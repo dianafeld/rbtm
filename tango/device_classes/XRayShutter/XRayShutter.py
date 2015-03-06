@@ -81,7 +81,9 @@ class XRayShutter (PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         #----- PROTECTED REGION ID(XRayShutter.init_device) ENABLED START -----#
-        self.set_state(PyTango.DevState.CLOSE);
+
+        self.set_state(PyTango.DevState.CLOSE)
+
         #----- PROTECTED REGION END -----#	//	XRayShutter.init_device
 
     def always_executed_hook(self):
@@ -120,7 +122,9 @@ class XRayShutter (PyTango.Device_4Impl):
         :rtype: PyTango.DevVoid """
         self.debug_stream("In Open()")
         #----- PROTECTED REGION ID(XRayShutter.Open) ENABLED START -----#
-        self.set_state(PyTango.DevState.OPEN);
+
+        self.set_state(PyTango.DevState.OPEN)
+
         #----- PROTECTED REGION END -----#	//	XRayShutter.Open
         
     def Close(self):
@@ -132,7 +136,9 @@ class XRayShutter (PyTango.Device_4Impl):
         :rtype: PyTango.DevVoid """
         self.debug_stream("In Close()")
         #----- PROTECTED REGION ID(XRayShutter.Close) ENABLED START -----#
-        self.set_state(PyTango.DevState.CLOSE);
+
+        self.set_state(PyTango.DevState.CLOSE)
+
         #----- PROTECTED REGION END -----#	//	XRayShutter.Close
         
 
