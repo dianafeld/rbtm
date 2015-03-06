@@ -84,7 +84,9 @@ class XRaySource (PyTango.Device_4Impl):
         self.get_device_properties(self.get_device_class())
         self.attr_voltage_read = 0.0
         #----- PROTECTED REGION ID(XRaySource.init_device) ENABLED START -----#
+
         self.set_state(PyTango.DevState.OFF);
+
         #----- PROTECTED REGION END -----#	//	XRaySource.init_device
 
     def always_executed_hook(self):
@@ -100,15 +102,18 @@ class XRaySource (PyTango.Device_4Impl):
     def read_voltage(self, attr):
         self.debug_stream("In read_voltage()")
         #----- PROTECTED REGION ID(XRaySource.voltage_read) ENABLED START -----#
+
         attr.set_value(self.attr_voltage_read)
+
         #----- PROTECTED REGION END -----#	//	XRaySource.voltage_read
         
     def write_voltage(self, attr):
         self.debug_stream("In write_voltage()")
         data=attr.get_write_value()
-        #----- PROTECTED REGION ID(XRaySource.voltage_write) ENABLED START -----#           
+        # ----- PROTECTED REGION ID(XRaySource.voltage_write) ENABLED START -----#
+
         self.attr_voltage_read = data
-        self.attr_voltage_value = data
+
         #----- PROTECTED REGION END -----#	//	XRaySource.voltage_write
         
     
@@ -129,7 +134,7 @@ class XRaySource (PyTango.Device_4Impl):
     #-----------------------------------------------------------------------------
     
     def Off(self):
-        """ Turns off the source
+        """ Turns off the X-Ray source
         
         :param : 
         :type: PyTango.DevVoid
@@ -137,11 +142,13 @@ class XRaySource (PyTango.Device_4Impl):
         :rtype: PyTango.DevVoid """
         self.debug_stream("In Off()")
         #----- PROTECTED REGION ID(XRaySource.Off) ENABLED START -----#
+
         self.set_state(PyTango.DevState.OFF);
+
         #----- PROTECTED REGION END -----#	//	XRaySource.Off
         
     def On(self):
-        """ Turns on the source
+        """ Turns on the X-Ray source
         
         :param : 
         :type: PyTango.DevVoid
@@ -149,20 +156,42 @@ class XRaySource (PyTango.Device_4Impl):
         :rtype: PyTango.DevVoid """
         self.debug_stream("In On()")
         #----- PROTECTED REGION ID(XRaySource.On) ENABLED START -----#
+
         self.set_state(PyTango.DevState.ON);
+
         #----- PROTECTED REGION END -----#	//	XRaySource.On
+
+    def is_On_allowed(self):
+        self.debug_stream("In is_On_allowed()")
+        state_ok = not (self.get_state() in [PyTango.DevState.FAULT])
+        # ----- PROTECTED REGION ID(XRaySource.is_On_allowed) ENABLED START -----#
+
+        #----- PROTECTED REGION END -----#	//	XRaySource.is_On_allowed
+        return state_ok
         
     def SetOperatingMode(self, argin):
-        """ Sets written voltage
+        """ Sets new voltage
         
-        :param argin: 
+        :param argin: voltage
         :type: PyTango.DevDouble
         :return: 
         :rtype: PyTango.DevVoid """
         self.debug_stream("In SetOperatingMode()")
         #----- PROTECTED REGION ID(XRaySource.SetOperatingMode) ENABLED START -----#
-        self.attr_voltage_value = argin
+
+        new_voltage = argin
+        self.attr_voltage_read = new_voltage
+
         #----- PROTECTED REGION END -----#	//	XRaySource.SetOperatingMode
+
+    def is_SetOperatingMode_allowed(self):
+        self.debug_stream("In is_SetOperatingMode_allowed()")
+        state_ok = not (self.get_state() in [PyTango.DevState.OFF,
+                                             PyTango.DevState.FAULT])
+        # ----- PROTECTED REGION ID(XRaySource.is_SetOperatingMode_allowed) ENABLED START -----#
+
+        #----- PROTECTED REGION END -----#	//	XRaySource.is_SetOperatingMode_allowed
+        return state_ok
         
 
 class XRaySourceClass(PyTango.DeviceClass):
@@ -209,7 +238,7 @@ class XRaySourceClass(PyTango.DeviceClass):
             [[PyTango.DevVoid, "none"],
             [PyTango.DevVoid, "none"]],
         'SetOperatingMode':
-            [[PyTango.DevDouble, "none"],
+            [[PyTango.DevDouble, "voltage"],
             [PyTango.DevVoid, "none"]],
         }
 
@@ -220,14 +249,14 @@ class XRaySourceClass(PyTango.DeviceClass):
             [[PyTango.DevDouble,
             PyTango.SCALAR,
             PyTango.READ_WRITE],
-            {
-                'label': "Input Vooltage",
+             {
+                 'label': "Input Voltage",
                 'unit': "kV",
-                'standard unit': "10+3",
-                'format': "%3.1",
+                'standard unit': "10E+3",
+                'format': "%4.1f",
                 'max value': "100",
                 'min value': "10",
-                'description': "shows the voltage of the source",
+                'description': "shows the voltage of the X-Ray source",
             } ],
         }
 
