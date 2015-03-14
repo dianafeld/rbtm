@@ -3,17 +3,18 @@
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-ADMINS = (
-    # ('Your Name', 'your_email@example.com'),
-)
+import os
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-MANAGERS = ADMINS
+
+ADMINS = (
+    ('Robotom Admins', 'robotomproject@gmail.com'),
+)
 
 DATABASES = {
     'default': {
         'ENGINE': 'django_mongodb_engine',# Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'test_db',                      # Or path to database file if using sqlite3.
-        # The following settings are not used with sqlite3:
+        'NAME': 'robotom_db',                      # Or path to database file if using sqlite3.
         'USER': '',
         'PASSWORD': '',
         'HOST': '',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
@@ -35,7 +36,7 @@ TIME_ZONE = 'America/Chicago'
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'en-us'
 
-SITE_ID = 1
+SITE_ID = '55043f7df6199327c98f73c9'
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -57,11 +58,7 @@ MEDIA_ROOT = ''
 # Examples: "http://example.com/media/", "http://media.example.com/"
 MEDIA_URL = ''
 
-# Absolute path to the directory static files should be collected to.
-# Don't put anything in this directory yourself; store your static files
-# in apps' "static/" subdirectories and in STATICFILES_DIRS.
-# Example: "/var/www/example.com/static/"
-STATIC_ROOT = '/srv/www/robotom/robotom/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
@@ -107,9 +104,6 @@ ROOT_URLCONF = 'robotom.urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'robotom.wsgi.application'
 
-import os
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-
 TEMPLATE_DIRS = (
     os.path.join(BASE_DIR, 'robotom/templates/'),
 )
@@ -121,10 +115,10 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Uncomment the next line to enable the admin:
     'django.contrib.admin',
-    # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
+    'djangotoolbox',
+    'django_mongodb_engine',
 )
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
