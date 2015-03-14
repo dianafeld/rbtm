@@ -1,0 +1,26 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+<head lang="ru">
+    <meta charset="UTF-8">
+    <title>ROBO-TOM</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'styles.css' %}">
+</head>
+<body>
+    <div class="wrapper">
+    <div class="menu_bar">
+    <div class="menu_rect"><p><a href="{% url "index" %}">Главная</a></p></div>
+    <div class="menu_rect"><p><a href="{% url "group_1" %}">1 группа</a></p></div>
+    <div class="menu_rect"><p><a href="{% url "group_2" %}">2 группа</a></p></div>
+    <div class="menu_rect"><p><a href="{% url "group_3" %}">3 группа</a></p></div>
+    </div>
+        <div class="content">
+            <div class="local_title">
+                <h1>Pages with lists of working group</h1>
+            </div>
+            <p>Click to the group you interested in see list of people</p>
+        </div>
+    </div>
+</body>
+</html>

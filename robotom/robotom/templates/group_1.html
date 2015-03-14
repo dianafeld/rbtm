@@ -1,0 +1,71 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+<head lang="ru">
+<meta charset="UTF-8">
+<title>ROBO-TOM</title>
+<link rel="stylesheet" type="text/css" href="{% static 'styles.css' %}">
+</head>
+<body>
+<div class="wrapper">
+<div class="menu_bar">
+<div class="menu_rect"><p><a href="{% url "index" %}">Главная</a></p></div>
+<div class="menu_rect"><p><a href="{% url "group_1" %}">1 группа</a></p></div>
+<div class="menu_rect"><p><a href="{% url "group_2" %}">2 группа</a></p></div>
+<div class="menu_rect"><p><a href="{% url "group_3" %}">3 группа</a></p></div>
+</div>
+        <div class="content">
+            <div class="local_title">
+                Группа разработки системы управления аппаратным лабораторным комплексом
+            </div>
+            <div class="instruments">
+                Основные инструменты: Python 2.7, платформа Tango
+            </div>
+            <table>
+                <tr>
+                    <td class="cell_photo">
+                        <img src="https://fivt.in.ru/confluence/download/attachments/11632740/user-avatar?version=1&modificationDate=1425228187897&api=v2" width=100%>
+                    </td>
+                    <td class="cell_text">
+                        <p>ФИО: Ичалова Диана Евгеньевна</p>
+                        <p>Университетская группа: 294</p>
+                        <p>ссылка на профиль в JIRA:
+                        <a href = "https://fivt.in.ru/jira/secure/ViewProfile.jspa?name=dermeerstein">dermeerstein</a></p>
+                    </td>
+                    <td class="cell_photo">
+                        <img src="https://fivt.in.ru/confluence/download/attachments/11632739/user-avatar?version=1&modificationDate=1425312337472&api=v2" width=100%>
+                    </td>
+                    <td class="cell_text">
+                        <p>ФИО: Контуров Дмитрий Алексеевич</p>
+                        <p>Университетская группа: 294</p>
+                        <p>ссылка на профиль в JIRA:
+                        <a href = "https://fivt.in.ru/jira/secure/ViewProfile.jspa?name=dmitry.konturov">dmitry.konturov</a>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="cell_photo">
+                        <img src="https://fivt.in.ru/confluence/download/attachments/11632755/user-avatar?version=1" width=100%>
+                    </td>
+                    <td class="cell_text">
+                        <p>ФИО: Рыкунова Елена Дмитриевна</p>
+                        <p>Университетская группа: 296</p>
+                        <p>ссылка на профиль в JIRA:
+                        <a href = "https://fivt.in.ru/jira/secure/ViewProfile.jspa?name=alenarykunova">alenarykunova</a></p>
+                    </td>
+                    <td class="cell_photo">
+                        <img src="https://fivt.in.ru/confluence/download/attachments/11632746/user-avatar?version=1" width=100%>
+                    </td>
+                    <td class="cell_text">
+                        <p>ФИО: Рябова Мария Владимировна</p>
+                        <p>Университетская группа: 294</p>
+                        <p>ссылка на профиль в JIRA:
+                        <a href = "https://fivt.in.ru/jira/secure/ViewProfile.jspa?name=mariya.ryabova">mariya.ryabova</a></p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

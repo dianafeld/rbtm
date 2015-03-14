@@ -1,0 +1,92 @@
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html>
+<head lang="ru">
+<meta charset="UTF-8">
+<title>ROBO-TOM</title>
+<link rel="stylesheet" type="text/css" href="{% static 'styles.css' %}">
+</head>
+<body>
+<div class="wrapper">
+<div class="menu_bar">
+<div class="menu_rect"><p><a href="{% url "index" %}">Главная</a></p></div>
+<div class="menu_rect"><p><a href="{% url "group_1" %}">1 группа</a></p></div>
+<div class="menu_rect"><p><a href="{% url "group_2" %}">2 группа</a></p></div>
+<div class="menu_rect"><p><a href="{% url "group_3" %}">3 группа</a></p></div>
+</div>
+        <div class="content">
+            <div class="local_title">
+               Группа разработки хранения, доступа, обработки и каталогизации экспериментальных данных
+            </div>
+            <div class="instruments">
+                Основные инструменты: Python 2.7, ПО для визуализации и работы с базами данных
+            </div>
+            <table>
+                <tr>
+                    <td class="cell_photo">
+                        <img src="https://fivt.in.ru/confluence/download/attachments/11632720/user-avatar?version=1" width=100%>
+                    </td>
+                    <td class="cell_text">
+                        <p>ФИО: Марданов Рустам Рамилевич</p>
+                        <p>Университетская группа: 293</p>
+                        <p>ссылка на профиль в JIRA:
+                        <a href = "https://fivt.in.ru/jira/secure/ViewProfile.jspa?name=rustam.zftsh">rustam.zftsh</a></p>
+                    </td>
+                    <td class="cell_photo">
+                        <img src="https://fivt.in.ru/jira/secure/useravatar?avatarId=10122" width=100%>
+                    </td>
+                    <td class="cell_text">
+                        <p>ФИО: Мухан Артур Сергеевич</p>
+                        <p>Университетская группа: 293</p>
+                        <p>ссылка на профиль в JIRA:
+                        <a href = "https://fivt.in.ru/jira/secure/ViewProfile.jspa?name=mukhan">mukhan</a>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="cell_photo">
+                        <img src="https://fivt.in.ru/confluence/download/attachments/11632749/user-avatar?version=1" width=100%>
+                    </td>
+                    <td class="cell_text">
+                        <p>ФИО: Опарин Александр Николаевич</p>
+                        <p>Университетская группа: 291</p>
+                        <p>ссылка на профиль в JIRA:
+                        <a href = "https://fivt.in.ru/jira/secure/ViewProfile.jspa?name=oparin.mipt">oparin.mipt</a></p>
+                    </td>
+                    <td class="cell_photo">
+                        <img src="https://fivt.in.ru/confluence/download/attachments/11632715/user-avatar?version=1" width=100%>
+                    </td>
+                    <td class="cell_text">
+                        <p>ФИО: Вацюк Александр Валентинович</p>
+                        <p>Университетская группа: 293</p>
+                        <p>ссылка на профиль в JIRA:
+                        <a href = "https://fivt.in.ru/jira/secure/ViewProfile.jspa?name=vatsuik.a.v">vatsuik.a.v</a></p>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="cell_photo">
+                        <img src="https://fivt.in.ru/confluence/download/attachments/11632712/user-avatar?version=2" width=100%>
+                    </td>
+                    <td class="cell_text">
+                        <p>ФИО: Соболев Владислав Андреевич</p>
+                        <p>Университетская группа: 293</p>
+                        <p>ссылка на профиль в JIRA:
+                        <a href = "https://fivt.in.ru/jira/secure/ViewProfile.jspa?name=sobolev.1994">sobolev.1994</a></p>
+                    </td>
+                    <td class="cell_photo">
+                        <img src="https://fivt.in.ru/confluence/download/attachments/11632725/user-avatar?version=1" width=100%>
+                    </td>
+                    <td class="cell_text">
+                        <p>ФИО: Дорина Ксения Олеговна</p>
+                        <p>Университетская группа: 291</p>
+                        <p>ссылка на профиль в JIRA:
+                        <a href = "https://fivt.in.ru/jira/secure/ViewProfile.jspa?name=do.kseniya">do.kseniya</a></p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
+
