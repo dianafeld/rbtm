@@ -1,0 +1,16 @@
+from django.shortcuts import render, get_object_or_404, redirect
+
+def index(request):
+    return render(request, 'index.html')
+
+def group1(request):
+    return render(request, 'group_1.html')
+
+def group2(request):
+    return render(request, 'group_2.html')
+
+def group3(request):
+    return render(request, 'group_3.html')
+
+def profile_view(request):
+    pass
