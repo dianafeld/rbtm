@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/home/paulin/vote/robotom/bin/python
+
 import os
 import sys
 
