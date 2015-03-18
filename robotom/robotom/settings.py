@@ -11,6 +11,8 @@ ADMINS = (
     ('Robotom Admins', 'robotomproject@gmail.com'),
 )
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -112,7 +114,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.admin',
     'django.contrib.admindocs',
-    'registration',
+#    'registration',
     'bootstrap3',
     'main',
 )

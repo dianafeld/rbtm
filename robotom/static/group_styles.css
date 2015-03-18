@@ -1,0 +1,12 @@
+.content .cell_text p{
+    padding-left: 20px;
+}
+
+.content .cell_photo img{
+    margin-left: 20px;
+}
+
+.content .local_title h3{
+    margin-left: 20px;
+    margin-bottom: 30px;
+}
