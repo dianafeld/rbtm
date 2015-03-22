@@ -2,20 +2,19 @@ import pytest
 import os, sys
 import PyTango
 import subprocess
+import time
 
 MAX_VOLTAGE = 100.0
 MIN_VOLTAGE = 10.0
 CORRECT_VOLTAGE = (MIN_VOLTAGE + MAX_VOLTAGE)/2
+SERVER_STARTING_TIME = 1
 
 @pytest.yield_fixture
-def source(request):
-    #cmdRunServer = 'python ../tango-ds/XRaySource/XRaySource.py source &'
-    #cmdStopServer = '''ps axf | grep source | grep -v grep | awk '{print "kill -9 " $1}' | sh'''
-    #os.system(cmdRunServer)
-    process = subprocess.Popen(['python', '../tango-ds/XRaySource/XRaySource.py', 'source'])
+def source():
+    process = subprocess.Popen(['python', '../tango-ds/XRaySource/XRaySource.py', 'source'], shell = False)
+    time.sleep(SERVER_STARTING_TIME)    
     yield PyTango.DeviceProxy('tomo/source/1')
-    request.addfinalizer(process.kill)    
-    #os.system(cmdStopServer)
+    process.kill()
 
 #States testing
 def test_source_init_state(source):
@@ -29,7 +28,7 @@ def test_source_off(source):
     source.On()
     source.Off()
     assert source.State() == PyTango._PyTango.DevState.OFF
-"""
+
 #Voltage testing
 def test_source_init_voltage(source):
     source.On()
@@ -64,6 +63,6 @@ def test_source_set_more_than_max_voltage(source):
 
 #Testing voltage change in OFF state
 def test_source_set_voltage_if_off(source):
+    prevVoltage = source.voltage
     source.SetOperatingMode(CORRECT_VOLTAGE)
-"""
-    
+    assert source.voltage == prevVoltage
