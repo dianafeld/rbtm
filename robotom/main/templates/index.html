@@ -1,8 +1,16 @@
 {% extends "base.html" %}
 
+
 {% block content %}
 
-<h1>Pages with lists of working group</h1>
-<h2>Click to the group you interested in see list of people</h2>
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'index_styles.css' %}">
+
+<div class="jumbotron">
+	<div class="container">
+		<h1>Pages with lists of working group</h1>
+		<h2>Click to the group you interested in see list of people</h2>
+	</div>
+</div>
 
 {% endblock content %}

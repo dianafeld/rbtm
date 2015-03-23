@@ -1,0 +1,15 @@
+.jumbotron{
+ 	background-image: url("images/tomo_img.jpg");
+ 	background-position: 50% 40%;
+    height: 500px;
+}
+
+.jumbotron h1{
+	color: #D1D163;
+	text-align: left;
+}
+
+.jumbotron h2{
+	color: #D1D163;
+	text-align: left;
+}
