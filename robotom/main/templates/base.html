@@ -41,7 +41,7 @@
             </ul>
                     <ul class="nav navbar-nav navbar-right">
                     {% if user.is_authenticated %}
-                        <li><a href="{% url 'main:profile_view' %}">Профиль</a></li>
+                        <li><a href="{% url 'main:profile' %}">Профиль</a></li>
                         <li><a href="{% url 'logout' %}">Выход</a></li>
                     {% else %}
                         <li><a href="{% url 'register' %}">Регистрация</a></li>

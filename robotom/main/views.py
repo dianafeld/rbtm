@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 def index(request):
     return render(request, 'index.html')
@@ -12,5 +13,20 @@ def group2(request):
 def group3(request):
     return render(request, 'group_3.html')
 
+@login_required
 def profile_view(request):
-    pass
+    #TODO
+    return render(request, 'empty.html')
+
+def has_experiment_access(user):
+    return user.userprofile.role in ['ADM', 'RES']
+
+@user_passes_test(has_experiment_access)
+def experiment_view(request):
+    return render(request, 'empty.html', {
+        full_access: (user.userprofile.role == 'EXP'),
+    })
+
+def storage_view(request):
+    #TODO
+    return render(request, 'empty.html')
