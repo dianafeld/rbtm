@@ -10,7 +10,7 @@ class UserProfileInline(admin.StackedInline):
 
 class MyUserAdmin(UserAdmin):
     def user_role(self, obj):
-        return obj.userprofile.get_role_display()
+        return obj.userprofile.role
     user_role.short_description = 'User role'
 
     inlines = (UserProfileInline,)
@@ -18,6 +18,5 @@ class MyUserAdmin(UserAdmin):
 
 
 admin.site.unregister(User)
-admin.site.unregister(Group)
 admin.site.register(User, MyUserAdmin)
 
