@@ -19,12 +19,13 @@ def profile_view(request):
     return render(request, 'empty.html')
 
 def has_experiment_access(user):
-    return user.userprofile.role in ['ADM', 'RES']
+    return (user.userprofile.role in ['ADM', 'RES'])
 
+@login_required
 @user_passes_test(has_experiment_access)
 def experiment_view(request):
     return render(request, 'empty.html', {
-        full_access: (user.userprofile.role == 'EXP'),
+        'full_access': (request.user.userprofile.role == 'EXP'),
     })
 
 def storage_view(request):

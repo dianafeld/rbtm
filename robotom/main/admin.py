@@ -10,7 +10,7 @@ class UserProfileInline(admin.StackedInline):
 
 class MyUserAdmin(UserAdmin):
     def user_role(self, obj):
-        return obj.userprofile.role()
+        return obj.userprofile.role
     user_role.short_description = 'User role'
 
     inlines = (UserProfileInline,)
