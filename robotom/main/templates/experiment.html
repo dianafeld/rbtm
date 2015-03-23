@@ -1,0 +1,10 @@
+{% extends base.html %}
+
+{% block content %}
+    <button type="button" class="btn btn-primary btn-lg" style="margin: 15px">МНЕ МОЖНО ВСЕ</button>
+    {% if full_access %}
+    	<button type="button" class="btn btn-primary btn-lg" style="margin: 15px">МЕНЯ МОЖНО НЕ ВСЕМ</button>
+    {% else %}
+    	<button type="button" class="btn btn-primary btn-lg" style="margin: 15px" disabled="disabled">МЕНЯ МОЖНО НЕ ВСЕМ</button>
+    {% endif %}
+{% endblock content %}
