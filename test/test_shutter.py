@@ -4,13 +4,31 @@ import PyTango
 import subprocess
 import time
 
-SERVER_STARTING_TIME = 1
+SERVER_STARTING_TIME = 0.5
+STEP_NUMBER = 7
 
 @pytest.yield_fixture
 def shutter():
     process = subprocess.Popen(['python', '../tango-ds/XRayShutter/XRayShutter.py', 'shutter'], shell = False)
-    time.sleep(SERVER_STARTING_TIME)
-    yield PyTango.DeviceProxy('tomo/shutter/1')
+  
+    step = 0    
+    while (step < STEP_NUMBER):         
+        shutter = PyTango.DeviceProxy('tomo/shutter/1')
+        try:
+            shutter.ping()
+        except:
+            step = step + 1
+            time.sleep(SERVER_STARTING_TIME)
+        else:
+            break
+
+    try:
+        shutter.ping()
+    except:
+        process.kill()
+        raise Exception('Connection with shutter fault')
+
+    yield shutter
     process.kill()
 
 def test_shutter_init_state(shutter):
