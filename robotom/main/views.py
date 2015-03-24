@@ -15,8 +15,8 @@ def group3(request):
 
 @login_required
 def profile_view(request):
-    #TODO
-    return render(request, 'empty.html')
+    #TODO Eugene
+    return render(request, 'experiment.html')
 
 def has_experiment_access(user):
     return (user.userprofile.role in ['ADM', 'RES'])

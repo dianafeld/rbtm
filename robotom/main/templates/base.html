@@ -39,9 +39,7 @@
                         <li role="presentation"><a role="menuitem" tabindex="-1" href="{% url 'main:group_3' %}">Группа 3</a></li>
                     </ul>
                 </li>
-            </ul>
-<<<<<<< HEAD
-            
+            </ul>            
 			<ul class="nav navbar-nav navbar-right">
 				{% if user.is_authenticated %}
 					<li><a href="{% url 'main:profile' %}">Профиль</a></li>
@@ -51,17 +49,6 @@
 					<li><a href="{% url 'login' %}">Вход</a></li>
 				{% endif %}
 			</ul>
-=======
-                    <ul class="nav navbar-nav navbar-right">
-                    {% if user.is_authenticated %}
-                        <li><a href="{% url 'main:profile' %}">Профиль</a></li>
-                        <li><a href="{% url 'logout' %}">Выход</a></li>
-                    {% else %}
-                        <li><a href="{% url 'register' %}">Регистрация</a></li>
-                        <li><a href="{% url 'login' %}">Вход</a></li>
-                    {% endif %}
-                    </ul>
->>>>>>> 71cb1a59442bbd7d52566924c4da9be4743a1277
         </div>
     </div>
 </nav>
