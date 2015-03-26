@@ -41,7 +41,11 @@
                 </li>
             </ul>     
             <ul class="nav navbar-nav">
+            {% if user.is_authenticated %}
+                {% if user.userprofile.role == "ADM" or user.userprofile.role == "EXP" %}
                 <li><a href="{% url 'main:experiment' %}">Эксперимент</a></li>
+                {% endif %}
+            {% endif %}
                 <li><a href="{% url 'main:storage' %}">Хранилище</a></li>
             </ul>
 			<ul class="nav navbar-nav navbar-right">
