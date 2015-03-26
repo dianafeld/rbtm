@@ -16,15 +16,15 @@ def group3(request):
 @login_required
 def profile_view(request):
     #TODO Eugene
-    return render(request, 'experiment.html')
+    return render(request, 'empty.html')
 
 def has_experiment_access(user):
-    return (user.userprofile.role in ['ADM', 'RES'])
+    return (user.userprofile.role in ['ADM', 'RES', 'EXP'])
 
 @login_required
 @user_passes_test(has_experiment_access)
 def experiment_view(request):
-    return render(request, 'empty.html', {
+    return render(request, 'experiment.html', {
         'full_access': (request.user.userprofile.role == 'EXP'),
     })
 

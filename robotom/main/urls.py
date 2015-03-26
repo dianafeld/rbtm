@@ -8,4 +8,5 @@ urlpatterns = patterns('',
     url(r'^group3/', views.group3, name='group_3'),
     url(r'^accounts/profile/$', views.profile_view, name='profile'),
     url(r'^experiment/$', views.experiment_view, name='experiment'),
+    url(r'^storage/$', views.storage_view, name='storage'),
 )

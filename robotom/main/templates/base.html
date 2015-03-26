@@ -39,7 +39,11 @@
                         <li role="presentation"><a role="menuitem" tabindex="-1" href="{% url 'main:group_3' %}">Группа 3</a></li>
                     </ul>
                 </li>
-            </ul>            
+            </ul>     
+            <ul class="nav navbar-nav">
+                <li><a href="{% url 'main:experiment' %}">Эксперимент</a></li>
+                <li><a href="{% url 'main:storage' %}">Хранилище</a></li>
+            </ul>
 			<ul class="nav navbar-nav navbar-right">
 				{% if user.is_authenticated %}
 					<li><a href="{% url 'main:profile' %}">Профиль</a></li>
@@ -52,9 +56,9 @@
         </div>
     </div>
 </nav>
-
- {% block content %}
- {% endblock %}
-
+<div style="margin-top:60px">
+     {% block content %}
+     {% endblock %}
+</div>
 </body>
 </html>
