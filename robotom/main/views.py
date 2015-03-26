@@ -19,7 +19,7 @@ def profile_view(request):
     return render(request, 'empty.html')
 
 def has_experiment_access(user):
-    return (user.userprofile.role in ['ADM', 'RES', 'EXP'])
+    return (user.userprofile.role in ['ADM', 'EXP'])
 
 @login_required
 @user_passes_test(has_experiment_access)
