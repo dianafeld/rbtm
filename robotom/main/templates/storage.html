@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-	
+	{% for record_id in record_range %}
+	 	<a href="/storage/storage_record{{record_id}}/">
+	 		Перейти к записи номер {{ record_id }} 
+	 	</a> <br>
+	{% endfor %}
 {% endblock content %}

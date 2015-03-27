@@ -9,4 +9,6 @@ urlpatterns = patterns('',
     url(r'^accounts/profile/$', views.profile_view, name='profile'),
     url(r'^experiment/$', views.experiment_view, name='experiment'),
     url(r'^storage/$', views.storage_view, name='storage'),
+    url(r'^storage/storage_record(?P<storage_record_id>\d+)/$', 
+    	views.storage_record_view, name='storage_record'),    
 )

@@ -19,7 +19,7 @@ def profile_view(request):
     return render(request, 'empty.html')
 
 def has_experiment_access(user):
-    return (user.userprofile.role in ['ADM', 'EXP'])
+    return (user.userprofile.role in ['ADM', 'RES', 'EXP'])
 
 @login_required
 @user_passes_test(has_experiment_access)
@@ -30,4 +30,9 @@ def experiment_view(request):
 
 def storage_view(request):
     #TODO
-    return render(request, 'empty.html')
+    return render(request, 'storage.html', {"record_range": xrange(10)})
+
+def storage_record_view(request, storage_record_id):
+    #TODO
+    return render(request, 'storage_record.html', 
+        {"record_id": storage_record_id})
