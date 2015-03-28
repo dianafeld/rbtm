@@ -3,8 +3,21 @@
 {% block content %}
 {% load bootstrap3 %}
 {% load staticfiles %}
-<link rel="stylesheet" href="{% static 'reg_styles.css' %}">
 
+<link rel="stylesheet" href="{% static 'reg_styles.css' %}">
+{% for field in user_form %}
+{% if field.errors %}
+<div class="row">
+    <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+        <div class="alert alert-warning">
+            <a class="close" data-dismiss="alert" href="/">&times;</a>
+            {{ field.errors }}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+    
 <div class="row">
 <div class="col-sm-10 col-sm-offset-1 col-md-8 col-md-offset-2 col-lg-6 col-lg-offset-3">
 <div class="panel panel-primary">
@@ -12,34 +25,10 @@
 <h1 class="panel-title"><strong>Регистрация</strong></h1> 
 </div>
 <div class="panel-body">
-
-    <form action="" method="post" class="form">
+    <form action="" method="post" class="form">    
     {% csrf_token %}
-    <div class="form-group col-lg-12">
-        <label>Логин</label>
-        <input type="" name="" class="form-control" id="" value="" placeholder="Логин">
-        <br>
-        <label>Фамилия</label>
-        <input type="" name="" class="form-control" id="" value="" placeholder="Фамилия">
-        <br>
-        <label>Имя</label>
-        <input type="" name="" class="form-control" id="" value="" placeholder="Имя">
-        <br>
-        <label>Отчество</label>
-        <input type="" name="" class="form-control" id="" value="" placeholder="Отчество">
-        <br>
-        <label>Пароль</label>
-        <input type="password" name="" class="form-control" id="" value="" placeholder="Пароль">
-        <br>
-        <label>Повторите пароль</label>
-        <input type="password" name="" class="form-control" id="" value="" placeholder="Пароль">
-        <br>
-        <label>Email адрес</label>
-        <input type="" name="" class="form-control" id="" value="" placeholder="Email адрес">
-        <br>
-        <label>Повторите Email адрес</label>
-        <input type="" name="" class="form-control" id="" value="" placeholder="Повторите Email адрес">
-    </div>
+    {% bootstrap_form user_form %}
+    {% bootstrap_form userprofile_form %}
     {% buttons %}
     <button type="submit" class="btn btn-primary" style="margin-left: 15px">Регистрация</button>
     {% endbuttons %}

@@ -50,10 +50,10 @@
             </ul>
 			<ul class="nav navbar-nav navbar-right">
 				{% if user.is_authenticated %}
-					<li><a href="{% url 'main:profile' %}">Профиль</a></li>
+				<li><a href="{% url 'main:profile' %}">Профиль [{{ user.username }}]</a></li>
 					<li><a href="{% url 'logout' %}">Выход</a></li>
 				{% else %}
-					<li><a href="{% url 'register' %}">Регистрация</a></li>
+					<li><a href="{% url 'main:register' %}">Регистрация</a></li>
 					<li><a href="{% url 'login' %}">Вход</a></li>
 				{% endif %}
 			</ul>

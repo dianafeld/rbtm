@@ -1,0 +1,5 @@
+*.pyc
+
+**/manage.py
+
+**/local_settings.py
