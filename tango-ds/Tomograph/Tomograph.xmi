@@ -5,7 +5,6 @@
       <inheritances classname="Device_Impl" sourcePath=""/>
       <identification contact="at phystech.edu - diana.ichalova" author="diana.ichalova" emailDomain="phystech.edu" classFamily="Miscellaneous" siteSpecific="" platform="All Platforms" bus="Not Applicable" manufacturer="none" reference=""/>
     </description>
-
     <commands name="GetDevicesInfo" description="Returns information about available devices" execMethod="get_devices_info" displayLevel="OPERATOR" polledPeriod="0">
       <argin description="">
         <type xsi:type="pogoDsl:VoidType"/>
@@ -24,7 +23,6 @@
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
-
     <commands name="GetMotorStatus" description="Returns motor information" execMethod="get_motor_status" displayLevel="OPERATOR" polledPeriod="0">
       <argin description="">
         <type xsi:type="pogoDsl:VoidType"/>
@@ -61,7 +59,6 @@
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
-
     <commands name="GetXRaySourceStatus" description="" execMethod="get_xray_source_status" displayLevel="OPERATOR" polledPeriod="0">
       <argin description="">
         <type xsi:type="pogoDsl:VoidType"/>
@@ -98,7 +95,6 @@
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
-
     <commands name="GetXRayShutterStatus" description="" execMethod="get_xray_shutter_status" displayLevel="OPERATOR" polledPeriod="0">
       <argin description="">
         <type xsi:type="pogoDsl:VoidType"/>
@@ -126,7 +122,6 @@
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
-
     <commands name="GetDetectorStatus" description="" execMethod="get_detector_status" displayLevel="OPERATOR" polledPeriod="0">
       <argin description="">
         <type xsi:type="pogoDsl:VoidType"/>
@@ -145,7 +140,6 @@
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
-
     <commands name="Status" description="This command gets the device status (stored in its device_status data member) and returns it to the caller." execMethod="dev_status" displayLevel="OPERATOR" polledPeriod="0">
       <argin description="none">
         <type xsi:type="pogoDsl:VoidType"/>
@@ -164,8 +158,6 @@
       </argout>
       <status abstract="true" inherited="true" concrete="true"/>
     </commands>
-
-
     <states name="UNKNOWN" description="">
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </states>
