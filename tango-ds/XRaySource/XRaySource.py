@@ -83,9 +83,10 @@ class XRaySource (PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         self.attr_voltage_read = 0.0
+        self.attr_current_read = 0.0
         #----- PROTECTED REGION ID(XRaySource.init_device) ENABLED START -----#
 
-        self.set_state(PyTango.DevState.OFF);
+        self.set_state(PyTango.DevState.OFF)
 
         #----- PROTECTED REGION END -----#	//	XRaySource.init_device
 
@@ -115,8 +116,23 @@ class XRaySource (PyTango.Device_4Impl):
         self.attr_voltage_read = data
 
         #----- PROTECTED REGION END -----#	//	XRaySource.voltage_write
-        
-    
+
+    def read_current(self, attr):
+        self.debug_stream("In read_current()")
+        # ----- PROTECTED REGION ID(XRaySource.current_read) ENABLED START -----#
+
+        attr.set_value(self.attr_current_read)
+
+        # ----- PROTECTED REGION END -----#	//	XRaySource.current_read
+
+    def write_current(self, attr):
+        self.debug_stream("In write_current()")
+        data = attr.get_write_value()
+        # ----- PROTECTED REGION ID(XRaySource.current_write) ENABLED START -----#
+
+        # ----- PROTECTED REGION END -----#	//	XRaySource.current_write
+
+        self.attr_current_read = data
     
         #----- PROTECTED REGION ID(XRaySource.initialize_dynamic_attributes) ENABLED START -----#
         
@@ -143,7 +159,7 @@ class XRaySource (PyTango.Device_4Impl):
         self.debug_stream("In Off()")
         #----- PROTECTED REGION ID(XRaySource.Off) ENABLED START -----#
 
-        self.set_state(PyTango.DevState.OFF);
+        self.set_state(PyTango.DevState.OFF)
 
         #----- PROTECTED REGION END -----#	//	XRaySource.Off
         
@@ -157,7 +173,7 @@ class XRaySource (PyTango.Device_4Impl):
         self.debug_stream("In On()")
         #----- PROTECTED REGION ID(XRaySource.On) ENABLED START -----#
 
-        self.set_state(PyTango.DevState.ON);
+        self.set_state(PyTango.DevState.ON)
 
         #----- PROTECTED REGION END -----#	//	XRaySource.On
 
@@ -170,17 +186,26 @@ class XRaySource (PyTango.Device_4Impl):
         return state_ok
         
     def SetOperatingMode(self, argin):
-        """ Sets new voltage
+        """ Sets new voltage and current
         
-        :param argin: voltage
-        :type: PyTango.DevDouble
+        :param argin: voltage, current
+        :type: PyTango.DevVarDoubleArray
         :return: 
         :rtype: PyTango.DevVoid """
         self.debug_stream("In SetOperatingMode()")
         #----- PROTECTED REGION ID(XRaySource.SetOperatingMode) ENABLED START -----#
 
-        new_voltage = argin
+        if len(argin) != 2:
+            PyTango.Except.throw_exception(
+                "TOMOGRAPH_invalid_arguments",
+                "Invalid number of arguments: {} provided, 2 needed (voltage, current)".format(len(argin)),
+                "Tomograph::SetOperatingMode")
+
+        new_voltage = argin[0]
+        new_current = argin[1]
+
         self.attr_voltage_read = new_voltage
+        self.attr_current_read = new_current
 
         #----- PROTECTED REGION END -----#	//	XRaySource.SetOperatingMode
 
@@ -238,7 +263,7 @@ class XRaySourceClass(PyTango.DeviceClass):
             [[PyTango.DevVoid, "none"],
             [PyTango.DevVoid, "none"]],
         'SetOperatingMode':
-            [[PyTango.DevDouble, "voltage"],
+            [[PyTango.DevVarDoubleArray, "voltage, current"],
             [PyTango.DevVoid, "none"]],
         }
 
@@ -258,6 +283,18 @@ class XRaySourceClass(PyTango.DeviceClass):
                 'min value': "10",
                 'description': "shows the voltage of the X-Ray source",
             } ],
+        'current':
+            [[PyTango.DevDouble,
+              PyTango.SCALAR,
+              PyTango.READ_WRITE],
+             {
+                 'label': "current",
+                 'unit': "mA",
+                 'standard unit': "10E-3",
+                 'format': "%4.1f",
+                 'max value': "100",
+                 'min value': "0",
+             }],
         }
 
 
