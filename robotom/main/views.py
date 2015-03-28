@@ -3,19 +3,24 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import forms as auth_forms, views as auth_views
 from django.contrib.auth import login as auth_login, authenticate as auth_authenticate
 from forms import UserRegistrationForm, UserProfileRegistrationForm
-from django.core.context_processors import csrf 
+from django.core.context_processors import csrf
+
 
 def index(request):
     return render(request, 'index.html')
 
+
 def group1(request):
     return render(request, 'group_1.html')
+
 
 def group2(request):
     return render(request, 'group_2.html')
 
+
 def group3(request):
     return render(request, 'group_3.html')
+
 
 def registration_view(request):
     if request.method == 'POST':
@@ -35,19 +40,22 @@ def registration_view(request):
                 'user_form': user_form,
                 'userprofile_form': userprofile_form,
             })
-    
+
     return render(request, 'registration/registration_form.html', {
         'user_form': UserRegistrationForm(),
         'userprofile_form': UserProfileRegistrationForm(),
     })
 
+
 @login_required
 def profile_view(request):
-    #TODO Eugene
+    # TODO Eugene
     return render(request, 'empty.html')
 
+
 def has_experiment_access(user):
-    return (user.userprofile.role in ['ADM', 'RES', 'EXP'])
+    return user.userprofile.role in ['ADM', 'RES', 'EXP']
+
 
 @login_required
 @user_passes_test(has_experiment_access)
@@ -56,11 +64,13 @@ def experiment_view(request):
         'full_access': (request.user.userprofile.role == 'EXP'),
     })
 
+
 def storage_view(request):
-    #TODO
+    # TODO
     return render(request, 'storage.html', {"record_range": xrange(10)})
 
+
 def storage_record_view(request, storage_record_id):
-    #TODO
-    return render(request, 'storage_record.html', 
-        {"record_id": storage_record_id})
+    # TODO
+    return render(request, 'storage_record.html',
+                  {"record_id": storage_record_id})

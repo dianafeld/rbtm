@@ -3,3 +3,5 @@
 **/manage.py
 
 **/local_settings.py
+
+*.idea/*

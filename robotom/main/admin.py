@@ -5,10 +5,12 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User, Group
 from main.models import UserProfile
 
+
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
     can_delete = False
     exclude = ('first_name', 'last_name',)
+
 
 class MyUserAdmin(UserAdmin):
     def user_role(self, obj):
@@ -27,4 +29,3 @@ admin.site.unregister(User)
 admin.site.unregister(Group)
 
 admin.site.register(User, MyUserAdmin)
-

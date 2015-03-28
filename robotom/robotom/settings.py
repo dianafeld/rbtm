@@ -4,8 +4,8 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 import os
-BASE_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..')
 
+BASE_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..')
 
 ADMINS = (
     ('Robotom Admins', 'robotomproject@gmail.com'),
@@ -72,7 +72,7 @@ STATICFILES_DIRS = ()
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    # 'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # Make this unique, and don't share it with anybody.
@@ -82,7 +82,7 @@ SECRET_KEY = 'vn)82k3mmx_41^em04jxb-ri=asbcs(=(^=r1h89d%gk4d7*v='
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
+    # 'django.template.loaders.eggs.Loader',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -115,6 +115,7 @@ INSTALLED_APPS = (
     'registration',
     'bootstrap3',
     'main',
+    'rest_framework',
 )
 
 ACCOUNT_ACTIVATION_DAYS = 7
@@ -149,7 +150,7 @@ LOGGING = {
         },
     }
 }
-        
+
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
