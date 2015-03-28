@@ -50,7 +50,7 @@ import PyTango
 import sys
 # Add additional import
 #----- PROTECTED REGION ID(XRayShutter.additionnal_import) ENABLED START -----#
-
+import threading
 #----- PROTECTED REGION END -----#	//	XRayShutter.additionnal_import
 
 ## Device States Description
@@ -112,32 +112,43 @@ class XRayShutter (PyTango.Device_4Impl):
     #-----------------------------------------------------------------------------
     #    XRayShutter command methods
     #-----------------------------------------------------------------------------
-    
-    def Open(self):
+
+    def Open(self, argin):
         """ Opens the shutter
         
-        :param : 
-        :type: PyTango.DevVoid
+        :param argin: Automatically closes the shutter after the given time. Stays opened if 0.
+        :type: PyTango.DevULong
         :return: 
         :rtype: PyTango.DevVoid """
         self.debug_stream("In Open()")
         #----- PROTECTED REGION ID(XRayShutter.Open) ENABLED START -----#
-
+        # check time for reasonable values.
+        # time in seconds currently, maybe we need ms. threading.Timer accepts floating point seconds.
+        # looks like tango doesn't have function overloading. impossible to have zero or one argument for function
+        
+        time = argin
         self.set_state(PyTango.DevState.OPEN)
 
+        if time != 0:
+            threading.Timer(time, self.Close, args=[0]).start()
+
         #----- PROTECTED REGION END -----#	//	XRayShutter.Open
-        
-    def Close(self):
+
+    def Close(self, argin):
         """ Closes the shutter
         
-        :param : 
-        :type: PyTango.DevVoid
+        :param argin: Automatically opens the shutter after the given time. Stays closed if 0.
+        :type: PyTango.DevULong
         :return: 
         :rtype: PyTango.DevVoid """
         self.debug_stream("In Close()")
         #----- PROTECTED REGION ID(XRayShutter.Close) ENABLED START -----#
 
+        time = argin
         self.set_state(PyTango.DevState.CLOSE)
+
+        if time != 0:
+            threading.Timer(time, self.Open, args=[0]).start()
 
         #----- PROTECTED REGION END -----#	//	XRayShutter.Close
         
@@ -180,10 +191,10 @@ class XRayShutterClass(PyTango.DeviceClass):
     #    Command definitions
     cmd_list = {
         'Open':
-            [[PyTango.DevVoid, "none"],
+            [[PyTango.DevULong, "Automatically closes the shutter after the given time. Stays opened if 0."],
             [PyTango.DevVoid, "none"]],
         'Close':
-            [[PyTango.DevVoid, "none"],
+            [[PyTango.DevULong, "Automatically opens the shutter after the given time. Stays closed if 0."],
             [PyTango.DevVoid, "none"]],
         }
 
