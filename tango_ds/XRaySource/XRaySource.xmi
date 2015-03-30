@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ASCII"?>
 <pogoDsl:PogoSystem xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:pogoDsl="http://www.esrf.fr/tango/pogo/PogoDsl">
   <classes name="XRaySource" pogoRevision="8.1">
-    <description description="It is a class for XRay sourse, which is used for setting operating mode (voltage)" title="XRaySource" sourcePath="/home/itsnotme/rbtm-drivers/tango-ds/XRaySource" language="Python" filestogenerate="XMI   file,Code files" license="GPL" hasMandatoryProperty="false" hasConcreteProperty="false" hasAbstractCommand="false" hasAbstractAttribute="false">
+    <description description="It is a class for XRay sourse, which is used for setting operating mode (voltage)" title="XRaySource" sourcePath="/home/guest/rbtm-Drivers/rbtm-drivers/tango_ds/XRaySource" language="Python" filestogenerate="XMI   file,Code files" license="GPL" hasMandatoryProperty="false" hasConcreteProperty="false" hasAbstractCommand="false" hasAbstractAttribute="false">
       <inheritances classname="Device_Impl" sourcePath=""/>
       <identification contact="at gmail.com - mariya.ryabova" author="mariya.ryabova" emailDomain="gmail.com" classFamily="Miscellaneous" siteSpecific="" platform="All Platforms" bus="Not Applicable" manufacturer="none" reference=""/>
     </description>
@@ -60,6 +60,10 @@
       <dataReadyEvent fire="false" libCheckCriteria="true"/>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
       <properties description="shows the voltage of the X-Ray source" label="Input Voltage" unit="kV" standardUnit="10E+3" displayUnit="" format="%4.1f" maxValue="100" minValue="10" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+      <readExcludedStates>OFF</readExcludedStates>
+      <readExcludedStates>FAULT</readExcludedStates>
+      <writeExcludedStates>OFF</writeExcludedStates>
+      <writeExcludedStates>FAULT</writeExcludedStates>
     </attributes>
     <attributes name="current" attType="Scalar" rwType="READ_WRITE" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="true" isDynamic="false">
       <dataType xsi:type="pogoDsl:DoubleType"/>
@@ -68,6 +72,10 @@
       <dataReadyEvent fire="false" libCheckCriteria="true"/>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
       <properties description="" label="current" unit="mA" standardUnit="10E-3" displayUnit="" format="%4.1f" maxValue="100" minValue="0" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+      <readExcludedStates>OFF</readExcludedStates>
+      <readExcludedStates>FAULT</readExcludedStates>
+      <writeExcludedStates>OFF</writeExcludedStates>
+      <writeExcludedStates>FAULT</writeExcludedStates>
     </attributes>
     <states name="ON" description="The state in which the source is active">
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>

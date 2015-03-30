@@ -9,7 +9,7 @@ STEP_NUMBER = 7
 
 @pytest.yield_fixture
 def shutter():
-    process = subprocess.Popen(['python', '../tango-ds/XRayShutter/XRayShutter.py', 'shutter'], shell = False)
+    process = subprocess.Popen(['python', '../tango_ds/XRayShutter/XRayShutter.py', 'shutter'], shell = False)
   
     step = 0    
     while (step < STEP_NUMBER):         

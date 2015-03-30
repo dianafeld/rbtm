@@ -9,7 +9,7 @@ STEP_NUMBER = 7
 
 @pytest.yield_fixture
 def detector():
-    process = subprocess.Popen(['python', '../tango-ds/Detector/Detector.py', 'detector'], shell = False)
+    process = subprocess.Popen(['python', '../tango_ds/Detector/Detector.py', 'detector'], shell = False)
     step = 0    
     while (step < STEP_NUMBER):         
         detector = PyTango.DeviceProxy('tomo/detector/1')
