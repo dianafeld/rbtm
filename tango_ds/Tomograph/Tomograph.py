@@ -172,9 +172,9 @@ class Tomograph(PyTango.Device_4Impl):
         :param : 
         :type: PyTango.DevVoid
         :return: Array of 3 numbers: horizontal position, vertical position, angle position
-        :rtype: PyTango.DevVarShortArray """
+        :rtype: PyTango.DevVarDoubleArray """
         self.debug_stream("In CurrentPosition()")
-        argout = [0]
+        argout = [0.0]
         #----- PROTECTED REGION ID(Tomograph.CurrentPosition) ENABLED START -----#
         argout = [self.motor.horizontal_position, self.motor.vertical_position, self.motor.angle_position]
         #----- PROTECTED REGION END -----#	//	Tomograph.CurrentPosition
@@ -184,7 +184,7 @@ class Tomograph(PyTango.Device_4Impl):
         """ Sets motor to the given position
         
         :param argin: 3 numbers: horizontal position, vertical position, angle position
-        :type: PyTango.DevVarShortArray
+        :type: PyTango.DevVarDoubleArray
         :return: 
         :rtype: PyTango.DevVoid """
         self.debug_stream("In GotoPosition()")
@@ -409,9 +409,9 @@ class TomographClass(PyTango.DeviceClass):
              [PyTango.DevString, "Information about motor"]],
         'CurrentPosition':
             [[PyTango.DevVoid, "none"],
-             [PyTango.DevVarShortArray, "Array of 3 numbers: horizontal position, vertical position, angle position"]],
+             [PyTango.DevVarDoubleArray, "Array of 3 numbers: horizontal position, vertical position, angle position"]],
         'GotoPosition':
-            [[PyTango.DevVarShortArray, "3 numbers: horizontal position, vertical position, angle position"],
+            [[PyTango.DevVarDoubleArray, "3 numbers: horizontal position, vertical position, angle position"],
              [PyTango.DevVoid, "none"]],
         'ResetCurrentPosition':
             [[PyTango.DevVoid, "none"],

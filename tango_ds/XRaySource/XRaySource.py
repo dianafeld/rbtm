@@ -117,15 +117,6 @@ class XRaySource (PyTango.Device_4Impl):
 
         #----- PROTECTED REGION END -----#	//	XRaySource.voltage_write
         
-    def is_voltage_allowed(self, attr):
-        self.debug_stream("In is_voltage_allowed()")
-        state_ok = not(self.get_state() in [PyTango.DevState.OFF,
-            PyTango.DevState.FAULT])
-        #----- PROTECTED REGION ID(XRaySource.is_voltage_allowed) ENABLED START -----#
-        
-        #----- PROTECTED REGION END -----#	//	XRaySource.is_voltage_allowed
-        return state_ok
-        
     def read_current(self, attr):
         self.debug_stream("In read_current()")
         # ----- PROTECTED REGION ID(XRaySource.current_read) ENABLED START -----#
@@ -140,15 +131,6 @@ class XRaySource (PyTango.Device_4Impl):
         # ----- PROTECTED REGION ID(XRaySource.current_write) ENABLED START -----#
 
         # ----- PROTECTED REGION END -----#	//	XRaySource.current_write
-        
-    def is_current_allowed(self, attr):
-        self.debug_stream("In is_current_allowed()")
-        state_ok = not(self.get_state() in [PyTango.DevState.OFF,
-            PyTango.DevState.FAULT])
-        #----- PROTECTED REGION ID(XRaySource.is_current_allowed) ENABLED START -----#
-        
-        #----- PROTECTED REGION END -----#	//	XRaySource.is_current_allowed
-        return state_ok
         
     
     
@@ -225,7 +207,7 @@ class XRaySource (PyTango.Device_4Impl):
         voltage = self.get_device_attr().get_attr_by_name("voltage")
         min_voltage_value = voltage.get_min_value()
         max_voltage_value = voltage.get_max_value()
-        if new_voltage >= min_voltage_value and new_voltage <= max_voltage_value:        
+        if min_voltage_value <= new_voltage <= max_voltage_value:
             self.attr_voltage_read = new_voltage
         else:
             PyTango.Except.throw_exception(
@@ -236,7 +218,7 @@ class XRaySource (PyTango.Device_4Impl):
         current = self.get_device_attr().get_attr_by_name("current")
         min_current_value = current.get_min_value()
         max_current_value = current.get_max_value()
-        if new_current >= min_current_value and new_current <= max_current_value:        
+        if min_current_value <= new_current <= max_current_value:
             self.attr_current_read = new_current
         else:
             PyTango.Except.throw_exception(
@@ -316,8 +298,8 @@ class XRaySourceClass(PyTango.DeviceClass):
                 'unit': "kV",
                 'standard unit': "10E+3",
                 'format': "%4.1f",
-                'max value': "100",
-                'min value': "10",
+                'max value': "100.00001",
+                'min value': "-0.00001",
                 'description': "shows the voltage of the X-Ray source",
             } ],
         'current':
@@ -329,8 +311,8 @@ class XRaySourceClass(PyTango.DeviceClass):
                 'unit': "mA",
                 'standard unit': "10E-3",
                 'format': "%4.1f",
-                'max value': "100",
-                'min value': "0",
+                'max value': "100.00001",
+                'min value': "-0.00001",
             } ],
         }
 

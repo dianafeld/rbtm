@@ -4,5 +4,5 @@ python Motor/Motor.py motor &
 python Detector/Detector.py detector &
 python XRayShutter/XRayShutter.py shutter &
 python XRaySource/XRaySource.py source &
-sleep 3
+sleep 5
 python Tomograph/Tomograph.py tomograph &

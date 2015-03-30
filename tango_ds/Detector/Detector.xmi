@@ -59,7 +59,7 @@
       <archiveEvent fire="false" libCheckCriteria="false"/>
       <dataReadyEvent fire="false" libCheckCriteria="true"/>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-      <properties description="" label="" unit="ms" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+      <properties description="" label="exposure time" unit="ms" standardUnit="10E-3" displayUnit="" format="%f5.2" maxValue="1000.00001" minValue="0.99999" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
     </attributes>
     <states name="ON" description="detector is on">
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>

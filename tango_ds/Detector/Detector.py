@@ -262,7 +262,12 @@ class DetectorClass(PyTango.DeviceClass):
               PyTango.SCALAR,
               PyTango.READ_WRITE],
              {
+                 'label': "exposure time",
                  'unit': "ms",
+                 'standard unit': "10E-3",
+                 'format': "%f5.2",
+                 'max value': "1000.00001",
+                 'min value': "0.99999",
              }],
     }
 

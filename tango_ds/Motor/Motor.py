@@ -112,14 +112,6 @@ class Motor (PyTango.Device_4Impl):
         self.attr_angle_position_read = data
         #----- PROTECTED REGION END -----#	//	Motor.angle_position_write 
         
-    def is_angle_position_allowed(self, attr):
-        self.debug_stream("In is_angle_position_allowed()")
-        state_ok = not(self.get_state() in [PyTango.DevState.OFF])
-        #----- PROTECTED REGION ID(Motor.is_angle_position_allowed) ENABLED START -----#
-        
-        #----- PROTECTED REGION END -----#	//	Motor.is_angle_position_allowed
-        return state_ok
-        
     def read_vertical_position(self, attr):
         self.debug_stream("In read_vertical_position()")
         #----- PROTECTED REGION ID(Motor.vertical_position_read) ENABLED START -----#
@@ -133,17 +125,10 @@ class Motor (PyTango.Device_4Impl):
         self.attr_vertical_position_read = data
         #----- PROTECTED REGION END -----#	//	Motor.vertical_position_write
         
-    def is_vertical_position_allowed(self, attr):
-        self.debug_stream("In is_vertical_position_allowed()")
-        state_ok = not(self.get_state() in [PyTango.DevState.OFF])
-        #----- PROTECTED REGION ID(Motor.is_vertical_position_allowed) ENABLED START -----#
-        
-        #----- PROTECTED REGION END -----#	//	Motor.is_vertical_position_allowed
-        return state_ok
-        
     def read_horizontal_position(self, attr):
         self.debug_stream("In read_horizontal_position()")
         #----- PROTECTED REGION ID(Motor.horizontal_position_read) ENABLED START -----#
+        print self.attr_horizontal_position_read
         attr.set_value(self.attr_horizontal_position_read)
         #----- PROTECTED REGION END -----#	//	Motor.horizontal_position_read
         
@@ -153,14 +138,6 @@ class Motor (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(Motor.horizontal_position_write) ENABLED START -----#
         self.attr_horizontal_position_read = data
         #----- PROTECTED REGION END -----#	//	Motor.horizontal_position_write
-        
-    def is_horizontal_position_allowed(self, attr):
-        self.debug_stream("In is_horizontal_position_allowed()")
-        state_ok = not(self.get_state() in [PyTango.DevState.OFF])
-        #----- PROTECTED REGION ID(Motor.is_horizontal_position_allowed) ENABLED START -----#
-        
-        #----- PROTECTED REGION END -----#	//	Motor.is_horizontal_position_allowed
-        return state_ok
         
     
     
@@ -220,9 +197,9 @@ class Motor (PyTango.Device_4Impl):
         :rtype: PyTango.DevVoid """
         self.debug_stream("In ResetPosition()")
         #----- PROTECTED REGION ID(Motor.ResetPosition) ENABLED START -----#
-        self.attr_horizontal_position_read = 0.0
-        self.attr_vertical_position_read = 0.0
-        self.attr_angle_position_read = 0.0
+        self.attr_horizontal_position_read = 1e-5
+        self.attr_vertical_position_read = 1e-5
+        self.attr_angle_position_read = 1e-5
         #----- PROTECTED REGION END -----#	//	Motor.ResetPosition
         
     def is_ResetPosition_allowed(self):
@@ -293,8 +270,8 @@ class MotorClass(PyTango.DeviceClass):
                 'label': "angle position",
                 'unit': "deg",
                 'format': "%5.2f",
-                'max value': "360",
-                'min value': "0",
+                'max value': "360.00001",
+                'min value': "-0.00001",
             } ],
         'vertical_position':
             [[PyTango.DevDouble,
@@ -305,8 +282,8 @@ class MotorClass(PyTango.DeviceClass):
                 'unit': "mm",
                 'standard unit': "10E-3",
                 'format': "%5.2f",
-                'max value': "500",
-                'min value': "0",
+                'max value': "500.00001",
+                'min value': "-0.00001",
             } ],
         'horizontal_position':
             [[PyTango.DevDouble,
@@ -317,8 +294,8 @@ class MotorClass(PyTango.DeviceClass):
                 'unit': "mm",
                 'standard unit': "10E-3",
                 'format': "%5.2f",
-                'max value': "500",
-                'min value': "0",
+                'max value': "500.00001",
+                'min value': "-0.00001",
             } ],
         }
 

@@ -37,13 +37,13 @@
         <type xsi:type="pogoDsl:VoidType"/>
       </argin>
       <argout description="Array of 3 numbers: horizontal position, vertical position, angle position">
-        <type xsi:type="pogoDsl:ShortArrayType"/>
+        <type xsi:type="pogoDsl:DoubleArrayType"/>
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
     <commands name="GotoPosition" description="Sets motor to the given position" execMethod="goto_position" displayLevel="OPERATOR" polledPeriod="0">
       <argin description="3 numbers: horizontal position, vertical position, angle position">
-        <type xsi:type="pogoDsl:ShortArrayType"/>
+        <type xsi:type="pogoDsl:DoubleArrayType"/>
       </argin>
       <argout description="">
         <type xsi:type="pogoDsl:VoidType"/>

@@ -1,2 +1,2 @@
-PyTango==8.1.6
+PyTango>=8.1.1
 pytest>=2.6.4
