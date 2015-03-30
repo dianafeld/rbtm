@@ -1,0 +1,2 @@
+PyTango==8.1.6
+pytest>=2.6.4

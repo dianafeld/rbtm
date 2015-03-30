@@ -1,5 +1,4 @@
 import pytest
-import os, sys
 import PyTango
 import subprocess
 import time
@@ -9,14 +8,14 @@ STEP_NUMBER = 7
 
 @pytest.yield_fixture
 def detector():
-    process = subprocess.Popen(['python', '../tango_ds/Detector/Detector.py', 'detector'], shell = False)
-    step = 0    
-    while (step < STEP_NUMBER):         
+    process = subprocess.Popen(['python', '../tango_ds/Detector/Detector.py', 'detector'], shell=False)
+    step = 0
+    while step < STEP_NUMBER:
         detector = PyTango.DeviceProxy('tomo/detector/1')
         try:
             detector.ping()
         except:
-            step = step + 1
+            step += 1
             time.sleep(SERVER_STARTING_TIME)
         else:
             break
@@ -30,14 +29,17 @@ def detector():
     yield detector
     process.kill()
 
-#States testing
+
+# States testing
 def test_detector_init_state(detector):
     assert detector.State() == PyTango._PyTango.DevState.OFF
+
 
 def test_detector_off(detector):
     detector.On()
     detector.Off()
     assert detector.State() == PyTango._PyTango.DevState.OFF
+
 
 def test_detector_on(detector):
     detector.On()

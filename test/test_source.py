@@ -1,5 +1,4 @@
 import pytest
-import os, sys
 import PyTango
 import subprocess
 import time
@@ -15,14 +14,14 @@ STEP_NUMBER = 7
 
 @pytest.yield_fixture
 def source():
-    process = subprocess.Popen(['python', '../tango_ds/XRaySource/XRaySource.py', 'source'], shell = False)
-    step = 0    
-    while (step < STEP_NUMBER):         
+    process = subprocess.Popen(['python', '../tango_ds/XRaySource/XRaySource.py', 'source'], shell=False)
+    step = 0
+    while step < STEP_NUMBER:
         source = PyTango.DeviceProxy('tomo/source/1')
         try:
             source.ping()
         except:
-            step = step + 1
+            step += 1
             time.sleep(SERVER_STARTING_TIME)
         else:
             break
@@ -35,31 +34,37 @@ def source():
     yield source
     process.kill()
 
-#States testing
+
+# States testing
 def test_source_init_state(source):
     assert source.State() == PyTango._PyTango.DevState.OFF
+
 
 def test_source_on(source):
     source.On()
     assert source.State() == PyTango._PyTango.DevState.ON
+
 
 def test_source_off(source):
     source.On()
     source.Off()
     assert source.State() == PyTango._PyTango.DevState.OFF
 
-#Voltage testing
+
+# Voltage testing
 def test_source_set_correct_voltage(source):
     source.On()
     arg = (CORRECT_VOLTAGE, CORRECT_CURRENT)
     source.SetOperatingMode(arg)
     assert source.voltage == CORRECT_VOLTAGE and source.current == CORRECT_CURRENT
 
+
 def test_source_set_min_voltage(source):
     source.On()
     arg = (MIN_VOLTAGE, MIN_CURRENT)
     source.SetOperatingMode(arg)
     assert source.voltage == MIN_VOLTAGE and source.current == MIN_CURRENT
+
 
 def test_source_set_less_than_min_voltage(source):
     source.On()
@@ -68,11 +73,13 @@ def test_source_set_less_than_min_voltage(source):
         source.SetOperatingMode(arg)
     assert excinfo
 
+
 def test_source_set_max_voltage(source):
     source.On()
     arg = (MAX_VOLTAGE, MAX_CURRENT)
     source.SetOperatingMode(arg)
     assert source.voltage == MAX_VOLTAGE and source.current == MAX_CURRENT
+
 
 def test_source_set_more_than_max_voltage(source):
     source.On()
@@ -81,7 +88,8 @@ def test_source_set_more_than_max_voltage(source):
         source.SetOperatingMode(arg)
     assert excinfo
 
-#Testing voltage change in OFF state
+
+# Testing voltage change in OFF state
 def test_source_set_voltage_if_off(source):
     arg = (CORRECT_VOLTAGE, CORRECT_CURRENT)
     with pytest.raises(Exception) as excinfo:
