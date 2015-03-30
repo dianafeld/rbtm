@@ -117,6 +117,15 @@ class XRaySource (PyTango.Device_4Impl):
 
         #----- PROTECTED REGION END -----#	//	XRaySource.voltage_write
         
+    def is_voltage_allowed(self, attr):
+        self.debug_stream("In is_voltage_allowed()")
+        state_ok = not(self.get_state() in [PyTango.DevState.OFF,
+            PyTango.DevState.FAULT])
+        #----- PROTECTED REGION ID(XRaySource.is_voltage_allowed) ENABLED START -----#
+        
+        #----- PROTECTED REGION END -----#	//	XRaySource.is_voltage_allowed
+        return state_ok
+        
     def read_current(self, attr):
         self.debug_stream("In read_current()")
         # ----- PROTECTED REGION ID(XRaySource.current_read) ENABLED START -----#
@@ -131,6 +140,15 @@ class XRaySource (PyTango.Device_4Impl):
         # ----- PROTECTED REGION ID(XRaySource.current_write) ENABLED START -----#
 
         # ----- PROTECTED REGION END -----#	//	XRaySource.current_write
+        
+    def is_current_allowed(self, attr):
+        self.debug_stream("In is_current_allowed()")
+        state_ok = not(self.get_state() in [PyTango.DevState.OFF,
+            PyTango.DevState.FAULT])
+        #----- PROTECTED REGION ID(XRaySource.is_current_allowed) ENABLED START -----#
+        
+        #----- PROTECTED REGION END -----#	//	XRaySource.is_current_allowed
+        return state_ok
         
     
     
