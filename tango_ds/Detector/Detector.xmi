@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ASCII"?>
 <pogoDsl:PogoSystem xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:pogoDsl="http://www.esrf.fr/tango/pogo/PogoDsl">
   <classes name="Detector" pogoRevision="8.1">
-    <description description="Class for tomograph's detector.&#xA;It is used for getting an image of the object being observed&#xA;&#xA;It is written according to&#xA;http://sourceforge.net/p/tango-ds/code/HEAD/tree/DeviceClasses/Acquisition/2D/PSCamera/trunk/PSCamera.py" title="Detector" sourcePath="/home/itsnotme/drivers/tango/device_classes/Detector" language="Python" filestogenerate="XMI   file,Code files" license="GPL" hasMandatoryProperty="false" hasConcreteProperty="false" hasAbstractCommand="false" hasAbstractAttribute="false">
+    <description description="Class for tomograph's detector.&#xA;It is used for getting an image of the object being observed&#xA;&#xA;It is written according to&#xA;http://sourceforge.net/p/tango-ds/code/HEAD/tree/DeviceClasses/Acquisition/2D/PSCamera/trunk/PSCamera.py" title="Detector" sourcePath="/home/itsnotme/rbtm-drivers/tango_ds/Detector" language="Python" filestogenerate="XMI   file,Code files" license="GPL" hasMandatoryProperty="false" hasConcreteProperty="false" hasAbstractCommand="false" hasAbstractAttribute="false">
       <inheritances classname="Device_Impl" sourcePath=""/>
       <identification contact="at phystech.edu - diana.ichalova" author="diana.ichalova" emailDomain="phystech.edu" classFamily="Acquisition" siteSpecific="" platform="All Platforms" bus="Not Applicable" manufacturer="none" reference=""/>
     </description>
@@ -44,6 +44,15 @@
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
       <excludedStates>RUNNING</excludedStates>
     </commands>
+    <commands name="GetFrame" description="Returns image from detector" execMethod="get_frame" displayLevel="OPERATOR" polledPeriod="0">
+      <argin description="">
+        <type xsi:type="pogoDsl:VoidType"/>
+      </argin>
+      <argout description="image">
+        <type xsi:type="pogoDsl:StringType"/>
+      </argout>
+      <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
+    </commands>
     <attributes name="exposureTime" attType="Scalar" rwType="READ_WRITE" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="true" isDynamic="false">
       <dataType xsi:type="pogoDsl:DoubleType"/>
       <changeEvent fire="false" libCheckCriteria="false"/>
@@ -51,16 +60,6 @@
       <dataReadyEvent fire="false" libCheckCriteria="true"/>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
       <properties description="" label="" unit="ms" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
-    </attributes>
-    <attributes name="image" attType="Image" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="16" maxY="16" allocReadMember="true" isDynamic="false">
-      <dataType xsi:type="pogoDsl:IntType"/>
-      <changeEvent fire="false" libCheckCriteria="false"/>
-      <archiveEvent fire="false" libCheckCriteria="false"/>
-      <dataReadyEvent fire="false" libCheckCriteria="true"/>
-      <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-      <properties description="" label="" unit="" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
-      <readExcludedStates>OFF</readExcludedStates>
-      <readExcludedStates>FAULT</readExcludedStates>
     </attributes>
     <states name="ON" description="detector is on">
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>

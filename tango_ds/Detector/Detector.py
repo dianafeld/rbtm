@@ -87,7 +87,6 @@ class Detector(PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         self.attr_exposureTime_read = 0.0
-        self.attr_image_read = [[0]]
         #----- PROTECTED REGION ID(Detector.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
@@ -120,30 +119,6 @@ class Detector(PyTango.Device_4Impl):
         self.attr_exposureTime_read = data
 
         #----- PROTECTED REGION END -----#	//	Detector.exposureTime_write
-
-    def read_image(self, attr):
-        self.debug_stream("In read_image()")
-        #----- PROTECTED REGION ID(Detector.image_read) ENABLED START -----#
-        #attr.set_value(self.attr_image_read)
-
-        self.set_state(PyTango.DevState.RUNNING)
-
-        image = [[0x1, 0x2], [0x3, 0x4]]
-
-        self.set_state(PyTango.DevState.ON)
-
-        attr.set_value(image)
-
-        #----- PROTECTED REGION END -----#	//	Detector.image_read
-
-    def is_image_allowed(self, attr):
-        self.debug_stream("In is_image_allowed()")
-        state_ok = not (self.get_state() in [PyTango.DevState.OFF,
-                                             PyTango.DevState.FAULT])
-        #----- PROTECTED REGION ID(Detector.is_image_allowed) ENABLED START -----#
-
-        #----- PROTECTED REGION END -----#	//	Detector.is_image_allowed
-        return state_ok
 
 
 
@@ -213,9 +188,26 @@ class Detector(PyTango.Device_4Impl):
         #----- PROTECTED REGION END -----#	//	Detector.is_Off_allowed
         return state_ok
 
+    def GetFrame(self):
+        """ Returns image from detector
+        
+        :param : 
+        :type: PyTango.DevVoid
+        :return: image
+        :rtype: PyTango.DevString """
+        self.debug_stream("In GetFrame()")
+        argout = ''
+        #----- PROTECTED REGION ID(Detector.GetFrame) ENABLED START -----#
+
+        with open('Detector/DATA_14') as image:
+            argout = image.read()
+
+        # ----- PROTECTED REGION END -----#	//	Detector.GetFrame
+        return argout
+        
 
 class DetectorClass(PyTango.DeviceClass):
-    # --------- Add you global class variables here --------------------------
+    #--------- Add you global class variables here --------------------------
     #----- PROTECTED REGION ID(Detector.global_class_variables) ENABLED START -----#
 
     #----- PROTECTED REGION END -----#	//	Detector.global_class_variables
@@ -233,7 +225,6 @@ class DetectorClass(PyTango.DeviceClass):
                 dev.initialize_dynamic_attributes()
             except:
                 import traceback
-
                 dev.warn_stream("Failed to initialize dynamic attributes")
                 dev.debug_stream("Details: " + traceback.format_exc())
                 #----- PROTECTED REGION ID(Detector.dyn_attr) ENABLED START -----#
@@ -258,6 +249,9 @@ class DetectorClass(PyTango.DeviceClass):
         'Off':
             [[PyTango.DevVoid, "none"],
              [PyTango.DevVoid, "none"]],
+        'GetFrame':
+            [[PyTango.DevVoid, "none"],
+             [PyTango.DevString, "image"]],
     }
 
 
@@ -270,10 +264,6 @@ class DetectorClass(PyTango.DeviceClass):
              {
                  'unit': "ms",
              }],
-        'image':
-            [[PyTango.DevLong,
-              PyTango.IMAGE,
-              PyTango.READ, 16, 16]],
     }
 
 
@@ -289,8 +279,7 @@ def main():
     except PyTango.DevFailed, e:
         print '-------> Received a DevFailed exception:', e
     except Exception, e:
-        print '-------> An unforeseen exception occured....', e
-
+        print '-------> An unforeseen exception occured....',e
 
 if __name__ == '__main__':
     main()
