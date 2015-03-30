@@ -51,7 +51,7 @@ import sys
 # Add additional import
 # ----- PROTECTED REGION ID(Tomograph.additionnal_import) ENABLED START -----#
 
-#----- PROTECTED REGION END -----#	//	Tomograph.additionnal_import
+# ----- PROTECTED REGION END -----#	//	Tomograph.additionnal_import
 
 ## Device States Description
 ## UNKNOWN : 
@@ -80,6 +80,13 @@ class Tomograph(PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         #----- PROTECTED REGION ID(Tomograph.init_device) ENABLED START -----#
+
+        self.motor = PyTango.DeviceProxy('tomo/motor/1')
+        self.source = PyTango.DeviceProxy('tomo/source/1')
+        self.shutter = PyTango.DeviceProxy('tomo/shutter/1')
+        self.detector = PyTango.DeviceProxy('tomo/detector/1')
+
+        self.SelfTest()
 
         #----- PROTECTED REGION END -----#	//	Tomograph.init_device
 
@@ -110,46 +117,6 @@ class Tomograph(PyTango.Device_4Impl):
     #    Tomograph command methods
     #-----------------------------------------------------------------------------
 
-    def CloseShutter(self, argin):
-        """ 
-        
-        :param argin: 
-        :type: PyTango.DevLong
-        :return: 
-        :rtype: PyTango.DevVoid """
-        self.debug_stream("In CloseShutter()")
-        #----- PROTECTED REGION ID(Tomograph.CloseShutter) ENABLED START -----#
-
-        #----- PROTECTED REGION END -----#	//	Tomograph.CloseShutter
-
-    def GetCurrentPosition(self):
-        """ Returns current motor position.
-        
-        :param : 
-        :type: PyTango.DevVoid
-        :return: Array of 3 numbers: horizontal position, vertical position, angle position
-        :rtype: PyTango.DevVarShortArray """
-        self.debug_stream("In GetCurrentPosition()")
-        argout = [0]
-        #----- PROTECTED REGION ID(Tomograph.GetCurrentPosition) ENABLED START -----#
-
-        #----- PROTECTED REGION END -----#	//	Tomograph.GetCurrentPosition
-        return argout
-
-    def GetDetectorStatus(self):
-        """ 
-        
-        :param : 
-        :type: PyTango.DevVoid
-        :return: 
-        :rtype: PyTango.ConstDevString """
-        self.debug_stream("In GetDetectorStatus()")
-        argout = ''
-        #----- PROTECTED REGION ID(Tomograph.GetDetectorStatus) ENABLED START -----#
-
-        #----- PROTECTED REGION END -----#	//	Tomograph.GetDetectorStatus
-        return argout
-
     def GetDevicesInfo(self):
         """ Returns information about available devices
         
@@ -159,10 +126,27 @@ class Tomograph(PyTango.Device_4Impl):
         :rtype: PyTango.ConstDevString """
         self.debug_stream("In GetDevicesInfo()")
         argout = ''
-        #----- PROTECTED REGION ID(Tomograph.GetDevicesInfo) ENABLED START -----#
+        # ----- PROTECTED REGION ID(Tomograph.GetDevicesInfo) ENABLED START -----#
 
         #----- PROTECTED REGION END -----#	//	Tomograph.GetDevicesInfo
         return argout
+
+    def SelfTest(self):
+        """ Tests equipment
+        
+        :param : 
+        :type: PyTango.DevVoid
+        :return: 
+        :rtype: PyTango.DevVoid """
+        self.debug_stream("In SelfTest()")
+        #----- PROTECTED REGION ID(Tomograph.SelfTest) ENABLED START -----#
+
+        self.motor.ping()
+        self.source.ping()
+        self.shutter.ping()
+        self.detector.ping()
+
+        #----- PROTECTED REGION END -----#	//	Tomograph.SelfTest
 
     def GetMotorStatus(self):
         """ Returns motor information
@@ -175,35 +159,25 @@ class Tomograph(PyTango.Device_4Impl):
         argout = ''
         #----- PROTECTED REGION ID(Tomograph.GetMotorStatus) ENABLED START -----#
 
+        argout = self.motor.Status()
+
         #----- PROTECTED REGION END -----#	//	Tomograph.GetMotorStatus
         return argout
 
-    def GetXRayShutterStatus(self):
-        """ 
+    def GetCurrentPosition(self):
+        """ Returns current motor position.
         
         :param : 
         :type: PyTango.DevVoid
-        :return: 
-        :rtype: PyTango.ConstDevString """
-        self.debug_stream("In GetXRayShutterStatus()")
-        argout = ''
-        #----- PROTECTED REGION ID(Tomograph.GetXRayShutterStatus) ENABLED START -----#
+        :return: Array of 3 numbers: horizontal position, vertical position, angle position
+        :rtype: PyTango.DevVarShortArray """
+        self.debug_stream("In GetCurrentPosition()")
+        argout = [0]
+        #----- PROTECTED REGION ID(Tomograph.GetCurrentPosition) ENABLED START -----#
 
-        #----- PROTECTED REGION END -----#	//	Tomograph.GetXRayShutterStatus
-        return argout
+        argout = [self.motor.horizontal_position, self.motor.vertical_position, self.motor.angle_position]
 
-    def GetXRaySourceStatus(self):
-        """ 
-        
-        :param : 
-        :type: PyTango.DevVoid
-        :return: 
-        :rtype: PyTango.ConstDevString """
-        self.debug_stream("In GetXRaySourceStatus()")
-        argout = ''
-        #----- PROTECTED REGION ID(Tomograph.GetXRaySourceStatus) ENABLED START -----#
-
-        #----- PROTECTED REGION END -----#	//	Tomograph.GetXRaySourceStatus
+        #----- PROTECTED REGION END -----#	//	Tomograph.GetCurrentPosition
         return argout
 
     def GotoPosition(self, argin):
@@ -216,19 +190,18 @@ class Tomograph(PyTango.Device_4Impl):
         self.debug_stream("In GotoPosition()")
         #----- PROTECTED REGION ID(Tomograph.GotoPosition) ENABLED START -----#
 
+        if len(argin) != 3:
+            PyTango.Except.throw_exception(
+                "TOMOGRAPH_invalid_arguments",
+                "Invalid number of arguments: {} provided, ".format(len(argin)) +
+                "3 needed (horizontal position, vertical position, angle position",
+                "Tomograph::GotoPosition")
+
+        self.motor.horizontal_position = argin[0]
+        self.motor.vertical_position = argin[1]
+        self.motor.angle_position = argin[2]
+
         #----- PROTECTED REGION END -----#	//	Tomograph.GotoPosition
-
-    def OpenShutter(self, argin):
-        """ 
-        
-        :param argin: 
-        :type: PyTango.DevLong
-        :return: 
-        :rtype: PyTango.DevVoid """
-        self.debug_stream("In OpenShutter()")
-        #----- PROTECTED REGION ID(Tomograph.OpenShutter) ENABLED START -----#
-
-        #----- PROTECTED REGION END -----#	//	Tomograph.OpenShutter
 
     def ResetCurrentPosition(self):
         """ Sets current motor position to 0
@@ -240,31 +213,25 @@ class Tomograph(PyTango.Device_4Impl):
         self.debug_stream("In ResetCurrentPosition()")
         #----- PROTECTED REGION ID(Tomograph.ResetCurrentPosition) ENABLED START -----#
 
+        self.motor.ResetPosition()
+
         #----- PROTECTED REGION END -----#	//	Tomograph.ResetCurrentPosition
 
-    def SelfTest(self):
-        """ Tests equipment
+    def GetXRaySourceStatus(self):
+        """ 
         
         :param : 
         :type: PyTango.DevVoid
         :return: 
-        :rtype: PyTango.DevVoid """
-        self.debug_stream("In SelfTest()")
-        #----- PROTECTED REGION ID(Tomograph.SelfTest) ENABLED START -----#
+        :rtype: PyTango.ConstDevString """
+        self.debug_stream("In GetXRaySourceStatus()")
+        argout = ''
+        # ----- PROTECTED REGION ID(Tomograph.GetXRaySourceStatus) ENABLED START -----#
 
-        #----- PROTECTED REGION END -----#	//	Tomograph.SelfTest
+        argout = self.source.Status()
 
-    def SetOperatingMode(self, argin):
-        """ 
-        
-        :param argin: voltage, current
-        :type: PyTango.DevVarDoubleArray
-        :return: 
-        :rtype: PyTango.DevVoid """
-        self.debug_stream("In SetOperatingMode()")
-        #----- PROTECTED REGION ID(Tomograph.SetOperatingMode) ENABLED START -----#
-
-        #----- PROTECTED REGION END -----#	//	Tomograph.SetOperatingMode
+        #----- PROTECTED REGION END -----#	//	Tomograph.GetXRaySourceStatus
+        return argout
 
     def PowerOn(self):
         """ Turns on the X-ray source
@@ -286,9 +253,83 @@ class Tomograph(PyTango.Device_4Impl):
         :return: 
         :rtype: PyTango.DevVoid """
         self.debug_stream("In PowerOff()")
-        #----- PROTECTED REGION ID(Tomograph.PowerOff) ENABLED START -----#
+        # ----- PROTECTED REGION ID(Tomograph.PowerOff) ENABLED START -----#
 
         #----- PROTECTED REGION END -----#	//	Tomograph.PowerOff
+
+    def SetOperatingMode(self, argin):
+        """ 
+        
+        :param argin: voltage, current
+        :type: PyTango.DevVarDoubleArray
+        :return: 
+        :rtype: PyTango.DevVoid """
+        self.debug_stream("In SetOperatingMode()")
+        #----- PROTECTED REGION ID(Tomograph.SetOperatingMode) ENABLED START -----#
+
+        self.source.SetOperatingMode(argin)
+
+        #----- PROTECTED REGION END -----#	//	Tomograph.SetOperatingMode
+
+    def GetXRayShutterStatus(self):
+        """ 
+        
+        :param : 
+        :type: PyTango.DevVoid
+        :return: 
+        :rtype: PyTango.ConstDevString """
+        self.debug_stream("In GetXRayShutterStatus()")
+        argout = ''
+        # ----- PROTECTED REGION ID(Tomograph.GetXRayShutterStatus) ENABLED START -----#
+
+        argout = self.shutter.Status()
+
+        #----- PROTECTED REGION END -----#	//	Tomograph.GetXRayShutterStatus
+        return argout
+
+    def OpenShutter(self, argin):
+        """ 
+        
+        :param argin: 
+        :type: PyTango.DevLong
+        :return: 
+        :rtype: PyTango.DevVoid """
+        self.debug_stream("In OpenShutter()")
+        #----- PROTECTED REGION ID(Tomograph.OpenShutter) ENABLED START -----#
+
+        self.shutter.Open(argin)
+
+        # ----- PROTECTED REGION END -----#	//	Tomograph.OpenShutter
+
+    def CloseShutter(self, argin):
+        """ 
+        
+        :param argin: 
+        :type: PyTango.DevLong
+        :return: 
+        :rtype: PyTango.DevVoid """
+        self.debug_stream("In CloseShutter()")
+        # ----- PROTECTED REGION ID(Tomograph.CloseShutter) ENABLED START -----#
+
+        self.shutter.Close(argin)
+
+        #----- PROTECTED REGION END -----#	//	Tomograph.CloseShutter
+
+    def GetDetectorStatus(self):
+        """ 
+        
+        :param : 
+        :type: PyTango.DevVoid
+        :return: 
+        :rtype: PyTango.ConstDevString """
+        self.debug_stream("In GetDetectorStatus()")
+        argout = ''
+        #----- PROTECTED REGION ID(Tomograph.GetDetectorStatus) ENABLED START -----#
+
+        argout = self.detector.Status()
+
+        # ----- PROTECTED REGION END -----#	//	Tomograph.GetDetectorStatus
+        return argout
 
     def GetFrame(self):
         """ 
@@ -300,6 +341,8 @@ class Tomograph(PyTango.Device_4Impl):
         self.debug_stream("In GetFrame()")
         argout = ''
         #----- PROTECTED REGION ID(Tomograph.GetFrame) ENABLED START -----#
+
+        argout = self.detector.GetFrame()
 
         #----- PROTECTED REGION END -----#	//	Tomograph.GetFrame
         return argout
@@ -343,48 +386,48 @@ class TomographClass(PyTango.DeviceClass):
 
     #    Command definitions
     cmd_list = {
-        'CloseShutter':
-            [[PyTango.DevLong, "none"],
-             [PyTango.DevVoid, "none"]],
-        'GetCurrentPosition':
-            [[PyTango.DevVoid, "none"],
-             [PyTango.DevVarShortArray, "Array of 3 numbers: horizontal position, vertical position, angle position"]],
-        'GetDetectorStatus':
-            [[PyTango.DevVoid, "none"],
-             [PyTango.ConstDevString, "none"]],
         'GetDevicesInfo':
             [[PyTango.DevVoid, "none"],
              [PyTango.ConstDevString, "none"]],
+        'SelfTest':
+            [[PyTango.DevVoid, "none"],
+             [PyTango.DevVoid, "none"]],
         'GetMotorStatus':
             [[PyTango.DevVoid, "none"],
              [PyTango.ConstDevString, "Information about motor"]],
-        'GetXRayShutterStatus':
+        'GetCurrentPosition':
             [[PyTango.DevVoid, "none"],
-             [PyTango.ConstDevString, "none"]],
-        'GetXRaySourceStatus':
-            [[PyTango.DevVoid, "none"],
-             [PyTango.ConstDevString, "none"]],
+             [PyTango.DevVarShortArray, "Array of 3 numbers: horizontal position, vertical position, angle position"]],
         'GotoPosition':
             [[PyTango.DevVarShortArray, "3 numbers: horizontal position, vertical position, angle position"],
-             [PyTango.DevVoid, "none"]],
-        'OpenShutter':
-            [[PyTango.DevLong, "none"],
              [PyTango.DevVoid, "none"]],
         'ResetCurrentPosition':
             [[PyTango.DevVoid, "none"],
              [PyTango.DevVoid, "none"]],
-        'SelfTest':
+        'GetXRaySourceStatus':
             [[PyTango.DevVoid, "none"],
-             [PyTango.DevVoid, "none"]],
-        'SetOperatingMode':
-            [[PyTango.DevVarDoubleArray, "voltage, current"],
-             [PyTango.DevVoid, "none"]],
+             [PyTango.ConstDevString, "none"]],
         'PowerOn':
             [[PyTango.DevVoid, "none"],
              [PyTango.DevVoid, "none"]],
         'PowerOff':
             [[PyTango.DevVoid, "none"],
              [PyTango.DevVoid, "none"]],
+        'SetOperatingMode':
+            [[PyTango.DevVarDoubleArray, "voltage, current"],
+             [PyTango.DevVoid, "none"]],
+        'GetXRayShutterStatus':
+            [[PyTango.DevVoid, "none"],
+             [PyTango.ConstDevString, "none"]],
+        'OpenShutter':
+            [[PyTango.DevLong, "none"],
+             [PyTango.DevVoid, "none"]],
+        'CloseShutter':
+            [[PyTango.DevLong, "none"],
+             [PyTango.DevVoid, "none"]],
+        'GetDetectorStatus':
+            [[PyTango.DevVoid, "none"],
+             [PyTango.ConstDevString, "none"]],
         'GetFrame':
             [[PyTango.DevVoid, "none"],
              [PyTango.ConstDevString, "none"]],
