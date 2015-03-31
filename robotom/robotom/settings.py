@@ -115,6 +115,7 @@ INSTALLED_APPS = (
     'registration',
     'bootstrap3',
     'main',
+    'experiment',
     'rest_framework',
 )
 

@@ -7,7 +7,8 @@ from django.core.urlresolvers import reverse
 
 urlpatterns = patterns('',
                        url('', include('main.urls', namespace='main')),
-
+                       url('', include('experiment.urls', namespace='experiment')),
+                       
                        url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
                        url(r'^admin/', include(admin.site.urls)),
 
