@@ -50,9 +50,10 @@
             </ul>
 			<ul class="nav navbar-nav navbar-right">
 				{% if user.is_authenticated %}
-				{% if user.userprofile.role == "ADM" %}
-                    <li><a href="/admin/">Страница администратора</a></li>
-                {% endif %}
+                    {% if user.is_superuser %}
+                    <li><a href="{% url 'admin:index' %}">Страница администратора</a></li>
+                    <li><a href="{% url 'main:manage_requests' %}">Запросы смены роли</a></li>
+                    {% endif %}
                     <li><a href="{% url 'main:profile' %}">Профиль [{{ user.username }}]</a></li>
 					<li><a href="{% url 'logout' %}">Выход</a></li>
 				{% else %}

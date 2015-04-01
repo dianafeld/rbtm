@@ -1,9 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import forms as auth_forms, views as auth_views
-from django.contrib.auth import login as auth_login, authenticate as auth_authenticate
+from django.contrib.auth import login as auth_login
 from forms import UserRegistrationForm, UserProfileRegistrationForm, UserRoleRequestForm
 from models import UserProfile, RoleRequest
+from django.contrib.auth.models import User
 from django.core.context_processors import csrf
 
 
@@ -69,15 +69,32 @@ def storage_record_view(request, storage_record_id):
                   {"record_id": storage_record_id})
 
 
+
+#If user's request is not actual now, no information should be provided in database
+def flush_userprofile_request(userprofile):
+    userprofile.rolerequest.role = 'NONE'
+    userprofile.rolerequest.comment = ''
+    userprofile.rolerequest.save()
+
+
 @user_passes_test(is_superuser)
 def manage_requests_view(request):
     if request.method == 'POST':
-        if request.POST['verdict'] == 'cancel':
-            pass
-        else:
-            pass
-            return redirect('/role_request')
-
+        profile_id = request.POST['profile_id']
+        profile = get_object_or_404(UserProfile, pk=profile_id)
+        if 'accept' in request.POST:
+            profile.user.is_superuser = False # we must invalidate superuser and staff rights
+            profile.user.is_staff = False     # if any error was made before
+            profile.role = profile.rolerequest.role
+            if profile.role == 'ADM':
+                profile.user.is_superuser = True
+                profile.user.is_staff = True
+            profile.save()
+            profile.user.save()
+            flush_userprofile_request(profile)    
+        elif 'decline' in request.POST:
+            flush_userprofile_request(profile)
+            
     request_list = [rolerequest.user for rolerequest in RoleRequest.objects.exclude(role='NONE')]
     return render(request, 'manage_requests.html', {
         'request_list': request_list,
@@ -87,7 +104,12 @@ def manage_requests_view(request):
 @login_required
 def role_request_view(request):
     if request.method == 'POST':
-        role_form = UserRoleRequestForm(request.POST)
+        if User.objects.filter(pk=request.user.pk):
+            role_request = RoleRequest.objects.get(user__user__pk=request.user.pk)
+            role_form = UserRoleRequestForm(request.POST, instance=role_request)
+        else:
+            role_form = UserRoleRequestForm(request.POST)
+            
         if role_form.is_valid():
             new_request = role_form.save(commit=False)
             new_request.user = request.user.userprofile
@@ -98,7 +120,12 @@ def role_request_view(request):
             return render(request, 'role_request.html', {
                 'role_form': role_form,
             })
-
+        
+    if User.objects.filter(pk=request.user.pk):
+        role_request = RoleRequest.objects.get(user__user__pk=request.user.pk)
+        role_form = UserRoleRequestForm(instance=role_request)
+    else:
+        role_form = UserRoleRequestForm()
     return render(request, 'role_request.html', {
-        'role_form': UserRoleRequestForm(),
+        'role_form': role_form,
     })

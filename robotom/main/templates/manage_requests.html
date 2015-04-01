@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    DIV.table {
+        display:table;
+        border-collapse:collapse;
+        margin:10px;
+        width:95%;
+    }
+    FORM.tr, DIV.tr {
+        display:table-row;
+    }
+    SPAN.td {
+        display:table-cell;
+        padding: 4px;
+        border: 1px solid grey;
+    }
+    SPAN.td-head {
+        display:table-cell;
+        padding: 4px;
+        font-weight: bold;
+        border: 1px solid grey;
+        }
+    SPAN.td-button {
+        display:table-cell;
+        }
+</style>
+
+<div align="center">
+{% if request_list %}
+    <div align="center" class="table">
+    <div class="tr">
+        <span class="td-head">Логин</span>
+        <span class="td-head">ФИО</span>
+        <span class="td-head">Текущая роль</span>
+        <span class="td-head">Запрос роли</span>
+        <span class="td-head">Дополнительная информация</span>
+        <span class="td-button"></span>
+        <span class="td-button"></span>
+    </div>
+    {% for profile in request_list %}
+        <form class="tr" method="post" action="" name="{{ profile.id }}_user_table">
+            {% csrf_token %}
+            <input type="hidden" name="profile_id" value="{{ profile.id }}" />
+            <span class="td">{{ profile.user.username }}</span>
+            <span class="td">{{ profile.full_name }}</span>
+            <span class="td">{{ profile.role }}</span>
+            <span class="td">{{ profile.rolerequest.role }}</span>
+            <span class="td">{{ profile.rolerequest.comment }}</span>
+            <span class="td-button"><button type="submit" class="btn btn-primary" style="margin-left: 15px" name="accept">Принять</button></span>
+            <span class="td-button"><button type="submit" class="btn btn-primary" style="margin-left: 15px" name="decline">Отклонить</button></span>
+        </form>
+    {% endfor %}
+    </div>
+{% else %}
+    Поздравляем! На данный момент нет пользователей, ожидающих смены статуса.
+{% endif %}
+</div>
+{% endblock content %}

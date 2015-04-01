@@ -1,8 +1,7 @@
-from main.models import UserProfile
+from main.models import UserProfile, RoleRequest
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-
 
 class UserRegistrationForm(UserCreationForm):    
     class Meta:
@@ -14,3 +13,9 @@ class UserProfileRegistrationForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         exclude = ('user', 'role')
+
+ 
+class UserRoleRequestForm(forms.ModelForm):
+    class Meta:
+        model = RoleRequest
+        exclude = ('user',)
