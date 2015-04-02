@@ -82,7 +82,7 @@ class XRaySource (PyTango.Device_4Impl):
     def init_device(self):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
-        self.attr_voltage_read = 0.0
+        self.attr_voltage_read = 0
         self.attr_current_read = 0.0
         #----- PROTECTED REGION ID(XRaySource.init_device) ENABLED START -----#
 
@@ -290,7 +290,7 @@ class XRaySourceClass(PyTango.DeviceClass):
     #    Attribute definitions
     attr_list = {
         'voltage':
-            [[PyTango.DevDouble,
+            [[PyTango.DevUShort,
             PyTango.SCALAR,
             PyTango.READ_WRITE],
             {
@@ -303,7 +303,7 @@ class XRaySourceClass(PyTango.DeviceClass):
                 'description': "shows the voltage of the X-Ray source",
             } ],
         'current':
-            [[PyTango.DevDouble,
+            [[PyTango.DevFloat,
             PyTango.SCALAR,
             PyTango.READ_WRITE],
             {
