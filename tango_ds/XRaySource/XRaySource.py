@@ -298,8 +298,8 @@ class XRaySourceClass(PyTango.DeviceClass):
                 'unit': "kV",
                 'standard unit': "10E+3",
                 'format': "%4.1f",
-                'max value': "100.00001",
-                'min value': "-0.00001",
+                'max value': "100",
+                'min value': "0",
                 'description': "shows the voltage of the X-Ray source",
             } ],
         'current':
