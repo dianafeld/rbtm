@@ -54,12 +54,12 @@
       <excludedStates>FAULT</excludedStates>
     </commands>
     <attributes name="voltage" attType="Scalar" rwType="READ_WRITE" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="true" isDynamic="false">
-      <dataType xsi:type="pogoDsl:UShortType"/>
+      <dataType xsi:type="pogoDsl:DoubleType"/>
       <changeEvent fire="false" libCheckCriteria="false"/>
       <archiveEvent fire="false" libCheckCriteria="false"/>
       <dataReadyEvent fire="false" libCheckCriteria="true"/>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-      <properties description="shows the voltage of the X-Ray source" label="Input Voltage" unit="kV" standardUnit="10E+3" displayUnit="" format="%4.1f" maxValue="100" minValue="0" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+      <properties description="shows the voltage of the X-Ray source" label="Input Voltage" unit="kV" standardUnit="10E+3" displayUnit="" format="%4.1f" maxValue="100.00001" minValue="-1.00001" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
     </attributes>
     <attributes name="current" attType="Scalar" rwType="READ_WRITE" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="true" isDynamic="false">
       <dataType xsi:type="pogoDsl:FloatType"/>
@@ -67,7 +67,7 @@
       <archiveEvent fire="false" libCheckCriteria="false"/>
       <dataReadyEvent fire="false" libCheckCriteria="true"/>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-      <properties description="" label="current" unit="mA" standardUnit="10E-3" displayUnit="" format="%4.1f" maxValue="100.00001" minValue="-0.00001" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+      <properties description="" label="current" unit="mA" standardUnit="10E-3" displayUnit="" format="%4.1f" maxValue="100.00001" minValue="0.99999" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
     </attributes>
     <states name="ON" description="The state in which the source is active">
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
