@@ -10,6 +10,7 @@ from django.core.context_processors import csrf
 from django.core.mail import send_mail
 from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.contrib import messages
 
 
 def index(request):
@@ -40,7 +41,8 @@ def registration_view(request):
             new_profile.save()
             userprofile_form.save_m2m()
             auth_login(request, user)
-            return redirect('/role_request')
+            messages.success(request, 'Регистрация успешно завершена')
+            return redirect(reverse('main:role_request'))
         else:
             return render(request, 'registration/registration_form.html', {
                 'user_form': user_form,
@@ -51,6 +53,10 @@ def registration_view(request):
         'user_form': UserRegistrationForm(),
         'userprofile_form': UserProfileRegistrationForm(),
     })
+
+
+def done_view(request):
+    return render(request, 'done.html')
 
 
 @login_required
@@ -159,7 +165,10 @@ def role_request_view(request):
             role_form.save_m2m()
             if new_request.role != 'NONE':
                 mail_role_request(new_request, request.get_host(), request.build_absolute_uri(reverse('main:manage_requests')))
-            return redirect('/accounts/register/complete')
+                messages.info(request, 'Ваша заявка на получение статуса зарегистрирована. После её рассмотрения вам будет направлено электронное письмо на email, указанный при регистрации')
+            else:
+                messages.info(request, 'Вам автоматически присвоен статус "Гость"')
+            return redirect(reverse('main:done'))
         else:
             return render(request, 'role_request.html', {
                 'role_form': role_form,

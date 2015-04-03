@@ -6,7 +6,7 @@
         display:table;
         border-collapse:collapse;
         margin:10px;
-        width:95%;
+        width:900px;
     }
     FORM.tr, DIV.tr {
         display:table-row;
@@ -22,8 +22,14 @@
         font-weight: bold;
         border: 1px solid grey;
         }
+    SPAN.td-comment {
+        display:table-cell;
+        width:40%;
+        border: 1px solid grey;
+    }
     SPAN.td-button {
         display:table-cell;
+        width:5px;
         }
 </style>
 
@@ -47,9 +53,9 @@
             <span class="td">{{ profile.full_name }}</span>
             <span class="td">{{ profile.role }}</span>
             <span class="td">{{ profile.rolerequest.role }}</span>
-            <span class="td">{{ profile.rolerequest.comment }}</span>
-            <span class="td-button"><button type="submit" class="btn btn-primary" style="margin-left: 15px" name="accept">Принять</button></span>
-            <span class="td-button"><button type="submit" class="btn btn-primary" style="margin-left: 15px" name="decline">Отклонить</button></span>
+            <span class="td-comment">{{ profile.rolerequest.comment }}</span>
+            <span class="td-button"><button type="submit" class="btn btn-primary" style="margin-left: 5px" name="accept">Принять</button></span>
+            <span class="td-button"><button type="submit" class="btn btn-primary" style="margin-left: 5px" name="decline">Отклонить</button></span>
         </form>
     {% endfor %}
     </div>
