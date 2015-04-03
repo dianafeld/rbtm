@@ -37,13 +37,13 @@
         <type xsi:type="pogoDsl:VoidType"/>
       </argin>
       <argout description="Array of 3 numbers: horizontal position, vertical position, angle position">
-        <type xsi:type="pogoDsl:DoubleArrayType"/>
+        <type xsi:type="pogoDsl:ShortArrayType"/>
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
     <commands name="GotoPosition" description="Sets motor to the given position" execMethod="goto_position" displayLevel="OPERATOR" polledPeriod="0">
       <argin description="3 numbers: horizontal position, vertical position, angle position">
-        <type xsi:type="pogoDsl:DoubleArrayType"/>
+        <type xsi:type="pogoDsl:ShortArrayType"/>
       </argin>
       <argout description="">
         <type xsi:type="pogoDsl:VoidType"/>
@@ -88,7 +88,7 @@
     </commands>
     <commands name="SetOperatingMode" description="" execMethod="set_operating_mode" displayLevel="OPERATOR" polledPeriod="0">
       <argin description="voltage, current">
-        <type xsi:type="pogoDsl:DoubleArrayType"/>
+        <type xsi:type="pogoDsl:ShortArrayType"/>
       </argin>
       <argout description="">
         <type xsi:type="pogoDsl:VoidType"/>
@@ -133,7 +133,7 @@
     </commands>
     <commands name="GetFrame" description="Return image from detector with metadata in JSON" execMethod="get_frame" displayLevel="OPERATOR" polledPeriod="0">
       <argin description="exposure">
-        <type xsi:type="pogoDsl:ShortType"/>
+        <type xsi:type="pogoDsl:IntType"/>
       </argin>
       <argout description="">
         <type xsi:type="pogoDsl:StringType"/>

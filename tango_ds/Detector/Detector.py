@@ -86,7 +86,7 @@ class Detector(PyTango.Device_4Impl):
     def init_device(self):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
-        self.attr_exposureTime_read = 0.0
+        self.attr_exposure_read = 0
         #----- PROTECTED REGION ID(Detector.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
@@ -103,25 +103,21 @@ class Detector(PyTango.Device_4Impl):
     #    Detector read/write attribute methods
     #-----------------------------------------------------------------------------
 
-    def read_exposureTime(self, attr):
-        self.debug_stream("In read_exposureTime()")
-        #----- PROTECTED REGION ID(Detector.exposureTime_read) ENABLED START -----#
-
+    def read_exposure(self, attr):
+        self.debug_stream("In read_exposure()")
+        # ----- PROTECTED REGION ID(Detector.exposure_read) ENABLED START -----#
         attr.set_value(self.attr_exposureTime_read)
+        # ----- PROTECTED REGION END -----#	//	Detector.exposure_read
 
-        #----- PROTECTED REGION END -----#	//	Detector.exposureTime_read
-
-    def write_exposureTime(self, attr):
-        self.debug_stream("In write_exposureTime()")
+    def write_exposure(self, attr):
+        self.debug_stream("In write_exposure()")
         data = attr.get_write_value()
-        #----- PROTECTED REGION ID(Detector.exposureTime_write) ENABLED START -----#
-
+        #----- PROTECTED REGION ID(Detector.exposure_write) ENABLED START -----#
         self.attr_exposureTime_read = data
-
-        #----- PROTECTED REGION END -----#	//	Detector.exposureTime_write
-
-
-
+        #----- PROTECTED REGION END -----#	//	Detector.exposure_write
+        
+    
+    
         #----- PROTECTED REGION ID(Detector.initialize_dynamic_attributes) ENABLED START -----#
 
         #----- PROTECTED REGION END -----#	//	Detector.initialize_dynamic_attributes
@@ -257,17 +253,16 @@ class DetectorClass(PyTango.DeviceClass):
 
     #    Attribute definitions
     attr_list = {
-        'exposureTime':
-            [[PyTango.DevDouble,
+        'exposure':
+            [[PyTango.DevLong,
               PyTango.SCALAR,
               PyTango.READ_WRITE],
              {
                  'label': "exposure time",
                  'unit': "ms",
                  'standard unit': "10E-3",
-                 'format': "%f5.2",
-                 'max value': "1000.00001",
-                 'min value': "0.99999",
+                 'max value': "1000",
+                 'min value': "1",
              }],
     }
 

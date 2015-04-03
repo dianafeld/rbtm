@@ -57,6 +57,7 @@ import sys
 ## ON : The state in which the source is active
 ## OFF : The state in which the source is not active
 ## FAULT : The state in which the source is fault
+## STANDBY : 
 
 class XRaySource (PyTango.Device_4Impl):
 
@@ -82,11 +83,13 @@ class XRaySource (PyTango.Device_4Impl):
     def init_device(self):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
-        self.attr_voltage_read = 0.0
-        self.attr_current_read = 0.0
+        self.attr_voltage_read = 0
+        self.attr_current_read = 0
         #----- PROTECTED REGION ID(XRaySource.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
+
+        # read actual values from source
 
         #----- PROTECTED REGION END -----#	//	XRaySource.init_device
 
@@ -189,7 +192,7 @@ class XRaySource (PyTango.Device_4Impl):
         """ Sets new voltage and current
         
         :param argin: voltage, current
-        :type: PyTango.DevVarDoubleArray
+        :type: PyTango.DevVarShortArray
         :return: 
         :rtype: PyTango.DevVoid """
         self.debug_stream("In SetOperatingMode()")
@@ -199,7 +202,7 @@ class XRaySource (PyTango.Device_4Impl):
             PyTango.Except.throw_exception(
                 "TOMOGRAPH_invalid_arguments",
                 "Invalid number of arguments: {} provided, 2 needed (voltage, current)".format(len(argin)),
-                "Tomograph::SetOperatingMode")
+                "XRaySource::SetOperatingMode")
 
         new_voltage = argin[0]
         new_current = argin[1]
@@ -212,8 +215,8 @@ class XRaySource (PyTango.Device_4Impl):
         else:
             PyTango.Except.throw_exception(
                 "TOMOGRAPH_invalid_arguments",
-                "Invalid value of voltage",
-                "Tomograph::SetOperatingMode")
+                "Invalid voltage value",
+                "XRaySource::SetOperatingMode")
 
         current = self.get_device_attr().get_attr_by_name("current")
         min_current_value = current.get_min_value()
@@ -223,15 +226,14 @@ class XRaySource (PyTango.Device_4Impl):
         else:
             PyTango.Except.throw_exception(
                 "TOMOGRAPH_invalid_arguments",
-                "Invalid value of current",
-                "Tomograph::SetOperatingMode")
+                "Invalid current value",
+                "XRaySource::SetOperatingMode")
 
         #----- PROTECTED REGION END -----#	//	XRaySource.SetOperatingMode
         
     def is_SetOperatingMode_allowed(self):
         self.debug_stream("In is_SetOperatingMode_allowed()")
-        state_ok = not(self.get_state() in [PyTango.DevState.OFF,
-            PyTango.DevState.FAULT])
+        state_ok = not (self.get_state() in [PyTango.DevState.FAULT])
         # ----- PROTECTED REGION ID(XRaySource.is_SetOperatingMode_allowed) ENABLED START -----#
 
         #----- PROTECTED REGION END -----#	//	XRaySource.is_SetOperatingMode_allowed
@@ -282,7 +284,7 @@ class XRaySourceClass(PyTango.DeviceClass):
             [[PyTango.DevVoid, "none"],
             [PyTango.DevVoid, "none"]],
         'SetOperatingMode':
-            [[PyTango.DevVarDoubleArray, "voltage, current"],
+            [[PyTango.DevVarShortArray, "voltage, current"],
             [PyTango.DevVoid, "none"]],
         }
 
@@ -290,29 +292,28 @@ class XRaySourceClass(PyTango.DeviceClass):
     #    Attribute definitions
     attr_list = {
         'voltage':
-            [[PyTango.DevDouble,
+            [[PyTango.DevShort,
             PyTango.SCALAR,
             PyTango.READ_WRITE],
             {
                 'label': "Input Voltage",
-                'unit': "kV",
-                'standard unit': "10E+3",
-                'format': "%4.1f",
-                'max value': "100.00001",
-                'min value': "-1.00001",
-                'description': "shows the voltage of the X-Ray source",
+                'unit': "0.1 kV",
+                'standard unit': "10E+2",
+                'max value': "600",
+                'min value': "20",
+                'description': "voltage of the X-Ray source",
             } ],
         'current':
-            [[PyTango.DevFloat,
+            [[PyTango.DevShort,
             PyTango.SCALAR,
             PyTango.READ_WRITE],
             {
                 'label': "current",
-                'unit': "mA",
-                'standard unit': "10E-3",
-                'format': "%4.1f",
-                'max value': "100.00001",
-                'min value': "0.99999",
+                'unit': "0.1 mA",
+                'standard unit': "10E-4",
+                'max value': "800",
+                'min value': "20",
+                'description': "current of the X-Ray source",
             } ],
         }
 

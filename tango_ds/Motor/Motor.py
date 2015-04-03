@@ -82,9 +82,9 @@ class Motor (PyTango.Device_4Impl):
     def init_device(self):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
-        self.attr_angle_position_read = 0.0
-        self.attr_vertical_position_read = 0.0
-        self.attr_horizontal_position_read = 0.0
+        self.attr_angle_position_read = 0
+        self.attr_vertical_position_read = 0
+        self.attr_horizontal_position_read = 0
         #----- PROTECTED REGION ID(Motor.init_device) ENABLED START -----#
         self.set_state(PyTango.DevState.ON)
         #----- PROTECTED REGION END -----#	//	Motor.init_device
@@ -263,30 +263,26 @@ class MotorClass(PyTango.DeviceClass):
     #    Attribute definitions
     attr_list = {
         'angle_position':
-            [[PyTango.DevDouble,
+            [[PyTango.DevShort,
             PyTango.SCALAR,
             PyTango.READ_WRITE],
             {
                 'label': "angle position",
-                'unit': "deg",
-                'format': "%5.2f",
-                'max value': "360.00001",
-                'min value': "-0.00001",
+                'unit': "0.1 deg",
+                'max value': "3600",
+                'min value': "0",
             } ],
         'vertical_position':
-            [[PyTango.DevDouble,
+            [[PyTango.DevShort,
             PyTango.SCALAR,
             PyTango.READ_WRITE],
             {
                 'label': "vertical position",
                 'unit': "mm",
                 'standard unit': "10E-3",
-                'format': "%5.2f",
-                'max value': "500.00001",
-                'min value': "-0.00001",
             } ],
         'horizontal_position':
-            [[PyTango.DevDouble,
+            [[PyTango.DevShort,
             PyTango.SCALAR,
             PyTango.READ_WRITE],
             {
@@ -294,8 +290,6 @@ class MotorClass(PyTango.DeviceClass):
                 'unit': "mm",
                 'standard unit': "10E-3",
                 'format': "%5.2f",
-                'max value': "500.00001",
-                'min value': "-0.00001",
             } ],
         }
 

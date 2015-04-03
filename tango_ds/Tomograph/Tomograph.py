@@ -172,9 +172,9 @@ class Tomograph(PyTango.Device_4Impl):
         :param : 
         :type: PyTango.DevVoid
         :return: Array of 3 numbers: horizontal position, vertical position, angle position
-        :rtype: PyTango.DevVarDoubleArray """
+        :rtype: PyTango.DevVarShortArray """
         self.debug_stream("In CurrentPosition()")
-        argout = [0.0]
+        argout = [0]
         #----- PROTECTED REGION ID(Tomograph.CurrentPosition) ENABLED START -----#
         argout = [self.motor.horizontal_position, self.motor.vertical_position, self.motor.angle_position]
         #----- PROTECTED REGION END -----#	//	Tomograph.CurrentPosition
@@ -184,7 +184,7 @@ class Tomograph(PyTango.Device_4Impl):
         """ Sets motor to the given position
         
         :param argin: 3 numbers: horizontal position, vertical position, angle position
-        :type: PyTango.DevVarDoubleArray
+        :type: PyTango.DevVarShortArray
         :return: 
         :rtype: PyTango.DevVoid """
         self.debug_stream("In GotoPosition()")
@@ -263,7 +263,7 @@ class Tomograph(PyTango.Device_4Impl):
         """ 
         
         :param argin: voltage, current
-        :type: PyTango.DevVarDoubleArray
+        :type: PyTango.DevVarShortArray
         :return: 
         :rtype: PyTango.DevVoid """
         self.debug_stream("In SetOperatingMode()")
@@ -333,7 +333,7 @@ class Tomograph(PyTango.Device_4Impl):
         """ Return image from detector with metadata in JSON
         
         :param argin: exposure
-        :type: PyTango.DevShort
+        :type: PyTango.DevLong
         :return: 
         :rtype: PyTango.DevString """
         self.debug_stream("In GetFrame()")
@@ -409,9 +409,9 @@ class TomographClass(PyTango.DeviceClass):
              [PyTango.DevString, "Information about motor"]],
         'CurrentPosition':
             [[PyTango.DevVoid, "none"],
-             [PyTango.DevVarDoubleArray, "Array of 3 numbers: horizontal position, vertical position, angle position"]],
+             [PyTango.DevVarShortArray, "Array of 3 numbers: horizontal position, vertical position, angle position"]],
         'GotoPosition':
-            [[PyTango.DevVarDoubleArray, "3 numbers: horizontal position, vertical position, angle position"],
+            [[PyTango.DevVarShortArray, "3 numbers: horizontal position, vertical position, angle position"],
              [PyTango.DevVoid, "none"]],
         'ResetCurrentPosition':
             [[PyTango.DevVoid, "none"],
@@ -426,7 +426,7 @@ class TomographClass(PyTango.DeviceClass):
             [[PyTango.DevVoid, "none"],
              [PyTango.DevVoid, "none"]],
         'SetOperatingMode':
-            [[PyTango.DevVarDoubleArray, "voltage, current"],
+            [[PyTango.DevVarShortArray, "voltage, current"],
              [PyTango.DevVoid, "none"]],
         'ShutterStatus':
             [[PyTango.DevVoid, "none"],
@@ -441,7 +441,7 @@ class TomographClass(PyTango.DeviceClass):
             [[PyTango.DevVoid, "none"],
              [PyTango.DevString, "none"]],
         'GetFrame':
-            [[PyTango.DevShort, "exposure"],
+            [[PyTango.DevLong, "exposure"],
              [PyTango.DevString, "none"]],
     }
 
