@@ -63,7 +63,7 @@ class XRaySource (PyTango.Device_4Impl):
 
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(XRaySource.global_variables) ENABLED START -----#
-    
+
     #----- PROTECTED REGION END -----#	//	XRaySource.global_variables
 
     def __init__(self,cl, name):

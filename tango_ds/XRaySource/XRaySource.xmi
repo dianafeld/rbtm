@@ -21,7 +21,7 @@
       <argout description="Device status">
         <type xsi:type="pogoDsl:ConstStringType"/>
       </argout>
-      <status abstract="true" inherited="true" concrete="true"/>
+      <status abstract="true" inherited="true" concrete="true" concreteHere="false"/>
     </commands>
     <commands name="Off" description="Turns off the X-Ray source" execMethod="off" displayLevel="OPERATOR" polledPeriod="0">
       <argin description="">

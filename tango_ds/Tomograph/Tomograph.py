@@ -162,7 +162,15 @@ class Tomograph(PyTango.Device_4Impl):
         self.debug_stream("In MotorStatus()")
         argout = ''
         #----- PROTECTED REGION ID(Tomograph.MotorStatus) ENABLED START -----#
-        argout = self.motor.Status()
+
+        motor_data = {'state': str(self.motor.State()),
+                      'horizontal_position': self.motor.horizontal_position,
+                      'vertical_position': self.motor.vertical_position,
+                      'angle_position': self.motor.angle_position}
+
+        json_data = json.dumps(motor_data)
+        argout = json_data
+
         #----- PROTECTED REGION END -----#	//	Tomograph.MotorStatus
         return argout
 
@@ -227,7 +235,14 @@ class Tomograph(PyTango.Device_4Impl):
         self.debug_stream("In XRaySourceStatus()")
         argout = ''
         #----- PROTECTED REGION ID(Tomograph.XRaySourceStatus) ENABLED START -----#
-        argout = self.source.Status()
+
+        source_data = {'model': 'Isovolt 3003',
+                       'state': str(self.source.State()),
+                       'voltage': self.source.voltage, 'current': self.source.current}
+
+        json_data = json.dumps(source_data)
+        argout = json_data
+
         #----- PROTECTED REGION END -----#	//	Tomograph.XRaySourceStatus
         return argout
 
@@ -283,7 +298,12 @@ class Tomograph(PyTango.Device_4Impl):
         self.debug_stream("In ShutterStatus()")
         argout = ''
         #----- PROTECTED REGION ID(Tomograph.ShutterStatus) ENABLED START -----#
-        argout = self.shutter.Status()
+
+        shutter_data = {'state': str(self.shutter.State())}
+
+        json_data = json.dumps(shutter_data)
+        argout = json_data
+
         #----- PROTECTED REGION END -----#	//	Tomograph.ShutterStatus
         return argout
 
@@ -325,7 +345,13 @@ class Tomograph(PyTango.Device_4Impl):
         self.debug_stream("In DetectorStatus()")
         argout = ''
         #----- PROTECTED REGION ID(Tomograph.DetectorStatus) ENABLED START -----#
-        argout = self.detector.Status()
+
+        detector_data = {'model': 'Ximea xiRAY',
+                         'state': str(self.detector.State())}
+
+        json_data = json.dumps(detector_data)
+        argout = json_data
+
         #----- PROTECTED REGION END -----#	//	Tomograph.DetectorStatus
         return argout
 
@@ -342,7 +368,7 @@ class Tomograph(PyTango.Device_4Impl):
 
         exposure = argin
 
-        self.detector.exposureTime = exposure
+        self.detector.exposure = exposure
         image = self.detector.GetFrame()
         current_datetime = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
