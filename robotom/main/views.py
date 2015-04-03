@@ -14,19 +14,19 @@ from django.contrib import messages
 
 
 def index(request):
-    return render(request, 'index.html')
+    return render(request, 'main/index.html')
 
 
 def group1(request):
-    return render(request, 'group_1.html')
+    return render(request, 'main/group_1.html')
 
 
 def group2(request):
-    return render(request, 'group_2.html')
+    return render(request, 'main/group_2.html')
 
 
 def group3(request):
-    return render(request, 'group_3.html')
+    return render(request, 'main/group_3.html')
 
 
 def registration_view(request):
@@ -56,29 +56,17 @@ def registration_view(request):
 
 
 def done_view(request):
-    return render(request, 'done.html')
+    return render(request, 'main/done.html')
 
 
 @login_required
 def profile_view(request):
     # TODO Eugene
-    return render(request, 'empty.html')
+    return render(request, 'main/empty.html')
 
 
 def is_superuser(user):
     return user.is_superuser
-
-
-def storage_view(request):
-    # TODO
-    return render(request, 'storage.html', {"record_range": xrange(10)})
-
-
-def storage_record_view(request, storage_record_id):
-    # TODO
-    return render(request, 'storage_record.html',
-                  {"record_id": storage_record_id})
-
 
 
 #If user's request is not actual now, no information should be provided in database
@@ -144,7 +132,7 @@ def manage_requests_view(request):
             flush_userprofile_request(profile)
             
     request_list = [rolerequest.user for rolerequest in RoleRequest.objects.exclude(role='NONE')]
-    return render(request, 'manage_requests.html', {
+    return render(request, 'main/manage_requests.html', {
         'request_list': request_list,
     })
 
@@ -175,7 +163,7 @@ def role_request_view(request):
             else:
                 return redirect(next)
         else:
-            return render(request, 'role_request.html', {
+            return render(request, 'main/role_request.html', {
                 'role_form': role_form,
             })
         
@@ -184,6 +172,6 @@ def role_request_view(request):
         role_form = UserRoleRequestForm(instance=role_request)
     else:
         role_form = UserRoleRequestForm()
-    return render(request, 'role_request.html', {
+    return render(request, 'main/role_request.html', {
         'role_form': role_form,
     })

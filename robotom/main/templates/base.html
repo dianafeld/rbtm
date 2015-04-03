@@ -46,7 +46,7 @@
                 <li><a href="{% url 'experiment:index' %}">Эксперимент</a></li>
                 {% endif %}
             {% endif %}
-                <li><a href="{% url 'main:storage' %}">Хранилище</a></li>
+                <li><a href="{% url 'storage:index' %}">Хранилище</a></li>
             </ul>
 			<ul class="nav navbar-nav navbar-right">
 				{% if user.is_authenticated %}
