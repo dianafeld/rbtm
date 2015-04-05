@@ -9,7 +9,7 @@ def has_experiment_access(user):
 @login_required
 @user_passes_test(has_experiment_access)
 def experiment_view(request):
-    return render(request, 'experiment_index.html', {
+    return render(request, 'experiment/experiment_index.html', {
         'full_access': (request.user.userprofile.role == 'EXP'),
     })
 

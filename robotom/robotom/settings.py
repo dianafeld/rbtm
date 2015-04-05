@@ -114,9 +114,11 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     'registration',
     'bootstrap3',
+    'rest_framework',
+    
     'main',
     'experiment',
-    'rest_framework',
+    'storage',
 )
 
 ACCOUNT_ACTIVATION_DAYS = 7
