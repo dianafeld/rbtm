@@ -1,15 +1,19 @@
+# coding=utf-8
 from django.shortcuts import render
 
 
 def storage_view(request):
     # TODO
     return render(request, 'storage/storage_index.html', {
-        "record_range": xrange(10)
+        "record_range": xrange(10),
+        'caption': 'Хранилище',
     })
 
 
 def storage_record_view(request, storage_record_id):
     # TODO
     return render(request, 'storage/storage_record.html', {
-        "record_id": storage_record_id
+        "record_id": storage_record_id,
+        'caption': 'Запись хранилища номер ' + str(storage_record_id),
+        'image_range': xrange(5),  # TODO
     })

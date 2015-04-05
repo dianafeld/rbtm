@@ -1,5 +1,63 @@
 {% extends "base.html" %}
 
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'storage/styles.css' %}">
 {% block content %}
-	 Здесь будет запись хранилища номер {{ record_id }}
+    <div class="page-header">
+        <h1>Запись хранилища номер {{ record_id }}
+            <small>Предварительная версия</small>
+        </h1>
+    </div>
+
+    <!-- images -->
+    <div id="links">
+        {% for image_id in image_range %}
+            <a href="{% static 'storage/1.png' %}" data-description="image {{ image_id }} description"
+               title="Image {{ image_id }}">
+                <img src="{% static 'storage/1.png' %}" alt="Image {{ image_id }}"/>
+            </a>
+        {% endfor %}
+    </div>
+    <!-- The Bootstrap Image Gallery lightbox, should be a child element of the document body -->
+    <div id="blueimp-gallery" class="blueimp-gallery blueimp-gallery-controls" data-use-bootstrap-modal="true">
+        <!-- The container for the modal slides -->
+        <div class="slides"></div>
+        <!-- Controls for the borderless lightbox -->
+        <h3 class="title"></h3>
+
+        <p class="description"></p>
+        <a class="prev">‹</a>
+        <a class="next">›</a>
+        <a class="close">×</a>
+        <!-- The modal dialog, which will be used to wrap the lightbox content -->
+        <div class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title"></h4>
+                    </div>
+                    <div class="row">
+                        <p class="description"></p>
+
+                        <div class="modal-body next"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left prev">
+                            <i class="glyphicon glyphicon-chevron-left"></i>
+                            Previous
+                        </button>
+                        <button type="button" class="btn btn-primary next">
+                            Next
+                            <i class="glyphicon glyphicon-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="//blueimp.github.io/Gallery/js/jquery.blueimp-gallery.min.js"></script>
+    <script src="{% static 'storage/js/bootstrap-image-gallery.min.js' %}"></script>
+    <script src="{% static 'storage/js/descriptions.js' %}"></script>
 {% endblock content %}
