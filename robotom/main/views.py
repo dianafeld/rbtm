@@ -164,12 +164,15 @@ def role_request_view(request):
                               'Ваша заявка на получение статуса зарегистрирована. После её рассмотрения вам будет направлено электронное письмо на email, указанный при регистрации')
             else:
                 messages.info(request, 'Вам автоматически присвоен статус "Гость"')
-
-            next = request.POST['next']
-            if next == '':
-                return redirect(reverse('main:done'))
+            
+            if 'next' in request.POST:
+                next = request.POST['next']
+                if next == '':
+                    return redirect(reverse('main:done'))
+                else:
+                    return redirect(next)
             else:
-                return redirect(next)
+                return redirect(reverse('main:done'))
         else:
             return render(request, 'main/role_request.html', {
                 'role_form': role_form,
