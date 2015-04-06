@@ -120,7 +120,7 @@ def manage_requests_view(request):
         profile_id = request.POST['profile_id']
         profile = get_object_or_404(UserProfile, pk=profile_id)
         site = request.get_host()
-        role_long = profile.get_role_display()
+        role_long = profile.rolerequest.get_role_display()
         if 'accept' in request.POST:
             profile.user.is_superuser = False  # we must invalidate superuser and staff rights
             profile.user.is_staff = False  # if any error was made before
