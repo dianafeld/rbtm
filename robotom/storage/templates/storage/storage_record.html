@@ -8,17 +8,64 @@
             <small>Предварительная версия</small>
         </h1>
     </div>
+    <div class="container-fluid">
+        <div class="row">
+            <p>
+                Здесь должно быть большое описание с параметрами эксперимента.
+            </p>
 
-    <!-- images -->
-    <div id="links">
-        {% for image_id in image_range %}
-            <a href="{% static 'storage/1.png' %}" data-description="image {{ image_id }} description"
-               title="Image {{ image_id }}">
-                <img src="{% static 'storage/1.png' %}" alt="Image {{ image_id }}"/>
-            </a>
-        {% endfor %}
+            <p>
+                Здесь должно быть большое описание с параметрами эксперимента.
+            </p>
+
+            <p>
+                Здесь должно быть большое описание с параметрами эксперимента.
+            </p>
+
+            <p>
+                Здесь должно быть большое описание с параметрами эксперимента.
+            </p>
+
+            <p>
+                Здесь должно быть большое описание с параметрами эксперимента.
+            </p>
+
+            <p>
+                Здесь должно быть большое описание с параметрами эксперимента.
+            </p>
+
+            <p>
+                Здесь должно быть большое описание с параметрами эксперимента.
+            </p>
+            {% if user.user_profile.role == "RES" %}
+                <button type="button" class="btn btn-primary btn-lg" data-container="body" data-toggle="popover"
+                        data-placement="auto" data-content="Доступна только исследователю.">TomoRec</span>
+                </button>
+            {% else %}
+                <button type="button" class="btn btn-primary btn-lg" data-container="body" data-toggle="popover"
+                        data-placement="auto" data-content="Доступна только исследователю.">TomoRec</span>
+                </button>
+            {% endif %}
+        </div>
     </div>
-    <!-- The Bootstrap Image Gallery lightbox, should be a child element of the document body -->
+
+    <div class="container-fluid" style="margin-top: 30px">
+        <!-- images -->
+        <div id="links" class="row">
+            {% for image_id in image_range %}
+                <div class="col-xs-4">
+                    {% load static %}
+                    {% static "" as base_url %}
+                    <a href="{{ base_url }}storage/{{ image_id }}.png"
+                       data-description="image {{ image_id }} description"
+                       title="Image {{ image_id }}" class="thumbnail">
+                        <img src="{{ base_url }}storage/{{ image_id }}.png" alt="Image {{ image_id }}"/>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
     <div id="blueimp-gallery" class="blueimp-gallery blueimp-gallery-controls" data-use-bootstrap-modal="true">
         <!-- The container for the modal slides -->
         <div class="slides"></div>
@@ -38,9 +85,12 @@
                         <h4 class="modal-title"></h4>
                     </div>
                     <div class="row">
-                        <p class="description"></p>
-
-                        <div class="modal-body next"></div>
+                        <div class="col-xs-4">
+                            <p class="description"></p>
+                        </div>
+                        <div class="col-xs-4">
+                            <div class="modal-body next"></div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default pull-left prev">
@@ -57,7 +107,26 @@
         </div>
     </div>
 
-    <script src="//blueimp.github.io/Gallery/js/jquery.blueimp-gallery.min.js"></script>
-    <script src="{% static 'storage/js/bootstrap-image-gallery.min.js' %}"></script>
+    <script src="{% static 'storage/js/bootstrap-image-gallery-bluimp.js' %}"></script>
     <script src="{% static 'storage/js/descriptions.js' %}"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('[data-toggle="popover"]').popover();
+        });
+    </script>
+    {#    <script>#}
+    {#        blueimp.Gallery(#}
+    {#            document.getElementById('links'),#}
+    {#            {#}
+    {#                onslide: function (index, slide) {#}
+    {#                    var text = this.list[index].getAttribute('data-description'),#}
+    {#                        node = this.container.find('.description');#}
+    {#                    node.empty();#}
+    {#                    if (text) {#}
+    {#                        node[0].appendChild(document.createTextNode(text));#}
+    {#                    }#}
+    {#                }#}
+    {#            }#}
+    {#        );#}
+    {#    </script>#}
 {% endblock content %}

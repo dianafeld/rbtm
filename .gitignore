@@ -4,6 +4,6 @@
 
 **/local_settings.py
 
-*.idea/*
+robotom/.idea/*
 
 *robotom/static/rest_framework/*
