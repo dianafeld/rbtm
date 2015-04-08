@@ -233,12 +233,16 @@ class XRaySource (PyTango.Device_4Impl):
         
     def is_SetOperatingMode_allowed(self):
         self.debug_stream("In is_SetOperatingMode_allowed()")
-        state_ok = not (self.get_state() in [PyTango.DevState.FAULT])
+        state_ok = not(self.get_state() in [PyTango.DevState.FAULT])
         # ----- PROTECTED REGION ID(XRaySource.is_SetOperatingMode_allowed) ENABLED START -----#
 
         #----- PROTECTED REGION END -----#	//	XRaySource.is_SetOperatingMode_allowed
         return state_ok
         
+
+    #----- PROTECTED REGION ID(XRaySource.programmer_methods) ENABLED START -----#
+    
+    #----- PROTECTED REGION END -----#	//	XRaySource.programmer_methods
 
 class XRaySourceClass(PyTango.DeviceClass):
     #--------- Add you global class variables here --------------------------
@@ -322,6 +326,9 @@ def main():
     try:
         py = PyTango.Util(sys.argv)
         py.add_class(XRaySourceClass,XRaySource,'XRaySource')
+        #----- PROTECTED REGION ID(XRaySource.add_classes) ENABLED START -----#
+        
+        #----- PROTECTED REGION END -----#	//	XRaySource.add_classes
 
         U = PyTango.Util.instance()
         U.server_init()
