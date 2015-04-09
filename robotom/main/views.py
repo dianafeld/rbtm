@@ -11,7 +11,9 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.contrib import messages
+import logging
 
+logger = logging.getLogger('django.request')
 
 def index(request):
     return render(request, 'main/index.html', {'caption': 'ROBO-TOM'})
@@ -82,7 +84,7 @@ ACCEPT = 1
 DECLINE = 0
 
 
-def mail_verdict(user, site, role, verdict):
+def mail_verdict(request, user, site, role, verdict):
     if verdict == ACCEPT:
         subject = '[Томограф] Ваша заявка на присвоение роли удовлетворена'
         message = u'Здравствуйте, {username}!\n\
@@ -95,11 +97,17 @@ def mail_verdict(user, site, role, verdict):
   С уважением, администрация сайта {site}.'.format(site=site, username=user.userprofile.full_name, role=role)
     else:
         return
+    
+    try:
+        send_mail(subject, message, settings.EMAIL_HOST_USER, [user.email], fail_silently=False)
+    except BaseException as e:
+        messages.warning(request, u'При отправке письма по адресу \'{}\' произошла ошибка. Если адрес корректен, уточните причину возникновения ошибки в логах сервера'.format(user.email))
+        logger.error(e)
+    else:
+        messages.success(request, u'Успешно отправлено сообщение по адресу \' {}\''.format(user.email))
+        
 
-    send_mail(subject, message, settings.EMAIL_HOST_USER, [user.email], fail_silently=True)
-
-
-def mail_role_request(role_request, site, manage_link):
+def mail_role_request(request, role_request, site, manage_link):
     subject = '[Томограф] Новая заявка на сайте'
     message = u'На сайте {site} появилась новая заявка на изменение роли:\n\
   Имя пользователя: {username}\n\
@@ -130,10 +138,12 @@ def manage_requests_view(request):
                 profile.user.is_staff = True
             profile.save()
             profile.user.save()
-            mail_verdict(profile.user, site, role_long, ACCEPT)
+            messages.success(request, u'Запрос пользователя {} был успешно подтверждён'.format(profile.user.username))
+            mail_verdict(request, profile.user, site, role_long, ACCEPT)
             flush_userprofile_request(profile)
         elif 'decline' in request.POST:
-            mail_verdict(profile.user, site, role_long, DECLINE)
+            messages.success(request, u'Запрос пользователя {} был успешно отклонён'.format(profile.user.username))
+            mail_verdict(request, profile.user, site, role_long, DECLINE)
             flush_userprofile_request(profile)
 
     request_list = [rolerequest.user for rolerequest in RoleRequest.objects.exclude(role='NONE')]
@@ -158,9 +168,13 @@ def role_request_view(request):
             new_request.save()
             role_form.save_m2m()
             if new_request.role != 'NONE':
-                mail_role_request(new_request, request.get_host(),
-                                  request.build_absolute_uri(reverse('main:manage_requests')))
-                messages.info(request,
+                try:
+                    mail_role_request(request, new_request, request.get_host(), request.build_absolute_uri(reverse('main:manage_requests')))
+                except BaseException as e:
+                    messages.warning(request, 'Произошла ошибка во время оповещения администратора о появлении новой заявки, из-за чего её рассмотрение может задержаться. Чтобы избежать этого, Вы можете связаться с администрацией сайта самостоятельно')
+                    logger.error(e)
+                finally:
+                    messages.info(request,
                               'Ваша заявка на получение статуса зарегистрирована. После её рассмотрения вам будет направлено электронное письмо на email, указанный при регистрации')
             else:
                 messages.info(request, 'Вам автоматически присвоен статус "Гость"')
