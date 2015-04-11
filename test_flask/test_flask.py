@@ -35,29 +35,6 @@ def create_experiment():
     print(request.get_json())
     return jsonify(request.get_json())
 
-# update data of the experiment, need json file as a request'
-@app.route('/storage', methods=['PUT'])
-def update_task(task_id):
-    if not request.json:
-        abort(400)
-
-    db['experiments'].update(request.get_json())
-    return jsonify(request.get_json())
-
-# delete data of the experiment, return json file
-@app.route('/storage', methods=['DELETE'])
-def delete_experiment():
-    if not request.json:
-        abort(400)
-
-
-    cursor = db['experiments'].find(request.get_json())
-
-    db['experiments'].remove(request.get_json())
-    db['frames'].remove(request.get_json())
-    db['reconstructions'].remove(request.get_json())
-
-    return jsonify({'deleted': cursor.count()})
 
 if __name__ == '__main__':
     app.run()
