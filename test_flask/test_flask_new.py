@@ -50,7 +50,6 @@ def delete_experiment():
     if not request.json:
         abort(400)
 
-
     cursor = db['experiments'].find(request.get_json())
 
     db['experiments'].remove(request.get_json())
@@ -58,6 +57,13 @@ def delete_experiment():
     db['reconstructions'].remove(request.get_json())
 
     return jsonify({'deleted': cursor.count()})
+
+@app.route('/storage', methods=['GET'])
+def get_frame():
+    frame = db['frames']
+    cursor = frame.find()
+    print(list(cursor))
+    return jsonify({'frames': list(cursor)})
 
 if __name__ == '__main__':
     app.run()
