@@ -1,22 +1,23 @@
 # -*- coding: utf-8 -*-
-import urllib2
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login as auth_login
-import requests
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer, StaticHTMLRenderer
-from rest_framework.response import Response
 from forms import UserRegistrationForm, UserProfileRegistrationForm, UserRoleRequestForm
 from models import UserProfile, RoleRequest
+from django.contrib.auth.models import User
+from django.core.context_processors import csrf
 from django.core.mail import send_mail
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.contrib import messages
 import logging
+import hashlib
+import datetime
+import random
 from serializers import UserSerializer
+import requests
+import urllib2
 
 logger = logging.getLogger('django.request')
 
@@ -37,20 +38,45 @@ def group3(request):
     return render(request, 'main/group_3.html', {'caption': "Группа 3"})
 
 
+def confirm_view(request, activation_key):
+    userprofile = get_object_or_404(UserProfile, activation_key=activation_key)
+    userprofile.user.backend = 'django.contrib.auth.backends.ModelBackend'
+    auth_login(request, userprofile.user)
+    userprofile.user.is_active = True
+    messages.success(request, 'Ваш профиль был успешно подтверждён!')
+    return redirect(reverse('main:role_request'))
+
+
 def registration_view(request):
     if request.method == 'POST':
         user_form = UserRegistrationForm(request.POST)
         userprofile_form = UserProfileRegistrationForm(request.POST)
         if user_form.is_valid() and userprofile_form.is_valid():
             user = user_form.save()
-            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            user.is_active = False
+
+            salt = hashlib.sha1(str(random.random())).hexdigest()[:5]
+            activation_key = hashlib.sha1(salt + user.email).hexdigest()
+            key_expires = datetime.datetime.today() + datetime.timedelta(2)
+
             new_profile = userprofile_form.save(commit=False)
             new_profile.user = user
-            new_profile.save()
-            userprofile_form.save_m2m()
-            auth_login(request, user)
-            messages.success(request, 'Регистрация успешно завершена')
-            return redirect(reverse('main:role_request'))
+            new_profile.activation_key = activation_key
+            activation_link = u'{}/accounts/confirm/{}'.format(request.get_host(), activation_key) 
+            email_subject = '[Томограф] Подтверждение регистрации'
+            email_body = u"Приветствуем Вас на сайте Robo-Tom, {}!\n Для активации аккаунта пройдите по следующей ссылке: {}".format(user.username, activation_link)
+
+            try:
+                send_mail(email_subject, email_body, 'myemail@example.com',
+                        [user.email], fail_silently=False)
+            except BaseException:
+                messages.warning(request, 'Произошла ошибка при отправке письма о подтверждении регистрации. Попробуйте зарегистрироваться повторно, указав корректный email')
+            else:
+                messages.success(request, 'На указанный Вами адрес было отправлено письмо. Для завершения регистрации и подтверждения адреса перейдите по ссылке, указанной в письме')
+                new_profile.save()
+                userprofile_form.save_m2m()
+                #auth_login(request, user)
+            return redirect(reverse('main:done'))
         else:
             return render(request, 'registration/registration_form.html', {
                 'user_form': user_form,
