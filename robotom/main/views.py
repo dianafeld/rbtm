@@ -1,19 +1,25 @@
 # -*- coding: utf-8 -*-
+import urllib2
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login as auth_login
+import requests
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer, StaticHTMLRenderer
+from rest_framework.response import Response
 from forms import UserRegistrationForm, UserProfileRegistrationForm, UserRoleRequestForm
 from models import UserProfile, RoleRequest
-from django.contrib.auth.models import User
-from django.core.context_processors import csrf
 from django.core.mail import send_mail
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.contrib import messages
 import logging
+from serializers import UserSerializer
 
 logger = logging.getLogger('django.request')
+
 
 def index(request):
     return render(request, 'main/index.html', {'caption': 'ROBO-TOM'})
@@ -202,3 +208,21 @@ def role_request_view(request):
         'role_form': role_form,
         'caption': 'Запрос на изменение роли',
     })
+
+
+@api_view(['GET', 'POST'])
+def user_list(request):
+    """
+    Пока что тестовый view, отправляющий запросы
+    """
+    if request.method == 'GET':
+        users = UserProfile.objects.all()
+        serializer = UserSerializer(users, many=True)
+        content = JSONRenderer().render(serializer.data)
+        requests.post('http://127.0.0.1:8001/test_rest/', {'us': 'us'})
+        return render(request, 'main/rest_test.html', {'content': content, 'serializer': serializer.data})
+
+    elif request.method == 'POST':
+        users = UserProfile.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)

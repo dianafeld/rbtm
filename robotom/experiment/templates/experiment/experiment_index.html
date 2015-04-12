@@ -57,4 +57,10 @@
   		</form>
 			</div>
 
+    {% if full_access %}
+        <button type="button"> Я КНОПКА </button>
+    {% else %}
+        <button type="button" disabled> Я КНОПКА </button>
+    {% endif %}
+
 {% endblock content %}
