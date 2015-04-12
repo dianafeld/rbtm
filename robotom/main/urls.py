@@ -14,6 +14,5 @@ urlpatterns = patterns('',
                        url(r'^accounts/done/$', views.done_view, name='done'),
                        url(r'^role_request/$', views.role_request_view, name='role_request'),
                        url(r'^manage_requests/$', views.manage_requests_view, name='manage_requests'),
-                       
                        url(r'^test_rest/$', views.user_list, name='user_list'),
                        )
