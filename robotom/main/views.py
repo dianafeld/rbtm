@@ -77,7 +77,6 @@ def registration_view(request):
                 messages.success(request, 'На указанный Вами адрес было отправлено письмо. Для завершения регистрации и подтверждения адреса перейдите по ссылке, указанной в письме')
                 new_profile.save()
                 userprofile_form.save_m2m()
-                #auth_login(request, user)
             return redirect(reverse('main:done'))
         else:
             return render(request, 'registration/registration_form.html', {
