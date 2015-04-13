@@ -38,7 +38,7 @@ class UserProfileRegistrationForm(forms.ModelForm):
         
     class Meta:
         model = UserProfile
-        exclude = ('user', 'role')
+        exclude = ('user', 'role', 'activation_key')
 
 
 class UserRoleRequestForm(forms.ModelForm):
