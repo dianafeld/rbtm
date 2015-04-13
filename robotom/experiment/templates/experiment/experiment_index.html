@@ -8,17 +8,26 @@
 <!--<script type="text/javascript" src="{% static 'experiment/js/jquery-1.7.1.min.js' %}"></script>-->
 <script type="text/javascript" src="{% static 'experiment/js/my_scripts.js' %}"></script>
 
-		Страница-заглушка юстировки томографа
+		Page stub "adjusting tomograph"
 		<hr noshade>
 		
-		состояние томографа 
-		<p><button disabled> эксперимент идет </button>
-		<p><button > включить</button>
+		Codition 
+		<p><button disabled> The experiment started </button>
+		<p><button > Turn on </button>
 			
-	<div class="link_group">		
-		<a class="show_popup" rel="tabs_info" href="#">Настройка параметров  или показ параметров,если эксперимент идёт</a>
-		<p><a class="show_popup" rel="photo_win" href="#">показать текущее изображение</a></p>
-		<p><a class="show_popup" rel="settings" href="#">изменить положение образца</a></p>
+	<div class="link_group">	
+		{% if experiment_on %}
+			 {% if full_access %}
+    			<button type="button" class="btn btn-primary btn-lg" style="margin: 15px">Shut down</button>
+    		{% else %}
+    			<button type="button" class="btn btn-primary btn-lg" style="margin: 15px" disabled="disabled">Shut down</button>
+    		{% endif %}    	
+			<a class="show_popup" rel="tabs_info" href="#">Current settings</a>
+		{% else %}
+			<a class="show_popup" rel="tabs_info" href="#">Enter the settings</a>
+		{% endif %}
+		<p><a class="show_popup" rel="photo_win" href="#">Show current image</a></p>
+		<p><a class="show_popup" rel="settings" href="#">Change sample's position</a></p>
 	</div>
 
 	
@@ -26,20 +35,20 @@
 	<div class="popup tabs_info">
 	<form>
 		<a class="close" href="#">Close</a>
-		<p> включен/выключен  </p>
+		<p> On/Off  </p>
 		<p> <input type="radio" value="yes">  <input type="radio"  value="no"> </p>
-		<p> задать ток,мА <input type="text"> </p> 
-		<p>задать напряжение,В <input type="text"> </p>
-		<p>заслонка:поднять </p> <p> <input type="radio" value="yes">  <input type="radio" value="no"> </p>
-		<p>задать угол <input type="text"></p>
+		<p> current,mA <input type="text"> </p> 
+		<p> Voltage, kB <input type="text"> </p>
+		<p> Sliding:open </p> <p> <input type="radio" value="yes">  <input type="radio" value="no"> </p>
+		<p> Angle <input type="text"></p>
 		
-   			<button type="submit">ввести</button>
+   			<button type="submit">Ok</button>
   		</form>
 			</div>
 					
 <div class="popup photo_win">
 		<a class="close" href="#">Close</a>
-		<h2>картинка</h2>
+		<h2>image</h2>
 		<div class="img_wrap">
 		<img alt="" src="{% static 'experiment/images/tabs.jpg' %}" />			
 		</div>
@@ -48,13 +57,19 @@
 		<div class="popup settings">
 	<form>
 		<a class="close" href="#">Close</a>
-		<p> повернуть на <input type="text"> градусов </p>
+		<p> rotate to <input type="text"> degrees </p>
 	
-		<p> подвинуть горизонтально на <input type="text"> мм </p> 
-		<p> подвинуть вертикально на <input type="text"> мм </p>
+		<p> move horizontally on <input type="text"> mm </p> 
+		<p> move vertically on <input type="text"> mm </p>
 				
-   			<button type="submit">ввести</button>
+   			<button type="submit">Ok</button>
   		</form>
 			</div>
+
+    {% if full_access %}
+        <button type="button"> Я КНОПКА </button>
+    {% else %}
+        <button type="button" disabled> Я КНОПКА </button>
+    {% endif %}
 
 {% endblock content %}
