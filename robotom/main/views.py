@@ -120,7 +120,7 @@ DECLINE = 0
 def mail_verdict(request, user, site, role, verdict):
     if verdict == ACCEPT:
         subject = '[Томограф] Ваша заявка на присвоение роли удовлетворена'
-        message = u'Здравствуйте, {username}!\n\
+        message = u'   Здравствуйте, {username}!\n\
   Поздравляем, Ваша заявка на присвоение роли "{role}" была удовлетворена администратором. Вы можете приступить к пользованию дополнительным функционалом сайта уже сейчас!\n\
   С уважением, администрация сайта {site}.'.format(site=site, username=user.userprofile.full_name, role=role)
     elif verdict == DECLINE:
@@ -137,7 +137,7 @@ def mail_verdict(request, user, site, role, verdict):
         messages.warning(request, u'При отправке письма по адресу \'{}\' произошла ошибка. Если адрес корректен, уточните причину возникновения ошибки в логах сервера'.format(user.email))
         logger.error(e)
     else:
-        messages.success(request, u'Успешно отправлено сообщение по адресу \' {}\''.format(user.email))
+        messages.success(request, u'Успешно отправлено сообщение по адресу \'{}\''.format(user.email))
         
 
 def mail_role_request(request, role_request, site, manage_link):
@@ -195,37 +195,41 @@ def role_request_view(request):
         else:
             role_form = UserRoleRequestForm(request.POST)
 
-        if role_form.is_valid():
-            new_request = role_form.save(commit=False)
+        if 'cancel' in request.POST:
+            new_request = RoleRequest()
             new_request.user = request.user.userprofile
-            new_request.save()
-            role_form.save_m2m()
-            if new_request.role != 'NONE':
-                try:
-                    mail_role_request(request, new_request, request.get_host(), request.build_absolute_uri(reverse('main:manage_requests')))
-                except BaseException as e:
-                    messages.warning(request, 'Произошла ошибка во время оповещения администратора о появлении новой заявки, из-за чего её рассмотрение может задержаться. Чтобы избежать этого, Вы можете связаться с администрацией сайта самостоятельно')
-                    logger.error(e)
-                finally:
-                    messages.info(request,
-                              'Ваша заявка на получение статуса зарегистрирована. После её рассмотрения вам будет направлено электронное письмо на email, указанный при регистрации')
+            new_request.role = 'NONE'
+        elif 'submit' in request.POST:
+            if role_form.is_valid():
+                new_request = role_form.save(commit=False)
+                new_request.user = request.user.userprofile
+                new_request.save()
+                role_form.save_m2m()
             else:
-                messages.info(request, 'Вам автоматически присвоен статус "Гость"')
-            
-            if 'next' in request.POST:
-                next = request.POST['next']
-                if next == '':
-                    return redirect(reverse('main:done'))
-                else:
-                    return redirect(next)
-            else:
-                return redirect(reverse('main:done'))
+                return render(request, 'main/role_request.html', {
+                    'role_form': role_form,
+                    'caption': 'Запрос на изменение роли',
+                })
         else:
             return render(request, 'main/role_request.html', {
                 'role_form': role_form,
                 'caption': 'Запрос на изменение роли',
             })
+        
+        if new_request.role != 'NONE':
+            try:
+                mail_role_request(request, new_request, request.get_host(), request.build_absolute_uri(reverse('main:manage_requests')))
+            except BaseException as e:
+                messages.warning(request, 'Произошла ошибка во время оповещения администратора о появлении новой заявки, из-за чего её рассмотрение может задержаться. Чтобы избежать этого, Вы можете связаться с администрацией сайта самостоятельно')
+                logger.error(e)
+            finally:
+                messages.info(request, 'Ваша заявка на получение статуса зарегистрирована. После её рассмотрения вам будет направлено электронное письмо на email, указанный при регистрации')
+        else:
+            messages.info(request, u'Заявка не отправлена. Ваша роль "{}" не будет изменена'.format(request.user.userprofile.get_role_display())) 
+            
+        return redirect(reverse('main:done'))
 
+    # if method is not 'POST'
     if RoleRequest.objects.filter(user__user__pk=request.user.pk):
         role_request = RoleRequest.objects.get(user__user__pk=request.user.pk)
         role_form = UserRoleRequestForm(instance=role_request)

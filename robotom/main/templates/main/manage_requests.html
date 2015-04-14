@@ -13,22 +13,26 @@
     }
     SPAN.td {
         display:table-cell;
-        padding: 4px;
+        vertical-align:middle;
+        padding: 6px;
         border: 1px solid grey;
     }
     SPAN.td-head {
         display:table-cell;
-        padding: 4px;
+        vertical-align:middle;
+        padding: 6px;
         font-weight: bold;
         border: 1px solid grey;
         }
     SPAN.td-comment {
         display:table-cell;
+        vertical-align:middle;
         width:40%;
         border: 1px solid grey;
     }
     SPAN.td-button {
         display:table-cell;
+        vertical-align:middle;
         width:5px;
         }
 </style>
@@ -67,8 +71,8 @@
             <span class="td">{{ profile.role }}</span>
             <span class="td">{{ profile.rolerequest.role }}</span>
             <span class="td-comment">{{ profile.rolerequest.comment }}</span>
-            <span class="td-button"><button type="submit" class="btn btn-primary" style="margin-left: 5px" name="accept">Принять</button></span>
-            <span class="td-button"><button type="submit" class="btn btn-primary" style="margin-left: 5px" name="decline">Отклонить</button></span>
+            <span class="td-button"><button type="submit" class="btn btn-success" style="margin-left: 5px" name="accept">Принять</button></span>
+            <span class="td-button"><button type="submit" class="btn btn-danger" style="margin-left: 5px" name="decline">Отклонить</button></span>
         </form>
     {% endfor %}
     </div>
