@@ -164,4 +164,7 @@ CACHES = {
     }
 }
 
-from robotom.local_settings import *
+try:
+    from robotom.local_settings import *
+except BaseException:
+    pass
