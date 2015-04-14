@@ -13,6 +13,12 @@ cdef class Detector:
         e = cxiapi.xiOpenDevice(1, &device)
         print(e)
 
+        e = cxiapi.xiSetParamInt(device, cxiapi.XI_PRM_IMAGE_DATA_FORMAT, cxiapi.XI_MONO8)
+        print(e)
+
         cdef cxiapi.XI_IMG image
         e = cxiapi.xiGetImage(device, 5000, &image)
+        print(e)
+
+        e = cxiapi.xiCloseDevice(device)
         print(e)
