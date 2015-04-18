@@ -4,10 +4,18 @@ from django.shortcuts import render
 
 def storage_view(request):
     # TODO
-    return render(request, 'storage/storage_index.html', {
-        "record_range": xrange(10),
-        'caption': 'Хранилище',
-    })
+    if request.method == "GET":
+        return render(request, 'storage/storage_index.html', {
+            'record_range': xrange(10),
+            'caption': 'Хранилище',
+            'toShowResult': False,
+        })
+    elif request.method == "POST":
+        return render(request, 'storage/storage_index.html', {
+            'record_range': xrange(10),
+            'caption': 'Хранилище',
+            'toShowResult': True,
+        })
 
 
 def storage_record_view(request, storage_record_id):
