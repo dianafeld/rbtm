@@ -240,20 +240,37 @@ def role_request_view(request):
         'caption': 'Запрос на изменение роли',
     })
 
+#
+# @api_view(['GET', 'POST'])
+# def user_list(request):
+#     """
+#     Пока что тестовый view, отправляющий запросы
+#     """
+#     if request.method == 'GET':
+#         users = UserProfile.objects.all()
+#         serializer = UserSerializer(users, many=True)
+#         content = JSONRenderer().render(serializer.data)
+#         requests.post('http://127.0.0.1:8001/test_rest/', {'us': 'us'})
+#         return render(request, 'main/rest_test.html', {'content': content, 'serializer': serializer.data})
+#
+#     elif request.method == 'POST':
+#         users = UserProfile.objects.all()
+#         serializer = UserSerializer(users, many=True)
+#         return Response(serializer.data)
 
 @api_view(['GET', 'POST'])
 def user_list(request):
-    """
+    """git
     Пока что тестовый view, отправляющий запросы
     """
     if request.method == 'GET':
         users = UserProfile.objects.all()
         serializer = UserSerializer(users, many=True)
         content = JSONRenderer().render(serializer.data)
-        requests.post('http://127.0.0.1:8001/test_rest/', {'us': 'us'})
         return render(request, 'main/rest_test.html', {'content': content, 'serializer': serializer.data})
 
     elif request.method == 'POST':
-        users = UserProfile.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
+        if 'accept' in request.POST:
+            return render(request, 'main/rest_test.html', {'content': request.POST, 'serializer': 'accept'})
+        elif 'decline' in request.POST:
+            return render(request, 'main/rest_test.html', {'content': request.POST, 'serializer': 'decline'})
