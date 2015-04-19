@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% load bootstrap3 %}
+{% load staticfiles %}
+
+<link rel="stylesheet" href="{% static 'reg_styles.css' %}">
+
+
+{% if messages %}
+<div class="row">
+    {% for message in messages %}
+    <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+            <a class="close" data-dismiss="alert" href="/">&times;</a>
+            {{ message }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% for field in profile_form %}
+{% if field.errors %}
+<div class="row">
+    <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+        <div class="alert alert-warning">
+            <a class="close" data-dismiss="alert" href="/">&times;</a>
+            {{ field.errors }}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+    
+<div class="row">
+<div class="col-sm-10 col-sm-offset-1 col-md-8 col-md-offset-2 col-lg-6 col-lg-offset-3">
+<div class="panel panel-primary">
+<div class="panel-heading">
+<h1 class="panel-title"><strong>Профиль пользователя</strong></h1> 
+</div>
+<div class="panel-body">
+    <p>Ваша текущая роль: <strong>"{{ user.userprofile.get_role_display }}"</strong>.</p>
+    {% if user.userprofile.rolerequest.role != 'NONE' %}
+    <p>Ваш запрос на присвоение роли <strong>"{{ user.userprofile.rolerequest.get_role_display }}"</strong> ещё не был рассмотрен администратором.</p>
+    {% endif %}
+    <p>Вы можете <a href="{% url 'main:role_request' %}">послать новую заявку на изменение Вашей роли на сайте</a>.</p>
+
+    <form action="" method="post" class="form">    
+    {% csrf_token %}
+    {% bootstrap_form profile_form %}
+    {% buttons %}
+    {% if mode = 'view' %}
+    <button type="submit" name="edit_profile" class="btn btn-success btn-lg" style="margin-left: 15px">Изменить данные</button>
+    {% else %}
+    <button type="submit" name="save_profile" class="btn btn-success" style="margin-left: 15px">Сохранить</button>
+    <button type="submit" name="cancel" class="btn btn-default" style="margin-left: 15px">Отмена</button>
+    {% endif %}
+    {% endbuttons %}
+    </form>
+</div>
+</div>  
+</div>
+</div>
+
+{% endblock %}
