@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -268,7 +269,8 @@ def user_list(request):
         users = UserProfile.objects.all()
         serializer = UserSerializer(users, many=True)
         content = JSONRenderer().render(serializer.data)
-        requests.post('mardanov@109.234.34.140:5000/storage/experiments', {'data': 'data'})
+        info = json.dumps({'select': 'all'})
+        requests.post('http://mardanov@109.234.34.140:5002/storage/experiments', info)
         return render(request, 'main/rest_test.html', {'content': content, 'serializer': serializer.data})
 
     elif request.method == 'POST':
