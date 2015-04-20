@@ -276,7 +276,10 @@ def user_list(request):
     elif request.method == 'POST':
         users = UserProfile.objects.all()
         serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
+        content = JSONRenderer().render(serializer.data)
+        info = json.dumps({'select': 'all'})
+        requests.post('http://mardanov@109.234.34.140:5002/storage/experiments', info)
+        return render(request, 'main/rest_test.html', {'content': content, 'serializer': serializer.data})
 #
 # @api_view(['GET', 'POST'])
 # def user_list(request):
