@@ -46,5 +46,27 @@
         {% endif %}
     </div>
 
+    {% if toShowResult %}
+        <div class="pagination">
+            <span class="step-links">
+                {% if record_range.has_previous %}
+                    <form method="post" action="?page={{ record_range.previous_page_number }}" class="form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-default">previous</button>
+                    </form>
+                {% endif %}
 
+                <span class="current">
+                    Page {{ record_range.number }} of {{ record_range.paginator.num_pages }}.
+                </span>
+
+                {% if record_range.has_next %}
+                    <form method="post" action="?page={{ record_range.next_page_number }}" class="form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-default">next</button>
+                    </form>
+                {% endif %}
+            </span>
+        </div>
+    {% endif %}
 {% endblock content %}
