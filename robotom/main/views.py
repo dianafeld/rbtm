@@ -3,7 +3,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login as auth_login
-from forms import UserRegistrationForm, UserProfileRegistrationForm, UserRoleRequestForm
+from forms import UserRegistrationForm, UserProfileRegistrationForm, UserRoleRequestForm, UserProfileFormDisabled, UserProfileFormEnabled
 from models import UserProfile, RoleRequest
 from django.core.mail import send_mail
 from django.conf import settings
@@ -59,7 +59,6 @@ def registration_view(request):
 
             salt = hashlib.sha1(str(random.random())).hexdigest()[:5]
             activation_key = hashlib.sha1(salt + user.email).hexdigest()
-            key_expires = datetime.datetime.today() + datetime.timedelta(2)
 
             new_profile = userprofile_form.save(commit=False)
             new_profile.user = user
@@ -98,8 +97,27 @@ def done_view(request):
 
 @login_required
 def profile_view(request):
-    # TODO Eugene
-    return render(request, 'main/empty.html', {'caption': 'Профиль'})
+    if request.method == 'POST':
+        if 'edit_profile' in request.POST:
+            return render(request, 'main/profile.html', {
+                'caption': u'Профиль пользователя {}'.format(request.user.username),
+                'profile_form': UserProfileFormEnabled(instance=request.user.userprofile),
+                'mode': 'edit',
+            })
+        elif 'save_profile' in request.POST:
+            userprofile_form = UserProfileFormEnabled(request.POST, instance=request.user.userprofile)
+            if userprofile_form.is_valid():
+                profile = userprofile_form.save(commit=False)
+                profile.save()
+                messages.success(request, 'Ваши данные были успешно сохранены!')
+        elif 'cancel' in request.POST:
+            messages.success(request, 'Изменений в профиль не было внесено')
+        
+    return render(request, 'main/profile.html', {
+        'caption': u'Профиль пользователя {}'.format(request.user.username),
+        'profile_form': UserProfileFormDisabled(instance=request.user.userprofile),
+        'mode': 'view',
+    })
 
 
 def is_superuser(user):

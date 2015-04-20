@@ -11,6 +11,8 @@ ADMINS = (
     ('Robotom Admins', 'robotomproject@gmail.com'),
 )
 
+DEFAULT_FROM_EMAIL = 'robotomproject@gmail.com'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
