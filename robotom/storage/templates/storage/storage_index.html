@@ -1,9 +1,72 @@
 {% extends "base.html" %}
 
 {% block content %}
-    {% for record_id in record_range %}
-        <a href="{% url 'storage:storage_record' record_id %}">
-            Перейти к записи номер {{ record_id }}
-        </a> <br>
-    {% endfor %}
+    <div>
+        <form method="post" action="" class="form">
+            {% csrf_token %}
+            <row>
+                <div class="col-xs-6">
+                    <div class="form-group">
+                        <label for="KeyWords">Key words</label>
+                        <input type="text" class="form-control" id="KeyWords" placeholder="Key words">
+                    </div>
+                </div>
+                <div class="col-xs-3">
+                    <div class="form-group">
+                        <label for="SinceDate">Since Date</label>
+                        <input type="date" class="form-control" id="SinceDate">
+                    </div>
+                </div>
+                <div class="col-xs-3">
+                    <div class="form-group">
+                        <label for="ToDate">To Date</label>
+                        <input type="date" class="form-control" id="ToDate">
+                    </div>
+                </div>
+            </row>
+            <row>
+                <div class="col-xs-3">
+                    <button type="submit" class="btn btn-default">Search</button>
+                </div>
+            </row>
+        </form>
+    </div>
+
+    <div>
+        {% if toShowResult %}
+            <row>
+                <div class="col-xs-4">
+                    {% for record_id in record_range %}
+                            <a href="{% url 'storage:storage_record' record_id %}">
+                                Перейти к записи номер {{ record_id }}
+                            </a> <br>
+                    {% endfor %}
+                </div>
+            </row>
+        {% endif %}
+    </div>
+
+    {% if toShowResult %}
+        <div class="pagination">
+            <span class="step-links">
+                {% if record_range.has_previous %}
+                    <form method="post" action="?page={{ record_range.previous_page_number }}" class="form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-default">previous</button>
+                    </form>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ record_range.number }} of {{ record_range.paginator.num_pages }}.
+                </span>
+
+                {% if record_range.has_next %}
+                    <form method="post" action="?page={{ record_range.next_page_number }}" class="form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-default">next</button>
+                    </form>
+                {% endif %}
+            </span>
+        </div>
+    {% endif %}
 {% endblock content %}
