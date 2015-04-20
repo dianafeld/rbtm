@@ -3,10 +3,10 @@ import PyTango
 import subprocess
 import time
 
-MAX_VOLTAGE = 100.0
-MIN_VOLTAGE = 10.0
-MAX_CURRENT = 100.0
-MIN_CURRENT = 0.0
+MAX_VOLTAGE = 600
+MIN_VOLTAGE = 20
+MAX_CURRENT = 800
+MIN_CURRENT = 20
 CORRECT_VOLTAGE = (MIN_VOLTAGE + MAX_VOLTAGE)/2
 CORRECT_CURRENT = (MIN_CURRENT + MAX_CURRENT)/2
 SERVER_STARTING_TIME = 0.5
@@ -51,46 +51,52 @@ def test_source_off(source):
     assert source.State() == PyTango._PyTango.DevState.OFF
 
 
-# Voltage testing
-def test_source_set_correct_voltage(source):
+# Voltage and current testing
+def test_source_set_correct_args(source):
     source.On()
     arg = (CORRECT_VOLTAGE, CORRECT_CURRENT)
     source.SetOperatingMode(arg)
     assert source.voltage == CORRECT_VOLTAGE and source.current == CORRECT_CURRENT
 
 
-def test_source_set_min_voltage(source):
+def test_source_set_min_args(source):
     source.On()
     arg = (MIN_VOLTAGE, MIN_CURRENT)
     source.SetOperatingMode(arg)
     assert source.voltage == MIN_VOLTAGE and source.current == MIN_CURRENT
 
 
-def test_source_set_less_than_min_voltage(source):
+def test_source_set_less_than_min_args(source):
     source.On()
-    arg = (MIN_VOLTAGE - 0.1, MIN_CURRENT - 0.1)
+    arg = (MIN_VOLTAGE - 1, MIN_CURRENT - 1)
     with pytest.raises(Exception) as excinfo:
         source.SetOperatingMode(arg)
     assert excinfo
 
 
-def test_source_set_max_voltage(source):
+def test_source_set_max_args(source):
     source.On()
     arg = (MAX_VOLTAGE, MAX_CURRENT)
     source.SetOperatingMode(arg)
     assert source.voltage == MAX_VOLTAGE and source.current == MAX_CURRENT
 
 
-def test_source_set_more_than_max_voltage(source):
+def test_source_set_more_than_max_args(source):
     source.On()
-    arg = (MAX_VOLTAGE + 0.1, MAX_CURRENT + 0.1)
+    arg = (MAX_VOLTAGE + 1, MAX_CURRENT + 1)
     with pytest.raises(Exception) as excinfo:
         source.SetOperatingMode(arg)
     assert excinfo
 
 
-# Testing voltage change in OFF state
-def test_source_set_voltage_if_off(source):
+# Testing voltage and current change in OFF or FAULT state
+def test_source_set_args_if_off(source):
+    arg = (CORRECT_VOLTAGE, CORRECT_CURRENT)
+    with pytest.raises(Exception) as excinfo:
+        source.SetOperatingMode(arg)
+    assert excinfo
+
+def test_source_set_args_if_fault(source):
     arg = (CORRECT_VOLTAGE, CORRECT_CURRENT)
     with pytest.raises(Exception) as excinfo:
         source.SetOperatingMode(arg)
