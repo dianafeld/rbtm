@@ -13,7 +13,9 @@
 		
 		состояние томографа 
 		<p><button disabled> эксперимент идет </button>
-		<p><button > включить</button>
+		<form>
+		<p><input type = "button" onclick = "power_on" value = "on" >
+		</form>
 			
 	<div class="link_group">		
 		<a class="show_popup" rel="tabs_info" href="#">Настройка параметров  или показ параметров,если эксперимент идёт</a>
