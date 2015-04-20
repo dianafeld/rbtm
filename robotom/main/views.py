@@ -68,7 +68,7 @@ def registration_view(request):
             email_body = u"Приветствуем Вас на сайте Robo-Tom, {}!\n Для активации аккаунта пройдите по следующей ссылке: {}".format(user.username, activation_link)
 
             try:
-                send_mail(email_subject, email_body, 'myemail@example.com',
+                send_mail(email_subject, email_body, 'robotomproject@gmail.com',
                         [user.email], fail_silently=False)
             except BaseException:
                 messages.warning(request, 'Произошла ошибка при отправке письма о подтверждении регистрации. Попробуйте зарегистрироваться повторно, указав корректный email')

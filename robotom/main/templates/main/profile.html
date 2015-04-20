@@ -41,7 +41,8 @@
 </div>
 <div class="panel-body">
     <p>Ваша текущая роль: <strong>"{{ user.userprofile.get_role_display }}"</strong>.</p>
-    {% if user.userprofile.rolerequest.role != 'NONE' %}
+    {% if user.userprofile.rolerequest.role = 'NONE' or not user.userprofile.rolerequest.role %}
+    {% else %}
     <p>Ваш запрос на присвоение роли <strong>"{{ user.userprofile.rolerequest.get_role_display }}"</strong> ещё не был рассмотрен администратором.</p>
     {% endif %}
     <p>Вы можете <a href="{% url 'main:role_request' %}">послать новую заявку на изменение Вашей роли на сайте</a> или <a href="{% url 'password_change' %}">изменить пароль</a>.</p>
