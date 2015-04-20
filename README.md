@@ -13,7 +13,8 @@ $ tango_ds/run.sh
   
 ### Stop server
 
-  **Warning: stop script just kills all processes containing `python` substring in their name**
+  **Warning:** stop script just kills all processes containing `python` substring in their name
+  
 ```sh
 $ tango_ds/stop.sh
 ```
