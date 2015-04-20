@@ -39,6 +39,19 @@ class UserProfileRegistrationForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         exclude = ('user', 'role', 'activation_key')
+        
+class UserProfileFormEnabled(UserProfileRegistrationForm):
+    def __init__(self, *args, **kwargs):
+        super(UserProfileFormEnabled, self).__init__(*args, **kwargs)
+      
+
+class UserProfileFormDisabled(UserProfileFormEnabled):
+    def __init__(self, *args, **kwargs):
+        super(UserProfileFormDisabled, self).__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs['class'] = 'disabled'
+            self.fields[field].widget.attrs['readonly'] = 'readonly'
+            self.fields[field].widget.attrs['placeholder'] = ''
 
 
 class UserRoleRequestForm(forms.ModelForm):

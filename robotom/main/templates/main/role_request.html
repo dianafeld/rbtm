@@ -32,7 +32,8 @@
     {% csrf_token %}
     {% bootstrap_form role_form %}
     {% buttons %}
-    <button type="submit" class="btn btn-primary" style="margin-left: 15px">Запросить изменение роли</button>
+    <button type="submit" name="submit" class="btn btn-success" style="margin-left: 15px">Запросить изменение роли</button>
+    <button type="submit" name="cancel" class="btn btn-default" style="margin-left: 15px">Отмена</button>
     {% endbuttons %}
     </form>
 </div>
