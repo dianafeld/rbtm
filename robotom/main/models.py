@@ -34,6 +34,7 @@ class UserProfile(models.Model):
     work_place = models.CharField('Место учёбы/работы', max_length=100, blank=True)
     degree = models.CharField('Ученая степень', max_length=50, blank=True)
     title = models.CharField('Звание', max_length=50, blank=True)
+    activation_key = models.CharField('Ключ активации', max_length=50, blank=True)
 
 
 class RoleRequest(models.Model):

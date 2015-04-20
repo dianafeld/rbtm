@@ -11,6 +11,8 @@ ADMINS = (
     ('Robotom Admins', 'robotomproject@gmail.com'),
 )
 
+DEFAULT_FROM_EMAIL = 'robotomproject@gmail.com'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -99,6 +101,9 @@ ROOT_URLCONF = 'robotom.urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'robotom.wsgi.application'
 
+TEST_RUNNER = 'xmlrunner.extra.djangotestrunner.XMLTestRunner'
+TEST_OUTPUT_DIR = 'robotom/test-reports/'
+
 TEMPLATE_DIRS = (
     os.path.join(BASE_DIR, 'templates'),
 )
@@ -161,4 +166,7 @@ CACHES = {
     }
 }
 
-from robotom.local_settings import *
+try:
+    from robotom.local_settings import *
+except BaseException:
+    pass

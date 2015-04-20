@@ -4,6 +4,19 @@
 {% load bootstrap3 %}
 {% load staticfiles %}
     
+{% if messages %}
+<div class="row">
+    {% for message in messages %}
+    <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+            <a class="close" data-dismiss="alert" href="/">&times;</a>
+            {{ message }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}  
+
 <div class="row">
 <div class="col-sm-10 col-sm-offset-1 col-md-8 col-md-offset-2 col-lg-6 col-lg-offset-3">
 <div class="panel panel-primary">
@@ -19,7 +32,8 @@
     {% csrf_token %}
     {% bootstrap_form role_form %}
     {% buttons %}
-    <button type="submit" class="btn btn-primary" style="margin-left: 15px">Запросить изменение роли</button>
+    <button type="submit" name="submit" class="btn btn-success" style="margin-left: 15px">Запросить изменение роли</button>
+    <button type="submit" name="cancel" class="btn btn-default" style="margin-left: 15px">Отмена</button>
     {% endbuttons %}
     </form>
 </div>

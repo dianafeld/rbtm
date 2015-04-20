@@ -1,9 +1,87 @@
 {% extends "base.html" %}
 
 {% block content %}
-    {% for record_id in record_range %}
-        <a href="{% url 'storage:storage_record' record_id %}">
-            Перейти к записи номер {{ record_id }}
-        </a> <br>
-    {% endfor %}
+    <div class="container">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <form method="post" action="" class="form">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="form-group">
+                                <label for="KeyWords">Ключевые слова в названии</label>
+                                <input type="text" class="form-control" id="KeyWords" placeholder="Ключевые слова">
+                            </div>
+                        </div>
+                        <div class="col-xs-3">
+                            <div class="form-group">
+                                <label for="SinceDate">С даты</label>
+                                <input type="date" class="form-control" id="SinceDate">
+                            </div>
+                        </div>
+                        <div class="col-xs-3">
+                            <div class="form-group">
+                                <label for="ToDate">До даты</label>
+                                <input type="date" class="form-control" id="ToDate">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-3">
+                            <button type="submit" class="btn btn-default">
+                                <span class="glyphicon glyphicon-search"></span>
+                                Поиск
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if toShowResult %}
+        <div class="container">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <p>Результаты поиска</p>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-xs-4">
+                            {% for record_id in record_range %}
+                                    <a href="{% url 'storage:storage_record' record_id %}">
+                                        Перейти к записи номер {{ record_id }}
+                                    </a> <br>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <ul class="pagination">
+                        {% if record_range.has_previous %}
+                            <li><a href="?page={{ record_range.previous_page_number }}#">
+                                <span class="glyphicon glyphicon-chevron-left"></span>
+                            </a></li>
+                        {% else %}
+                            <li class="disabled"><a href="#">
+                                <span class="glyphicon glyphicon-chevron-left"></span>
+                            </a></li>
+                        {% endif %}
+                        {% for page_id in pages %}
+                            <li><a href="?page={{ page_id }}#">{{ page_id }}</a></li>
+                        {% endfor %}
+                        {% if record_range.has_next %}
+                            <li><a href="?page={{ record_range.next_page_number }}#">
+                                <span class="glyphicon glyphicon-chevron-right"></span>
+                            </a></li>
+                        {% else %}
+                            <li class="disabled"><a href="#">
+                                <span class="glyphicon glyphicon-chevron-right"></span>
+                            </a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock content %}

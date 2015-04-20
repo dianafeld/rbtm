@@ -13,27 +13,21 @@
             <p>
                 Здесь должно быть большое описание с параметрами эксперимента.
             </p>
-
             <p>
                 Здесь должно быть большое описание с параметрами эксперимента.
             </p>
-
             <p>
                 Здесь должно быть большое описание с параметрами эксперимента.
             </p>
-
             <p>
                 Здесь должно быть большое описание с параметрами эксперимента.
             </p>
-
             <p>
                 Здесь должно быть большое описание с параметрами эксперимента.
             </p>
-
             <p>
                 Здесь должно быть большое описание с параметрами эксперимента.
             </p>
-
             <p>
                 Здесь должно быть большое описание с параметрами эксперимента.
             </p>
@@ -71,7 +65,6 @@
         <div class="slides"></div>
         <!-- Controls for the borderless lightbox -->
         <h3 class="title"></h3>
-
         <p class="description"></p>
         <a class="prev">‹</a>
         <a class="next">›</a>
@@ -110,23 +103,23 @@
     <script src="{% static 'storage/js/bootstrap-image-gallery-bluimp.js' %}"></script>
     <script src="{% static 'storage/js/descriptions.js' %}"></script>
     <script type="text/javascript">
+        blueimp.Gallery(
+            document.getElementById('links'),
+            {
+                onslide: function (index, slide) {
+                    var text = this.list[index].getAttribute('data-description'),
+                        node = this.container.find('.description');
+                    node.empty();
+                    if (text) {
+                        node[0].appendChild(document.createTextNode(text));
+                    }
+                }
+            }
+        );
+    </script>
+    <script type="text/javascript">
         $(document).ready(function () {
             $('[data-toggle="popover"]').popover();
         });
     </script>
-    {#    <script>#}
-    {#        blueimp.Gallery(#}
-    {#            document.getElementById('links'),#}
-    {#            {#}
-    {#                onslide: function (index, slide) {#}
-    {#                    var text = this.list[index].getAttribute('data-description'),#}
-    {#                        node = this.container.find('.description');#}
-    {#                    node.empty();#}
-    {#                    if (text) {#}
-    {#                        node[0].appendChild(document.createTextNode(text));#}
-    {#                    }#}
-    {#                }#}
-    {#            }#}
-    {#        );#}
-    {#    </script>#}
 {% endblock content %}

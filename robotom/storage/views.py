@@ -1,12 +1,36 @@
 # coding=utf-8
 from django.shortcuts import render
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 
 def storage_view(request):
     # TODO
+    records_list = range(110)
+    pagin = Paginator(records_list, 15)
+    page = request.GET.get('page')
+
+    try:
+        records = pagin.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        records = pagin.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        records = pagin.page(pagin.num_pages)
+
+    to_show = True
+    if request.method == "GET":
+        if page is None:
+            to_show = False
+    elif request.method == "POST":
+        records = pagin.page(1)
+
     return render(request, 'storage/storage_index.html', {
-        "record_range": xrange(10),
+        'record_range': records,
         'caption': 'Хранилище',
+        'toShowResult': to_show,
+        'pages': xrange(1, pagin.num_pages + 1),
+        'current_page': page,
     })
 
 

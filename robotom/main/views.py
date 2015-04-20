@@ -3,14 +3,25 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login as auth_login
-from forms import UserRegistrationForm, UserProfileRegistrationForm, UserRoleRequestForm
+from forms import UserRegistrationForm, UserProfileRegistrationForm, UserRoleRequestForm, UserProfileFormDisabled, UserProfileFormEnabled
 from models import UserProfile, RoleRequest
-from django.contrib.auth.models import User
-from django.core.context_processors import csrf
 from django.core.mail import send_mail
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.contrib import messages
+import logging
+import hashlib
+import datetime
+import random
+from serializers import UserSerializer
+import requests
+import urllib2
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer, StaticHTMLRenderer
+from rest_framework.response import Response
+
+logger = logging.getLogger('django.request')
 
 
 def index(request):
@@ -29,20 +40,43 @@ def group3(request):
     return render(request, 'main/group_3.html', {'caption': "Группа 3"})
 
 
+def confirm_view(request, activation_key):
+    userprofile = get_object_or_404(UserProfile, activation_key=activation_key)
+    userprofile.user.backend = 'django.contrib.auth.backends.ModelBackend'
+    auth_login(request, userprofile.user)
+    userprofile.user.is_active = True
+    messages.success(request, 'Ваш профиль был успешно подтверждён!')
+    return redirect(reverse('main:role_request'))
+
+
 def registration_view(request):
     if request.method == 'POST':
         user_form = UserRegistrationForm(request.POST)
         userprofile_form = UserProfileRegistrationForm(request.POST)
         if user_form.is_valid() and userprofile_form.is_valid():
             user = user_form.save()
-            user.backend = 'django.contrib.auth.backends.ModelBackend'
+            user.is_active = False
+
+            salt = hashlib.sha1(str(random.random())).hexdigest()[:5]
+            activation_key = hashlib.sha1(salt + user.email).hexdigest()
+
             new_profile = userprofile_form.save(commit=False)
             new_profile.user = user
-            new_profile.save()
-            userprofile_form.save_m2m()
-            auth_login(request, user)
-            messages.success(request, 'Регистрация успешно завершена')
-            return redirect(reverse('main:role_request'))
+            new_profile.activation_key = activation_key
+            activation_link = u'{}/accounts/confirm/{}'.format(request.get_host(), activation_key) 
+            email_subject = '[Томограф] Подтверждение регистрации'
+            email_body = u"Приветствуем Вас на сайте Robo-Tom, {}!\n Для активации аккаунта пройдите по следующей ссылке: {}".format(user.username, activation_link)
+
+            try:
+                send_mail(email_subject, email_body, 'robotomproject@gmail.com',
+                        [user.email], fail_silently=False)
+            except BaseException:
+                messages.warning(request, 'Произошла ошибка при отправке письма о подтверждении регистрации. Попробуйте зарегистрироваться повторно, указав корректный email')
+            else:
+                messages.success(request, 'На указанный Вами адрес было отправлено письмо. Для завершения регистрации и подтверждения адреса перейдите по ссылке, указанной в письме')
+                new_profile.save()
+                userprofile_form.save_m2m()
+            return redirect(reverse('main:done'))
         else:
             return render(request, 'registration/registration_form.html', {
                 'user_form': user_form,
@@ -63,8 +97,27 @@ def done_view(request):
 
 @login_required
 def profile_view(request):
-    # TODO Eugene
-    return render(request, 'main/empty.html', {'caption': 'Профиль'})
+    if request.method == 'POST':
+        if 'edit_profile' in request.POST:
+            return render(request, 'main/profile.html', {
+                'caption': u'Профиль пользователя {}'.format(request.user.username),
+                'profile_form': UserProfileFormEnabled(instance=request.user.userprofile),
+                'mode': 'edit',
+            })
+        elif 'save_profile' in request.POST:
+            userprofile_form = UserProfileFormEnabled(request.POST, instance=request.user.userprofile)
+            if userprofile_form.is_valid():
+                profile = userprofile_form.save(commit=False)
+                profile.save()
+                messages.success(request, 'Ваши данные были успешно сохранены!')
+        elif 'cancel' in request.POST:
+            messages.success(request, 'Изменений в профиль не было внесено')
+        
+    return render(request, 'main/profile.html', {
+        'caption': u'Профиль пользователя {}'.format(request.user.username),
+        'profile_form': UserProfileFormDisabled(instance=request.user.userprofile),
+        'mode': 'view',
+    })
 
 
 def is_superuser(user):
@@ -82,10 +135,10 @@ ACCEPT = 1
 DECLINE = 0
 
 
-def mail_verdict(user, site, role, verdict):
+def mail_verdict(request, user, site, role, verdict):
     if verdict == ACCEPT:
         subject = '[Томограф] Ваша заявка на присвоение роли удовлетворена'
-        message = u'Здравствуйте, {username}!\n\
+        message = u'   Здравствуйте, {username}!\n\
   Поздравляем, Ваша заявка на присвоение роли "{role}" была удовлетворена администратором. Вы можете приступить к пользованию дополнительным функционалом сайта уже сейчас!\n\
   С уважением, администрация сайта {site}.'.format(site=site, username=user.userprofile.full_name, role=role)
     elif verdict == DECLINE:
@@ -95,11 +148,17 @@ def mail_verdict(user, site, role, verdict):
   С уважением, администрация сайта {site}.'.format(site=site, username=user.userprofile.full_name, role=role)
     else:
         return
+    
+    try:
+        send_mail(subject, message, settings.EMAIL_HOST_USER, [user.email], fail_silently=False)
+    except BaseException as e:
+        messages.warning(request, u'При отправке письма по адресу \'{}\' произошла ошибка. Если адрес корректен, уточните причину возникновения ошибки в логах сервера'.format(user.email))
+        logger.error(e)
+    else:
+        messages.success(request, u'Успешно отправлено сообщение по адресу \'{}\''.format(user.email))
+        
 
-    send_mail(subject, message, settings.EMAIL_HOST_USER, [user.email], fail_silently=True)
-
-
-def mail_role_request(role_request, site, manage_link):
+def mail_role_request(request, role_request, site, manage_link):
     subject = '[Томограф] Новая заявка на сайте'
     message = u'На сайте {site} появилась новая заявка на изменение роли:\n\
   Имя пользователя: {username}\n\
@@ -130,10 +189,12 @@ def manage_requests_view(request):
                 profile.user.is_staff = True
             profile.save()
             profile.user.save()
-            mail_verdict(profile.user, site, role_long, ACCEPT)
+            messages.success(request, u'Запрос пользователя {} был успешно подтверждён'.format(profile.user.username))
+            mail_verdict(request, profile.user, site, role_long, ACCEPT)
             flush_userprofile_request(profile)
         elif 'decline' in request.POST:
-            mail_verdict(profile.user, site, role_long, DECLINE)
+            messages.success(request, u'Запрос пользователя {} был успешно отклонён'.format(profile.user.username))
+            mail_verdict(request, profile.user, site, role_long, DECLINE)
             flush_userprofile_request(profile)
 
     request_list = [rolerequest.user for rolerequest in RoleRequest.objects.exclude(role='NONE')]
@@ -152,33 +213,41 @@ def role_request_view(request):
         else:
             role_form = UserRoleRequestForm(request.POST)
 
-        if role_form.is_valid():
-            new_request = role_form.save(commit=False)
+        if 'cancel' in request.POST:
+            new_request = RoleRequest()
             new_request.user = request.user.userprofile
-            new_request.save()
-            role_form.save_m2m()
-            if new_request.role != 'NONE':
-                mail_role_request(new_request, request.get_host(),
-                                  request.build_absolute_uri(reverse('main:manage_requests')))
-                messages.info(request,
-                              'Ваша заявка на получение статуса зарегистрирована. После её рассмотрения вам будет направлено электронное письмо на email, указанный при регистрации')
+            new_request.role = 'NONE'
+        elif 'submit' in request.POST:
+            if role_form.is_valid():
+                new_request = role_form.save(commit=False)
+                new_request.user = request.user.userprofile
+                new_request.save()
+                role_form.save_m2m()
             else:
-                messages.info(request, 'Вам автоматически присвоен статус "Гость"')
-            
-            if 'next' in request.POST:
-                next = request.POST['next']
-                if next == '':
-                    return redirect(reverse('main:done'))
-                else:
-                    return redirect(next)
-            else:
-                return redirect(reverse('main:done'))
+                return render(request, 'main/role_request.html', {
+                    'role_form': role_form,
+                    'caption': 'Запрос на изменение роли',
+                })
         else:
             return render(request, 'main/role_request.html', {
                 'role_form': role_form,
                 'caption': 'Запрос на изменение роли',
             })
+        
+        if new_request.role != 'NONE':
+            try:
+                mail_role_request(request, new_request, request.get_host(), request.build_absolute_uri(reverse('main:manage_requests')))
+            except BaseException as e:
+                messages.warning(request, 'Произошла ошибка во время оповещения администратора о появлении новой заявки, из-за чего её рассмотрение может задержаться. Чтобы избежать этого, Вы можете связаться с администрацией сайта самостоятельно')
+                logger.error(e)
+            finally:
+                messages.info(request, 'Ваша заявка на получение статуса зарегистрирована. После её рассмотрения вам будет направлено электронное письмо на email, указанный при регистрации')
+        else:
+            messages.info(request, u'Заявка не отправлена. Ваша роль "{}" не будет изменена'.format(request.user.userprofile.get_role_display())) 
+            
+        return redirect(reverse('main:done'))
 
+    # if method is not 'POST'
     if RoleRequest.objects.filter(user__user__pk=request.user.pk):
         role_request = RoleRequest.objects.get(user__user__pk=request.user.pk)
         role_form = UserRoleRequestForm(instance=role_request)
@@ -188,3 +257,38 @@ def role_request_view(request):
         'role_form': role_form,
         'caption': 'Запрос на изменение роли',
     })
+
+#
+# @api_view(['GET', 'POST'])
+# def user_list(request):
+#     """
+#     Пока что тестовый view, отправляющий запросы
+#     """
+#     if request.method == 'GET':
+#         users = UserProfile.objects.all()
+#         serializer = UserSerializer(users, many=True)
+#         content = JSONRenderer().render(serializer.data)
+#         requests.post('http://127.0.0.1:8001/test_rest/', {'us': 'us'})
+#         return render(request, 'main/rest_test.html', {'content': content, 'serializer': serializer.data})
+#
+#     elif request.method == 'POST':
+#         users = UserProfile.objects.all()
+#         serializer = UserSerializer(users, many=True)
+#         return Response(serializer.data)
+
+@api_view(['GET', 'POST'])
+def user_list(request):
+    """git
+    Пока что тестовый view, отправляющий запросы
+    """
+    if request.method == 'GET':
+        users = UserProfile.objects.all()
+        serializer = UserSerializer(users, many=True)
+        content = JSONRenderer().render(serializer.data)
+        return render(request, 'main/rest_test.html', {'content': content, 'serializer': serializer.data})
+
+    elif request.method == 'POST':
+        if 'accept' in request.POST:
+            return render(request, 'main/rest_test.html', {'content': request.POST, 'serializer': 'accept'})
+        elif 'decline' in request.POST:
+            return render(request, 'main/rest_test.html', {'content': request.POST, 'serializer': 'decline'})
