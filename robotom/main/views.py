@@ -270,7 +270,7 @@ def user_list(request):
         serializer = UserSerializer(users, many=True)
         content = JSONRenderer().render(serializer.data)
         info = json.dumps({'select': 'all'})
-        requests.post('http://mardanov@109.234.34.140:5002/storage/experiments', info)
+        requests.post('http://mardanov@109.234.34.140:5006/storage/experiments', info)
         return render(request, 'main/rest_test.html', {'content': content, 'serializer': serializer.data})
 
     elif request.method == 'POST':
@@ -278,7 +278,7 @@ def user_list(request):
         serializer = UserSerializer(users, many=True)
         content = JSONRenderer().render(serializer.data)
         info = json.dumps({'select': 'all'})
-        requests.post('http://mardanov@109.234.34.140:5002/storage/experiments', info)
+        requests.post('http://mardanov@109.234.34.140:5006/storage/experiments', info)
         return render(request, 'main/rest_test.html', {'content': content, 'serializer': serializer.data})
 #
 # @api_view(['GET', 'POST'])
