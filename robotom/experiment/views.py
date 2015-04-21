@@ -15,7 +15,7 @@ def power_on(request):
 @login_required
 @user_passes_test(has_experiment_access)
 def experiment_view(request):
-    return render(request, 'experiment/admin_rus/adj_admin.html', {
+    return render(request, 'experiment/Interface.html', {
         'full_access': (request.user.userprofile.role == 'EXP'),
         'caption': 'Эксперимент',
     })
