@@ -259,6 +259,13 @@ def role_request_view(request):
         'caption': 'Запрос на изменение роли',
     })
 
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 
 @api_view(['GET', 'POST'])
 def user_list(request):
@@ -270,7 +277,13 @@ def user_list(request):
         serializer = UserSerializer(users, many=True)
         content = JSONRenderer().render(serializer.data)
         info = json.dumps({'select': 'all'})
-        requests.post('http://mardanov@109.234.34.140:5006/storage/experiments', info)
+        #requests.post('http://mardanov@109.234.34.140:5006/storage/experiments', info)
+        # print "GET1"
+        # requests.post('http://93.175.2.145:8009/test_rest/', info)
+        # print get_client_ip(request)
+        requests.post("http://" + str(get_client_ip(request)) + ":8000", info)
+
+        # print "GET2"
         return render(request, 'main/rest_test.html', {'content': content, 'serializer': serializer.data})
 
     elif request.method == 'POST':
@@ -278,7 +291,10 @@ def user_list(request):
         serializer = UserSerializer(users, many=True)
         content = JSONRenderer().render(serializer.data)
         info = json.dumps({'select': 'all'})
-        requests.post('http://mardanov@109.234.34.140:5006/storage/experiments', info)
+        #requests.post('http://mardanov@109.234.34.140:5006/storage/experiments', info)
+        # print "POST1"
+        #requests.get('http://93.175.2.145:8009/test_rest/')
+        # print "POST2"
         return render(request, 'main/rest_test.html', {'content': content, 'serializer': serializer.data})
 #
 # @api_view(['GET', 'POST'])
