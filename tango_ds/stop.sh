@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-killall python
+killall -v python
