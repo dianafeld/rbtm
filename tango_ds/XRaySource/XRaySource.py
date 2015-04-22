@@ -57,12 +57,13 @@ import sys
 ## ON : The state in which the source is active
 ## OFF : The state in which the source is not active
 ## FAULT : The state in which the source is fault
+## STANDBY : 
 
 class XRaySource (PyTango.Device_4Impl):
 
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(XRaySource.global_variables) ENABLED START -----#
-    
+
     #----- PROTECTED REGION END -----#	//	XRaySource.global_variables
 
     def __init__(self,cl, name):
@@ -82,10 +83,13 @@ class XRaySource (PyTango.Device_4Impl):
     def init_device(self):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
-        self.attr_voltage_read = 0.0
+        self.attr_voltage_read = 0
+        self.attr_current_read = 0
         #----- PROTECTED REGION ID(XRaySource.init_device) ENABLED START -----#
 
-        self.set_state(PyTango.DevState.OFF);
+        self.set_state(PyTango.DevState.OFF)
+
+        # read actual values from source
 
         #----- PROTECTED REGION END -----#	//	XRaySource.init_device
 
@@ -116,6 +120,21 @@ class XRaySource (PyTango.Device_4Impl):
 
         #----- PROTECTED REGION END -----#	//	XRaySource.voltage_write
         
+    def read_current(self, attr):
+        self.debug_stream("In read_current()")
+        # ----- PROTECTED REGION ID(XRaySource.current_read) ENABLED START -----#
+
+        attr.set_value(self.attr_current_read)
+
+        # ----- PROTECTED REGION END -----#	//	XRaySource.current_read
+        
+    def write_current(self, attr):
+        self.debug_stream("In write_current()")
+        data=attr.get_write_value()
+        # ----- PROTECTED REGION ID(XRaySource.current_write) ENABLED START -----#
+
+        # ----- PROTECTED REGION END -----#	//	XRaySource.current_write
+        
     
     
         #----- PROTECTED REGION ID(XRaySource.initialize_dynamic_attributes) ENABLED START -----#
@@ -143,7 +162,7 @@ class XRaySource (PyTango.Device_4Impl):
         self.debug_stream("In Off()")
         #----- PROTECTED REGION ID(XRaySource.Off) ENABLED START -----#
 
-        self.set_state(PyTango.DevState.OFF);
+        self.set_state(PyTango.DevState.OFF)
 
         #----- PROTECTED REGION END -----#	//	XRaySource.Off
         
@@ -157,42 +176,73 @@ class XRaySource (PyTango.Device_4Impl):
         self.debug_stream("In On()")
         #----- PROTECTED REGION ID(XRaySource.On) ENABLED START -----#
 
-        self.set_state(PyTango.DevState.ON);
+        self.set_state(PyTango.DevState.ON)
 
         #----- PROTECTED REGION END -----#	//	XRaySource.On
-
+        
     def is_On_allowed(self):
         self.debug_stream("In is_On_allowed()")
-        state_ok = not (self.get_state() in [PyTango.DevState.FAULT])
+        state_ok = not(self.get_state() in [PyTango.DevState.FAULT])
         # ----- PROTECTED REGION ID(XRaySource.is_On_allowed) ENABLED START -----#
 
         #----- PROTECTED REGION END -----#	//	XRaySource.is_On_allowed
         return state_ok
         
     def SetOperatingMode(self, argin):
-        """ Sets new voltage
+        """ Sets new voltage and current
         
-        :param argin: voltage
-        :type: PyTango.DevDouble
+        :param argin: voltage, current
+        :type: PyTango.DevVarShortArray
         :return: 
         :rtype: PyTango.DevVoid """
         self.debug_stream("In SetOperatingMode()")
         #----- PROTECTED REGION ID(XRaySource.SetOperatingMode) ENABLED START -----#
 
-        new_voltage = argin
-        self.attr_voltage_read = new_voltage
+        if len(argin) != 2:
+            PyTango.Except.throw_exception(
+                "TOMOGRAPH_invalid_arguments",
+                "Invalid number of arguments: {} provided, 2 needed (voltage, current)".format(len(argin)),
+                "XRaySource::SetOperatingMode")
+
+        new_voltage = argin[0]
+        new_current = argin[1]
+
+        voltage = self.get_device_attr().get_attr_by_name("voltage")
+        min_voltage_value = voltage.get_min_value()
+        max_voltage_value = voltage.get_max_value()
+        if min_voltage_value <= new_voltage <= max_voltage_value:
+            self.attr_voltage_read = new_voltage
+        else:
+            PyTango.Except.throw_exception(
+                "TOMOGRAPH_invalid_arguments",
+                "Invalid voltage value",
+                "XRaySource::SetOperatingMode")
+
+        current = self.get_device_attr().get_attr_by_name("current")
+        min_current_value = current.get_min_value()
+        max_current_value = current.get_max_value()
+        if min_current_value <= new_current <= max_current_value:
+            self.attr_current_read = new_current
+        else:
+            PyTango.Except.throw_exception(
+                "TOMOGRAPH_invalid_arguments",
+                "Invalid current value",
+                "XRaySource::SetOperatingMode")
 
         #----- PROTECTED REGION END -----#	//	XRaySource.SetOperatingMode
-
+        
     def is_SetOperatingMode_allowed(self):
         self.debug_stream("In is_SetOperatingMode_allowed()")
-        state_ok = not (self.get_state() in [PyTango.DevState.OFF,
-                                             PyTango.DevState.FAULT])
+        state_ok = not(self.get_state() in [PyTango.DevState.FAULT])
         # ----- PROTECTED REGION ID(XRaySource.is_SetOperatingMode_allowed) ENABLED START -----#
 
         #----- PROTECTED REGION END -----#	//	XRaySource.is_SetOperatingMode_allowed
         return state_ok
         
+
+    #----- PROTECTED REGION ID(XRaySource.programmer_methods) ENABLED START -----#
+    
+    #----- PROTECTED REGION END -----#	//	XRaySource.programmer_methods
 
 class XRaySourceClass(PyTango.DeviceClass):
     #--------- Add you global class variables here --------------------------
@@ -238,7 +288,7 @@ class XRaySourceClass(PyTango.DeviceClass):
             [[PyTango.DevVoid, "none"],
             [PyTango.DevVoid, "none"]],
         'SetOperatingMode':
-            [[PyTango.DevDouble, "voltage"],
+            [[PyTango.DevVarShortArray, "voltage, current"],
             [PyTango.DevVoid, "none"]],
         }
 
@@ -246,17 +296,28 @@ class XRaySourceClass(PyTango.DeviceClass):
     #    Attribute definitions
     attr_list = {
         'voltage':
-            [[PyTango.DevDouble,
+            [[PyTango.DevShort,
             PyTango.SCALAR,
             PyTango.READ_WRITE],
-             {
-                 'label': "Input Voltage",
-                'unit': "kV",
-                'standard unit': "10E+3",
-                'format': "%4.1f",
-                'max value': "100",
-                'min value': "10",
-                'description': "shows the voltage of the X-Ray source",
+            {
+                'label': "Input Voltage",
+                'unit': "0.1 kV",
+                'standard unit': "10E+2",
+                'max value': "600",
+                'min value': "20",
+                'description': "voltage of the X-Ray source",
+            } ],
+        'current':
+            [[PyTango.DevShort,
+            PyTango.SCALAR,
+            PyTango.READ_WRITE],
+            {
+                'label': "current",
+                'unit': "0.1 mA",
+                'standard unit': "10E-4",
+                'max value': "800",
+                'min value': "20",
+                'description': "current of the X-Ray source",
             } ],
         }
 
@@ -265,6 +326,9 @@ def main():
     try:
         py = PyTango.Util(sys.argv)
         py.add_class(XRaySourceClass,XRaySource,'XRaySource')
+        #----- PROTECTED REGION ID(XRaySource.add_classes) ENABLED START -----#
+        
+        #----- PROTECTED REGION END -----#	//	XRaySource.add_classes
 
         U = PyTango.Util.instance()
         U.server_init()
