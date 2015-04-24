@@ -3,30 +3,32 @@ import requests
 
 experiment = json.dumps(
     {
-    'specimen': 'Gekkonidae',
-    'DARK':
-        {
-            'count': 100,
-            'exposure':3
-        },
-    'EMPTY':
-        {
-            'count': 20,
-            'exposure': 3
-        },
-    'DATA':
-        {
-            'step count': 10,
-            'exposure':3,
-            'angle step': 1,
-            'count per step': 100
-        }
+        'experiment_id': '552aa5546c8dc50c93edacf0',
+        'advanced': False,
+        'specimen': 'Gekkonidae',
+        'DARK':
+            {
+                'count': 1,
+                'exposure': 3
+            },
+        'EMPTY':
+            {
+                'count': 20,
+                'exposure': 3
+            },
+        'DATA':
+            {
+                'step count': 2,
+                'exposure': 3,
+                'angle step': 1,
+                'count per step': 1
+            }
     }
 )
 
 new_mode = json.dumps(
     {
-        'voltage': 22,
+        'voltage': 20,
         'current': 22
     }
 )
