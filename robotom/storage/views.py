@@ -3,9 +3,21 @@ from django.shortcuts import render
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 
+class Experiment_Record:
+    def __init__(self, id, name, voltage, date, finished, owner):
+        self.id = id
+        self.name = name
+        self.voltage = voltage
+        self.date = date
+        self.finished = finished
+        self.owner = owner
+
+
 def storage_view(request):
     # TODO
-    records_list = range(110)
+    records_list = [
+        Experiment_Record(i, "Name" + str(i), i, "22.11.2000", "Да", "Экспериментатор" + str(i))
+        for i in xrange(110)]
     pagin = Paginator(records_list, 15)
     page = request.GET.get('page')
 

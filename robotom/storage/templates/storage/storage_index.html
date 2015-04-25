@@ -7,23 +7,39 @@
                 <form method="post" action="" class="form">
                     {% csrf_token %}
                     <div class="row">
-                        <div class="col-xs-6">
+                        <div class="col-xs-5">
                             <div class="form-group">
                                 <label for="KeyWords">Ключевые слова в названии</label>
                                 <input type="text" class="form-control" id="KeyWords" placeholder="Ключевые слова">
                             </div>
                         </div>
-                        <div class="col-xs-3">
+                        <div class="col-xs-2">
                             <div class="form-group">
                                 <label for="SinceDate">С даты</label>
                                 <input type="date" class="form-control" id="SinceDate">
                             </div>
                         </div>
-                        <div class="col-xs-3">
+                        <div class="col-xs-2">
                             <div class="form-group">
                                 <label for="ToDate">До даты</label>
                                 <input type="date" class="form-control" id="ToDate">
                             </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-3">
+                            <div class="form-group">
+                                <label for="Finished">Завершен</label>
+                                <select class="form-control" id="Finished">
+                                    <option>---</option>
+                                    <option>Завершен</option>
+                                    <option>Не завершен</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-5">
+                            <label for="Owner">Экспериментатор</label>
+                            <input type="text" class="form-control" id="Owner" placeholder="Экспериментатор">
                         </div>
                     </div>
                     <div class="row">
@@ -46,15 +62,30 @@
                     <p>Результаты поиска</p>
                 </div>
                 <div class="panel-body">
-                    <div class="row">
-                        <div class="col-xs-4">
-                            {% for record_id in record_range %}
-                                    <a href="{% url 'storage:storage_record' record_id %}">
-                                        Перейти к записи номер {{ record_id }}
-                                    </a> <br>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Название</th>
+                                <th>Вольтаж</th>
+                                <th>Дата</th>
+                                <th>Закончен</th>
+                                <th>Экспериментатор</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in record_range %}
+                                <tr>
+                                    <th>{{ record.id }}</th>
+                                    <th>{{ record.name }}</th>
+                                    <th>{{ record.voltage }}</th>
+                                    <th>{{ record.date }}</th>
+                                    <th>{{ record.finished }}</th>
+                                    <th>{{ record.owner }}</th>
+                                </tr>
                             {% endfor %}
-                        </div>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
                 <div class="panel-footer">
                     <ul class="pagination">
