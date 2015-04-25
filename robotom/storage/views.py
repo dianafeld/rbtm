@@ -35,6 +35,8 @@ def storage_view(request):
         if page is None:
             to_show = False
     elif request.method == "POST":
+        for res in request.POST:
+            print res
         records = pagin.page(1)
 
     return render(request, 'storage/storage_index.html', {
