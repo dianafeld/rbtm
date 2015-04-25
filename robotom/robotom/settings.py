@@ -3,12 +3,28 @@
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+STORAGE_FRAMES_HOST = 'http://109.234.34.140:5006/storage/frames'
+#TODO
+STORAGE_CREATE_USER_HOST = ''
+STORAGE_ALT_USER_HOST = ''
+
 import os
 
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..')
 
 ADMINS = (
     ('Robotom Admins', 'robotomproject@gmail.com'),
+)
+
+PASSWORD_HASHERS = (
+    'django.contrib.auth.hashers.MD5PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+    'django.contrib.auth.hashers.BCryptPasswordHasher',
+    'django.contrib.auth.hashers.SHA1PasswordHasher',
+    'django.contrib.auth.hashers.CryptPasswordHasher',
 )
 
 DEFAULT_FROM_EMAIL = 'robotomproject@gmail.com'
@@ -148,6 +164,11 @@ LOGGING = {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
+        },
+        'write_to_file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'rest.log')
         }
     },
     'loggers': {
@@ -156,6 +177,10 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'rest_logger': {
+            'handlers': ['write_to_file'],
+            'level': 'DEBUG',
+        }
     }
 }
 

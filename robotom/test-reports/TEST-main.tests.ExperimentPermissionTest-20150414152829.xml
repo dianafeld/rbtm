@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite errors="0" failures="0" name="main.tests.ExperimentPermissionTest-20150414152829" tests="1" time="0.999">
-	<properties/>
-	<system-out>
-<![CDATA[]]>	</system-out>
-	<system-err>
-<![CDATA[]]>	</system-err>
-	<testcase classname="main.tests.ExperimentPermissionTest" name="test_exp_perm" time="0.999"/>
-</testsuite>

@@ -23,7 +23,7 @@ from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer, StaticH
 from rest_framework.response import Response
 
 logger = logging.getLogger('django.request')
-
+rest_logger = logging.getLogger('rest_logger')
 
 def index(request):
     return render(request, 'main/index.html', {'caption': 'ROBO-TOM'})
@@ -54,14 +54,29 @@ def registration_view(request):
     if request.method == 'POST':
         user_form = UserRegistrationForm(request.POST)
         userprofile_form = UserProfileRegistrationForm(request.POST)
-        if user_form.is_valid() and userprofile_form.is_valid():
-            user = user_form.save()
+        if user_form.is_valid() and userprofile_form.is_valid():                 
+            user = user_form.save(commit=False)
             user.is_active = False
-
+            new_profile = userprofile_form.save(commit=False)
+            
+            # request to Storage
+            user_info = json.dumps({'username': user.username, 'password': user.password, 'role': 'GST'})
+            #rest_logger.debug(user_info)
+            try:
+                answer = requests.post(settings.STORAGE_CREATE_USER_HOST, user_info, timeout=1)
+                if answer.status_code != 200:
+                    messages.warning(request, u'Пользователь не может быть зарегистрирован. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
+                    logger.error(u'Пользователь не может быть зарегистрирован. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
+                    return redirect(reverse('main:done'))
+            except requests.exceptions.Timeout as e:
+                 messages.warning(request, 'Нет ответа от модуля "Хранилище", невозможно завершить регистрацию')
+                 logger.error(e)
+                 return redirect(reverse('main:done'))
+             
+            user.save()
+            
             salt = hashlib.sha1(str(random.random())).hexdigest()[:5]
             activation_key = hashlib.sha1(salt + user.email).hexdigest()
-
-            new_profile = userprofile_form.save(commit=False)
             new_profile.user = user
             new_profile.activation_key = activation_key
             activation_link = u'{}/accounts/confirm/{}'.format(request.get_host(), activation_key) 
@@ -181,7 +196,26 @@ def manage_requests_view(request):
         profile = get_object_or_404(UserProfile, pk=profile_id)
         site = request.get_host()
         role_long = profile.rolerequest.get_role_display()
+        request_list = [rolerequest.user for rolerequest in RoleRequest.objects.exclude(role='NONE')]
         if 'accept' in request.POST:
+            user_info = json.dumps({'username': profile.user.username, 'password': profile.user.password, 'role': profile.rolerequest.role})
+            #rest_logger.debug(user_info)
+            try:
+                answer = requests.post(settings.STORAGE_ALT_USER_HOST, user_info, timeout=1)
+                if answer.status_code != 200:
+                    messages.warning(request, u'Невозможно сохранить данные. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
+                    logger.error(u'Невозможно сохранить данные. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
+                    return render(request, 'main/manage_requests.html', {
+                        'request_list': request_list,
+                        'caption': 'Запросы смены роли'
+                    })
+            except requests.exceptions.Timeout as e:
+                 messages.warning(request, 'Нет ответа от модуля "Хранилище", невозможно сохранить данные. Попробуйте снова через некоторое время или свяжитесь с администратором')
+                 logger.error(e)
+                 return render(request, 'main/manage_requests.html', {
+                    'request_list': request_list,
+                    'caption': 'Запросы смены роли'
+                 })
             profile.user.is_superuser = False  # we must invalidate superuser and staff rights
             profile.user.is_staff = False  # if any error was made before
             profile.role = profile.rolerequest.role
@@ -277,6 +311,8 @@ def user_list(request):
         serializer = UserSerializer(users, many=True)
         content = JSONRenderer().render(serializer.data)
         info = json.dumps({'select': 'all'})
+ 
+        rest_logger.debug('Message here!') # an example of logging-to-file
         #requests.post('http://mardanov@109.234.34.140:5006/storage/experiments', info)
         # print "GET1"
         # requests.post('http://93.175.2.145:8009/test_rest/', info)

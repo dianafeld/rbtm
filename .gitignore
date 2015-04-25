@@ -9,3 +9,5 @@
 robotom/.idea/
 
 robotom/static/rest_framework/
+
+*.log
