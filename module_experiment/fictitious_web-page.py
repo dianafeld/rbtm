@@ -1,5 +1,6 @@
 import json
 import requests
+import exceptions
 
 experiment = json.dumps(
     {
@@ -8,8 +9,8 @@ experiment = json.dumps(
         'specimen': 'Gekkonidae',
         'DARK':
             {
-                'count': 1,
-                'exposure': 3
+                'count': 4,
+                'exposure': 5
             },
         'EMPTY':
             {
@@ -18,10 +19,10 @@ experiment = json.dumps(
             },
         'DATA':
             {
-                'step count': 2,
+                'step count': 20,
                 'exposure': 3,
                 'angle step': 1,
-                'count per step': 1
+                'count per step': 20
             }
     }
 )
@@ -32,9 +33,12 @@ new_mode = json.dumps(
         'current': 22
     }
 )
-
-req = requests.post("http://109.234.34.140:5001/module-experiment/v1.0/start-experiment", data = experiment)
-#req = requests.post("http://109.234.34.140:5001/module-experiment/v1.0/source/set-operating-mode", data = new_mode)
-#req = requests.get('http://109.234.34.140:5001/module-experiment/v1.0/detector/get-frame/3')
-print req.content
+try:
+    req = requests.post("http://109.234.34.140:5001/module-experiment/v1.0/experiment/start", data = experiment)
+    #req = requests.post("http://109.234.34.140:5001/module-experiment/v1.0/source/set-operating-mode", data = new_mode)
+    #req = requests.get('http://109.234.34.140:5001/module-experiment/v1.0/detector/get-frame/3')
+except requests.ConnectionError as e:
+    print "Could not connect", e.message
+else:
+    print req.content
 
