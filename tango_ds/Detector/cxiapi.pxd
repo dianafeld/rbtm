@@ -5,14 +5,14 @@ cdef extern from "m3api/xiApi.h":
 
     ctypedef int XI_RETURN
 
-    ctypedef void* HANDLE
-    ctypedef HANDLE* PHANDLE
+    ctypedef void *HANDLE
+    ctypedef HANDLE *PHANDLE
     ctypedef int DWORD
-    ctypedef DWORD* PDWORD
-    ctypedef void* LPVOID
+    ctypedef DWORD *PDWORD
+    ctypedef void *LPVOID
 
-    cdef char* XI_PRM_IMAGE_DATA_FORMAT = "imgdataformat" # Output data format. XI_IMG_FORMAT
-    cdef char* XI_PRM_EXPOSURE = "exposure" # Exposure time in microseconds
+    cdef char *XI_PRM_IMAGE_DATA_FORMAT = "imgdataformat" # Output data format. XI_IMG_FORMAT
+    cdef char *XI_PRM_EXPOSURE = "exposure" # Exposure time in microseconds
 
     ctypedef enum XI_IMG_FORMAT:
         XI_MONO8,  # 8 bits per pixel
@@ -40,7 +40,7 @@ cdef extern from "m3api/xiApi.h":
         DWORD         AbsoluteOffsetX  # Horizontal offset of origin of sensor and buffer image first pixel.
         DWORD         AbsoluteOffsetY  # Vertical offset of origin of sensor and buffer image first pixel.
 
-    ctypedef XI_IMG* LPXI_IMG
+    ctypedef XI_IMG *LPXI_IMG
 
     ctypedef enum XI_OPEN_BY:
         XI_OPEN_BY_INST_PATH,  # Open camera by its hardware path
@@ -135,11 +135,11 @@ cdef extern from "m3api/xiApi.h":
 
     XI_RETURN xiGetNumberDevices(PDWORD pNumberDevices)
 
-    XI_RETURN xiGetDeviceInfo(DWORD DevId, const char* prm, void* val, DWORD* size, XI_PRM_TYPE* type)
+    XI_RETURN xiGetDeviceInfo(DWORD DevId, const char *prm, void *val, DWORD *size, XI_PRM_TYPE *type)
 
     XI_RETURN xiOpenDevice(DWORD DevId, PHANDLE hDevice)
 
-    XI_RETURN xiOpenDeviceBy(XI_OPEN_BY sel, const char* prm, PHANDLE hDevice);
+    XI_RETURN xiOpenDeviceBy(XI_OPEN_BY sel, const char *prm, PHANDLE hDevice);
 
     XI_RETURN xiCloseDevice(HANDLE hDevice)
 
@@ -149,24 +149,24 @@ cdef extern from "m3api/xiApi.h":
 
     XI_RETURN xiGetImage(HANDLE hDevice, DWORD timeout, LPXI_IMG img)
 
-    XI_RETURN xiSetParam(HANDLE hDevice, const char* prm, void* val, DWORD size, XI_PRM_TYPE type);
+    XI_RETURN xiSetParam(HANDLE hDevice, const char *prm, void *val, DWORD size, XI_PRM_TYPE type);
 
-    XI_RETURN xiGetParam(HANDLE hDevice, const char* prm, void* val, DWORD *size, XI_PRM_TYPE* type);
+    XI_RETURN xiGetParam(HANDLE hDevice, const char *prm, void *val, DWORD *size, XI_PRM_TYPE *type);
 
     # -----------------------------------------------------------------------------------
     # Set device parameter
-    XI_RETURN xiSetParamInt(HANDLE hDevice, const char* prm, const int val);
-    XI_RETURN xiSetParamFloat(HANDLE hDevice, const char* prm, const float val);
-    XI_RETURN xiSetParamString(HANDLE hDevice, const char* prm, void*val, DWORD size);
+    XI_RETURN xiSetParamInt(HANDLE hDevice, const char *prm, const int val);
+    XI_RETURN xiSetParamFloat(HANDLE hDevice, const char *prm, const float val);
+    XI_RETURN xiSetParamString(HANDLE hDevice, const char *prm, void *val, DWORD size);
     # -----------------------------------------------------------------------------------
     # Get device parameter
-    XI_RETURN xiGetParamInt(HANDLE hDevice, const char* prm, int* val);
-    XI_RETURN xiGetParamFloat(HANDLE hDevice, const char* prm, float* val);
-    XI_RETURN xiGetParamString(HANDLE hDevice, const char* prm, void* val, DWORD size);
+    XI_RETURN xiGetParamInt(HANDLE hDevice, const char *prm, int *val);
+    XI_RETURN xiGetParamFloat(HANDLE hDevice, const char *prm, float *val);
+    XI_RETURN xiGetParamString(HANDLE hDevice, const char *prm, void *val, DWORD size);
     # -----------------------------------------------------------------------------------
     # Get device info
-    XI_RETURN xiGetDeviceInfoInt(DWORD DevId, const char* prm, int*value);
-    XI_RETURN xiGetDeviceInfoString(DWORD DevId, const char* prm, char*value, DWORD value_size);
+    XI_RETURN xiGetDeviceInfoInt(DWORD DevId, const char *prm, int *value);
+    XI_RETURN xiGetDeviceInfoString(DWORD DevId, const char *prm, char *value, DWORD value_size);
     # -----------------------------------------------------------------------------------
 
 
