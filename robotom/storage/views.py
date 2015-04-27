@@ -1,25 +1,28 @@
 # coding=utf-8
+import requests
+import json
 from django.shortcuts import render
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 
 class Experiment_Record:
-    def __init__(self, id, name, voltage, date, finished, owner):
+    def __init__(self, id, name, voltage, current, date, finished, owner):
         self.id = id
         self.name = name
         self.voltage = voltage
+        self.current = current
         self.date = date
         self.finished = finished
         self.owner = owner
 
 
-def storage_view(request):
-    # TODO
-    records_list = [
-        Experiment_Record(i, "Name" + str(i), i, "22.11.2000", "Да", "Экспериментатор" + str(i))
+def create_pages(request, results, page):
+    record_list = [
+        Experiment_Record(i, "Name" + str(i), i, i, "22.11.2000", "Да", "Экспериментатор" + str(i))
         for i in xrange(110)]
-    pagin = Paginator(records_list, 15)
-    page = request.GET.get('page')
+
+    # record_list = [Experiment_Record(result) for result in results]
+    pagin = Paginator(record_list, 15)
 
     try:
         records = pagin.page(page)
@@ -30,6 +33,16 @@ def storage_view(request):
         # If page is out of range (e.g. 9999), deliver last page of results.
         records = pagin.page(pagin.num_pages)
 
+    return records
+
+
+def storage_view(request):
+    # TODO
+
+    page = request.GET.get('page')
+    records = []
+    num_pages = 0
+
     to_show = True
     if request.method == "GET":
         if page is None:
@@ -37,13 +50,19 @@ def storage_view(request):
     elif request.method == "POST":
         for res in request.POST:
             print res, request.POST[res]
-        records = pagin.page(1)
+        info = json.dumps({'select': 'all'})
+        experiments = requests.post('http://10.234.34.140:5006/storage/experiments', info)
+        print experiments.content
+        page = 1
+        records = create_pages(request, experiments, page)
+        # print json.loads(info)
+        # num_pages = len(experiments) / 15 + 2
 
     return render(request, 'storage/storage_index.html', {
         'record_range': records,
         'caption': 'Хранилище',
         'toShowResult': to_show,
-        'pages': xrange(1, pagin.num_pages + 1),
+        'pages': xrange(1, num_pages + 1),
         'current_page': page,
     })
 
