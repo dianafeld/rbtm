@@ -33,6 +33,26 @@ def incorrect_format(error):
 
 
 
+# create new user, need json file as request return result:success json if success
+@app.route('/storage/users/post', methods=['POST'])
+def create_user():
+    if not request.data:
+        logging.error(u'Incorrect format')
+        abort(400)
+
+    try:
+        experiments = db[u'users']
+        query = json.loads(request.data)
+        experiments.insert(query)
+
+    except ValueError, e:
+        logging.error(e)
+        abort(500)
+
+    return jsonify({'result': 'success'})
+
+
+
 # return experiments by request json file. return json
 @app.route('/storage/experiments/get', methods=['POST'])
 def get_experiments():
