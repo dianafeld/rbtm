@@ -62,7 +62,7 @@ from driver_source import *
 class XRaySource (PyTango.Device_4Impl):
 
     #--------- Add you global variables here --------------------------
-    mydr = DriverSource()
+    mydr = Source()
     #----- PROTECTED REGION ID(XRaySource.global_variables) ENABLED START -----#
 
     #----- PROTECTED REGION END -----#	//	XRaySource.global_variables
