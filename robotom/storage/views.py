@@ -50,11 +50,13 @@ def storage_view(request):
     elif request.method == "POST":
         for res in request.POST:
             print res, request.POST[res]
-        info = json.dumps({'select': 'all'})
-        experiments = requests.post('http://10.234.34.140:5006/storage/experiments', info)
-        print experiments.content
+        # info = json.dumps({'select': 'all'})
+        # experiments = requests.post('http://10.234.34.140:5006/storage/experiments', info)
+        # print experiments.content
         page = 1
+        experiments = []
         records = create_pages(request, experiments, page)
+        num_pages = 110 / 15 + 1
         # print json.loads(info)
         # num_pages = len(experiments) / 15 + 2
 
