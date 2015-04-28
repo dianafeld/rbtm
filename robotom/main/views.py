@@ -293,6 +293,7 @@ def role_request_view(request):
         'caption': 'Запрос на изменение роли',
     })
 
+
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:
