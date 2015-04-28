@@ -106,7 +106,7 @@ class XRaySource (PyTango.Device_4Impl):
     def read_voltage(self, attr):
         self.debug_stream("In read_voltage()")
         #----- PROTECTED REGION ID(XRaySource.voltage_read) ENABLED START -----#
-        attr.set_value(self.attr_voltage_read)
+        attr.set_value(self.mydr.get_voltage())
 
         #----- PROTECTED REGION END -----#	//	XRaySource.voltage_read
         
@@ -115,8 +115,6 @@ class XRaySource (PyTango.Device_4Impl):
         data=attr.get_write_value()
         # ----- PROTECTED REGION ID(XRaySource.voltage_write) ENABLED START -----#
         self.mydr.set_voltage(data)
-        self.attr_voltage_read = self.mydr.get_voltage()
-
         #----- PROTECTED REGION END -----#	//	XRaySource.voltage_write
         
     def is_voltage_allowed(self, attr):
@@ -130,7 +128,7 @@ class XRaySource (PyTango.Device_4Impl):
     def read_current(self, attr):
         self.debug_stream("In read_current()")
         # ----- PROTECTED REGION ID(XRaySource.current_read) ENABLED START -----#
-        attr.set_value(self.attr_current_read)
+        attr.set_value(self.mydr.get_current())
 
         # ----- PROTECTED REGION END -----#	//	XRaySource.current_read
         
@@ -139,7 +137,6 @@ class XRaySource (PyTango.Device_4Impl):
         data=attr.get_write_value()
         # ----- PROTECTED REGION ID(XRaySource.current_write) ENABLED START -----#
         self.mydr.set_current(data)
-        self.attr_current_read = self.mydr.get_current()
         # ----- PROTECTED REGION END -----#	//	XRaySource.current_write
         
     def is_current_allowed(self, attr):
@@ -226,7 +223,8 @@ class XRaySource (PyTango.Device_4Impl):
         min_voltage_value = voltage.get_min_value()
         max_voltage_value = voltage.get_max_value()
         if min_voltage_value <= new_voltage <= max_voltage_value:
-            self.attr_voltage_read = new_voltage
+            self.attr_voltage_write = new_voltage
+            self.write_voltage(voltage)
         else:
             PyTango.Except.throw_exception(
                 "TOMOGRAPH_invalid_arguments",
@@ -237,7 +235,8 @@ class XRaySource (PyTango.Device_4Impl):
         min_current_value = current.get_min_value()
         max_current_value = current.get_max_value()
         if min_current_value <= new_current <= max_current_value:
-            self.attr_current_read = new_current
+            self.attr_current_write = new_current
+            self.write_current(current)
         else:
             PyTango.Except.throw_exception(
                 "TOMOGRAPH_invalid_arguments",
