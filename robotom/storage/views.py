@@ -5,9 +5,9 @@ from django.shortcuts import render
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 
-class Experiment_Record:
-    def __init__(self, id, name, voltage, current, date, finished, owner):
-        self.id = id
+class ExperimentRecord:
+    def __init__(self, record_id, name, voltage, current, date, finished, owner):
+        self.id = record_id
         self.name = name
         self.voltage = voltage
         self.current = current
@@ -18,7 +18,7 @@ class Experiment_Record:
 
 def create_pages(request, results, page):
     record_list = [
-        Experiment_Record(i, "Name" + str(i), i, i, "22.11.2000", "Да", "Экспериментатор" + str(i))
+        ExperimentRecord(i, "Name" + str(i), i, i, "22.11.2000", "Да", "Экспериментатор" + str(i))
         for i in xrange(110)]
 
     # record_list = [Experiment_Record(result) for result in results]
