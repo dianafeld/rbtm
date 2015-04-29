@@ -42,23 +42,23 @@
 			Параметры получения изображения<br>
 			<h2>Кадры DARK<br></h2>
 			Количество:<br>
-			<input type = "text" class="btn btn-primary" name = "dark_quantity" size = "30", maxsize = "50" pattern="d [0-9]"><br>
+			<input type = "text" class="btn btn-primary" name = "dark_quantity" size = "30", maxsize = "50" pattern="^[ 0-9]+$"><br>
 			Экспозиция:<br>
-			<input type = "text" class="btn btn-primary" name = "dark_exposure" size = "30", maxsize = "50" pattern="d [0-9]"><br>
+			<input type = "text" class="btn btn-primary" name = "dark_exposure" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
 			<h2>EMPTY shots<br></h2>
 			Количество:<br>
-			<input type = "text" class="btn btn-primary" name = "empty_quantity" size = "30", maxsize = "50" pattern="d [0-9]"><br>
+			<input type = "text" class="btn btn-primary" name = "empty_quantity" size = "30", maxsize = "50" pattern="^[ 0-9]+$"><br>
 			Экспозиция:<br>
-			<input type = "text" class="btn btn-primary" name = "empty_exposure" size = "30", maxsize = "50" pattern="d [0-9]"><br>
+			<input type = "text" class="btn btn-primary" name = "empty_exposure" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
 			<h2>DATA shots:<br></h2>
 			Количество:<br>
-			<input type = "text" class="btn btn-primary" name = "data_quantity" size = "30", maxsize = "50" pattern="d [0-9]"><br>
+			<input type = "text" class="btn btn-primary" name = "data_quantity" size = "30", maxsize = "50" pattern="^[ 0-9]+$"><br>
 			Экспозиция:<br>
-			<input type = "text" class="btn btn-primary" name = "data_exposure" size = "30", maxsize = "50" pattern="d [0-9]"><br>
+			<input type = "text" class="btn btn-primary" name = "data_exposure" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
 			Угловой шаг между кадрами:<br>
 			<input type = "text" class="btn btn-primary" name = "data_angle" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
 			Количество кадров снятых при одном угле поворота кадров DATA:<br>
-			<input type = "text" class="btn btn-primary" name = "data_same" size = "30", maxsize = "50" pattern="d [0-9]"><br>
+			<input type = "text" class="btn btn-primary" name = "data_same" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
 			<br>
 			<input type="submit" class="btn btn-primary" name="start_experiment">
 			<input type="reset" class="btn btn-primary" value="Сбросить">

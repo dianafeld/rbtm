@@ -14,6 +14,7 @@ import random
 import requests
 import urllib2
 import json
+import uuid
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer, StaticHTMLRenderer
@@ -50,8 +51,8 @@ def experiment_start(request):
 		if 'experiment_on' in request.POST:
 			info = json.dumps({
 				'experiment_id': '552aa5546c8dc50c93edacf0',
-				'voltage': request.POST['voltage'],
-				'current': request.POST['current']
+				'voltage': float(request.POST['voltage']),
+				'current': float(request.POST['current'])
 				})
 			req = requests.post('http://109.234.34.140:5001/tomograph/1/source/set-operating-mode', info)
 		return render(request, 'experiment/Interface.html', {
@@ -62,33 +63,33 @@ def experiment_start(request):
 def send_parameters(request):
 	if request.method == 'POST':
 		if 'start_experiment' in request.POST:
-				simple_experiment = json.dumps(
-				{
-				'experiment id': '552aa5546c8dc50c93edacf0',
+				x = uuid.uuid4()
+				simple_experiment = json.dumps({
+				'experiment id': str(x),
 				'advanced': False,
 				'specimen': 'Gekkonidae',
 				'DARK':
 				{
-				'count': 10,
-				'exposure': 0.12
+				'count': int(float(request.POST['dark_quantity'])),
+				'exposure': float(request.POST['dark_exposure'])
 				},
 				'EMPTY':
 				{
-				'count': 20,
-				'exposure': 3
+				'count': int(float(request.POST['empty_quantity'])),
+				'exposure': float(request.POST['dark_exposure'])
 				},
 				'DATA':
 				{
-				'step count': 6,
-				'exposure': 3,
-				'angle step': 1.34,
-				'count per step': 1
+				'step count': int(float(request.POST['data_quantity'])),
+				'exposure': float(request.POST['data_exposure']),
+				'angle step': float(request.POST['data_angle']),
+				'count per step': int(float(request.POST['data_same']))
 				}
 				}
 				)
 				requests.post('http://mardanov@109.234.34.140:5006/storage/experiments/post', simple_experiment)
 				print("sgg")
-				'''requests.post('http://109.234.34.140:5001/tomograph/1/experiment/start', simple_experiment)'''
+				requests.post('http://109.234.34.140:5001/tomograph/1/experiment/start', simple_experiment)
 		return render(request, 'experiment/Interface.html', {
         'full_access': (request.user.userprofile.role == 'EXP'),
         'caption': 'Эксперимент',
