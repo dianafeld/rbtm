@@ -1,52 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+
 <html>
+
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Interface</title>
 </head>
 	<body>
-		<h1 align = "center">Интерфейс томографического эксперимента</h1>
+		<h1 align = "center">Эксперимент</h1>
 		<hr noshade>
-		<form name = "manual">
-			<h2>Праметры образца<br></h2>
+		<body>
+		<br><h3>Заполните все поля для начала эксперимента</h3>
+		<form name = "form1" method="POST" action="start">
+		{% csrf_token %}
+			<h2>Параметры эксперимента</h2>
+			<br>Напряжение, кВ<br>
+			<input type="text" class="btn btn-primary" required name="voltage" pattern="\d+(\.\d{2})?"><br>
+			Ток, мА<br>
+			<input type="text" class="btn btn-primary" required name="current" pattern="\d+(\.\d{2})?"><br>
+			<br>
+			<input type="submit" class="btn btn-primary" name="experiment_on" value="Начать">
+			<input type="reset" class="btn btn-primary" value="Сбросить">
+		</form>
+	</body>
+		<form method="POST" action="send" class="form">
+			{% csrf_token %} 
+			<h2>Параметры образца<br></h2>
 			Название:<br>
-			<input type = "text" name = "name" size = "20", maxsize = "50"><br>
+			<input type = "text" class="btn btn-primary" name = "name" size = "30", maxsize = "50" ><br>
 			Тип:<br>
-			<input type = "text" name = "type" size = "20", maxsize = "50"><br>
+			<input type = "text" class="btn btn-primary" name = "type" size = "30", maxsize = "50" ><br>
 			Другое:<br>
-			<input type = "text" name = "other" size = "20", maxsize = "50"><br>
+			<input type = "text" class="btn btn-primary" name = "sample_other" size = "30", maxsize = "50"><br>
 			<h2>Параметры установки<br></h2>
 			Параметры источника:<br>
-			<input type = "text" name = "source" size = "20", maxsize = "50"><br>
+			<input type = "text" class="btn btn-primary" name = "source" size = "30", maxsize = "50" ><br>
 			Другое:<br>
-			<input type = "text" name = "other" size = "20", maxsize = "50"><br>
+			<input type = "text" class="btn btn-primary" name = "source_other" size = "30", maxsize = "50"><br>
 			Параметры получения изображения<br>
 			<h2>Кадры DARK<br></h2>
 			Количество:<br>
-			<input type = "text" name = "quantity" size = "20", maxsize = "50"><br>
+			<input type = "text" class="btn btn-primary" name = "dark_quantity" size = "30", maxsize = "50" pattern="d [0-9]"><br>
 			Экспозиция:<br>
-			<input type = "text" name = "exposition" size = "20", maxsize = "50"><br>
+			<input type = "text" class="btn btn-primary" name = "dark_exposure" size = "30", maxsize = "50" pattern="d [0-9]"><br>
 			<h2>EMPTY shots<br></h2>
 			Количество:<br>
-			<input type = "text" name = "quantity" size = "20", maxsize = "50"><br>
+			<input type = "text" class="btn btn-primary" name = "empty_quantity" size = "30", maxsize = "50" pattern="d [0-9]"><br>
 			Экспозиция:<br>
-			<input type = "text" name = "exposition" size = "20", maxsize = "50"><br>
+			<input type = "text" class="btn btn-primary" name = "empty_exposure" size = "30", maxsize = "50" pattern="d [0-9]"><br>
 			<h2>DATA shots:<br></h2>
 			Количество:<br>
-			<input type = "text" name = "quantity" size = "20", maxsize = "50"><br>
+			<input type = "text" class="btn btn-primary" name = "data_quantity" size = "30", maxsize = "50" pattern="d [0-9]"><br>
 			Экспозиция:<br>
-			<input type = "text" name = "exposition" size = "20", maxsize = "50"><br>
+			<input type = "text" class="btn btn-primary" name = "data_exposure" size = "30", maxsize = "50" pattern="d [0-9]"><br>
 			Угловой шаг между кадрами:<br>
-			<input type = "text" name = "angle" size = "20", maxsize = "50"><br>
+			<input type = "text" class="btn btn-primary" name = "data_angle" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
 			Количество кадров снятых при одном угле поворота кадров DATA:<br>
-			<input type = "text" name = "same" size = "20", maxsize = "50"><br>
+			<input type = "text" class="btn btn-primary" name = "data_same" size = "30", maxsize = "50" pattern="d [0-9]"><br>
 			<br>
-			<input type = "submit" name = "submit" value = "Отправить">
-		</form>
-		<form name = "file">
+			<input type="submit" class="btn btn-primary" name="start_experiment">
+			<input type="reset" class="btn btn-primary" value="Сбросить">
 			<h2>Выбрать настройки из файла:<br></h2>
-			<input type = "file" name = "load" size = "50"><br>
-			<br>
-			<input type = "submit" name = "submit" value = "Отправить">
-		</form>		
+			<input type="submit" class="btn btn-primary" name="load_from_database"><br>
+		</form>
+		<h2>Просмотреть текущее изображение<br></h2>
+		<form name ="form3" method="POST" action="image">
+			<input type="submit" class="btn btn-primary" name="show_image">
+		</form>
+		
 	</body>
 </html> 
+
+{% endblock content %}
