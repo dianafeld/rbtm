@@ -1,6 +1,7 @@
 from cxiapi cimport *
-
-import PyTango
+from libc.string cimport memset, memchr, memcmp, memcpy, memmove
+import numpy
+cimport numpy
 
 error_codes = { XI_OK: "Function call succeeded",
                 XI_INVALID_HANDLE: "Invalid handle",
@@ -85,8 +86,6 @@ cdef void create_exception(return_code, func_name) except *:
     desc = error_codes[return_code]
     origin = func_name
     print(reason, desc, origin)
-    PyTango.Except.throw_exception(reason, desc, origin)
-
 
 cdef void handle_error(return_code, func_name) except *:
     if return_code != XI_OK:
@@ -97,7 +96,7 @@ cdef void handle_error(return_code, func_name) except *:
 cdef class Detector:
 
     cdef HANDLE handle
-    TIMEOUT = 10 # in ms
+    TIMEOUT = 10000 # in ms
     def __cinit__(self):
         cdef DWORD a
 
@@ -105,10 +104,13 @@ cdef class Detector:
         handle_error(e, "Detector.__cinit__()")
         print "Number of devices: {}".format(a)
 
-        e = xiOpenDevice(1, &self.handle)
+        e = xiOpenDevice(0, &self.handle)
         handle_error(e, "Detector.__cinit__()")
 
         e = xiSetParamInt(self.handle, XI_PRM_IMAGE_DATA_FORMAT, XI_MONO16)
+        handle_error(e, "Detector.__cinit__()")
+
+        e = xiSetParamInt(self.handle, XI_PRM_BUFFER_POLICY, XI_BP_SAFE);
         handle_error(e, "Detector.__cinit__()")
 
     def set_exposure(self, exposure):
@@ -121,12 +123,53 @@ cdef class Detector:
         handle_error(e, "Detector.get_exposure()")
         return round(exposure_in_us / 1000)
 
-    def get_image(self):
-        cdef XI_IMG image
-        e = xiGetImage(self.handle, Detector.TIMEOUT, &image)
-        handle_error(e, "Detector.get_image()")
+    cdef make_image(self, XI_IMG image):
+        img = [[] for i in range(image.height)]
+        i = 0
+        for h in range(image.height):
+            for w in range(image.width + image.padding_x / 2):
+                if (<numpy.uint16_t *>image.bp)[i] <= 10:
+                    print(i, (<numpy.uint16_t *>image.bp)[i])
+                img[h].append((<numpy.uint16_t *>image.bp)[i])
+                i += 1
 
-        #return image.height, image.width, image.bp
+        return img
+
+    cdef make_image2(self, XI_IMG image):
+        number_of_pixels = (image.width + image.padding_x / 2) * image.height
+        size = number_of_pixels * 2
+        img = numpy.empty(shape=(image.height, image.width+ image.padding_x / 2), dtype = 'uint16')
+        i = 0
+        for h in range(img.shape[0]):
+            for w in range(img.shape[1]):
+                img[h,w]= (<numpy.uint16_t *>image.bp)[i]
+                i = i+1    
+        return img
+
+    def get_image(self):
+
+
+        cdef XI_IMG image
+        e = xiStartAcquisition(self.handle)
+        handle_error(e, "Detector.get_image().xiStartAcquisition()")
+        image.bp = NULL
+        image.bp_size = 0
+        for i in range(2):
+            e = xiGetImage(self.handle, Detector.TIMEOUT, &image)
+            handle_error(e, "Detector.get_image().xiGetImage()")
+
+        e = xiStopAcquisition(self.handle)
+        handle_error(e, "Detector.get_image().xiStopAcquisition()")
+        
+        return self.make_image2(image)    
+
+    def enable_cooling(self):
+        e = xiSetParamInt(self.handle, XI_PRM_COOLING, XI_ON)
+        handle_error(e, "Detector.enable_cooling()")
+
+    def disable_cooling(self):
+        e = xiSetParamInt(self.handle, XI_PRM_COOLING, XI_OFF)
+        handle_error(e, "Detector.disable_cooling()")
 
     def __dealloc__(self):
         e = xiCloseDevice(self.handle)

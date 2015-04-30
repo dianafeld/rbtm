@@ -13,6 +13,8 @@ cdef extern from "m3api/xiApi.h":
 
     cdef char *XI_PRM_IMAGE_DATA_FORMAT = "imgdataformat" # Output data format. XI_IMG_FORMAT
     cdef char *XI_PRM_EXPOSURE = "exposure" # Exposure time in microseconds
+    cdef char *XI_PRM_COOLING = "cooling" # Start camera cooling. XI_SWITCH
+    cdef char *XI_PRM_BUFFER_POLICY = "buffer_policy"# Data move policy XI_BP
 
     ctypedef enum XI_IMG_FORMAT:
         XI_MONO8,  # 8 bits per pixel
@@ -51,6 +53,18 @@ cdef extern from "m3api/xiApi.h":
         xiTypeInteger,  # integer parameter type
         xiTypeFloat,  # float parameter type
         xiTypeString  # string parameter type
+
+    ctypedef enum XI_SWITCH:
+        XI_OFF # Turn parameter off
+        XI_ON # Turn parameter on
+
+
+    ctypedef enum XI_BP:
+        XI_BP_UNSAFE #User gets pointer to internally allocated circle buffer and data may be overwritten by device.
+        XI_BP_SAFE  # Data from device will be copied to user allocated buffer or xiApi allocated memory.
+
+
+
 
 
     # Error codes xiApi

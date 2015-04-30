@@ -58,10 +58,10 @@ import xiApi
 # from threading import Thread
 
 
-# class AcquisitionThread(Thread):
+#class AcquisitionThread(Thread):
 
-#    def run(self):
-#        xiApi.get_image()
+#    def run(self, detector):
+#        self.image = detector.get_image()
 
 # ----- PROTECTED REGION END -----#	//	Detector.additionnal_import
 
@@ -95,6 +95,7 @@ class Detector(PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         self.attr_exposure_read = 0
+
         #----- PROTECTED REGION ID(Detector.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
@@ -116,7 +117,7 @@ class Detector(PyTango.Device_4Impl):
     def read_exposure(self, attr):
         self.debug_stream("In read_exposure()")
         # ----- PROTECTED REGION ID(Detector.exposure_read) ENABLED START -----#
-        attr.set_value(self.attr_exposureTime_read)
+        attr.set_value(self.attr_exposure_read)
         # ----- PROTECTED REGION END -----#	//	Detector.exposure_read
 
     def write_exposure(self, attr):
@@ -125,7 +126,7 @@ class Detector(PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(Detector.exposure_write) ENABLED START -----#
 
         self.detector.set_exposure(data)
-        self.attr_exposureTime_read = self.detector.get_exposure()
+        self.attr_exposure_read = self.detector.get_exposure()
         #----- PROTECTED REGION END -----#	//	Detector.exposure_write
         
     
@@ -207,7 +208,9 @@ class Detector(PyTango.Device_4Impl):
         argout = ''
         #----- PROTECTED REGION ID(Detector.GetFrame) ENABLED START -----#
 
-        self.detector.get_image()
+        image = self.detector.get_image()
+        print(str(image))
+        argout = str(image)
 
         # ----- PROTECTED REGION END -----#	//	Detector.GetFrame
         return argout
