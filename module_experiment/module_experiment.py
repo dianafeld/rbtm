@@ -6,14 +6,17 @@ import json
 import PyTango
 import requests
 import threading
+import logging
+
+logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = u'experiment_logfile.log')
 
 
 
 app = Flask(__name__)
 
 
-STORAGE_URI = "http://109.234.34.140:5020/fictitious-storage"
-#STORAGE_URI = "http://109.234.34.140:5006/storage/frames/post"
+#STORAGE_URI = "http://109.234.34.140:5020/fictitious-storage"
+STORAGE_URI = "http://109.234.34.140:5006/storage/frames/post"
 
 WEBPAGE_URI = "http://109.234.34.140:5021/fictitious-webpage"
 
@@ -73,140 +76,145 @@ def create_message(message, exp_id, exception_message = '', error = ''):
 
 def check_and_connect_tomograph(tomograph_num):
     if TOMOGRAPHS[tomograph_num]['experiment is running']:
-        print 'On this tomograph experiment is running'
+        logging.debug('On this tomograph experiment is running')
         return False, None, create_response(success= False, error= 'On this tomograph experiment is running')
 
-    print 'Connecting to tomograph...'
+    logging.debug('Connecting to tomograph...')
     success, tomograph, exception_message = try_something_thrice(PyTango.DeviceProxy, TOMOGRAPHS[tomograph_num]['address'])
     if success == False:
-        print exception_message
+        logging.debug(exception_message)
         return False, None, create_response(success, exception_message, error= 'Could not connect to tomograph')
 
-    print 'Success!'
+    logging.debug('Success!')
     return True, tomograph, ''
 
 
 @app.route('/tomograph/<int:tomograph_num>/source/power-on', methods=['GET'])
 def source_power_on(tomograph_num):
-    print '\n\nREQUEST: SOURCE/POWER ON'
+    logging.debug('REQUEST: SOURCE/POWER ON\n\n')
     tomograph_num -= 1          #because in list numeration begins from 0
     connected, tomograph, response_if_fail = check_and_connect_tomograph(tomograph_num)
     if not connected:
         return response_if_fail
 
-    print 'Powering on source...'
+    logging.debug('Powering on source...')
     success, useless, exception_message = try_something_thrice(tomograph.PowerOn)
     if success == False:
-        print exception_message
+        logging.debug(exception_message)
         return create_response(success, exception_message, error= 'Could not power on source')
 
-    print 'Success!'
+    logging.debug('Success!')
     return create_response(True)
 
 @app.route('/tomograph/<int:tomograph_num>/source/power-off', methods=['GET'])
 def source_power_off(tomograph_num):
-    print '\n\nREQUEST: SOURCE/POWER OFF'
+    logging.debug('REQUEST: SOURCE/POWER OFF\n\n')
     tomograph_num -= 1          #because in list numeration begins from 0
     connected, tomograph, response_if_fail = check_and_connect_tomograph(tomograph_num)
     if not connected:
         return response_if_fail
 
-    print 'Powering off source...'
+    logging.debug('Powering off source...')
     success, useless, exception_message = try_something_thrice(tomograph.PowerOff)
     if success == False:
-        print exception_message
+        logging.debug(exception_message)
         return create_response(success, exception_message, error= 'Could not power off source')
 
-    print 'Success!'
+    logging.debug('Success!')
     return create_response(True)
 
 @app.route('/tomograph/<int:tomograph_num>/source/set-operating-mode', methods=['POST'])
 def source_set_operating_mode(tomograph_num):
-    print '\n\nREQUEST: SOURCE/SET OPERATING MODE'
+    logging.debug('REQUEST: SOURCE/SET OPERATING MODE\n\n')
     tomograph_num -= 1          #because in list numeration begins from 0
     connected, tomograph, response_if_fail = check_and_connect_tomograph(tomograph_num)
     if not connected:
         return response_if_fail
 
-    print 'Checking request...'
+    logging.debug('Checking request...')
     if not request.data:
-        print 'Request is empty!'
+        logging.debug('Request is empty!')
         return create_response(success= False, error= 'Request is empty')
 
-    print 'Request is not empty!'
+    logging.debug('Request is not empty!')
     new_mode = json.loads(request.data)
-    print 'Checking format...'
+    logging.debug('Checking format...')
     if not ((u'voltage' in new_mode.keys()) and (u'current' in new_mode.keys())):
-        print 'Incorrect format!'
+        logging.debug('Incorrect format!')
         return create_response(success= False, error= 'Incorrect format')
 
-    print 'Format is normal, checking parameters...'
+    if not ((type(new_mode[u'voltage']) is float) and (type(new_mode[u'current']) is float)):
+        logging.debug('Incorrect format! Voltage and current types must be floats, but they are' + str(type(new_mode[u'voltage'])) + str(type(new_mode[u'current'])))
+        return create_response(success= False, error= 'Incorrect format')
+
+
+    logging.debug('Format is normal, new mode id: voltage is %f and current is %f...' % (new_mode[u'voltage'], new_mode[u'current']))
     if new_mode[u'voltage'] < 2 or 60 < new_mode[u'voltage']:
-        print 'Voltage must have value from 2 to 60'
+        logging.debug('Voltage must have value from 2 to 60')
         return create_response(success= False, error= 'Voltage must have value from 2 to 60')
     if new_mode[u'current'] < 2 or 80 < new_mode[u'current']:
-        print 'Current must have value from 2 to 80'
+        logging.debug('Current must have value from 2 to 80')
         return create_response(success= False, error= 'Current must have value from 2 to 80')
 
-    print 'Parameters are normal, setting operating mode...'
+    logging.debug('Parameters are normal, setting operating mode...')
     # Tomograph takes values multiplied by 10 and rounded
     new_voltage = round(new_mode[u'voltage'] * 10)
     new_current = round(new_mode[u'current'] * 10)
     success, useless, exception_message = try_something_thrice(tomograph.SetOperatingMode, [new_voltage, new_current])
     if success == False:
-        print exception_message
+        logging.debug(exception_message)
         return create_response(success, exception_message, error= 'Could not set operating mode')
 
-    print 'Success!'
+    logging.debug('Success!')
     return create_response(True)
 
 
 
 @app.route('/tomograph/<int:tomograph_num>/shutter/open/<int:time>', methods=['GET'])
 def shutter_open(tomograph_num, time):
-    print '\n\nREQUEST: SHUTTER/OPEN'
+    logging.debug('REQUEST: SHUTTER/OPEN\n\n')
     tomograph_num -= 1          #because in list numeration begins from 0
     connected, tomograph, response_if_fail = check_and_connect_tomograph(tomograph_num)
     if not connected:
         return response_if_fail
 
-    print 'Opening shutter...'
+    logging.debug('Opening shutter...')
     success, useless, exception_message = try_something_thrice(tomograph.OpenShutter, time)
     if success == False:
-        print exception_message
+        logging.debug(exception_message)
         return create_response(success, exception_message, error= 'Could not open shutter')
 
-    print 'Success!'
+    logging.debug('Success!')
     return create_response(True)
 
 @app.route('/tomograph/<int:tomograph_num>/shutter/close/<int:time>', methods=['GET'])
 def shutter_close(tomograph_num, time):
-    print '\n\nREQUEST: SHUTTER/CLOSE'
+    logging.debug('REQUEST: SHUTTER/CLOSE\n\n')
     tomograph_num -= 1          #because in list numeration begins from 0
     connected, tomograph, response_if_fail = check_and_connect_tomograph(tomograph_num)
     if not connected:
         return response_if_fail
 
-    print 'Closing shutter...'
+    logging.debug('Closing shutter...')
     success, useless, exception_message = try_something_thrice(tomograph.CloseShutter, time)
     if success == False:
-        print exception_message
+        logging.debug(exception_message)
         return create_response(success, exception_message, error= 'Could not close shutter')
 
-    print 'Success!'
+    logging.debug('Success!')
     return create_response(True)
 
 
 
 @app.route('/tomograph/<int:tomograph_num>/detector/get-frame/<float:exposure>', methods=['GET'])
 def detector_get_frame(tomograph_num, exposure):
-    print '\n\nREQUEST: DETECTOR/GET FRAME'
+    logging.debug('REQUEST: DETECTOR/GET FRAME\n\n')
     tomograph_num -= 1          #because in list numeration begins from 0
     connected, tomograph, response_if_fail = check_and_connect_tomograph(tomograph_num)
     if not connected:
         return response_if_fail
 
-    print 'Powering on source...'                                                     # EDIT
+    logging.debug('Powering on source...')                                                   # EDIT
     success, useless, exception_message = try_something_thrice(tomograph.PowerOn)
     if success == False:
         handle_emergency_stop(tomograph_num, exception_message, error = 'Could not power on source')
@@ -216,14 +224,15 @@ def detector_get_frame(tomograph_num, exposure):
     # Tomograph takes values multiplied by 10 and rounded
     exposure = int(round(exposure * 10))
 
-    print 'Success!\nGetting frame with exposure %.1f milliseconds...' % (exposure/10)
+    logging.debug('Success!')
+    logging.debug('Getting frame with exposure %.1f milliseconds...' % (exposure/10))
     success, frame_json, exception_message = try_something_thrice(tomograph.GetFrame, exposure)
     if success == False:
-        print exception_message
+        logging.debug(exception_message)
         return create_response(success, exception_message, error= 'Could not get frame')
 
     frame_dict = json.loads(frame_json)
-    print 'Success!'
+    logging.debug('Success!')
     # The only case, when we send response without using function  create_response()
     return json.dumps({'success': True, 'image': frame_dict})
 
@@ -238,11 +247,11 @@ def prepare_frame_to_send(frame_json, exp_id):
     return json.dumps(frame_dict)
 
 def send_messages_to_storage_webpage(message, tomograph_num):    #  NEED TO EDIT
-    print 'Sending to storage...'
+    logging.debug('Sending to storage...')
     try:
         req_storage = requests.post(STORAGE_URI, data = message)
     except requests.ConnectionError as e:
-        print e.message
+        logging.debug(e.message)
         TOMOGRAPHS[tomograph_num]['experiment is running'] = False
         TOMOGRAPHS[tomograph_num]['experiment state'] = 'Experiment was emergency stopped'
         TOMOGRAPHS[tomograph_num]['error'] = 'Could not send to storage'
@@ -252,32 +261,32 @@ def send_messages_to_storage_webpage(message, tomograph_num):    #  NEED TO EDIT
         #IF UNCOMMENT   exception_message= '' '''e.message''',    OCCURS PROBLEMS WITH JSON.DUMPS(...)
         exp_emergency_message = create_message(message= 'Experiment was emergency stopped', exp_id= TOMOGRAPHS[tomograph_num]['experiment id'],
                                                exception_message= '' '''e.message''', error= 'Could not send to storage')
-        print '\nEXPERIMENT IS EMERGENCY STOPPED!!!\n'
-        print 'Sending to web page that we could send to storage...'
+        logging.debug('EXPERIMENT IS EMERGENCY STOPPED!!!\n\n')
+        logging.debug('Sending to web page that we could send to storage...')
         try:
             req_webpage = requests.post(WEBPAGE_URI, data = exp_emergency_message)
         except requests.ConnectionError as e:
-            print 'Could not send to web page of adjustment'
+            logging.debug('Could not send to web page of adjustment')
         else:
-            print req_webpage.content
+            logging.debug(req_webpage.content)
         return False
 
     else:
-        print req_storage.content
-        print 'Sending to web page...'
+        logging.debug(req_storage.content)
+        logging.debug('Sending to web page...')
         try:
             req_webpage = requests.post(WEBPAGE_URI, data = message)
         except requests.ConnectionError as e:
-            print 'Could not send to web page of adjustment'
+            logging.debug('Could not send to web page of adjustment')
         else:
-            print req_webpage.content
+            logging.debug(req_webpage.content)
         return True
 
 
 
 
 def handle_emergency_stop(tomograph_num, exp_id, exception_message, error):
-    print exception_message
+    logging.debug(exception_message)
     TOMOGRAPHS[tomograph_num]['experiment is running'] = False
     TOMOGRAPHS[tomograph_num]['experiment state'] = 'Experiment was emergency stopped'
     TOMOGRAPHS[tomograph_num]['error'] = error
@@ -287,13 +296,13 @@ def handle_emergency_stop(tomograph_num, exp_id, exception_message, error):
                                            exp_id= exp_id, exception_message= exception_message, error= error)
     if send_messages_to_storage_webpage(exp_emergency_message, tomograph_num) == False:
         return
-    print '\nEXPERIMENT IS EMERGENCY STOPPED!!!\n'
+    logging.debug('EXPERIMENT IS EMERGENCY STOPPED!!!\n\n')
 
 def stop_experiment_because_someone(tomograph_num, exp_id):
     exp_stop_message = create_message(message= 'Experiment was stopped by someone', exp_id= exp_id)
     if send_messages_to_storage_webpage(exp_stop_message, tomograph_num) == False:
         return
-    print '\nEXPERIMENT IS STOPPED BY SOMEONE!!!\n'
+    logging.debug('EXPERIMENT IS STOPPED BY SOMEONE!!!\n\n')
     TOMOGRAPHS[tomograph_num]['experiment state'] = 'Experiment was stopped by someone'
     return
 
@@ -372,75 +381,77 @@ def check_and_prepare_exp_parameters(exp_param):
 
 def carry_out_simple_experiment(tomograph, tomograph_num, exp_param):
     # Closing shutter to get DARK images
-    print 'Closing shutter...'
+    logging.debug('Closing shutter...')
     success, useless, exception_message = try_something_thrice(tomograph.CloseShutter, 0)
     if success == False:
         return handle_emergency_stop(tomograph_num, exception_message, error = 'Could not close shutter')
 
 
-    print '\nGoing to get DARK images!'
+    logging.debug ('Going to get DARK images!\n\n')
     for i in range(0, exp_param[u'DARK'][u'count']):
         if TOMOGRAPHS[tomograph_num]['experiment is running'] == False:
             return stop_experiment_because_someone(tomograph_num, exp_param[u'experiment id'])
 
-        print '  Getting DARK image %d from tomograph...' % (i)
+        logging.debug('  Getting DARK image %d from tomograph...' % (i))
         success, frame_json, exception_message = try_something_thrice(tomograph.GetFrame, exp_param[u'DARK'][u'exposure'])
         if success == False:
             return handle_emergency_stop(tomograph_num, exception_message, error = 'Could not get frame')
 
-        print '  Success!'
+        logging.debug('  Success!')
         frame_json = prepare_frame_to_send(frame_json, exp_param[u'experiment id'])
         if send_messages_to_storage_webpage(frame_json, tomograph_num) == False:
             return
-    print '  Finished with DARK images!'
+    logging.debug('  Finished with DARK images!')
 
 
-    print 'Opening shutter...'
+    logging.debug('Opening shutter...')
     success, useless, exception_message = try_something_thrice(tomograph.OpenShutter, 0)
     if success == False:
         return handle_emergency_stop(tomograph_num, exception_message, error = 'Could not open shutter')
 
-    print 'Success!\nResetting current position...'
+    logging.debug('Success!')
+    logging.debug('Resetting current position...')
     success, useless, exception_message = try_something_thrice(tomograph.ResetCurrentPosition)
     if success == False:
         return handle_emergency_stop(tomograph_num, exception_message, error = 'Could not reset current position')
 
 
-    print 'Success!\n\nGoing to get DATA images, step count is %d!' % (exp_param[u'DATA'][u'step count'])
+    logging.debug('Success!')
+    logging.debug('Going to get DATA images, step count is %d!\n\n' % (exp_param[u'DATA'][u'step count']))
     angle_step = exp_param[u'DATA'][u'angle step']
     for i in range(1, exp_param[u'DATA'][u'step count']):
         current_angle = (round( ((i-1)*angle_step) ,  1)) % 360
-        print '  Getting DATA images: angle is %.1f' % current_angle
+        logging.debug('  Getting DATA images: angle is %.1f' % current_angle)
 
         for j in range(0, exp_param[u'DATA'][u'count per step']):
             if TOMOGRAPHS[tomograph_num]['experiment is running'] == False:
                 return stop_experiment_because_someone(tomograph_num, exp_param[u'experiment id'])
 
-            print '    Getting image %d from tomograph...' % (j)
+            logging.debug('    Getting image %d from tomograph...' % (j))
             success, frame_json, exception_message = try_something_thrice(tomograph.GetFrame, exp_param[u'DARK'][u'exposure'])
             if success == False:
                 return handle_emergency_stop(tomograph_num, exception_message, error = 'Could not get frame')
 
-            print '    Success!'
+            logging.debug('    Success!')
             frame_json = prepare_frame_to_send(frame_json, exp_param[u'experiment id'])
             if send_messages_to_storage_webpage(frame_json, tomograph_num) == False:
                 return
         # Rounding angles here, not in  check_and_prepare_exp_parameters(), cause it will be more accurately this way
         new_angle = (round( i*angle_step ,  1)) % 360
-        print '    Finished with this angle, turning to new angle %.1f...' % (new_angle)
+        logging.debug('    Finished with this angle, turning to new angle %.1f...' % (new_angle))
         success, frame_json, exception_message = try_something_thrice(tomograph.GotoPosition, [0, 0,  new_angle * 10])  # x = 0, y = 0 ?
         if success == False:
             return handle_emergency_stop(tomograph_num, exception_message, error = 'Could not turn motor')
 
-        print '    Success!'
-    print '  Finished with DATA images!'
+        logging.debug('    Success!')
+    logging.debug('  Finished with DATA images!')
 
     exp_finish_message = create_message(message= 'Experiment was finished successfully', exp_id= exp_param[u'experiment id'])
     if send_messages_to_storage_webpage(exp_finish_message, tomograph_num) == False:
         return
     TOMOGRAPHS[tomograph_num]['experiment state'] = 'Experiment was finished successfully'
     TOMOGRAPHS[tomograph_num]['experiment is running'] = False
-    print 'Experiment is done successfully!'
+    logging.debug('Experiment is done successfully!')
     return
 
 def carry_out_advanced_experiment(tomograph, tomograph_num, exp_param):
@@ -449,62 +460,63 @@ def carry_out_advanced_experiment(tomograph, tomograph_num, exp_param):
         if TOMOGRAPHS[tomograph_num]['experiment is running'] == False:
             return stop_experiment_because_someone(tomograph_num, exp_param[u'experiment id'])
         cmd_num += 1
-        print 'Executing command %d:' % cmd_num
+        logging.debug('Executing command %d:' % cmd_num)
 
         if command[u'type'] == u'open shutter':
-            print 'Opening shutter...'
+            logging.debug('Opening shutter...')
             success, useless, exception_message = try_something_thrice(tomograph.OpenShutter, command[u'args'])
             if success == False:
                 return handle_emergency_stop(tomograph_num, exception_message,
                                              error = 'Error in command ' + str(cmd_num) + ': Could not open shutter')
-            print 'Success!'
+            logging.debug('Success!')
 
         elif command[u'type'] == u'close shutter':
-            print 'Closing shutter...'
+            logging.debug('Closing shutter...')
             success, useless, exception_message = try_something_thrice(tomograph.OpenShutter, command[u'args'])
             if success == False:
                 return handle_emergency_stop(tomograph_num, exception_message,
                                              error = 'Error in command ' + str(cmd_num) + ': Could not close shutter')
-            print 'Success!'
+            logging.debug('Success!')
 
         elif command[u'type'] == u'reset current position':
-            print 'Resetting current position...'
+            logging.debug('Resetting current position...')
             success, useless, exception_message = try_something_thrice(tomograph.ResetCurrentPosition, command[u'args'])
             if success == False:
                 return handle_emergency_stop(tomograph_num, exception_message,
                                              error = 'Error in command ' + str(cmd_num) + ': Could not reset current position')
-            print 'Success!'
+            logging.debug('Success!')
 
         elif command[u'type'] == u'go to position':
-            x = str(command[u'args'][0])
-            y = str(command[u'args'][1])
-            angle = str(command[u'args'][2]/10)
-            print 'Changing position to:  x = ' + x + ', y = ' + y + ', angle = ' + angle + '...'
+            x = command[u'args'][0]
+            y = command[u'args'][1]
+            angle = command[u'args'][2]/10
+            logging.debug('Changing position to:  x = %.1f, y = %.1f, angle = %.1f...' % (x, y, angle))
             success, useless, exception_message = try_something_thrice(tomograph.GotoPosition, command[u'args'])
             if success == False:
                 return handle_emergency_stop(tomograph_num, exception_message,
-                                             error = 'Error in command ' + str(cmd_num) + ': Could not go to position: '
-                                                                     'x = ' + x + ', y = ' + y + ', angle = ' + angle)
-            print 'Success!'
+                                             error = 'Error in command ' + str(cmd_num) + ': Could not change position to:'
+                                                                                          'x = %.1f, y = %.1f, angle = %.1f...' % (x, y, angle))
+            logging.debug('Success!')
 
         elif command[u'type'] == u'get frame':
-            print 'Getting image...'
+            logging.debug('Getting image...')
             success, frame_json, exception_message = try_something_thrice(tomograph.GetFrame, command[u'args'])
             if success == False:
                 return handle_emergency_stop(tomograph_num, exception_message,
                                              error = 'Error in command ' + str(cmd_num) + ': Could not get frame')
-            print '  Got!\nSending frame to storage and web page of adjustment...'
+            logging.debug('  Got!')
+            logging.debug('Sending frame to storage and web page of adjustment...')
             frame_json = prepare_frame_to_send(frame_json, exp_param[u'experiment id'])
             if send_messages_to_storage_webpage(frame_json, tomograph_num) == False:
                 return
-            print 'Success!'
+            logging.debug('Success!')
 
     exp_finish_message = create_message(message= 'Experiment was finished successfully', exp_id= exp_param[u'experiment id'])
     if send_messages_to_storage_webpage(exp_finish_message, tomograph_num) == False:
         return
     TOMOGRAPHS[tomograph_num]['experiment state'] = 'Experiment was finished successfully'
     TOMOGRAPHS[tomograph_num]['experiment is running'] = False
-    print 'Experiment is done successfully!'
+    logging.debug('Experiment is done successfully!')
     return
 
 
@@ -512,32 +524,34 @@ def carry_out_advanced_experiment(tomograph, tomograph_num, exp_param):
 
 @app.route('/tomograph/<int:tomograph_num>/experiment/start', methods=['POST'])
 def experiment_start(tomograph_num):
-    print '\n\nREQUEST: EXPERIMENT/START'
+    logging.debug('REQUEST: EXPERIMENT/START\n\n')
     tomograph_num -= 1          #because in list numeration begins from 0
     connected, tomograph, response_if_fail = check_and_connect_tomograph(tomograph_num)
     if not connected:
         return response_if_fail
 
-    print 'Checking request...'
+    logging.debug('Checking request...')
     if not request.data:
-        print 'Request is empty!'
+        logging.debug('Request is empty!')
         return create_response(success= False, error= 'Request is empty')
 
-    print 'Request is not empty!'
+    logging.debug('Request is not empty!')
     exp_param = json.loads(request.data)
-    print 'Checking parameters...'
+    logging.debug('Checking parameters...')
     success, error = check_and_prepare_exp_parameters(exp_param)
     if not success:
-        print error
+        logging.debug(error)
         return create_response(success, error)
 
-    print 'Parameters are normal!\nPowering on source...'
+    logging.debug('Parameters are normal!')
+    logging.debug('Powering on source...')
     success, useless, exception_message = try_something_thrice(tomograph.PowerOn)
     if success == False:
-        print exception_message
+        logging.debug(exception_message)
         return create_response(success, exception_message, error= 'Could not power on source')
 
-    print 'Success!\nExperiment begins!'
+    logging.debug('Success!')
+    logging.debug('Experiment begins!')
     TOMOGRAPHS[tomograph_num]['experiment is running'] = True
     TOMOGRAPHS[tomograph_num]['experiment id'] = exp_param[u'experiment id']
     TOMOGRAPHS[tomograph_num]['experiment state'] = 'Experiment is running'
@@ -551,7 +565,7 @@ def experiment_start(tomograph_num):
 
 @app.route('/tomograph/<int:tomograph_num>/experiment/get-state', methods=['GET'])
 def experiment_get_state(tomograph_num):
-    print '\n\nREQUEST: EXPERIMENT/GET STATE'
+    logging.debug('REQUEST: EXPERIMENT/GET STATE\n\n')
     tomograph_num -= 1          #because in list numeration begins from 0
     state_message = create_message(message= TOMOGRAPHS[tomograph_num]['experiment state'], exp_id= TOMOGRAPHS[tomograph_num]['experiment id'],
                                    exception_message= TOMOGRAPHS[tomograph_num]['exception message'], error= TOMOGRAPHS[tomograph_num]['error'])
@@ -559,7 +573,7 @@ def experiment_get_state(tomograph_num):
 
 @app.route('/tomograph/<int:tomograph_num>/experiment/stop', methods=['GET'])
 def experiment_stop(tomograph_num):
-    print '\n\nREQUEST: EXPERIMENT/STOP'
+    logging.debug('REQUEST: EXPERIMENT/STOP\n\n')
     tomograph_num -= 1          #because in list numeration begins from 0
     TOMOGRAPHS[tomograph_num]['experiment is running'] = False
     return create_response(True)
@@ -583,7 +597,6 @@ def internal_server_error(error):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port = 5001)
-
 
 
 
