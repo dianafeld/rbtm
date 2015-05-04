@@ -59,13 +59,13 @@ def storage_view(request):
             rest_logger.debug("Post args: " + res + " " + request.POST[res])
         info = json.dumps({'select': 'all'})
         experiments = requests.post('http://109.234.34.140:5006/storage/experiments', info)
-        rest_logger.debug('Experiments status' + experiments.status_code)
+        rest_logger.debug('Experiments status', experiments.status_code)
 
         # experiments = requests.post('http://127.0.0.1:8000/storage/debug', info)
-        rest_logger.debug('Experiments content: ' + experiments.content)
+        rest_logger.debug('Experiments content: ', experiments.content)
         page = 1
         records = create_pages(request, experiments, page)
-        rest_logger.debug('Loaded info: ' + json.loads(info))
+        rest_logger.debug('Loaded info: ', json.loads(info))
         # num_pages = len(experiments) / 15 + 2
 
     return render(request, 'storage/storage_index.html', {
