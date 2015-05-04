@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from flask import Flask, jsonify, make_response, request, abort, Response
 from bson.json_util import dumps
 import pymongo as pm
@@ -5,17 +6,20 @@ import pyframes
 import pyfileSystem as fs
 import json
 import logging
+import os
 
 app = Flask(__name__)
+
+logs_path = os.path.join('logs', 'storage_log.log')
+logging.basicConfig(format = u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
+                    level=logging.DEBUG,
+                    filename=logs_path)
 
 
 # TODO login and pass not secure
 MONGODB_URI = 'mongodb://admin:33zxcdsa@ds049219.mongolab.com:49219/robotom'
 client = pm.MongoClient(MONGODB_URI)
 db = client.get_default_database()
-
-
-
 
 # for returning error as json file
 @app.errorhandler(404)
@@ -41,9 +45,9 @@ def create_user():
         abort(400)
 
     try:
-        experiments = db[u'users']
+        user = db[u'users']
         query = json.loads(request.data)
-        experiments.insert(query)
+        user.insert(query)
 
     except ValueError, e:
         logging.error(e)
@@ -52,23 +56,20 @@ def create_user():
     return jsonify({'result': 'success'})
 
 
-
-# return experiments by request json file. return json
-@app.route('/storage/experiments/get', methods=['POST'])
-def get_experiments():
+@app.route('/storage/users/get', methods=['POST'])
+def find_user():
     if not request.data:
         logging.error(u'Incorrect format')
         abort(400)
-
     try:
+        users = db[u'users']
         find_query = json.loads(request.data)
+        logging.info(find_query)
 
-        experiments = db[u'experiments']
-
-        if find_query[u'select'] == u'all':
-            cursor = experiments.find()
+        if u'select' in find_query and find_query[u'select'] == u'all':
+            cursor = users.find()
         else:
-            cursor = experiments.find(find_query)
+            cursor = users.find(find_query)
 
         resp = Response(response=dumps(cursor),
                         status=200,
@@ -82,6 +83,36 @@ def get_experiments():
 
 
 
+# return experiments by request json file. return json
+@app.route('/storage/experiments/get', methods=['POST'])
+def get_experiments():
+    if not request.data:
+        logging.error(u'Incorrect format')
+        abort(400)
+
+    try:
+        find_query = json.loads(request.data)
+        logging.debug(find_query)
+
+        experiments = db[u'experiments']
+
+        if u'select' in find_query and find_query[u'select'] == u'all':
+            cursor = experiments.find()
+        else:
+            cursor = experiments.find(find_query)
+
+        resp = Response(response=dumps(cursor),
+                        status=200,
+                        mimetype="application/json")
+
+        return resp
+
+    except BaseException, e:
+        logging.error(e)
+        abort(500)
+
+
+
 
 # create new experiment, need json file as request return result:success json if success
 @app.route('/storage/experiments/post', methods=['POST'])
@@ -90,20 +121,24 @@ def create_experiment():
         logging.error(u'Incorrect format')
         abort(400)
 
-    experiments = db[u'experiments']
-
     try:
+        experiments = db[u'experiments']
+
         insert_query = json.loads(request.data)
+        logging.debug(insert_query)
+        experiment_id = insert_query[u'experiment id']
 
-        insert_query[u'finished'] = False
-        experiment_id = experiments.insert(insert_query)
-        fs.create_new_experiment(experiment_id)
+        if (fs.create_new_experiment(experiment_id)==True):
+            insert_query[u'finished'] = False
+            experiments.insert(insert_query)
+            
+            return jsonify({u'result': u'success'})
+        else:
+            return jsonify({u'result': u'experiment '+str(experiment_id)+u' already exists in file system'})
 
-    except ValueError, e:
+    except BaseException, e:
         logging.error(e)
         abort(500)
-
-    return jsonify({'result': 'success'})
 
 
 
@@ -116,21 +151,23 @@ def new_frame():
 
     try:
         json_frame = json.loads(request.data)
-        experiment_id = json_frame[u'experiment_id']
+        experiment_id = json_frame[u'experiment id']
 
-        if json_frame[u'progress'] == u'finished':
-            db.experiments.update({u'_id': experiment_id}, {u'finished': True})
-        else:
+        if json_frame[u'type'] == u'message':
+            if json_frame[u'message'] == u'Experiment was finished successfully':
+                db.experiments.update({u'_id': experiment_id}, {u'finished': True})
+            else:
+                logging.WARNING(json_frame[u'exception message'] + json_frame[u'error'])
+        elif json_frame[u'type'] == u'frame':
             frame = json_frame[u'image_data'][u'image']
             json_frame[u'image_data'].pop(u'image')
-
             frame_id = db[u'frames'].insert(json_frame)
 
-            logging.info(u'experiment_id: ' + experiment_id + u'frame_id: ' + frame_id)
+            logging.info(u'experiment id: ' + str(experiment_id) + u'frame id: ' + str(frame_id))
 
             pyframes.add_frame(frame, frame_id, experiment_id)
 
-    except ValueError, e:
+    except BaseException, e:
         logging.error(e)
         abort(500)
 
@@ -152,7 +189,7 @@ def get_frame():
         frames_list = list(cursor)
         for frame in frames_list:
             frame_id = frame[u'_id']
-            experiment_id = frame[u'experiment_id']
+            experiment_id = frame[u'experiment id']
             frame[u'image_data'][u'image'] = pyframes.extract_frame(frame_id, experiment_id)
 
         resp = Response(response=dumps(frames_list),
@@ -161,7 +198,7 @@ def get_frame():
 
         return resp
 
-    except ValueError, e:
+    except BaseException, e:
         logging.error(e)
         abort(500)
 
@@ -181,7 +218,7 @@ def update_experiment():
         query = json.loads(request.data)
         experiment_id = experiments[u'_id']
         experiments.update({u'_id': experiment_id}, query)
-    except ValueError, e:
+    except BaseException, e:
         logging.error(e)
         abort(500)
     return jsonify({'result': 'success'})
@@ -190,30 +227,37 @@ def update_experiment():
 
 
 # delete data of the experiment, return json file
-@app.route('/storage/experiments/delete', methods=['DELETE'])
+@app.route('/storage/experiments/delete', methods=['POST'])
 def delete_experiment():
     if not request.json:
         logging.error(u'Incorrect format')
         abort(400)
 
     try:
-        cursor = db['experiments'].find(request.get_json())
+        logging.debug(json.loads(request.data))
+        experiments = db[u'experiments']
+        frames = db[u'frames']
 
-        db['experiments'].dbremove(request.get_json())
-        experiment_id = db.experiments[u'_id']
-        db['frames'].remove({u'experiment_id': experiment_id})
+        cursor = experiments.find(json.loads(request.data))
+
+        experiments.remove(json.loads(request.data))
+
+        experiments_list = list(cursor)
+        for experiment in experiments_list:
+            experiment_id = experiment[u'_id']
+            frames.remove({u'experiment id': experiment_id})
+            fs.delete_experiment(experiment_id)
 
         # db['reconstructions'].remove(request.get_json())
 
-        fs.delete_experiment(experiment_id)
-        
+
         return jsonify({'deleted': cursor.count()})
 
-    except ValueError, e:
+    except BaseException, e:
             logging.error(e)
             abort(500)
 
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5006)
