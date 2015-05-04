@@ -42,6 +42,81 @@ def create_pages(request, results, page):
     return records
 
 
+def make_info(post_args):
+    # PostArgs: ToDate
+    # PostArgs: specimen
+    # PostArgs: Finished
+    # PostArgs: SinceDate
+    # PostArgs: csrfmiddlewaretoken PJjr0RkK7BXfPnvnmdgiuLDuQ5Ej8mOp
+    # PostArgs: Advanced
+    for arg in post_args:
+        rest_logger.debug(u'PostArgs: \'{}\' \'{}\''.format(arg, post_args[arg]))
+    # Внимание! Быдлокод!
+    request = {
+        'DARK': {
+            'count': {},
+            'exposure': {}
+        },
+        'EMPTY': {
+            'count': {},
+            'exposure': {},
+        },
+        'DATA': {
+            'angle step': {},
+            'count per step': {},
+            'step count': {},
+            'exposure': {},
+        }
+    }
+    if post_args['DarkFromCount'] != '':
+        request['DARK']['count']['$gte'] = post_args['DarkFromCount']
+    if post_args['DarkToCount'] != '':
+        request['DARK']['count']['$lte'] = post_args['DarkToCount']
+    if post_args['DarkFromExposure'] != '':
+        request['DARK']['exposure']['$gte'] = post_args['DarkFromExposure']
+    if post_args['DarkToExposure'] != '':
+        request['DARK']['exposure']['$lte'] = post_args['DarkToExposure']
+
+    if post_args['EmptyFromCount'] != '':
+        request['EMPTY']['count']['$gte'] = post_args['EmptyFromCount']
+    if post_args['EmptyToCount'] != '':
+        request['EMPTY']['count']['$lte'] = post_args['EmptyToCount']
+    if post_args['EmptyFromExposure'] != '':
+        request['EMPTY']['exposure']['$gte'] = post_args['EmptyFromExposure']
+    if post_args['EmptyToExposure'] != '':
+        request['EMPTY']['exposure']['$lte'] = post_args['EmptyToExposure']
+
+    if post_args['Finished'] == u'Завершен':
+        request['finished'] = u'true'
+    if post_args['Finished'] == u'Не завершен':
+        request['finished'] = u'false'
+
+    if post_args['Advanced'] == u'Да':
+        request['advanced'] = u'true'
+    if post_args['Advanced'] == u'Нет':
+        request['advanced'] = u'false'
+
+    if post_args['DataFromExposure'] != '':
+        request['DATA']['exposure']['$gte'] = post_args['DataFromExposure']
+    if post_args['DataToExposure'] != '':
+        request['DATA']['exposure']['$lte'] = post_args['DataToExposure']
+    if post_args['DataFromAngleStep'] != '':
+        request['DATA']['angle step']['$gte'] = post_args['DataFromAngleStep']
+    if post_args['DataToAngleStep'] != '':
+        request['DATA']['angle step']['$lte'] = post_args['DataToAngleStep']
+    if post_args['DataFromCountPerStep'] != '':
+        request['DATA']['count per step']['$gte'] = post_args['DataFromCountPerStep']
+    if post_args['DataToCountPerStep'] != '':
+        request['DATA']['count per step']['$lte'] = post_args['DataToCountPerStep']
+    if post_args['DataFromStepCount'] != '':
+        request['DATA']['step count']['$gte'] = post_args['DataFromStepCount']
+    if post_args['DataToStepCount'] != '':
+        request['DATA']['step count']['$lte'] = post_args['DataToStepCount']
+
+    rest_logger.debug(u'Получившийся запрос {}'.format(json.dumps(request)))
+    return json.dumps(request)
+
+
 def storage_view(request):
     # TODO
 
@@ -56,15 +131,15 @@ def storage_view(request):
         if page is not None:
             to_show = True
     elif request.method == "POST":
-        info = json.dumps({'select': 'all'})
+        info = make_info(request.POST)
+        # info = json.dumps({'select': 'all'})
         try:
             answer = requests.post(STORAGE_EXPERIMENTS_HOST_GET, info, timeout=1)
             if answer.status_code == 200:
                 experiments = json.loads(answer.content)
-                rest_logger.debug(experiments)
+                rest_logger.debug(u'Найденные эксперименты: {}'.format(experiments))
                 page = 1
                 records = create_pages(request, experiments, page)
-                print
                 to_show = True
                 num_pages = len(experiments) / 15
             else:
