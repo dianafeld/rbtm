@@ -10,10 +10,6 @@ import os
 
 app = Flask(__name__)
 
-logs_path = os.path.join('logs', 'storage_log.log')
-logging.basicConfig(format = u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
-                    level=logging.DEBUG,
-                    filename=logs_path)
 
 
 # TODO login and pass not secure
@@ -80,6 +76,55 @@ def find_user():
     except ValueError, e:
         logging.error(e)
         abort(500)
+
+
+
+# delete user, return json file
+@app.route('/storage/users/delete', methods=['POST'])
+def delete_users():
+    if not request.json:
+        logging.error(u'Incorrect format')
+        abort(400)
+
+    try:
+        users = db[u'users']
+        find_query = json.loads(request.data)
+        logging.info(find_query)
+
+        cursor = users.find(find_query)
+        users.remove(find_query)
+
+        return jsonify({'deleted': cursor.count()})
+
+    except BaseException, e:
+            logging.error(e)
+            abort(500)
+
+
+
+# update informations about user, return json file
+#!!!!!!!!!!!!DON'T WORK!!!!!!!!!!!!
+#!!!!!!!!!!!!DON'T WORK!!!!!!!!!!!!
+#!!!!!!!!!!!!DON'T WORK!!!!!!!!!!!!
+@app.route('/storage/users/update', methods=['POST'])
+def update_users():
+    if not request.json:
+        logging.error(u'Incorrect format')
+        abort(400)
+
+    try:
+        users = db[u'users']
+        find_query = json.loads(request.data)
+        logging.info(find_query)
+
+        cursor = users.find(find_query)
+        users.update(request.data, find_query)
+
+        return jsonify({'updated': cursor.count()})
+
+    except BaseException, e:
+            logging.error(e)
+            abort(500)
 
 
 
