@@ -114,7 +114,7 @@ def make_info(post_args):
         request['DATA']['step count']['$lte'] = post_args['DataToStepCount']
 
     rest_logger.debug(u'Получившийся запрос {}'.format(json.dumps(request)))
-    return json.dumps(request)
+    return json.dumps({'select': 'all'})
 
 
 def storage_view(request):
