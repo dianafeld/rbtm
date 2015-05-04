@@ -192,7 +192,7 @@
                                     <td>{{ record.empty_exposure }}</td>
                                     <td>{{ record.dark_count }}</td>
                                     <td>{{ record.dark_exposure }}</td>
-                                    <td>{{ record.experiment_id }}</td>
+                                    <td><a href='{% url 'storage:storage_record' record.experiment_id %}'>{{ record.experiment_id }}</a></td>
                                 </tr>
                             {% endfor %}
                             </tbody>
