@@ -1,33 +1,33 @@
 # coding=utf-8
 import logging
-from django.core.context_processors import csrf
-from django.views.decorators.csrf import csrf_protect
 import requests
 import json
 from django.shortcuts import render
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from requests.exceptions import Timeout
+from robotom.settings import STORAGE_EXPERIMENTS_HOST_GET
 
 rest_logger = logging.getLogger('rest_logger')
 
 
 class ExperimentRecord:
-    def __init__(self, record_id, name, voltage, current, date, finished, owner):
-        self.id = record_id
-        self.name = name
-        self.voltage = voltage
-        self.current = current
-        self.date = date
-        self.finished = finished
-        self.owner = owner
+    def __init__(self, record):
+        self.specimen = record['specimen']
+        self.dark_count = record['DARK']['count']
+        self.dark_exposure = record['DARK']['exposure']
+        self.experiment_id = record['experiment id']
+        self.finished = record['finished']
+        self.advanced = record['advanced']
+        self.data_angle_step = record['DATA']['angle step']
+        self.data_count_per_step = record['DATA']['count per step']
+        self.data_step_count = record['DATA']['step count']
+        self.data_exposure = record['DATA']['exposure']
+        self.empty_count = record['EMPTY']['count']
+        self.empty_exposure = record['EMPTY']['exposure']
 
 
 def create_pages(request, results, page):
-    record_list = [
-        ExperimentRecord(i, "Name" + str(i), i, i, "22.11.2000", "Да", "Экспериментатор" + str(i))
-        for i in xrange(110)]
-
-    # record_list = [Experiment_Record(result) for result in results]
+    record_list = [ExperimentRecord(result) for result in results]
     pagin = Paginator(record_list, 15)
 
     try:
@@ -42,38 +42,48 @@ def create_pages(request, results, page):
     return records
 
 
-@csrf_protect
 def storage_view(request):
     # TODO
 
     page = request.GET.get('page')
     records = []
     num_pages = 0
+    message = u''
+    has_message = False
+    to_show = False
 
-    to_show = True
     if request.method == "GET":
-        if page is None:
-            to_show = False
+        if page is not None:
+            to_show = True
     elif request.method == "POST":
-        for res in request.POST:
-            rest_logger.debug("Post args: " + res + " " + request.POST[res])
         info = json.dumps({'select': 'all'})
-        experiments = requests.post('http://109.234.34.140:5006/storage/experiments', info)
-        rest_logger.debug('Experiments status', experiments.status_code)
-
-        # experiments = requests.post('http://127.0.0.1:8000/storage/debug', info)
-        rest_logger.debug('Experiments content: ', experiments.content)
-        page = 1
-        records = create_pages(request, experiments, page)
-        rest_logger.debug('Loaded info: ', json.loads(info))
-        # num_pages = len(experiments) / 15 + 2
+        try:
+            answer = requests.post(STORAGE_EXPERIMENTS_HOST_GET, info, timeout=1)
+            if answer.status_code == 200:
+                experiments = json.loads(answer.content)
+                rest_logger.debug(experiments)
+                page = 1
+                records = create_pages(request, experiments, page)
+                print
+                to_show = True
+                num_pages = len(experiments) / 15
+            else:
+                rest_logger.error(u'Не удается найти эксперименты. Код ошибки: {}'.format(answer.status_code))
+                has_message = True
+                message = u'Не удается найти эксперименты. Код ошибки: {}'.format(answer.status_code)
+        except Timeout as e:
+            rest_logger.error(u'Не удается найти эксперименты. Ошибка: {}'.format(e.message))
+            has_message = True
+            message = u'Не удается найти эксперименты. Сервер хранилища не отвечает. Попробуйте позже.'
 
     return render(request, 'storage/storage_index.html', {
-        'record_range': records,
         'caption': 'Хранилище',
+        'record_range': records,
         'toShowResult': to_show,
         'pages': xrange(1, num_pages + 1),
         'current_page': page,
+        'has_message': has_message,
+        'message': message,
     })
 
 
@@ -85,9 +95,3 @@ def storage_record_view(request, storage_record_id):
         'image_range': xrange(1, 5),  # TODO
         'user': request.user,
     })
-
-
-@csrf_protect
-def storage_debug(request):
-    record_list = [{"name": i, "current": i} for i in xrange(100)]
-    return json.dumps(record_list)

@@ -49,39 +49,62 @@
         </div>
     </div>
 
+    {% if has_message %}
+        <div class="container">
+            <div class="alert alert-danger">{{ message }}</div>
+        </div>
+    {% endif %}
+
     {% if toShowResult %}
         <div class="container">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <p>Результаты поиска</p>
+                    <h4>Результаты поиска</h4>
                 </div>
                 <div class="panel-body">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Название</th>
-                                <th>Вольтаж</th>
-                                <th>Ток</th>
-                                <th>Дата</th>
-                                <th>Закончен</th>
-                                <th>Экспериментатор</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for record in record_range %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered">
+                            <thead >
                                 <tr>
-                                    <th>{{ record.id }}</th>
-                                    <th>{{ record.name }}</th>
-                                    <th>{{ record.voltage }}</th>
-                                    <th>{{ record.current }}</th>
-                                    <th>{{ record.date }}</th>
-                                    <th>{{ record.finished }}</th>
-                                    <th>{{ record.owner }}</th>
+                                    <th rowspan="2" style="vertical-align: middle">Образец</th>
+                                    <th colspan="2" style="text-align: center">DARK</th>
+                                    <th rowspan="2" style="vertical-align: middle">Experiment id</th>
+                                    <th rowspan="2" style="vertical-align: middle">Закончен</th>
+                                    <th rowspan="2" style="vertical-align: middle">Advanced</th>
+                                    <th colspan="4" style="text-align: center">DATA</th>
+                                    <th colspan="2" style="text-align: center">EMPTY</th>
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                <tr>
+                                    <th>count</th>
+                                    <th>Exposure</th>
+                                    <th>Angle Step</th>
+                                    <th>Count per step</th>
+                                    <th>Step Count</th>
+                                    <th>Exposure</th>
+                                    <th>Count</th>
+                                    <th>Exposure</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in record_range %}
+                                    <tr>
+                                        <td>{{ record.specimen }}</td>
+                                        <td>{{ record.dark_count }}</td>
+                                        <td>{{ record.dark_exposure }}</td>
+                                        <td>{{ record.experiment_id }}</td>
+                                        <td>{{ record.finished }}</td>
+                                        <td>{{ record.advanced }}</td>
+                                        <td>{{ record.data_angle_step }}</td>
+                                        <td>{{ record.data_count_per_step }}</td>
+                                        <td>{{ record.data_step_count }}</td>
+                                        <td>{{ record.data_exposure }}</td>
+                                        <td>{{ record.empty_count }}</td>
+                                        <td>{{ record.empty_exposure }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 <div class="panel-footer">
                     <ul class="pagination">
