@@ -86,7 +86,15 @@ class XRaySource (PyTango.Device_4Impl):
         self.attr_voltage_read = 0
         self.attr_current_read = 0
         #----- PROTECTED REGION ID(XRaySource.init_device) ENABLED START -----#
-        self.mydr.open_port()
+        try:
+            self.mydr.open_port()
+        except PyTango.DevFailed as openError:
+            self.error_stream("In init_devce():\n" + openError)
+            PyTango.Except.re_throw_exception(openError,
+                                              "TOMOGRAPH_connection_failed",
+                                              "Source port did not open",
+                                              "XRaySource::init_device()")
+            
         self.set_state(PyTango.DevState.OFF)
 
         # read actual values from source
@@ -106,7 +114,15 @@ class XRaySource (PyTango.Device_4Impl):
     def read_voltage(self, attr):
         self.debug_stream("In read_voltage()")
         #----- PROTECTED REGION ID(XRaySource.voltage_read) ENABLED START -----#
-        attr.set_value(self.mydr.get_voltage())
+        try:
+            voltage = self.mydr.get_voltage()
+        except PyTango.DevFailed as voltageError:
+            self.error_stream("In read_voltage():\n" + voltageError)
+            PyTango.Except.re_throw_exception(voltageError,
+                                              "TOMOGRAPH_read_voltage_failed",
+                                              "Cannot get voltage",
+                                              "XRaySource::read_voltage()")
+        attr.set_value(voltage)
 
         #----- PROTECTED REGION END -----#	//	XRaySource.voltage_read
         
@@ -114,7 +130,15 @@ class XRaySource (PyTango.Device_4Impl):
         self.debug_stream("In write_voltage()")
         data=attr.get_write_value()
         # ----- PROTECTED REGION ID(XRaySource.voltage_write) ENABLED START -----#
-        self.mydr.set_voltage(data)
+        self.debug_stream("Voltage to set: %d" % data)
+        try:
+            self.mydr.set_voltage(data)
+        except PyTango.DevFailed as voltageError:
+            self.error_stream("In write_voltage():\n" + voltageError)
+            PyTango.Except.re_throw_exception(voltageError,
+                                              "TOMOGRAPH_write_voltage_failed",
+                                              "Cannot set voltage",
+                                              "XRaySource::write_voltage()")
         #----- PROTECTED REGION END -----#	//	XRaySource.voltage_write
         
     def is_voltage_allowed(self, attr):
@@ -128,15 +152,30 @@ class XRaySource (PyTango.Device_4Impl):
     def read_current(self, attr):
         self.debug_stream("In read_current()")
         # ----- PROTECTED REGION ID(XRaySource.current_read) ENABLED START -----#
-        attr.set_value(self.mydr.get_current())
-
+        try:
+            current = self.mydr.get_current()
+        except PyTango.DevFailed as currentError:
+            self.error_stream("In read_current():\n" + voltageError)
+            PyTango.Except.re_throw_exception(voltageError,
+                                              "TOMOGRAPH_read_current_failed",
+                                              "Cannot get current",
+                                              "XRaySource::read_current()")
+        attr.set_value(current)
         # ----- PROTECTED REGION END -----#	//	XRaySource.current_read
         
     def write_current(self, attr):
         self.debug_stream("In write_current()")
         data=attr.get_write_value()
         # ----- PROTECTED REGION ID(XRaySource.current_write) ENABLED START -----#
-        self.mydr.set_current(data)
+        self.debug_stream("Current to set: %d" % data)
+        try:
+            self.mydr.set_current(data)
+        except PyTango.DevFailed as currentError:
+            self.error_stream("In write_current():\n" + voltageError)
+            PyTango.Except.re_throw_exception(voltageError,
+                                              "TOMOGRAPH_write_current_failed",
+                                              "Cannot set current",
+                                              "XRaySource::write_current()")
         # ----- PROTECTED REGION END -----#	//	XRaySource.current_write
         
     def is_current_allowed(self, attr):
@@ -211,14 +250,13 @@ class XRaySource (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(XRaySource.SetOperatingMode) ENABLED START -----#
 
         if len(argin) != 2:
-            PyTango.Except.throw_exception(
-                "TOMOGRAPH_invalid_arguments",
-                "Invalid number of arguments: {} provided, 2 needed (voltage, current)".format(len(argin)),
-                "XRaySource::SetOperatingMode")
+            PyTango.Except.throw_exception("TOMOGRAPH_invalid_arguments",
+                                           "Invalid number of arguments: {} provided, 2 needed (voltage, current)".format(len(argin)),
+                                           "XRaySource::SetOperatingMode")
 
         new_voltage = argin[0]
         new_current = argin[1]
-
+        self.debug_stream("Voltage %d and current %d to set" % (new_voltage, new_current))     
         voltage = self.get_device_attr().get_attr_by_name("voltage")
         min_voltage_value = voltage.get_min_value()
         max_voltage_value = voltage.get_max_value()
@@ -226,10 +264,9 @@ class XRaySource (PyTango.Device_4Impl):
             self.attr_voltage_write = new_voltage
             self.write_voltage(voltage)
         else:
-            PyTango.Except.throw_exception(
-                "TOMOGRAPH_invalid_arguments",
-                "Invalid voltage value",
-                "XRaySource::SetOperatingMode")
+            PyTango.Except.throw_exception("TOMOGRAPH_invalid_arguments",
+                                           "Invalid voltage value",
+                                           "XRaySource::SetOperatingMode")
 
         current = self.get_device_attr().get_attr_by_name("current")
         min_current_value = current.get_min_value()
@@ -238,10 +275,9 @@ class XRaySource (PyTango.Device_4Impl):
             self.attr_current_write = new_current
             self.write_current(current)
         else:
-            PyTango.Except.throw_exception(
-                "TOMOGRAPH_invalid_arguments",
-                "Invalid current value",
-                "XRaySource::SetOperatingMode")
+            PyTango.Except.throw_exception("TOMOGRAPH_invalid_arguments",
+                                           "Invalid current value",
+                                           "XRaySource::SetOperatingMode")
 
         #----- PROTECTED REGION END -----#	//	XRaySource.SetOperatingMode
         
