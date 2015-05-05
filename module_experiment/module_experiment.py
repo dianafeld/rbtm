@@ -39,6 +39,9 @@ TOMOGRAPHS = (
 )
 
 
+
+
+
 def try_something_thrice(func, args = None):
     success = True
     exception_message = ''
@@ -88,6 +91,24 @@ def check_and_connect_tomograph(tomograph_num):
     logging.debug('Success!')
     return True, tomograph, ''
 
+def check_request(request_data):
+    logging.debug('Checking request...')
+    if not request_data:
+        logging.debug('Request is empty!')
+        return False, None, create_response(success= False, error= 'Request is empty')
+
+    logging.debug('Request is NOT empty!')
+    logging.debug('Checking request\'s JSON...')
+    try:
+        request_data_dict = json.loads(request_data)
+    except TypeError:
+        logging.debug('Request has NOT JSON data!')
+        return False, None, create_response(success= False, error= 'Request has not JSON data')
+    else:
+        logging.debug('Request has JSON data!')
+        return True, request_data_dict, ''
+
+
 
 @app.route('/tomograph/<int:tomograph_num>/source/power-on', methods=['GET'])
 def source_power_on(tomograph_num):
@@ -131,13 +152,10 @@ def source_set_operating_mode(tomograph_num):
     if not connected:
         return response_if_fail
 
-    logging.debug('Checking request...')
-    if not request.data:
-        logging.debug('Request is empty!')
-        return create_response(success= False, error= 'Request is empty')
+    success, new_mode, response_if_fail = check_request(request.data)
+    if not success:
+        return response_if_fail
 
-    logging.debug('Request is not empty!')
-    new_mode = json.loads(request.data)
     logging.debug('Checking format...')
     if not ((u'voltage' in new_mode.keys()) and (u'current' in new_mode.keys())):
         logging.debug('Incorrect format!')
@@ -498,6 +516,7 @@ def carry_out_advanced_experiment(tomograph, tomograph_num, exp_param):
                                                                                           'x = %.1f, y = %.1f, angle = %.1f...' % (x, y, angle))
             logging.debug('Success!')
 
+        # NEED TO ADD COUNT OF FRAMES !!!!!!!!!!!!!!!!!!
         elif command[u'type'] == u'get frame':
             logging.debug('Getting image...')
             success, frame_json, exception_message = try_something_thrice(tomograph.GetFrame, command[u'args'])
@@ -530,7 +549,69 @@ def experiment_start(tomograph_num):
     if not connected:
         return response_if_fail
 
-    logging.debug('Checking request...')
+    success, data, response_if_fail = check_request(request.data)
+    if not success:
+        return response_if_fail
+
+    logging.debug('Checking format...')
+    if not (('for storage' in data.keys()) and ('experiment parameters' in data.keys()) and ('experiment id' in data.keys())):
+        logging.debug('Incorrect format!')
+        return create_response(success= False, error= 'Incorrect format')
+
+    if not ((type(data['for storage']) is dict) and (type(data['experiment parameters']) is dict) and (type(data['experiment parameters']) is unicode)):
+        logging.debug('Incorrect format!')
+        return create_response(success= False, error= 'Incorrect format')
+
+    logging.debug('Format is normal!')
+    exp_param = data['experiment parameters']
+    exp_id = data['experiment id']
+    exp_param['experiment id'] = exp_id
+
+    logging.debug('Checking parameters...')
+    success, error = check_and_prepare_exp_parameters(exp_param)
+    if not success:
+        logging.debug(error)
+        return create_response(success, error)
+
+    logging.debug('Parameters are normal!')
+    logging.debug('Sending to storage leading to prepare...')
+    for_storage_dict = data['for storage']
+    for_storage_dict['type'] = 'experiment'
+    for_storage_dict['experiment id'] = exp_id
+    for_storage_json = json.dumps(for_storage_dict)
+    try:
+        storage_resp = requests.post(STORAGE_URI, data = for_storage_json)
+    except requests.ConnectionError as e:
+        logging.debug(e.message)
+        #IF UNCOMMENT   exception_message= '' '''e.message''',    OCCURS PROBLEMS WITH JSON.DUMPS(...)
+        return create_response(success= False, exception_message= '' '''e.message,''',
+                               error= 'Could not send to storage signal of experiment start')
+
+
+    logging.debug('Sent!')
+    storage_resp_dict = json.loads(storage_resp.content)
+    if not ('result' in storage_resp_dict.keys()):
+        logging.debug('Storage\'s response has incorrect format!')
+        return create_response(success= False, error= 'Storage is not ready: storage\'s response has incorrect format')
+
+    logging.debug('Storage\'s response:')
+    logging.debug (storage_resp_dict['result'])
+    if storage_resp_dict['result'] != 'success':
+        logging.debug('Storage is NOT ready!')
+        return create_response(success= False, error= 'Storage is not ready: ' + storage_resp_dict['result'])
+
+
+
+
+
+
+
+
+
+
+
+
+    '''logging.debug('Checking request...')
     if not request.data:
         logging.debug('Request is empty!')
         return create_response(success= False, error= 'Request is empty')
@@ -548,7 +629,7 @@ def experiment_start(tomograph_num):
     success, useless, exception_message = try_something_thrice(tomograph.PowerOn)
     if success == False:
         logging.debug(exception_message)
-        return create_response(success, exception_message, error= 'Could not power on source')
+        return create_response(success, exception_message, error= 'Could not power on source')'''
 
     logging.debug('Success!')
     logging.debug('Experiment begins!')
