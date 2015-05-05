@@ -1,6 +1,6 @@
 from cximc cimport *
 
-import PyTango
+# import PyTango
 
 error_description = {result_ok: "success",
                      result_error: "generic error",
@@ -20,15 +20,15 @@ cdef void create_exception(func_name, description) except *:
     print(reason, description, origin)
     # END DEBUG OUTPUT
 
-    PyTango.Except.throw_exception(reason, description, origin)
+    # PyTango.Except.throw_exception(reason, description, origin)
 
 def handle_error(error_code, origin):
     if error_code != result_ok:
         create_exception(origin, get_description(error_code))
 
 cdef class Motor:
-    cdef device_t motor_id
-    cdef char*device_name
+    cdef device_t device_id
+    cdef char *device_name
 
     def __cinit__(self, name):
         self.device_id = device_undefined
@@ -47,11 +47,11 @@ cdef class Motor:
     def close(self):
         cdef int tmp_device_id = self.device_id
         result_code = close_device(&tmp_device_id)
-        handle_error("Motor.close()", result_code)
+        handle_error(result_code, "Motor.close()")
 
     def set_zero(self):
         result_code = command_zero(self.device_id)
-        handle_error("Motor.set_zero()", result_code)
+        handle_error(result_code, "Motor.set_zero()")
 
     def get_position(self):
         cdef get_position_t position
@@ -60,7 +60,7 @@ cdef class Motor:
 
     def move_to_position(self, position, uposition):
         result_code = command_move(self.device_id, position, uposition)
-        handle_error("Motor.move_to_position()", result_code)
+        handle_error(result_code, "Motor.move_to_position()")
 
     def get_move_settings(self):
         cdef move_settings_t move_settings
