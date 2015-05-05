@@ -1,7 +1,7 @@
 from cxiapi cimport *
 from libc.string cimport memset, memchr, memcmp, memcpy, memmove
-import numpy
 cimport numpy
+import PyTango
 
 error_codes = { XI_OK: "Function call succeeded",
                 XI_INVALID_HANDLE: "Invalid handle",
@@ -86,6 +86,7 @@ cdef void create_exception(return_code, func_name) except *:
     desc = error_codes[return_code]
     origin = func_name
     print(reason, desc, origin)
+    PyTango.Except.throw_exception(reason, desc, origin)
 
 cdef void handle_error(return_code, func_name) except *:
     if return_code != XI_OK:
