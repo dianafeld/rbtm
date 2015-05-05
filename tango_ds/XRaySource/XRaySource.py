@@ -89,11 +89,11 @@ class XRaySource (PyTango.Device_4Impl):
         try:
             self.mydr.open_port()
         except PyTango.DevFailed as openError:
-            self.error_stream("In init_devce():\n" + openError)
-            PyTango.Except.re_throw_exception(openError,
-                                              "TOMOGRAPH_connection_failed",
-                                              "Source port did not open",
-                                              "XRaySource::init_device()")
+            self.error_stream(str(openError))
+            raise
+        except Exception as e:
+            self.error_stream(str(e))
+            raise
             
         self.set_state(PyTango.DevState.OFF)
 
@@ -116,12 +116,14 @@ class XRaySource (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(XRaySource.voltage_read) ENABLED START -----#
         try:
             voltage = self.mydr.get_voltage()
+            self.debug_stream("Got voltage = %d" % voltage)
         except PyTango.DevFailed as voltageError:
-            self.error_stream("In read_voltage():\n" + voltageError)
-            PyTango.Except.re_throw_exception(voltageError,
-                                              "TOMOGRAPH_read_voltage_failed",
-                                              "Cannot get voltage",
-                                              "XRaySource::read_voltage()")
+            self.error_stream(str(voltageError))
+            raise
+        except Exception as e:
+            self.error_stream(str(e))
+            raise
+
         attr.set_value(voltage)
 
         #----- PROTECTED REGION END -----#	//	XRaySource.voltage_read
@@ -130,15 +132,16 @@ class XRaySource (PyTango.Device_4Impl):
         self.debug_stream("In write_voltage()")
         data=attr.get_write_value()
         # ----- PROTECTED REGION ID(XRaySource.voltage_write) ENABLED START -----#
-        self.debug_stream("Voltage to set: %d" % data)
         try:
+            self.debug_stream("Setting voltage: %d" % data)
             self.mydr.set_voltage(data)
+            self.debug_stream("Voltage has been set")
         except PyTango.DevFailed as voltageError:
-            self.error_stream("In write_voltage():\n" + voltageError)
-            PyTango.Except.re_throw_exception(voltageError,
-                                              "TOMOGRAPH_write_voltage_failed",
-                                              "Cannot set voltage",
-                                              "XRaySource::write_voltage()")
+            self.error_stream(str(voltageError))
+            raise
+        except Exception as e:
+            self.error_stream(str(e))
+            raise
         #----- PROTECTED REGION END -----#	//	XRaySource.voltage_write
         
     def is_voltage_allowed(self, attr):
@@ -154,12 +157,13 @@ class XRaySource (PyTango.Device_4Impl):
         # ----- PROTECTED REGION ID(XRaySource.current_read) ENABLED START -----#
         try:
             current = self.mydr.get_current()
+            self.debug_stream("Got current = %d" % current)
         except PyTango.DevFailed as currentError:
-            self.error_stream("In read_current():\n" + voltageError)
-            PyTango.Except.re_throw_exception(voltageError,
-                                              "TOMOGRAPH_read_current_failed",
-                                              "Cannot get current",
-                                              "XRaySource::read_current()")
+            self.error_stream(str(voltageError))
+            raise
+        except Exception as e:
+            self.error_stream(str(e))
+            raise
         attr.set_value(current)
         # ----- PROTECTED REGION END -----#	//	XRaySource.current_read
         
@@ -167,15 +171,16 @@ class XRaySource (PyTango.Device_4Impl):
         self.debug_stream("In write_current()")
         data=attr.get_write_value()
         # ----- PROTECTED REGION ID(XRaySource.current_write) ENABLED START -----#
-        self.debug_stream("Current to set: %d" % data)
         try:
+            self.debug_stream("Setting current: %d" % data)
             self.mydr.set_current(data)
+            self.debug_stream("Current has been set")
         except PyTango.DevFailed as currentError:
-            self.error_stream("In write_current():\n" + voltageError)
-            PyTango.Except.re_throw_exception(voltageError,
-                                              "TOMOGRAPH_write_current_failed",
-                                              "Cannot set current",
-                                              "XRaySource::write_current()")
+            self.error_stream(str(voltageError))
+            raise
+        except Exception as e:
+            self.error_stream(str(e))
+            raise
         # ----- PROTECTED REGION END -----#	//	XRaySource.current_write
         
     def is_current_allowed(self, attr):
@@ -212,7 +217,16 @@ class XRaySource (PyTango.Device_4Impl):
         :rtype: PyTango.DevVoid """
         self.debug_stream("In Off()")
         #----- PROTECTED REGION ID(XRaySource.Off) ENABLED START -----#
-        self.mydr.off_high_voltage()
+        try:
+            self.debug_stream("Turn off high voltage")
+            self.mydr.off_high_voltage()
+            self.debug_stream("High voltage has been turned off")
+        except PyTango.DevFailed as voltageError:
+            self.debug_stream(str(voltageError))
+            raise
+        except Exception as e:
+            self.debug_stream(str(e))
+            raise
         self.set_state(PyTango.DevState.OFF)
 
         #----- PROTECTED REGION END -----#	//	XRaySource.Off
@@ -226,7 +240,16 @@ class XRaySource (PyTango.Device_4Impl):
         :rtype: PyTango.DevVoid """
         self.debug_stream("In On()")
         #----- PROTECTED REGION ID(XRaySource.On) ENABLED START -----#
-        self.mydr.on_high_voltage()
+        try:
+            self.debug_stream("Setting high voltage")       
+            self.mydr.on_high_voltage()
+            self.debug_stream("High voltage has been set")
+        except PyTango.DevFailed as voltageError:
+            self.debug_stream(str(voltageError))
+            raise
+        except Exception as e:
+            self.debug_stream(str(e))
+            raise
         self.set_state(PyTango.DevState.ON)
 
         #----- PROTECTED REGION END -----#	//	XRaySource.On
@@ -250,7 +273,7 @@ class XRaySource (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(XRaySource.SetOperatingMode) ENABLED START -----#
 
         if len(argin) != 2:
-            PyTango.Except.throw_exception("TOMOGRAPH_invalid_arguments",
+            PyTango.Except.throw_exception("XRaySource_IllegalArgument",
                                            "Invalid number of arguments: {} provided, 2 needed (voltage, current)".format(len(argin)),
                                            "XRaySource::SetOperatingMode")
 
@@ -264,7 +287,7 @@ class XRaySource (PyTango.Device_4Impl):
             self.attr_voltage_write = new_voltage
             self.write_voltage(voltage)
         else:
-            PyTango.Except.throw_exception("TOMOGRAPH_invalid_arguments",
+            PyTango.Except.throw_exception("XRaySource_IllegalArgument",
                                            "Invalid voltage value",
                                            "XRaySource::SetOperatingMode")
 
@@ -275,7 +298,7 @@ class XRaySource (PyTango.Device_4Impl):
             self.attr_current_write = new_current
             self.write_current(current)
         else:
-            PyTango.Except.throw_exception("TOMOGRAPH_invalid_arguments",
+            PyTango.Except.throw_exception("XRaySource_IllegalArgument",
                                            "Invalid current value",
                                            "XRaySource::SetOperatingMode")
 
