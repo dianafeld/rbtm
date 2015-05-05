@@ -1,11 +1,11 @@
 .jumbotron{
- 	background-image: url("images/tomo_img.jpg");
+    background: url("images/tomo_img.jpg") no-repeat center center fixed;
  	background-position: 50% 40%;
-    height: 500px;
+    height: 100%;
 }
 
 body { 
-	padding-top: 50px; 
+	padding-top: 0px; 
 }
 
 .jumbotron h1{
@@ -14,8 +14,8 @@ body {
 	text-align: left;
 }
 
-.jumbotron h2{
-	color: #FFFFFF;
-	text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+.jumbotron p{
+	color: #000000;
+	text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
 	text-align: left;
 }
