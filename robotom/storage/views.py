@@ -16,8 +16,14 @@ class ExperimentRecord:
         self.dark_count = record['DARK']['count']
         self.dark_exposure = record['DARK']['exposure']
         self.experiment_id = record['experiment id']
-        self.finished = record['finished']
-        self.advanced = record['advanced']
+        if record['finished']:
+            self.finished = u'Завершен'
+        else:
+            self.finished = u'Не завершен'
+        if record['advanced']:
+            self.advanced = u'Продвинутый'
+        else:
+            self.advanced = u'Стандартный'
         self.data_angle_step = record['DATA']['angle step']
         self.data_count_per_step = record['DATA']['count per step']
         self.data_step_count = record['DATA']['step count']
@@ -52,69 +58,79 @@ def make_info(post_args):
     for arg in post_args:
         rest_logger.debug(u'PostArgs: \'{}\' \'{}\''.format(arg, post_args[arg]))
     # Внимание! Быдлокод!
-    request = {
-        'DARK': {
-            'count': {},
-            'exposure': {}
-        },
-        'EMPTY': {
-            'count': {},
-            'exposure': {},
-        },
-        'DATA': {
-            'angle step': {},
-            'count per step': {},
-            'step count': {},
-            'exposure': {},
-        }
-    }
+    request = {}
+
     if post_args['DarkFromCount'] != '':
-        request['DARK']['count']['$gte'] = post_args['DarkFromCount']
+        request['DARK.count'] = {}
+        request['DARK.count']['$gte'] = int(post_args['DarkFromCount'])
     if post_args['DarkToCount'] != '':
-        request['DARK']['count']['$lte'] = post_args['DarkToCount']
+        if 'DARK.count' not in request:
+            request['DARK.count'] = {}
+        request['DARK.count']['$lte'] = int(post_args['DarkToCount'])
     if post_args['DarkFromExposure'] != '':
-        request['DARK']['exposure']['$gte'] = post_args['DarkFromExposure']
+        request['DARK.exposure'] = {}
+        request['DARK.exposure']['$gte'] = float(post_args['DarkFromExposure'])
     if post_args['DarkToExposure'] != '':
-        request['DARK']['exposure']['$lte'] = post_args['DarkToExposure']
+        if 'DARK.exposure' not in request:
+            request['DARK.exposure'] = {}
+        request['DARK.exposure']['$lte'] = float(post_args['DarkToExposure'])
 
     if post_args['EmptyFromCount'] != '':
-        request['EMPTY']['count']['$gte'] = post_args['EmptyFromCount']
+        request['EMPTY.count'] = {}
+        request['EMPTY.count']['$gte'] = int(post_args['EmptyFromCount'])
     if post_args['EmptyToCount'] != '':
-        request['EMPTY']['count']['$lte'] = post_args['EmptyToCount']
+        if 'EMPTY.count' not in request:
+            request['EMPTY.count'] = {}
+        request['EMPTY.count']['$lte'] = int(post_args['EmptyToCount'])
     if post_args['EmptyFromExposure'] != '':
-        request['EMPTY']['exposure']['$gte'] = post_args['EmptyFromExposure']
+        request['EMPTY.exposure'] = {}
+        request['EMPTY.exposure']['$gte'] = float(post_args['EmptyFromExposure'])
     if post_args['EmptyToExposure'] != '':
-        request['EMPTY']['exposure']['$lte'] = post_args['EmptyToExposure']
+        if 'EMPTY.exposure' not in request:
+            request['EMPTY.exposure'] = {}
+        request['EMPTY.exposure']['$lte'] = float(post_args['EmptyToExposure'])
 
     if post_args['Finished'] == u'Завершен':
-        request['finished'] = u'true'
+        request['finished'] = True
     if post_args['Finished'] == u'Не завершен':
-        request['finished'] = u'false'
+        request['finished'] = False
 
     if post_args['Advanced'] == u'Да':
-        request['advanced'] = u'true'
+        request['advanced'] = True
     if post_args['Advanced'] == u'Нет':
-        request['advanced'] = u'false'
+        request['advanced'] = False
 
     if post_args['DataFromExposure'] != '':
-        request['DATA']['exposure']['$gte'] = post_args['DataFromExposure']
+        request['DATA.exposure'] = {}
+        request['DATA.exposure']['$gte'] = float(post_args['DataFromExposure'])
     if post_args['DataToExposure'] != '':
-        request['DATA']['exposure']['$lte'] = post_args['DataToExposure']
+        if 'DATA.exposure' not in request:
+            request['DATA.exposure'] = {}
+        request['DATA.exposure']['$lte'] = float(post_args['DataToExposure'])
     if post_args['DataFromAngleStep'] != '':
-        request['DATA']['angle step']['$gte'] = post_args['DataFromAngleStep']
+        request['DATA.angle step'] = {}
+        request['DATA.angle step']['$gte'] = int(post_args['DataFromAngleStep'])
     if post_args['DataToAngleStep'] != '':
-        request['DATA']['angle step']['$lte'] = post_args['DataToAngleStep']
+        if 'DATA.angle step' not in request:
+            request['DATA.angle step'] = {}
+        request['DATA.angle step']['$lte'] = int(post_args['DataToAngleStep'])
     if post_args['DataFromCountPerStep'] != '':
-        request['DATA']['count per step']['$gte'] = post_args['DataFromCountPerStep']
+        request['DATA.count per step'] = {}
+        request['DATA.count per step']['$gte'] = int(post_args['DataFromCountPerStep'])
     if post_args['DataToCountPerStep'] != '':
-        request['DATA']['count per step']['$lte'] = post_args['DataToCountPerStep']
+        if 'DATA.count per step' not in request:
+            request['DATA.count per step'] = {}
+        request['DATA.count per step']['$lte'] = int(post_args['DataToCountPerStep'])
     if post_args['DataFromStepCount'] != '':
-        request['DATA']['step count']['$gte'] = post_args['DataFromStepCount']
+        request['DATA.step count'] = {}
+        request['DATA.step count']['$gte'] = int(post_args['DataFromStepCount'])
     if post_args['DataToStepCount'] != '':
-        request['DATA']['step count']['$lte'] = post_args['DataToStepCount']
+        if 'DATA.step count' not in request:
+            request['DATA.step count'] = {}
+        request['DATA.step count']['$lte'] = int(post_args['DataToStepCount'])
 
     rest_logger.debug(u'Получившийся запрос {}'.format(json.dumps(request)))
-    return json.dumps({'select': 'all'})
+    return json.dumps(request)
 
 
 def storage_view(request):
@@ -132,7 +148,6 @@ def storage_view(request):
             to_show = True
     elif request.method == "POST":
         info = make_info(request.POST)
-        # info = json.dumps({'select': 'all'})
         try:
             answer = requests.post(STORAGE_EXPERIMENTS_HOST_GET, info, timeout=1)
             if answer.status_code == 200:
