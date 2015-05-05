@@ -4,6 +4,7 @@ import unittest
 import json
 import module_experiment
 import tempfile
+import xmlrunner
 
 
 
@@ -151,5 +152,8 @@ class ModuleExperimentTestCase2(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(
+        testRunner=xmlrunner.XMLTestRunner(output='test-reports'),
+        failfast=False, buffer=False, catchbreak=False
+    )
 
