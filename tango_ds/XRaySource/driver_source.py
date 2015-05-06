@@ -1,48 +1,58 @@
-from serial import *
-import io
+import serial
+import sys
 import PyTango
-from string import *
+
 
 class Source:
-    #functions for users
-    #ser = None
+
+    def __init__(self, tty_name):
+        self.tty_name = tty_name
+
+    # functions for users
+    # ser = None
     def open_port(self):
         try:
-            #ser = Serial('/dev/ttyUSB0', timeout=1)
-            self.ser = serial_for_url('loop://', timeout=1)    
+            # ser = Serial('/dev/ttyUSB0', timeout=1)
+            self.ser = serial.serial_for_url('loop://', timeout=1)
         except serial.SerialException:
             python_exception = PyTango.Except.to_dev_failed(*sys.exc_info())
             PyTango.Except.re_throw_exception(python_exception,
                                               "XRaySource_ConnectionFailed",
                                               "Can't open a port",
-                                              "Source::open_port()")
+                                              "Source.open_port()")
 
     def close_port(self):
         self.ser.close()
 
     def on_high_voltage(self):
-        self.ser.write("HV:1\n")
+        with serial.Serial(self.tty_name) as serial_port:
+            serial_port.write("HV:1\n")
+
         error_line = self.get_error()
         if error_line != "":
             PyTango.Except.throw_exception("XRaySource_UnexpectedValue",
                                            error_line,
-                                           "Source::on_high_voltage()")
+                                           "Source.on_high_voltage()")
 
     def off_high_voltage(self):
-        self.ser.write("HV:0\n")
+        with serial.Serial(self.tty_name) as serial_port:
+            serial_port.write("HV:0\n")
+
         error_line = self.get_error()
         if error_line != "":
             PyTango.Except.throw_exception("XRaySource_UnexpectedValue",
                                            error_line,
-                                           "Source::off_high_voltage()")
+                                           "Source.off_high_voltage()")
 
     def get_id(self):
-        self.ser.write("ID\n")
+        with serial.Serial(self.tty_name) as serial_port:
+            serial_port.write("ID\n")
+
         error_line = self.get_error()
         if error_line != "":
             PyTango.Except.throw_exception("XRaySource_UnexpectedValue",
                                            error_line,
-                                           "Source::get_id()")
+                                           "Source.get_id()")
         return self.get_data_string()
 
     def get_error(self):
@@ -60,18 +70,18 @@ class Source:
         if len(str(interval)) != 1:
             PyTango.Except.throw_exception("XRaySource_IllegalArgument",
                                            "Incorrect unwork interval",
-                                           "Source::start_warming_up()")
+                                           "Source.start_warming_up()")
         if len(str(test_voltage)) > 3:
             PyTango.Except.throw_exception("XRaySource_IllegalArgument",
                                            "Incorrect test voltage",
-                                           "Source::start_warming_up()")
+                                           "Source.start_warming_up()")
         data = "WU:" + str(interval) + str(test_voltage).zfill(3)
         self.ser.write(data)
         error_line = self.get_error()
         if error_line != "":
             PyTango.Except.throw_exception("XRaySource_UnexpectedValue",
                                            error_line,
-                                           "Source::start_warming_up()")
+                                           "Source.start_warming_up()")
 
     def get_real_voltage(self):
         self.ser.write("VA\n")
@@ -80,7 +90,7 @@ class Source:
         if error_line != "":
             PyTango.Except.throw_exception("XRaySource_UnexpectedValue",
                                            error_line,
-                                           "Source::get_real_voltage()")
+                                           "Source.get_real_voltage()")
         return self.get_number(line)/1000
 
     def get_voltage(self):
@@ -90,7 +100,7 @@ class Source:
         if error_line != "":
             PyTango.Except.throw_exception("XRaySource_UnexpectedValue",
                                            error_line,
-                                           "Source::get_voltage()")
+                                           "Source.get_voltage()")
         return self.get_number(line)/1000
 
     def get_current(self):
@@ -100,7 +110,7 @@ class Source:
         if error_line != "":
             PyTango.Except.throw_exception("XRaySource_UnexpectedValue",
                                            error_line,
-                                           "Source::get_current()")
+                                           "Source.get_current()")
         return self.get_number(line)/1000
 
     def set_voltage(self, voltage):
@@ -110,7 +120,7 @@ class Source:
         if error_line != "":
             PyTango.Except.throw_exception("XRaySource_UnexpectedValue",
                                            error_line,
-                                           "Source::set_voltage()")
+                                           "Source.set_voltage()")
 
     def set_current(self, current):
         data = "SC:" + str(current*1000).zfill(6)
@@ -119,9 +129,10 @@ class Source:
         if error_line != "":
             PyTango.Except.throw_exception("XRaySource_UnexpectedValue",
                                            error_line,
-                                           "Source::set_current()")
+                                           "Source.set_current()")
 
-    #auxiliary functions
+    # auxiliary functions
+
     def get_data_string(self):
         cur_byte = self.ser.read()
         line = cur_byte

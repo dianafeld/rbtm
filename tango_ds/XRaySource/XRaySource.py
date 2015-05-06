@@ -62,7 +62,7 @@ from driver_source import *
 class XRaySource (PyTango.Device_4Impl):
 
     #--------- Add you global variables here --------------------------
-    mydr = Source()
+
     #----- PROTECTED REGION ID(XRaySource.global_variables) ENABLED START -----#
 
     #----- PROTECTED REGION END -----#	//	XRaySource.global_variables
@@ -87,6 +87,7 @@ class XRaySource (PyTango.Device_4Impl):
         self.attr_current_read = 0
         #----- PROTECTED REGION ID(XRaySource.init_device) ENABLED START -----#
         try:
+            mydr = Source()
             self.mydr.open_port()
         except PyTango.DevFailed as openError:
             self.error_stream(str(openError))
@@ -159,7 +160,7 @@ class XRaySource (PyTango.Device_4Impl):
             current = self.mydr.get_current()
             self.debug_stream("Got current = %d" % current)
         except PyTango.DevFailed as currentError:
-            self.error_stream(str(voltageError))
+            self.error_stream(str(currentError))
             raise
         except Exception as e:
             self.error_stream(str(e))
@@ -176,7 +177,7 @@ class XRaySource (PyTango.Device_4Impl):
             self.mydr.set_current(data)
             self.debug_stream("Current has been set")
         except PyTango.DevFailed as currentError:
-            self.error_stream(str(voltageError))
+            self.error_stream(str(currentError))
             raise
         except Exception as e:
             self.error_stream(str(e))
