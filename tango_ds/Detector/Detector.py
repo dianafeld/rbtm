@@ -76,6 +76,36 @@ class Detector (PyTango.Device_4Impl):
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(Detector.global_variables) ENABLED START -----#
 
+    def _read_exposure(self):
+        self.debug_stream("In _read_exposure()")
+
+        self.debug_stream("Reading exposure...")
+        try:
+            exposure = self.detector.get_exposure()
+        except PyTango.DevFailed as df:
+            self.error_stream(str(df))
+            raise
+        except Exception as e:
+            self.error_stream(str(e))
+            raise
+        self.debug_stream("exposure = {}".format(exposure))
+
+        return exposure
+
+    def _write_exposure(self, new_exposure):
+        self.debug_stream("In _write_exposure()")
+
+        self.debug_stream("Setting exposure = {}".format(new_exposure))
+        try:
+            self.detector.set_exposure(new_exposure)
+        except PyTango.DevFailed as df:
+            self.error_stream(str(df))
+            raise
+        except Exception as e:
+            self.error_stream(str(e))
+            raise
+        self.debug_stream("Exposure has been set")
+
     #----- PROTECTED REGION END -----#	//	Detector.global_variables
 
     def __init__(self,cl, name):
@@ -104,10 +134,6 @@ class Detector (PyTango.Device_4Impl):
             self.debug_stream("Creating link to detector driver...")
             self.detector = xiApi.Detector()
             self.debug_stream("Link created")
-
-            self.debug_stream("Reading exposure...")
-            self.attr_exposure_read = self.detector.get_exposure()
-            self.debug_stream("exposure = {}".format(self.attr_exposure_read))
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
             raise
@@ -116,6 +142,7 @@ class Detector (PyTango.Device_4Impl):
             raise
 
         self.set_state(PyTango.DevState.ON)
+        self.attr_exposure_read = self._read_exposure()
 
         #----- PROTECTED REGION END -----#	//	Detector.init_device
 
@@ -140,20 +167,9 @@ class Detector (PyTango.Device_4Impl):
         data=attr.get_write_value()
         #----- PROTECTED REGION ID(Detector.exposure_write) ENABLED START -----#
 
-        try:
-            self.debug_stream("Setting exposure = {}".format(data))
-            self.detector.set_exposure(data)
-            self.debug_stream("Exposure has been set")
-
-            self.debug_stream("Reading exposure...")
-            self.attr_exposure_read = self.detector.get_exposure()
-            self.debug_stream("exposure = {}".format(self.attr_exposure_read))
-        except PyTango.DevFailed as df:
-            self.error_stream(str(df))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
+        new_exposure = data
+        self._write_exposure(new_exposure)
+        self.attr_exposure_read = self._read_exposure()
 
         #----- PROTECTED REGION END -----#	//	Detector.exposure_write
         
