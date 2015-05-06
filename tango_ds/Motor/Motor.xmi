@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ASCII"?>
 <pogoDsl:PogoSystem xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:pogoDsl="http://www.esrf.fr/tango/pogo/PogoDsl">
-  <classes name="Motor" pogoRevision="8.4">
+  <classes name="Motor" pogoRevision="8.1">
     <description description="Class for motors and its commands&#xA;&#xA;http://sourceforge.net/p/tango-ds/code/HEAD/tree/DeviceClasses/Simulators/SimuMotor/trunk/src/SimuMotor.py&#xA;http://sourceforge.net/p/tango-ds/code/HEAD/tree/DeviceClasses/Simulators/SimMotor/trunk/SimMotor.cpp" title="Motor" sourcePath="/home/itsnotme/rbtm-drivers/tango_ds/Motor" language="Python" filestogenerate="XMI   file,Code files" license="GPL" hasMandatoryProperty="false" hasConcreteProperty="false" hasAbstractCommand="false" hasAbstractAttribute="false">
       <inheritances classname="Device_Impl" sourcePath=""/>
       <identification contact="at gmail.com - mariya.ryabova" author="mariya.ryabova" emailDomain="gmail.com" classFamily="Miscellaneous" siteSpecific="" platform="All Platforms" bus="Not Applicable" manufacturer="none" reference=""/>
@@ -22,25 +22,6 @@
         <type xsi:type="pogoDsl:ConstStringType"/>
       </argout>
       <status abstract="true" inherited="true" concrete="true"/>
-    </commands>
-    <commands name="On" description="Powers the device on" execMethod="on" displayLevel="OPERATOR" polledPeriod="0">
-      <argin description="">
-        <type xsi:type="pogoDsl:VoidType"/>
-      </argin>
-      <argout description="">
-        <type xsi:type="pogoDsl:VoidType"/>
-      </argout>
-      <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-    </commands>
-    <commands name="Off" description="Powers the device off" execMethod="off" displayLevel="OPERATOR" polledPeriod="0">
-      <argin description="">
-        <type xsi:type="pogoDsl:VoidType"/>
-      </argin>
-      <argout description="">
-        <type xsi:type="pogoDsl:VoidType"/>
-      </argout>
-      <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-      <excludedStates>MOVING</excludedStates>
     </commands>
     <commands name="ResetPosition" description="Resets the device to the initial position" execMethod="reset_position" displayLevel="OPERATOR" polledPeriod="0">
       <argin description="">
