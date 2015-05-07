@@ -80,7 +80,7 @@ class XRayShutter (PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         #----- PROTECTED REGION ID(XRayShutter.init_device) ENABLED START -----#
-        self.shutter = Shutter('COM4', 4)
+        self.shutter = Shutter('COM7', 4)
         if self.shutter.is_open():
             self.set_state(PyTango.DevState.OPEN)
         else:
