@@ -67,12 +67,14 @@ class UserRoleRequestForm(forms.ModelForm):
         exclude = ('user',)
         
 class InactiveAuthenticationForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super(InactiveAuthenticationForm, self).__init__(*args, **kwargs)
+        
     def clean(self):
         try:
             return super(InactiveAuthenticationForm, self).clean()
         except ValidationError as e:
-            if self.cached_user is not None: # user exists but is not active
-                self.check_for_test_cookie()
+            if self.user_cache is not None: # user exists but is not active
                 return self.cleaned_data
             else:
                 raise e

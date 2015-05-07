@@ -14,7 +14,7 @@
 					<a class="close" data-dismiss="alert" href="#">×</a>Неправильное имя пользователя или пароль
 				</div>
 				{% endif %}
-				<form method="post" action="{% url 'login' %}">
+				<form method="post" action="">
 					{% csrf_token %}
 					<div class="form-group">
 						<label for="{{ form.username.id_for_label }}">Логин</label>

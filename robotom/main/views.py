@@ -3,7 +3,7 @@ import json
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import login as auth_login
+from django.contrib.auth import login as auth_login, authenticate
 from forms import UserRegistrationForm, UserProfileRegistrationForm, UserRoleRequestForm, UserProfileFormDisabled, UserProfileFormEnabled, InactiveAuthenticationForm
 from models import UserProfile, RoleRequest
 from django.core.mail import send_mail
@@ -115,15 +115,14 @@ def registration_view(request):
 
 def login_view(request):
     if request.method == 'POST':
-        login_form = InactiveAuthenticationForm(request.POST)
-        print(request)
-        print(login_form)
+        login_form = InactiveAuthenticationForm(data=request.POST)
         if login_form.is_valid():   
             username = request.POST['username']
             password = request.POST['password']
             user = authenticate(username=username, password=password)
+            
             if user is not None:
-                login(request, user)
+                auth_login(request, user)
                 return redirect(reverse('main:profile'))
             else:
                 return render(request, 'registration/login.html', {
@@ -149,7 +148,7 @@ def done_view(request):
 @login_required
 def profile_view(request):
     if not request.user.is_active:
-        messages.info(request, u'Для доступа к странице подтвердите свой email. Письмо с информацией для подтверждения было направлено Вам на указанный при регистрации ящик {}'.format(request.user.email))
+        messages.info(request, u'Для доступа к профилю пользователя подтвердите свой email. Письмо с информацией для подтверждения было направлено Вам на указанный при регистрации ящик {}'.format(request.user.email))
         
     if request.method == 'POST':
         if 'edit_profile' in request.POST:
