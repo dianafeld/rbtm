@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*- 
 
-
 ##############################################################################
 ## license :
 ##============================================================================
@@ -51,6 +50,7 @@ import sys
 # Add additional import
 #----- PROTECTED REGION ID(XRayShutter.additionnal_import) ENABLED START -----#
 import threading
+from shutter import Shutter
 #----- PROTECTED REGION END -----#	//	XRayShutter.additionnal_import
 
 ## Device States Description
@@ -61,7 +61,6 @@ class XRayShutter (PyTango.Device_4Impl):
 
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(XRayShutter.global_variables) ENABLED START -----#
-    
     #----- PROTECTED REGION END -----#	//	XRayShutter.global_variables
 
     def __init__(self,cl, name):
@@ -81,8 +80,11 @@ class XRayShutter (PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         #----- PROTECTED REGION ID(XRayShutter.init_device) ENABLED START -----#
-
-        self.set_state(PyTango.DevState.CLOSE)
+        self.shutter = Shutter('COM7', 4)
+        if self.shutter.is_open():
+            self.set_state(PyTango.DevState.OPEN)
+        else:
+            self.set_state(PyTango.DevState.CLOSE)
 
         #----- PROTECTED REGION END -----#	//	XRayShutter.init_device
 
@@ -127,6 +129,8 @@ class XRayShutter (PyTango.Device_4Impl):
         # looks like tango doesn't have function overloading. impossible to have zero or one argument for function
         
         time = argin
+
+        self.shutter.open()
         self.set_state(PyTango.DevState.OPEN)
 
         if time != 0:
@@ -145,6 +149,8 @@ class XRayShutter (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(XRayShutter.Close) ENABLED START -----#
 
         time = argin
+
+        self.shutter.close()
         self.set_state(PyTango.DevState.CLOSE)
 
         if time != 0:
