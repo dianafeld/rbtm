@@ -23,27 +23,6 @@
       </argout>
       <status abstract="true" inherited="true" concrete="true"/>
     </commands>
-    <commands name="On" description="Turns detector on" execMethod="on" displayLevel="OPERATOR" polledPeriod="0">
-      <argin description="">
-        <type xsi:type="pogoDsl:VoidType"/>
-      </argin>
-      <argout description="">
-        <type xsi:type="pogoDsl:VoidType"/>
-      </argout>
-      <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-      <excludedStates>FAULT</excludedStates>
-      <excludedStates>RUNNING</excludedStates>
-    </commands>
-    <commands name="Off" description="Turns detector off" execMethod="off" displayLevel="OPERATOR" polledPeriod="0">
-      <argin description="">
-        <type xsi:type="pogoDsl:VoidType"/>
-      </argin>
-      <argout description="">
-        <type xsi:type="pogoDsl:VoidType"/>
-      </argout>
-      <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-      <excludedStates>RUNNING</excludedStates>
-    </commands>
     <commands name="GetFrame" description="Returns image from detector" execMethod="get_frame" displayLevel="OPERATOR" polledPeriod="0">
       <argin description="">
         <type xsi:type="pogoDsl:VoidType"/>

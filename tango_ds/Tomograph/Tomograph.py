@@ -200,10 +200,10 @@ class Tomograph(PyTango.Device_4Impl):
 
         if len(argin) != 3:
             PyTango.Except.throw_exception(
-                "TOMOGRAPH_invalid_arguments",
+                "Tomograph_InvalidArgument",
                 "Invalid number of arguments: {} provided, ".format(len(argin)) +
                 "3 needed (horizontal position, vertical position, angle position)",
-                "Tomograph::GotoPosition")
+                "Tomograph::GotoPosition()")
 
         self.motor.horizontal_position = argin[0]
         self.motor.vertical_position = argin[1]

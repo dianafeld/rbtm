@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ASCII"?>
 <pogoDsl:PogoSystem xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:pogoDsl="http://www.esrf.fr/tango/pogo/PogoDsl">
-  <classes name="XRaySource" pogoRevision="8.1">
-    <description description="It is a class for XRay sourse, which is used for setting operating mode (voltage)" title="XRaySource" sourcePath="/home/guest/rbtm-Drivers/rbtm-drivers/tango_ds/XRaySource" language="Python" filestogenerate="XMI   file,Code files" license="GPL" hasMandatoryProperty="false" hasConcreteProperty="false" hasAbstractCommand="false" hasAbstractAttribute="false">
+  <classes name="XRaySource" pogoRevision="8.4">
+    <description description="It is a class for XRay sourse, which is used for setting operating mode (voltage)" title="XRaySource" sourcePath="/home/itsnotme/rbtm-drivers/tango_ds/XRaySource" language="Python" filestogenerate="XMI   file,Code files" license="GPL" hasMandatoryProperty="false" hasConcreteProperty="false" hasAbstractCommand="false" hasAbstractAttribute="false">
       <inheritances classname="Device_Impl" sourcePath=""/>
       <identification contact="at gmail.com - mariya.ryabova" author="mariya.ryabova" emailDomain="gmail.com" classFamily="Miscellaneous" siteSpecific="" platform="All Platforms" bus="Not Applicable" manufacturer="none" reference=""/>
     </description>
@@ -50,8 +50,8 @@
         <type xsi:type="pogoDsl:VoidType"/>
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-      <excludedStates>FAULT</excludedStates>
       <excludedStates>OFF</excludedStates>
+      <excludedStates>FAULT</excludedStates>
     </commands>
     <attributes name="voltage" attType="Scalar" rwType="READ_WRITE" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="true" isDynamic="false">
       <dataType xsi:type="pogoDsl:ShortType"/>
@@ -60,7 +60,6 @@
       <dataReadyEvent fire="false" libCheckCriteria="true"/>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
       <properties description="voltage of the X-Ray source" label="Input Voltage" unit="0.1 kV" standardUnit="10E+2" displayUnit="" format="" maxValue="600" minValue="20" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
-      <readExcludedStates>OFF</readExcludedStates>
       <writeExcludedStates>OFF</writeExcludedStates>
     </attributes>
     <attributes name="current" attType="Scalar" rwType="READ_WRITE" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="true" isDynamic="false">
@@ -70,7 +69,6 @@
       <dataReadyEvent fire="false" libCheckCriteria="true"/>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
       <properties description="current of the X-Ray source" label="current" unit="0.1 mA" standardUnit="10E-4" displayUnit="" format="" maxValue="800" minValue="20" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
-      <readExcludedStates>OFF</readExcludedStates>
       <writeExcludedStates>OFF</writeExcludedStates>
     </attributes>
     <states name="ON" description="The state in which the source is active">
