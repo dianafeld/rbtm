@@ -240,30 +240,30 @@ def manage_requests_view(request):
         request_list = [rolerequest.user for rolerequest in RoleRequest.objects.exclude(role='NONE')]
         if 'accept' in request.POST:
             user_info = json.dumps({'username': profile.user.username, 'password': profile.user.password, 'role': profile.rolerequest.role})
-            #rest_logger.debug(user_info)
-            try:
-                answer = requests.post(settings.STORAGE_ALT_USER_HOST, user_info, timeout=1)
-                if answer.status_code != 200:
-                    messages.warning(request, u'Невозможно сохранить данные. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                    logger.error(u'Невозможно сохранить данные. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
+            if not settings.REQUEST_DEBUG:
+                try:
+                    answer = requests.post(settings.STORAGE_ALT_USER_HOST, user_info, timeout=1)
+                    if answer.status_code != 200:
+                        messages.warning(request, u'Невозможно сохранить данные. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
+                        logger.error(u'Невозможно сохранить данные. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
+                        return render(request, 'main/manage_requests.html', {
+                            'request_list': request_list,
+                            'caption': 'Запросы смены роли'
+                        })
+                except requests.exceptions.Timeout as e:
+                    messages.warning(request, 'Нет ответа от модуля "Хранилище", невозможно сохранить данные. Попробуйте снова через некоторое время или свяжитесь с администратором')
+                    logger.error(e)
                     return render(request, 'main/manage_requests.html', {
                         'request_list': request_list,
                         'caption': 'Запросы смены роли'
                     })
-            except requests.exceptions.Timeout as e:
-                 messages.warning(request, 'Нет ответа от модуля "Хранилище", невозможно сохранить данные. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                 logger.error(e)
-                 return render(request, 'main/manage_requests.html', {
-                    'request_list': request_list,
-                    'caption': 'Запросы смены роли'
-                 })
-            except BaseException as e:
-                logger.error(e)
-                messages.warning(request, 'Ошибка связи с модулем "Хранилище", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                return render(request, 'main/manage_requests.html', {
-                    'request_list': request_list,
-                    'caption': 'Запросы смены роли'
-                 })
+                except BaseException as e:
+                    logger.error(e)
+                    messages.warning(request, 'Ошибка связи с модулем "Хранилище", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
+                    return render(request, 'main/manage_requests.html', {
+                        'request_list': request_list,
+                        'caption': 'Запросы смены роли'
+                    })
             
             profile.user.is_superuser = False  # we must invalidate superuser and staff rights
             profile.user.is_staff = False  # if any error was made before
