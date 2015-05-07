@@ -281,16 +281,9 @@ class XRaySource (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(XRaySource.SetOperatingMode) ENABLED START -----#
 
         if len(argin) != 2:
-<<<<<<< HEAD
-            PyTango.Except.throw_exception(
-                "XRayShutter_InvalidArgument",
-                "Invalid number of arguments: {} provided, 2 needed (voltage, current)".format(len(argin)),
-                "XRaySource::SetOperatingMode()")
-=======
             PyTango.Except.throw_exception("XRaySource_IllegalArgument",
                                            "Invalid number of arguments: {} provided, 2 needed (voltage, current)".format(len(argin)),
                                            "XRaySource::SetOperatingMode")
->>>>>>> feature/source
 
         new_voltage = argin[0]
         new_current = argin[1]
@@ -302,16 +295,9 @@ class XRaySource (PyTango.Device_4Impl):
             self.attr_voltage_write = new_voltage
             self.write_voltage(voltage)
         else:
-<<<<<<< HEAD
-            PyTango.Except.throw_exception(
-                "XRayShutter_InvalidArgument",
-                "Invalid voltage value",
-                "XRaySource::SetOperatingMode()")
-=======
             PyTango.Except.throw_exception("XRaySource_IllegalArgument",
                                            "Invalid voltage value",
                                            "XRaySource::SetOperatingMode")
->>>>>>> feature/source
 
         current = self.get_device_attr().get_attr_by_name("current")
         min_current_value = current.get_min_value()
@@ -320,16 +306,9 @@ class XRaySource (PyTango.Device_4Impl):
             self.attr_current_write = new_current
             self.write_current(current)
         else:
-<<<<<<< HEAD
-            PyTango.Except.throw_exception(
-                "XRayShutter_InvalidArgument",
-                "Invalid current value",
-                "XRaySource::SetOperatingMode()")
-=======
             PyTango.Except.throw_exception("XRaySource_IllegalArgument",
                                            "Invalid current value",
                                            "XRaySource::SetOperatingMode")
->>>>>>> feature/source
 
         #----- PROTECTED REGION END -----#	//	XRaySource.SetOperatingMode
         
