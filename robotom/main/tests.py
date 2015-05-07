@@ -34,33 +34,35 @@ class LoginTest(TestCase):
     def test_register_ok(self):
         response = self.c.post('/accounts/register/', {'username': 'admin2', 'password1': 'admin2', 'password2': 'admin2', 'email': 'mail@mail.ru', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
         self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], 'http://testserver/accounts/done/')
 
 
     def test_register_existing_user(self):
-        with self.assertRaises(ValidationError):
-            responce = self.c.post('/accounts/register/', {'username': 'admin', 'password1': 'admin2', 'password2': 'admin2', 'email': 'email@mail.ru', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
+        response = self.c.post('/accounts/register/', {'username': 'admin', 'password1': 'admin2', 'password2': 'admin2', 'email': 'email@mail.ru', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
+        self.assertEqual(response.status_code, 200)
 
 
     def test_register_wrong_pass(self):
-        with self.assertRaises(ValidationError):
-            self.c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'not_admin2', 'email': 'email@mail.ru', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})  
+        response = self.c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'not_admin2', 'email': 'email@mail.ru', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
+        self.assertEqual(response.status_code, 200)
     
     
     def test_register_wrong_mail(self):
-        with self.assertRaises(ValidationError):
-            self.c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': 'email@mail', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
-        with self.assertRaises(ValidationError):
-            self.c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': '@mail.ru', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
+        response = self.c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': 'email@mail', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
+        self.assertEqual(response.status_code, 200)
+        
+        response = self.c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': '@mail.ru', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
+        self.assertEqual(response.status_code, 200)
 
 
     def test_register_duplicate_mail(self):
-        with self.assertRaises(ValidationError):
-            self.c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': 'mailadmin@mail.ru', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
+        response = self.c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': 'mailadmin@mail.ru', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
+        self.assertEqual(response.status_code, 200)
             
             
     def test_register_empty_full_name(self):
-        with self.assertRaises(ValidationError):
-            self.c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': 'email@mail.ru', 'full_name':'', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
+        response = self.c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': 'email@mail.ru', 'full_name':'', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
+        self.assertEqual(response.status_code, 200)
         
 
     def tearDown(self):

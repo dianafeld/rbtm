@@ -3,7 +3,8 @@
 from main.models import UserProfile, RoleRequest
 from django import forms
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.forms import ValidationError
 
 
 class UserRegistrationForm(UserCreationForm):
@@ -64,3 +65,14 @@ class UserRoleRequestForm(forms.ModelForm):
     class Meta:
         model = RoleRequest
         exclude = ('user',)
+        
+class InactiveAuthenticationForm(AuthenticationForm):
+    def clean(self):
+        try:
+            return super(InactiveAuthenticationForm, self).clean()
+        except ValidationError as e:
+            if self.cached_user is not None: # user exists but is not active
+                self.check_for_test_cookie()
+                return self.cleaned_data
+            else:
+                raise e

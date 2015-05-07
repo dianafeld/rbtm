@@ -6,7 +6,6 @@
 
 <link rel="stylesheet" href="{% static 'reg_styles.css' %}">
 
-
 {% if messages %}
 <div class="row">
     {% for message in messages %}
@@ -20,6 +19,7 @@
 </div>
 {% endif %}
 
+{% if user.is_active %}
 {% for field in profile_form %}
 {% if field.errors %}
 <div class="row">
@@ -63,5 +63,5 @@
 </div>  
 </div>
 </div>
-
+{% endif %}
 {% endblock %}

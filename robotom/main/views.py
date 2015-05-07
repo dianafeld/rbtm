@@ -100,7 +100,11 @@ def registration_view(request):
                 userprofile_form.save_m2m()
             return redirect(reverse('main:done'))
         else:
-            raise ValidationError('Bad POST form')
+            return render(request, 'registration/registration_form.html', {
+            'user_form': user_form,
+            'userprofile_form': userprofile_form,
+            'caption': 'Регистрация'
+            })
 
     return render(request, 'registration/registration_form.html', {
         'user_form': UserRegistrationForm(),
@@ -115,6 +119,9 @@ def done_view(request):
 
 @login_required
 def profile_view(request):
+    if not request.user.is_active:
+        messages.info(u'Для доступа к странице подтвердите свой email. Письмо с информацией для подтверждения было направлено Вам на указанный при регистрации ящик {}'.format(request.user.email))
+        
     if request.method == 'POST':
         if 'edit_profile' in request.POST:
             return render(request, 'main/profile.html', {
@@ -141,6 +148,9 @@ def profile_view(request):
 def is_superuser(user):
     return user.is_superuser
 
+
+def is_active(user):
+    return user.is_active
 
 # If user's request is not actual now, no information should be provided in database
 def flush_userprofile_request(userprofile):
@@ -251,6 +261,9 @@ def manage_requests_view(request):
 
 @login_required
 def role_request_view(request):
+    if not request.user.is_active:
+        messages.info(u'Для доступа к странице подтвердите свой email. Письмо с информацией для подтверждения было направлено Вам на указанный при регистрации ящик {}'.format(request.user.email))
+        
     if request.method == 'POST':
         if RoleRequest.objects.filter(user__user__pk=request.user.pk):
             role_request = RoleRequest.objects.get(user__user__pk=request.user.pk)
