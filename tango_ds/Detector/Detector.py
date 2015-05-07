@@ -54,6 +54,14 @@ import PyTango
 import sys
 # Add additional import
 # ----- PROTECTED REGION ID(Detector.additionnal_import) ENABLED START -----#
+import xiApi
+# from threading import Thread
+
+
+#class AcquisitionThread(Thread):
+
+#    def run(self, detector):
+#        self.image = detector.get_image()
 
 # ----- PROTECTED REGION END -----#	//	Detector.additionnal_import
 
@@ -63,20 +71,51 @@ import sys
 ## FAULT : an error occurred
 ## RUNNING : detector is taking an image
 
-class Detector(PyTango.Device_4Impl):
-    # --------- Add you global variables here --------------------------
+class Detector (PyTango.Device_4Impl):
+
+    #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(Detector.global_variables) ENABLED START -----#
+
+    def _read_exposure(self):
+        self.debug_stream("In _read_exposure()")
+
+        self.debug_stream("Reading exposure...")
+        try:
+            exposure = self.detector.get_exposure()
+        except PyTango.DevFailed as df:
+            self.error_stream(str(df))
+            raise
+        except Exception as e:
+            self.error_stream(str(e))
+            raise
+        self.debug_stream("exposure = {}".format(exposure))
+
+        return exposure
+
+    def _write_exposure(self, new_exposure):
+        self.debug_stream("In _write_exposure()")
+
+        self.debug_stream("Setting exposure = {}".format(new_exposure))
+        try:
+            self.detector.set_exposure(new_exposure)
+        except PyTango.DevFailed as df:
+            self.error_stream(str(df))
+            raise
+        except Exception as e:
+            self.error_stream(str(e))
+            raise
+        self.debug_stream("Exposure has been set")
 
     #----- PROTECTED REGION END -----#	//	Detector.global_variables
 
-    def __init__(self, cl, name):
-        PyTango.Device_4Impl.__init__(self, cl, name)
+    def __init__(self,cl, name):
+        PyTango.Device_4Impl.__init__(self,cl,name)
         self.debug_stream("In __init__()")
         Detector.init_device(self)
         #----- PROTECTED REGION ID(Detector.__init__) ENABLED START -----#
 
         #----- PROTECTED REGION END -----#	//	Detector.__init__
-
+        
     def delete_device(self):
         self.debug_stream("In delete_device()")
         #----- PROTECTED REGION ID(Detector.delete_device) ENABLED START -----#
@@ -91,6 +130,20 @@ class Detector(PyTango.Device_4Impl):
 
         self.set_state(PyTango.DevState.OFF)
 
+        try:
+            self.debug_stream("Creating link to detector driver...")
+            self.detector = xiApi.Detector()
+            self.debug_stream("Link created")
+        except PyTango.DevFailed as df:
+            self.error_stream(str(df))
+            raise
+        except Exception as e:
+            self.error_stream(str(e))
+            raise
+
+        self.set_state(PyTango.DevState.ON)
+        self.attr_exposure_read = self._read_exposure()
+
         #----- PROTECTED REGION END -----#	//	Detector.init_device
 
     def always_executed_hook(self):
@@ -102,18 +155,22 @@ class Detector(PyTango.Device_4Impl):
     #-----------------------------------------------------------------------------
     #    Detector read/write attribute methods
     #-----------------------------------------------------------------------------
-
+    
     def read_exposure(self, attr):
         self.debug_stream("In read_exposure()")
         # ----- PROTECTED REGION ID(Detector.exposure_read) ENABLED START -----#
-        attr.set_value(self.attr_exposureTime_read)
+        attr.set_value(self.attr_exposure_read)
         # ----- PROTECTED REGION END -----#	//	Detector.exposure_read
-
+        
     def write_exposure(self, attr):
         self.debug_stream("In write_exposure()")
-        data = attr.get_write_value()
+        data=attr.get_write_value()
         #----- PROTECTED REGION ID(Detector.exposure_write) ENABLED START -----#
-        self.attr_exposureTime_read = data
+
+        new_exposure = data
+        self._write_exposure(new_exposure)
+        self.attr_exposure_read = self._read_exposure()
+
         #----- PROTECTED REGION END -----#	//	Detector.exposure_write
         
     
@@ -121,7 +178,7 @@ class Detector(PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(Detector.initialize_dynamic_attributes) ENABLED START -----#
 
         #----- PROTECTED REGION END -----#	//	Detector.initialize_dynamic_attributes
-
+            
     def read_attr_hardware(self, data):
         self.debug_stream("In read_attr_hardware()")
         #----- PROTECTED REGION ID(Detector.read_attr_hardware) ENABLED START -----#
@@ -132,58 +189,7 @@ class Detector(PyTango.Device_4Impl):
     #-----------------------------------------------------------------------------
     #    Detector command methods
     #-----------------------------------------------------------------------------
-
-    def On(self):
-        """ Turns detector on
-        
-        :param : 
-        :type: PyTango.DevVoid
-        :return: 
-        :rtype: PyTango.DevVoid """
-        self.debug_stream("In On()")
-        #----- PROTECTED REGION ID(Detector.On) ENABLED START -----#
-
-        if self.get_state() == PyTango.DevState.ON:
-            pass
-        else:
-            self.set_state(PyTango.DevState.ON)
-
-            #----- PROTECTED REGION END -----#	//	Detector.On
-
-    def is_On_allowed(self):
-        self.debug_stream("In is_On_allowed()")
-        state_ok = not (self.get_state() in [PyTango.DevState.FAULT,
-                                             PyTango.DevState.RUNNING])
-        #----- PROTECTED REGION ID(Detector.is_On_allowed) ENABLED START -----#
-
-        #----- PROTECTED REGION END -----#	//	Detector.is_On_allowed
-        return state_ok
-
-    def Off(self):
-        """ Turns detector off
-        
-        :param : 
-        :type: PyTango.DevVoid
-        :return: 
-        :rtype: PyTango.DevVoid """
-        self.debug_stream("In Off()")
-        #----- PROTECTED REGION ID(Detector.Off) ENABLED START -----#
-
-        if self.get_state() == PyTango.DevState.OFF:
-            pass
-        else:
-            self.set_state(PyTango.DevState.OFF)
-
-            #----- PROTECTED REGION END -----#	//	Detector.Off
-
-    def is_Off_allowed(self):
-        self.debug_stream("In is_Off_allowed()")
-        state_ok = not (self.get_state() in [PyTango.DevState.RUNNING])
-        #----- PROTECTED REGION ID(Detector.is_Off_allowed) ENABLED START -----#
-
-        #----- PROTECTED REGION END -----#	//	Detector.is_Off_allowed
-        return state_ok
-
+    
     def GetFrame(self):
         """ Returns image from detector
         
@@ -195,8 +201,26 @@ class Detector(PyTango.Device_4Impl):
         argout = ''
         #----- PROTECTED REGION ID(Detector.GetFrame) ENABLED START -----#
 
-        with open('Detector/DATA_14') as image:
-            argout = image.read()
+        prev_state = self.get_state()
+        self.set_state(PyTango.DevState.RUNNING)
+
+        self.debug_stream("Starting acquisition...")
+        try:
+            image = self.detector.get_image()
+        except PyTango.DevFailed as df:
+            self.set_state(PyTango.DevState.FAULT)
+            self.error_stream(str(df))
+            raise
+        except Exception as e:
+            self.set_state(PyTango.DevState.FAULT)
+            self.error_stream(str(e))
+            raise
+        self.debug_stream("Image returned")
+
+        self.set_state(prev_state)
+
+        print(str(image))
+        argout = str(image)
 
         # ----- PROTECTED REGION END -----#	//	Detector.GetFrame
         return argout
@@ -215,7 +239,7 @@ class DetectorClass(PyTango.DeviceClass):
     
         :param dev_list: list of devices
         :type dev_list: :class:`PyTango.DeviceImpl`"""
-
+    
         for dev in dev_list:
             try:
                 dev.initialize_dynamic_attributes()
@@ -223,63 +247,57 @@ class DetectorClass(PyTango.DeviceClass):
                 import traceback
                 dev.warn_stream("Failed to initialize dynamic attributes")
                 dev.debug_stream("Details: " + traceback.format_exc())
-                #----- PROTECTED REGION ID(Detector.dyn_attr) ENABLED START -----#
+        #----- PROTECTED REGION ID(Detector.dyn_attr) ENABLED START -----#
 
                 #----- PROTECTED REGION END -----#	//	Detector.dyn_attr
 
     #    Class Properties
     class_property_list = {
-    }
+        }
 
 
     #    Device Properties
     device_property_list = {
-    }
+        }
 
 
     #    Command definitions
     cmd_list = {
-        'On':
-            [[PyTango.DevVoid, "none"],
-             [PyTango.DevVoid, "none"]],
-        'Off':
-            [[PyTango.DevVoid, "none"],
-             [PyTango.DevVoid, "none"]],
         'GetFrame':
             [[PyTango.DevVoid, "none"],
-             [PyTango.DevString, "image"]],
-    }
+            [PyTango.DevString, "image"]],
+        }
 
 
     #    Attribute definitions
     attr_list = {
         'exposure':
             [[PyTango.DevLong,
-              PyTango.SCALAR,
-              PyTango.READ_WRITE],
-             {
-                 'label': "exposure time",
-                 'unit': "0,1 ms",
-                 'standard unit': "10E-4",
-                 'max value': "160000",
-                 'min value': "1",
-                 'description': "exposure time",
-             }],
-    }
+            PyTango.SCALAR,
+            PyTango.READ_WRITE],
+            {
+                'label': "exposure time",
+                'unit': "0,1 ms",
+                'standard unit': "10E-4",
+                'max value': "160000",
+                'min value': "1",
+                'description': "exposure time",
+            } ],
+        }
 
 
 def main():
     try:
         py = PyTango.Util(sys.argv)
-        py.add_class(DetectorClass, Detector, 'Detector')
+        py.add_class(DetectorClass,Detector,'Detector')
 
         U = PyTango.Util.instance()
         U.server_init()
         U.server_run()
 
-    except PyTango.DevFailed, e:
-        print '-------> Received a DevFailed exception:', e
-    except Exception, e:
+    except PyTango.DevFailed,e:
+        print '-------> Received a DevFailed exception:',e
+    except Exception,e:
         print '-------> An unforeseen exception occured....',e
 
 if __name__ == '__main__':
