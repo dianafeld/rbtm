@@ -96,8 +96,8 @@ def registration_view(request):
                 messages.warning(request, 'Произошла ошибка при отправке письма о подтверждении регистрации. Попробуйте зарегистрироваться повторно, указав корректный email')
             else:
                 messages.success(request, 'На указанный Вами адрес было отправлено письмо. Для завершения регистрации и подтверждения адреса перейдите по ссылке, указанной в письме')
-                new_profile.save()
-                userprofile_form.save_m2m()
+            new_profile.save()
+            userprofile_form.save_m2m()
             return redirect(reverse('main:done'))
         else:
             return render(request, 'registration/registration_form.html', {
