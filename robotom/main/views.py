@@ -48,6 +48,7 @@ def confirm_view(request, activation_key):
     userprofile.user.backend = 'django.contrib.auth.backends.ModelBackend'
     auth_login(request, userprofile.user)
     userprofile.user.is_active = True
+    userprofile.user.save()
     messages.success(request, 'Ваш профиль был успешно подтверждён!')
     return redirect(reverse('main:role_request'))
 
@@ -292,7 +293,7 @@ def role_request_view(request):
     if not request.user.is_active:
         messages.info(request, u'Для доступа к странице подтвердите свой email. Письмо с информацией для подтверждения было направлено Вам на указанный при регистрации ящик {}'.format(request.user.email))
         
-    if request.method == 'POST':
+    if request.method == 'POST' and request.user.is_active:
         if RoleRequest.objects.filter(user__user__pk=request.user.pk):
             role_request = RoleRequest.objects.get(user__user__pk=request.user.pk)
             role_form = UserRoleRequestForm(request.POST, instance=role_request)
