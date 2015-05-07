@@ -6,17 +6,20 @@ from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Build import cythonize
 
+import numpy
+
 
 ext_modules=[
     Extension("ximc",
-              sources=["ximc.pyx"],
-              libraries=["libximc"] # Unix-like specific
-    ),
-    Extension("xiApi",
-              sources=["xiApi.pyx"],
-              libraries=["m3apiX64"], # Unix-like specific
-              include_dirs=[numpy.get_include()]
+              sources=["tango_ds/Motor/ximc.pyx"],
+              libraries=["tango_ds/Motor/libximc"] # Unix-like specific
     )
+    #,
+    #Extension("xiApi",
+    #          sources=["tango_ds/Detector/xiApi.pyx"],
+    #          libraries=["tango_ds/Detector/m3apiX64"], # Unix-like specific
+    #          include_dirs=[numpy.get_include()]
+    #)
 ]
 
 

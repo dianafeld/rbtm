@@ -1,7 +1,7 @@
 from ximc import Motor
 from pprint import pprint
 
-motor = Motor("name")
+motor = Motor("COM5")
 motor.open()
 motor.set_zero()
 status = motor.get_status()

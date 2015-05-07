@@ -71,7 +71,7 @@ class Motor (PyTango.Device_4Impl):
 
         self.debug_stream("Reading position...")
         try:
-            parrots = self.motor.get_position().Position
+            parrots = self.angle_motor.get_position()["Position"] 
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
             raise
@@ -79,7 +79,7 @@ class Motor (PyTango.Device_4Impl):
             self.error_stream(str(e))
             raise
         self.debug_stream("Position = {}".format(parrots))
-
+        print parrots
         return parrots
 
     def _write_angle_position(self, angle):
@@ -89,7 +89,7 @@ class Motor (PyTango.Device_4Impl):
 
         try:
             self.debug_stream("Setting position = {}".format(parrots))
-            self.motor.move_to_position(parrots, 0)
+            self.angle_motor.move_to_position(parrots, 0)
             self.debug_stream("Position has been set")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -111,7 +111,7 @@ class Motor (PyTango.Device_4Impl):
     def delete_device(self):
         self.debug_stream("In delete_device()")
         #----- PROTECTED REGION ID(Motor.delete_device) ENABLED START -----#
-
+        self.angle_motor.close()
         #----- PROTECTED REGION END -----#	//	Motor.delete_device
 
     def init_device(self):
@@ -126,7 +126,7 @@ class Motor (PyTango.Device_4Impl):
 
         try:
             self.debug_stream("Creating link to motor driver...")
-            self.motor = ximc.Motor()
+            self.angle_motor = ximc.Motor("COM5")
             self.debug_stream("Link created")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -134,6 +134,9 @@ class Motor (PyTango.Device_4Impl):
         except Exception as e:
             self.error_stream(str(e))
             raise
+
+        self.angle_motor.open()
+        self.angle_motor.set_move_settings(500, 500)    
 
         parrots = self._read_angle_position()
 
@@ -209,7 +212,6 @@ class Motor (PyTango.Device_4Impl):
         self.debug_stream("In read_horizontal_position()")
         #----- PROTECTED REGION ID(Motor.horizontal_position_read) ENABLED START -----#
 
-        print self.attr_horizontal_position_read
         attr.set_value(self.attr_horizontal_position_read)
 
         #----- PROTECTED REGION END -----#	//	Motor.horizontal_position_read
@@ -259,7 +261,7 @@ class Motor (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(Motor.ResetPosition) ENABLED START -----#
 
         self.debug_stream("Setting current angle position as new zero")
-        self.motor.set_zero()
+        self.angle_motor.set_zero()
         self.debug_stream("New zero has been set")
         
         self.attr_angle_position_read = self._read_angle_position()
@@ -324,14 +326,11 @@ class MotorClass(PyTango.DeviceClass):
     #    Attribute definitions
     attr_list = {
         'angle_position':
-            [[PyTango.DevShort,
+            [[PyTango.DevLong,
             PyTango.SCALAR,
             PyTango.READ_WRITE],
             {
                 'label': "angle position",
-                'unit': "0.1 deg",
-                'max value': "3600",
-                'min value': "0",
             } ],
         'vertical_position':
             [[PyTango.DevShort,
