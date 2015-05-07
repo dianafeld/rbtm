@@ -2,12 +2,12 @@
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
+REQUEST_DEBUG = False
 
 STORAGE_FRAMES_HOST = 'http://109.234.34.140:5006/storage/frames'
 STORAGE_EXPERIMENTS_HOST_GET = 'http://109.234.34.140:5006/storage/experiments/get'
-#TODO
-STORAGE_CREATE_USER_HOST = ''
-STORAGE_ALT_USER_HOST = ''
+STORAGE_CREATE_USER_HOST = 'http://109.234.34.140:5006/storage/users/get'
+STORAGE_ALT_USER_HOST = 'http://109.234.34.140:5006/storage/users/update'
 
 import os
 
@@ -142,8 +142,6 @@ INSTALLED_APPS = (
     'experiment',
     'storage',
 )
-
-ACCOUNT_ACTIVATION_DAYS = 7
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 

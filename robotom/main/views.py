@@ -21,6 +21,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer, StaticHTMLRenderer
 from rest_framework.response import Response
+from requests.exceptions import Timeout
+from django.forms import ValidationError
 
 logger = logging.getLogger('django.request')
 rest_logger = logging.getLogger('rest_logger')
@@ -54,24 +56,28 @@ def registration_view(request):
     if request.method == 'POST':
         user_form = UserRegistrationForm(request.POST)
         userprofile_form = UserProfileRegistrationForm(request.POST)
-        if user_form.is_valid() and userprofile_form.is_valid():                 
+        if user_form.is_valid() and userprofile_form.is_valid():            
             user = user_form.save(commit=False)
             user.is_active = False
             new_profile = userprofile_form.save(commit=False)
             
             # request to Storage
             user_info = json.dumps({'username': user.username, 'password': user.password, 'role': 'GST'})
-            #rest_logger.debug(user_info)
-            try:
-                answer = requests.post(settings.STORAGE_CREATE_USER_HOST, user_info, timeout=1)
-                if answer.status_code != 200:
-                    messages.warning(request, u'Пользователь не может быть зарегистрирован. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                    logger.error(u'Пользователь не может быть зарегистрирован. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
+            if not settings.REQUEST_DEBUG:
+                try:
+                    answer = requests.post(settings.STORAGE_CREATE_USER_HOST, user_info, timeout=1)
+                    if answer.status_code != 200:
+                        messages.warning(request, u'Пользователь не может быть зарегистрирован. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
+                        logger.error(u'Пользователь не может быть зарегистрирован. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
+                        return redirect(reverse('main:done'))
+                except Timeout as e:
+                    messages.warning(request, 'Нет ответа от модуля "Хранилище", невозможно завершить регистрацию')
+                    logger.error(e)
                     return redirect(reverse('main:done'))
-            except requests.exceptions.Timeout as e:
-                 messages.warning(request, 'Нет ответа от модуля "Хранилище", невозможно завершить регистрацию')
-                 logger.error(e)
-                 return redirect(reverse('main:done'))
+                except BaseException as e:
+                    logger.error(e)
+                    messages.warning(request, 'Ошибка связи с модулем "Хранилище", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
+                    return redirect(reverse('main:done'))
              
             user.save()
             
@@ -94,11 +100,7 @@ def registration_view(request):
                 userprofile_form.save_m2m()
             return redirect(reverse('main:done'))
         else:
-            return render(request, 'registration/registration_form.html', {
-                'user_form': user_form,
-                'userprofile_form': userprofile_form,
-                'caption': 'Регистрация'
-            })
+            raise ValidationError('Bad POST form')
 
     return render(request, 'registration/registration_form.html', {
         'user_form': UserRegistrationForm(),
@@ -216,6 +218,14 @@ def manage_requests_view(request):
                     'request_list': request_list,
                     'caption': 'Запросы смены роли'
                  })
+            except BaseException as e:
+                logger.error(e)
+                messages.warning(request, 'Ошибка связи с модулем "Хранилище", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
+                return render(request, 'main/manage_requests.html', {
+                    'request_list': request_list,
+                    'caption': 'Запросы смены роли'
+                 })
+            
             profile.user.is_superuser = False  # we must invalidate superuser and staff rights
             profile.user.is_staff = False  # if any error was made before
             profile.role = profile.rolerequest.role

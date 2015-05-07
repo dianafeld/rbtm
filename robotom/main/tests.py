@@ -1,12 +1,13 @@
 from django.test import TestCase
 from django.test import Client
 from django.contrib.auth.models import User
+from django.forms import ValidationError 
 from main.models import UserProfile
 from bootstrap3.exceptions import BootstrapError
 
-class LoginTest(TestCase):
+class LoginTest(TestCase):    
     def setUp(self):
-        self.u_adm = User.objects.create(username='admin', password='admin')
+        self.u_adm = User.objects.create(username='admin', password='admin', email='mailadmin@mail.ru')
         self.up_adm = UserProfile.objects.create(user=self.u_adm, role='ADM')
         
         self.u_exp = User.objects.create(username='exprm', password='exprm')
@@ -17,40 +18,49 @@ class LoginTest(TestCase):
         
         self.u_gst = User.objects.create(username='guest', password='guest')
         self.up_gst = UserProfile.objects.create(user=self.u_gst, role='GST')
+        
+        self.c = Client()
+
 
     def test_login_page(self):
-        c = Client()
-        response = c.post('/accounts/login/', {'username': 'admin', 'password': 'admin'})
+        response = self.c.post('/accounts/login/', {'username': 'admin', 'password': 'admin'})
         self.assertEqual(response.status_code, 200)
-        response = c.post('/accounts/login/', {'username': 'guest', 'password': 'guest'})
+        response = self.c.post('/accounts/login/', {'username': 'guest', 'password': 'guest'})
         self.assertEqual(response.status_code, 200)
-        response = c.post('/accounts/login/', {'username': 'guest', 'password': 'wrongpass'})
+        response = self.c.post('/accounts/login/', {'username': 'guest', 'password': 'wrongpass'})
         self.assertEqual(response.status_code, 200)
+
         
-    def test_register(self):
-        c = Client()
-        response = c.post('/accounts/register/', {'username': 'admin2', 'password1': 'admin2', 'password2': 'admin2', 'email': 'mail@mail.ru', 'full_name': 'FIO'})
+    def test_register_ok(self):
+        response = self.c.post('/accounts/register/', {'username': 'admin2', 'password1': 'admin2', 'password2': 'admin2', 'email': 'mail@mail.ru', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['Location'], 'http://testserver/accounts/register/complete/')
-        
-        # existing user
-        with self.assertRaises(BootstrapError):
-            c.post('/accounts/register/', {'username': 'guest', 'password1': 'admin2', 'password2': 'admin2', 'email': 'email@mail.ru', 'full_name': 'FIO'})
-        # wrong pass
-        with self.assertRaises(BootstrapError):
-            c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'not_admin2', 'email': 'email@mail.ru', 'full_name': 'FIO'})  
-        # wrong mail
-        with self.assertRaises(BootstrapError):
-            c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': 'email@mail', 'full_name': 'FIO'})
-        # wrong mail
-        with self.assertRaises(BootstrapError):
-            c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': '@mail.ru', 'full_name': 'FIO'})
-        '''# duplicate mail
-        with self.assertRaises(BootstrapError):
-            c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': 'mail@mail.ru', 'full_name': 'FIO'})
-        # empty full_name
-        with self.assertRaises(BootstrapError):
-            c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': 'email@mail.ru'})'''
+
+
+    def test_register_existing_user(self):
+        with self.assertRaises(ValidationError):
+            responce = self.c.post('/accounts/register/', {'username': 'admin', 'password1': 'admin2', 'password2': 'admin2', 'email': 'email@mail.ru', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
+
+
+    def test_register_wrong_pass(self):
+        with self.assertRaises(ValidationError):
+            self.c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'not_admin2', 'email': 'email@mail.ru', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})  
+    
+    
+    def test_register_wrong_mail(self):
+        with self.assertRaises(ValidationError):
+            self.c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': 'email@mail', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
+        with self.assertRaises(ValidationError):
+            self.c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': '@mail.ru', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
+
+
+    def test_register_duplicate_mail(self):
+        with self.assertRaises(ValidationError):
+            self.c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': 'mailadmin@mail.ru', 'full_name': 'FIO', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
+            
+            
+    def test_register_empty_full_name(self):
+        with self.assertRaises(ValidationError):
+            self.c.post('/accounts/register/', {'username': 'admin3', 'password1': 'admin2', 'password2': 'admin2', 'email': 'email@mail.ru', 'full_name':'', u'degree': '', u'title': u'', u'gender': 'N', u'address': '', u'work_place': '', u'phone_number': ''})
         
 
     def tearDown(self):

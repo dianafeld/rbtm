@@ -36,6 +36,12 @@ class UserProfileRegistrationForm(forms.ModelForm):
         self.fields['full_name'].label = 'ФИО *'
         self.fields['full_name'].widget = forms.TextInput(attrs={'placeholder': 'Иван Иванович Иванов'})
         
+    def clean_full_name(self):
+        full_name = self.cleaned_data.get('full_name')
+        if not full_name:
+            raise forms.ValidationError(u'Это поле обязательно')
+        return full_name
+        
     class Meta:
         model = UserProfile
         exclude = ('user', 'role', 'activation_key')
