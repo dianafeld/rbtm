@@ -52,7 +52,7 @@ import sys
 #----- PROTECTED REGION ID(XRaySource.additionnal_import) ENABLED START -----#
 
 #----- PROTECTED REGION END -----#	//	XRaySource.additionnal_import
-from driver_source import *
+from driver_source import Source
 ## Device States Description
 ## ON : The state in which the source is active
 ## OFF : The state in which the source is not active
@@ -64,6 +64,56 @@ class XRaySource (PyTango.Device_4Impl):
     #--------- Add you global variables here --------------------------
 
     #----- PROTECTED REGION ID(XRaySource.global_variables) ENABLED START -----#
+
+    def _read_voltage(self):
+        try:
+            voltage = self.source_driver.get_actual_voltage()
+            self.debug_stream("Got voltage = {}".format(voltage))
+        except PyTango.DevFailed as df:
+            self.error_stream(str(df))
+            raise
+        except Exception as e:
+            self.error_stream(str(e))
+            raise
+
+        return voltage
+
+    def _write_voltage(self, new_voltage):
+        try:
+            self.debug_stream("Setting voltage: {}".format(new_voltage))
+            self.source_driver.set_voltage(new_voltage)
+            self.debug_stream("Voltage has been set")
+        except PyTango.DevFailed as df:
+            self.error_stream(str(df))
+            raise
+        except Exception as e:
+            self.error_stream(str(e))
+            raise
+
+    def _read_current(self):
+        try:
+            current = self.source_driver.get_actual_current()
+            self.debug_stream("Got current = {}".format(current))
+        except PyTango.DevFailed as df:
+            self.error_stream(str(df))
+            raise
+        except Exception as e:
+            self.error_stream(str(e))
+            raise
+
+        return current
+
+    def _write_current(self, new_current):
+        try:
+            self.debug_stream("Setting current: {}".format(new_current))
+            self.source_driver.set_current(new_current)
+            self.debug_stream("Current has been set")
+        except PyTango.DevFailed as df:
+            self.error_stream(str(df))
+            raise
+        except Exception as e:
+            self.error_stream(str(e))
+            raise
 
     #----- PROTECTED REGION END -----#	//	XRaySource.global_variables
 
@@ -77,7 +127,7 @@ class XRaySource (PyTango.Device_4Impl):
     def delete_device(self):
         self.debug_stream("In delete_device()")
         #----- PROTECTED REGION ID(XRaySource.delete_device) ENABLED START -----#
-        self.mydr.close_port()
+        
         #----- PROTECTED REGION END -----#	//	XRaySource.delete_device
 
     def init_device(self):
@@ -87,16 +137,21 @@ class XRaySource (PyTango.Device_4Impl):
         self.attr_current_read = 0
         #----- PROTECTED REGION ID(XRaySource.init_device) ENABLED START -----#
         try:
-            mydr = Source()
-            self.mydr.open_port()
-        except PyTango.DevFailed as openError:
-            self.error_stream(str(openError))
+            self.source_driver = Source("COM8")
+        except PyTango.DevFailed as df:
+            self.error_stream(str(df))
             raise
         except Exception as e:
             self.error_stream(str(e))
             raise
-            
-        self.set_state(PyTango.DevState.OFF)
+
+        self.attr_voltage_read = self.source_driver.get_actual_voltage()
+        self.attr_current_read = self.source_driver.get_actual_current()
+        
+        if self.source_driver.is_on_high_volatge():
+            self.set_state(PyTango.DevState.ON)
+        else:
+            self.set_state(PyTango.DevState.OFF)
 
         # read actual values from source
 
@@ -115,34 +170,16 @@ class XRaySource (PyTango.Device_4Impl):
     def read_voltage(self, attr):
         self.debug_stream("In read_voltage()")
         #----- PROTECTED REGION ID(XRaySource.voltage_read) ENABLED START -----#
-        try:
-            voltage = self.mydr.get_voltage()
-            self.debug_stream("Got voltage = %d" % voltage)
-        except PyTango.DevFailed as voltageError:
-            self.error_stream(str(voltageError))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
-
+        voltage = self._read_voltage()
         attr.set_value(voltage)
-
         #----- PROTECTED REGION END -----#	//	XRaySource.voltage_read
         
     def write_voltage(self, attr):
         self.debug_stream("In write_voltage()")
         data=attr.get_write_value()
         # ----- PROTECTED REGION ID(XRaySource.voltage_write) ENABLED START -----#
-        try:
-            self.debug_stream("Setting voltage: %d" % data)
-            self.mydr.set_voltage(data)
-            self.debug_stream("Voltage has been set")
-        except PyTango.DevFailed as voltageError:
-            self.error_stream(str(voltageError))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
+        new_voltage = data
+        self._write_voltage(new_voltage)
         #----- PROTECTED REGION END -----#	//	XRaySource.voltage_write
         
     def is_voltage_allowed(self, attr):
@@ -156,15 +193,7 @@ class XRaySource (PyTango.Device_4Impl):
     def read_current(self, attr):
         self.debug_stream("In read_current()")
         # ----- PROTECTED REGION ID(XRaySource.current_read) ENABLED START -----#
-        try:
-            current = self.mydr.get_current()
-            self.debug_stream("Got current = %d" % current)
-        except PyTango.DevFailed as currentError:
-            self.error_stream(str(currentError))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
+        current = self._read_current()
         attr.set_value(current)
         # ----- PROTECTED REGION END -----#	//	XRaySource.current_read
         
@@ -172,16 +201,8 @@ class XRaySource (PyTango.Device_4Impl):
         self.debug_stream("In write_current()")
         data=attr.get_write_value()
         # ----- PROTECTED REGION ID(XRaySource.current_write) ENABLED START -----#
-        try:
-            self.debug_stream("Setting current: %d" % data)
-            self.mydr.set_current(data)
-            self.debug_stream("Current has been set")
-        except PyTango.DevFailed as currentError:
-            self.error_stream(str(currentError))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
+        new_current = data
+        self._write_current(new_current)
         # ----- PROTECTED REGION END -----#	//	XRaySource.current_write
         
     def is_current_allowed(self, attr):
@@ -220,14 +241,15 @@ class XRaySource (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(XRaySource.Off) ENABLED START -----#
         try:
             self.debug_stream("Turn off high voltage")
-            self.mydr.off_high_voltage()
+            self.source_driver.off_high_voltage()
             self.debug_stream("High voltage has been turned off")
-        except PyTango.DevFailed as voltageError:
-            self.debug_stream(str(voltageError))
+        except PyTango.DevFailed as df:
+            self.debug_stream(str(df))
             raise
         except Exception as e:
             self.debug_stream(str(e))
             raise
+
         self.set_state(PyTango.DevState.OFF)
 
         #----- PROTECTED REGION END -----#	//	XRaySource.Off
@@ -243,14 +265,15 @@ class XRaySource (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(XRaySource.On) ENABLED START -----#
         try:
             self.debug_stream("Setting high voltage")       
-            self.mydr.on_high_voltage()
+            self.source_driver.on_high_voltage()
             self.debug_stream("High voltage has been set")
-        except PyTango.DevFailed as voltageError:
-            self.debug_stream(str(voltageError))
+        except PyTango.DevFailed as df:
+            self.debug_stream(str(df))
             raise
         except Exception as e:
             self.debug_stream(str(e))
             raise
+
         self.set_state(PyTango.DevState.ON)
 
         #----- PROTECTED REGION END -----#	//	XRaySource.On
@@ -371,11 +394,11 @@ class XRaySourceClass(PyTango.DeviceClass):
             PyTango.SCALAR,
             PyTango.READ_WRITE],
             {
-                'label': "Input Voltage",
-                'unit': "0.1 kV",
-                'standard unit': "10E+2",
-                'max value': "600",
-                'min value': "20",
+                'label': "voltage",
+                'unit': "kV",
+                'standard unit': "10E+3",
+                'max value': "60",
+                'min value': "0",
                 'description': "voltage of the X-Ray source",
             } ],
         'current':
@@ -384,10 +407,10 @@ class XRaySourceClass(PyTango.DeviceClass):
             PyTango.READ_WRITE],
             {
                 'label': "current",
-                'unit': "0.1 mA",
-                'standard unit': "10E-4",
-                'max value': "800",
-                'min value': "20",
+                'unit': "mA",
+                'standard unit': "10E-3",
+                'max value': "80",
+                'min value': "0",
                 'description': "current of the X-Ray source",
             } ],
         }
