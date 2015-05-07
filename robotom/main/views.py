@@ -4,7 +4,7 @@ import json
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login as auth_login
-from forms import UserRegistrationForm, UserProfileRegistrationForm, UserRoleRequestForm, UserProfileFormDisabled, UserProfileFormEnabled
+from forms import UserRegistrationForm, UserProfileRegistrationForm, UserRoleRequestForm, UserProfileFormDisabled, UserProfileFormEnabled, InactiveAuthenticationForm
 from models import UserProfile, RoleRequest
 from django.core.mail import send_mail
 from django.conf import settings
@@ -113,6 +113,35 @@ def registration_view(request):
     })
 
 
+def login_view(request):
+    if request.method == 'POST':
+        login_form = InactiveAuthenticationForm(request.POST)
+        print(request)
+        print(login_form)
+        if login_form.is_valid():   
+            username = request.POST['username']
+            password = request.POST['password']
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect(reverse('main:profile'))
+            else:
+                return render(request, 'registration/login.html', {
+                    'form': login_form,
+                    'caption': 'Вход на сайт'
+                })
+        else:
+            return render(request, 'registration/login.html', {
+                'form': login_form,
+                'caption': 'Вход на сайт'
+            })
+    else:   
+        return render(request, 'registration/login.html', {
+            'form': InactiveAuthenticationForm(),
+            'caption': 'Вход на сайт'
+        })
+
+
 def done_view(request):
     return render(request, 'main/done.html', {'caption': 'Успех'})
 
@@ -120,7 +149,7 @@ def done_view(request):
 @login_required
 def profile_view(request):
     if not request.user.is_active:
-        messages.info(u'Для доступа к странице подтвердите свой email. Письмо с информацией для подтверждения было направлено Вам на указанный при регистрации ящик {}'.format(request.user.email))
+        messages.info(request, u'Для доступа к странице подтвердите свой email. Письмо с информацией для подтверждения было направлено Вам на указанный при регистрации ящик {}'.format(request.user.email))
         
     if request.method == 'POST':
         if 'edit_profile' in request.POST:
@@ -262,7 +291,7 @@ def manage_requests_view(request):
 @login_required
 def role_request_view(request):
     if not request.user.is_active:
-        messages.info(u'Для доступа к странице подтвердите свой email. Письмо с информацией для подтверждения было направлено Вам на указанный при регистрации ящик {}'.format(request.user.email))
+        messages.info(request, u'Для доступа к странице подтвердите свой email. Письмо с информацией для подтверждения было направлено Вам на указанный при регистрации ящик {}'.format(request.user.email))
         
     if request.method == 'POST':
         if RoleRequest.objects.filter(user__user__pk=request.user.pk):

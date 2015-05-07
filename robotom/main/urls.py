@@ -12,6 +12,7 @@ urlpatterns = patterns('',
                        
                        url(r'^accounts/register/$', views.registration_view, name='register'),
                        url(r'^accounts/done/$', views.done_view, name='done'),
+                       url(r'^accounts/login/$', views.login_view, name='login'), 
                        url(r'^role_request/$', views.role_request_view, name='role_request'),
                        url(r'^manage_requests/$', views.manage_requests_view, name='manage_requests'),
                        url(r'^test_rest/$', views.user_list, name='user_list'),
