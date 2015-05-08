@@ -52,6 +52,30 @@ def confirm_view(request, activation_key):
     messages.success(request, 'Ваш профиль был успешно подтверждён!')
     return redirect(reverse('main:role_request'))
 
+'''
+Making attempt to send user data to another module.
+If everything is OK, returns None, else returns redirect to error page
+'''
+def try_user_sending(request, err_text, address, user=None, user_info=None):
+    if not settings.REQUEST_DEBUG:
+        if not user_info:
+            user_info = json.dumps({'username': user.username, 'password': user.password, 'role': 'GST'})
+        try:
+            answer = requests.post(address, user_info, timeout=1)
+            if answer.status_code != 200:
+                messages.warning(request, u'{}. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(err_text, answer.status_code))
+                logger.error(u'{}. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(err_text, answer.status_code))
+                return redirect(reverse('main:done'))
+        except Timeout as e:
+                messages.warning(request, 'Нет ответа от модуля "Хранилище". {}.'. format(err_text))
+                logger.error(e)
+                return redirect(reverse('main:done'))
+        except BaseException as e:
+                logger.error(e)
+                messages.warning(request, 'Ошибка связи с модулем "Хранилище", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
+                return redirect(reverse('main:done'))
+    return None
+
 
 def registration_view(request):
     if request.method == 'POST':
@@ -62,24 +86,11 @@ def registration_view(request):
             user.is_active = False
             new_profile = userprofile_form.save(commit=False)
             
-            # request to Storage
-            user_info = json.dumps({'username': user.username, 'password': user.password, 'role': 'GST'})
-            if not settings.REQUEST_DEBUG:
-                try:
-                    answer = requests.post(settings.STORAGE_CREATE_USER_HOST, user_info, timeout=1)
-                    if answer.status_code != 200:
-                        messages.warning(request, u'Пользователь не может быть зарегистрирован. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                        logger.error(u'Пользователь не может быть зарегистрирован. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                        return redirect(reverse('main:done'))
-                except Timeout as e:
-                    messages.warning(request, 'Нет ответа от модуля "Хранилище", невозможно завершить регистрацию')
-                    logger.error(e)
-                    return redirect(reverse('main:done'))
-                except BaseException as e:
-                    logger.error(e)
-                    messages.warning(request, 'Ошибка связи с модулем "Хранилище", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                    return redirect(reverse('main:done'))
-             
+            attempt = try_user_sending(request, u'Невозможно завершить регистрацию', settings.STORAGE_CREATE_USER_HOST, user=user)
+            
+            if attempt: #if something went wrong
+                return attempt
+            
             user.save()
             
             salt = hashlib.sha1(str(random.random())).hexdigest()[:5]
@@ -160,8 +171,12 @@ def profile_view(request):
             })
         elif 'save_profile' in request.POST:
             userprofile_form = UserProfileFormEnabled(request.POST, instance=request.user.userprofile)
-            if userprofile_form.is_valid():
+            if userprofile_form.is_valid():                    
                 profile = userprofile_form.save(commit=False)
+                user_info = json.dumps({'username': profile.user.username, 'password': profile.user.password, 'role': profile.rolerequest.role})
+                attempt = try_user_sending(request, u'Невозможно сохранить изменения профиля', settings.STORAGE_ALT_USER_HOST, user_info=user_info)
+                if attempt: #if something went wrong
+                    return attempt
                 profile.save()
                 messages.success(request, 'Ваши данные были успешно сохранены!')
         elif 'cancel' in request.POST:
@@ -240,30 +255,10 @@ def manage_requests_view(request):
         request_list = [rolerequest.user for rolerequest in RoleRequest.objects.exclude(role='NONE')]
         if 'accept' in request.POST:
             user_info = json.dumps({'username': profile.user.username, 'password': profile.user.password, 'role': profile.rolerequest.role})
-            if not settings.REQUEST_DEBUG:
-                try:
-                    answer = requests.post(settings.STORAGE_ALT_USER_HOST, user_info, timeout=1)
-                    if answer.status_code != 200:
-                        messages.warning(request, u'Невозможно сохранить данные. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                        logger.error(u'Невозможно сохранить данные. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                        return render(request, 'main/manage_requests.html', {
-                            'request_list': request_list,
-                            'caption': 'Запросы смены роли'
-                        })
-                except requests.exceptions.Timeout as e:
-                    messages.warning(request, 'Нет ответа от модуля "Хранилище", невозможно сохранить данные. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                    logger.error(e)
-                    return render(request, 'main/manage_requests.html', {
-                        'request_list': request_list,
-                        'caption': 'Запросы смены роли'
-                    })
-                except BaseException as e:
-                    logger.error(e)
-                    messages.warning(request, 'Ошибка связи с модулем "Хранилище", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                    return render(request, 'main/manage_requests.html', {
-                        'request_list': request_list,
-                        'caption': 'Запросы смены роли'
-                    })
+            
+            attempt = try_user_sending(request, u'Невозможно сохранить изменения', settings.STORAGE_ALT_USER_HOST, user_info=user_info)
+            if attempt: #if something went wrong
+                return attempt
             
             profile.user.is_superuser = False  # we must invalidate superuser and staff rights
             profile.user.is_staff = False  # if any error was made before
