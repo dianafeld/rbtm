@@ -5,20 +5,20 @@
         <div class="panel panel-default">
             <div class="panel-body">
                 <form method="post" action="" class="form">
-                    <div class="form-group">
+                    <div class="control-group">
                         {% csrf_token %}
                         <div class="row">
-                            <div class="col-xs-5">
+                            <div class="col-xs-2">
                                 <label for="Specimen">Образец</label>
                                 <input type="text" class="form-control" id="Specimen" name="Specimen"
-                                       placeholder="Название образца">
+                                           placeholder="Название образца">
                             </div>
                             <div class="col-xs-2">
-                                <label for="SinceDate">С даты</label>
+                                <label for="SinceDate" class="control-label">Дата</label>
                                 <input type="date" class="form-control" id="SinceDate" name="SinceDate">
                             </div>
                             <div class="col-xs-2">
-                                <label for="ToDate">До даты</label>
+                                <label for="ToDate" class="control-label">LFLF</label>
                                 <input type="date" class="form-control" id="ToDate" name="ToDate">
                             </div>
                         </div>
@@ -41,91 +41,102 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-xs-6">
+                            <div class="col-xs-6"><h4><b>DATA</b></h4></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-2"><h5><b>Exposure</b></h5></div>
+                            <div class="col-xs-2 col-xs-offset-2"><h5><b>Angle Step</b></h5></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-2">
+                                <input type="number" step="any" class="form-control" id="DataFromExposure" name="DataFromExposure"
+                                        placeholder="От">
+                            </div>
+                            <div class="col-xs-2">
+                                <input type="number" step="any" class="form-control" id="DataToExposure" name="DataToExposure"
+                                        placeholder="До">
+                            </div>
+                            <div class="col-xs-2">
+                                <input type="number" min="0" class="form-control" id="DataFromAngleStep"
+                                       name="DataFromAngleStep" placeholder="От">
+                            </div>
+                            <div class="col-xs-2">
+                                <input type="number" min="0" class="form-control" id="DataToAngleStep" name="DataToAngleStep"
+                                        placeholder="До">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-2"><h5><b>Count per step</b></h5></div>
+                            <div class="col-xs-2 col-xs-offset-2"><h5><b>Step count</b></h5></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-2">
+                                <input type="number" min="0" class="form-control" id="DataFromCountPerStep"
+                                       name="DataFromCountPerStep" placeholder="От">
+                            </div>
+                            <div class="col-xs-2">
+                                <input type="number" min="0" class="form-control" id="DataToCountPerStep"
+                                       name="DataToCountPerStep" placeholder="До">
+                            </div>
+                            <div class="col-xs-2">
+                                <input type="number" min="0" class="form-control" id="DataFromStepCount"
+                                       name="DataFromStepCount" placeholder="От">
+                            </div>
+                            <div class="col-xs-2">
+                                <input type="number" min="0" class="form-control" id="DataToStepCount" name="DataToStepCount"
+                                        placeholder="До">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-2">
                                 <h4><b>DARK</b></h4>
                             </div>
-                            <div class="col-xs-6">
+                            <div class="col-xs-2 col-xs-offset-3">
                                 <h4><b>EMPTY</b></h4>
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-xs-3">
-                                <label for="DarkFromCount">Количество от</label>
-                                <input type="text" class="form-control" id="DarkFromCount" name="DarkFromCount">
+                            <div class="col-xs-2"><h5><b>Count</b></h5></div>
+                            <div class="col-xs-2 col-xs-offset-3"><h5><b>Count</b></h5></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-2">
+                                <input type="number" min="0" class="form-control" id="DarkFromCount" name="DarkFromCount"
+                                        placeholder="От">
                             </div>
-                            <div class="col-xs-3">
-                                <label for="DarkToCount">Количество до</label>
-                                <input type="text" class="form-control" id="DarkToCount" name="DarkToCount">
+                            <div class="col-xs-2">
+                                <input type="number" min="0" class="form-control" id="DarkToCount" name="DarkToCount"
+                                        placeholder="До">
                             </div>
-                            <div class="col-xs-3">
-                                <label for="EmptyFromCount">Количество от</label>
-                                <input type="text" class="form-control" id="EmptyFromCount" name="EmptyFromCount">
+                            <div class="col-xs-2 col-xs-offset-1">
+                                <input type="number" min="0" class="form-control" id="EmptyFromCount" name="EmptyFromCount"
+                                        placeholder="От">
                             </div>
-                            <div class="col-xs-3">
-                                <label for="EmptyToCount">Количество до</label>
-                                <input type="text" class="form-control" id="EmptyToCount" name="EmptyToCount">
+                            <div class="col-xs-2">
+                                <input type="number" min="0" class="form-control" id="EmptyToCount" name="EmptyToCount"
+                                        placeholder="До">
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-xs-3">
-                                <label for="DarkFromExposure">Экспозиция от</label>
-                                <input type="text" class="form-control" id="DarkFromExposure" name="DarkFromExposure">
-                            </div>
-                            <div class="col-xs-3">
-                                <label for="DarkToExposure">Экспозиция до</label>
-                                <input type="text" class="form-control" id="DarkToExposure" name="DarkToExposure">
-                            </div>
-                            <div class="col-xs-3">
-                                <label for="EmptyFromExposure">Экспозиция от</label>
-                                <input type="text" class="form-control" id="EmptyFromExposure"
-                                       name="EmptyFromExposure">
-                            </div>
-                            <div class="col-xs-3">
-                                <label for="EmptyToExposure">Экспозиция до</label>
-                                <input type="text" class="form-control" id="EmptyToExposure" name="EmptyToExposure">
-                            </div>
+                            <div class="col-xs-2"><h5><b>Exposure</b></h5></div>
+                            <div class="col-xs-2 col-xs-offset-3"><h5><b>Exposure</b></h5></div>
                         </div>
                         <div class="row">
-                            <div class="col-xs-6">
-                                <h4><b>DATA</b></h4>
+                            <div class="col-xs-2">
+                                <input type="number" step="any" class="form-control" id="DarkFromExposure" name="DarkFromExposure"
+                                        placeholder="От">
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-xs-3">
-                                <label for="DataFromExposure">Экспозиция от</label>
-                                <input type="text" class="form-control" id="DataFromExposure" name="DataFromExposure">
+                            <div class="col-xs-2">
+                                <input type="number" step="any" class="form-control" id="DarkToExposure" name="DarkToExposure"
+                                        placeholder="До">
                             </div>
-                            <div class="col-xs-3">
-                                <label for="DataToExposure">Экспозиция до</label>
-                                <input type="text" class="form-control" id="DataToExposure" name="DataToExposure">
+                            <div class="col-xs-2 col-xs-offset-1">
+                                <input type="number" step="any" class="form-control" id="EmptyFromExposure"
+                                       name="EmptyFromExposure" placeholder="От">
                             </div>
-                            <div class="col-xs-3">
-                                <label for="DataFromAngleStep">Шаг угла от</label>
-                                <input type="text" class="form-control" id="DataFromAngleStep"
-                                       name="DataFromAngleStep">
-                            </div>
-                            <div class="col-xs-3">
-                                <label for="DataToAngleStep">Шаг угла до</label>
-                                <input type="text" class="form-control" id="DataToAngleStep" name="DataToAngleStep">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-xs-3">
-                                <label for="DataFromCountPerStep">Количество за шаг от</label>
-                                <input type="text" class="form-control" id="DataFromCountPerStep" name="DataFromCountPerStep">
-                            </div>
-                            <div class="col-xs-3">
-                                <label for="DataToCountPerStep">Количество за шаг до</label>
-                                <input type="text" class="form-control" id="DataToCountPerStep" name="DataToCountPerStep">
-                            </div>
-                            <div class="col-xs-3">
-                                <label for="DataFromStepCount">Количество шагов от</label>
-                                <input type="text" class="form-control" id="DataFromStepCount"
-                                       name="DataFromStepCount">
-                            </div>
-                            <div class="col-xs-3">
-                                <label for="DataToStepCount">Количество шагов до</label>
-                                <input type="text" class="form-control" id="DataToStepCount" name="DataToStepCount">
+                            <div class="col-xs-2">
+                                <input type="number" step="any" class="form-control" id="EmptyToExposure" name="EmptyToExposure"
+                                        placeholder="До">
                             </div>
                         </div>
                         <div class="row">
@@ -192,7 +203,9 @@
                                     <td>{{ record.empty_exposure }}</td>
                                     <td>{{ record.dark_count }}</td>
                                     <td>{{ record.dark_exposure }}</td>
-                                    <td><a href='{% url 'storage:storage_record' record.experiment_id %}'>{{ record.experiment_id }}</a></td>
+                                    <td>
+                                        <a href='{% url 'storage:storage_record' record.experiment_id %}'>{{ record.experiment_id }}</a>
+                                    </td>
                                 </tr>
                             {% endfor %}
                             </tbody>
