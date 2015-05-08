@@ -49,6 +49,8 @@ def create_pages(request, results, page):
 
 
 def make_info(post_args):
+    for arg in post_args:
+        rest_logger.debug(u'PostArgs: {} {}'.format(arg, post_args[arg]))
     # Внимание! Быдлокод!
     request = {}
 
