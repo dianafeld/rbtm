@@ -163,6 +163,7 @@ def storage_view(request):
     return render(request, 'storage/storage_index.html', {
         'caption': 'Хранилище',
         'record_range': records,
+        'record_number': len(records),
         'toShowResult': to_show,
         'pages': xrange(1, num_pages + 1),
         'current_page': page,
@@ -175,15 +176,10 @@ def storage_record_view(request, storage_record_id):
     # TODO
     try:
         info = json.dumps({"experiment id": storage_record_id, "image_data.datetime": "30.04.2015 10:27:35"})
-        answer = requests.post(STORAGE_FRAMES_HOST, info)
+        answer = requests.post(STORAGE_FRAMES_HOST, info, timeout=10)
         if answer.status_code == 200:
             frames = json.loads(answer.content)
             rest_logger.debug(u'Найденные фреймы: {}'.format(frames))
-            import pylab as plt
-            plt.figure()
-            plt.imshow(frames["image"], cmap=plt.cm.gray)
-            plt.colorbar()
-            plt.show()
         else:
             rest_logger.error(u'Не удается получить фреймы. Код ошибки: {}'.format(answer.status_code))
     except Timeout as e:
