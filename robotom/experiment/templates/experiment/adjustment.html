@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Start experiment</title>
+</head>
+	<body>
+		<h1 align = "center">Эксперимент</h1>
+		<hr noshade>
+		<body>
+		{% if messages %}
+		<div class="row">
+		{% for message in messages %}
+			<div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+				<div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+				    {{ message }}
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+{% endif %}
+		<br><h3>Заполните все поля для начала эксперимента</h3>
+		<form name = "form1" method="POST" action="start_experiment">
+		{% csrf_token %}
+			<h2>Параметры эксперимента</h2>
+			<br>Напряжение, кВ<br>
+			<input type="text" required name="voltage" pattern="\d+(\.\d{2})?"><br>
+			Ток, мА<br>
+			<input type="text" required name="current" pattern="\d+(\.\d{2})?"><br>
+			<br>
+			<input type="submit" name="experiment_on" value="Отправить параметры и начать эксперимент,если все ок">
+			<input type="reset"  value="Сбросить настройки">
+		</form>
+		<br>
+	</body>
+	
+{% endblock content %}

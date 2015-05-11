@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Adjustment</title>
+</head>
+	<body>
+		<h1 align = "center">Эксперимент</h1>
+		<hr noshade>
+		<form method="POST" action="send_parameters" class="form">
+			{% csrf_token %} 
+			<h2>Параметры образца<br></h2>
+			Название:<br>
+			<input type = "text"  name = "name" size = "30", maxsize = "50" ><br>
+			Тип:<br>
+			<input type = "text"  name = "type" size = "30", maxsize = "50" ><br>
+			Другое:<br>
+			<input type = "text" name = "sample_other" size = "30", maxsize = "50"><br>
+			<h2>Параметры установки<br></h2>
+			Параметры источника:<br>
+			<input type = "text" name = "source" size = "30", maxsize = "50" ><br>
+			Другое:<br>
+			<input type = "text" name = "source_other" size = "30", maxsize = "50"><br>
+			<h2>Выбрать настройки из файла:<br></h2>
+			<input type="file" name="">Выбрать<br>
+			<input type="submit" name="processing" value="Задать параметры для эксперимента">
+		</form>
+		
+	</body>
+</html> 
+
+{% endblock content %}
