@@ -6,10 +6,10 @@
 
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Start experiment</title>
+<title>Adjustment</title>
 </head>
 	<body>
-		<h1 align = "center">Эксперимент</h1>
+		<h1 align = "center">Юстировка</h1>
 		<hr noshade>
 		<body>
 		{% if messages %}
@@ -23,19 +23,65 @@
 			{% endfor %}
 		</div>
 {% endif %}
-		<br><h3>Заполните все поля для начала эксперимента</h3>
-		<form name = "form1" method="POST" action="start_experiment">
 		{% csrf_token %}
-			<h2>Параметры эксперимента</h2>
-			<br>Напряжение, кВ<br>
-			<input type="text" required name="voltage" pattern="\d+(\.\d{2})?"><br>
-			Ток, мА<br>
-			<input type="text" required name="current" pattern="\d+(\.\d{2})?"><br>
+			<h3>Параметры юстировки</h3>
+			<form name = "voltage" method="POST" action="set_voltage">
+				<br>Напряжение, кВ<br>
+				<input type="text" required name="voltage" pattern="\d+(\.\d{2})?"><br>
+				{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+					<input type="submit" name="experiment_on" value="Отправить"><br>
+				{% else %}	
+					<input type="submit" name="experiment_on" value="Отправить"disabled><br>
+				{% endif %}
+
+			</form>
+			<form name = "current" method="POST" action="set_current">						
+				Ток, мА<br>
+				<input type="text" required name="current" pattern="\d+(\.\d{2})?"><br>
+				{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+					<input type="submit" name="experiment_on" value="Отправить"><br>
+				{% else %}
+					<input type="submit" name="experiment_on" value="Отправить"disabled><br>
+				{% endif %}
+			</form>
+			<form name = "gate" method="POST" action="gate">						
+				Заслонка<br>
+				<input type = "radio" name = "gate" value = "open" checked>открыть
+				<input type = "radio" name = "gate" value = "close">закрыть<br> 
+				{% if user.is_authenticated and user.userprofile.role == 'EXP' %} 
+					<input type="submit" name="experiment_on" value="Отправить"><br>
+				{% else %}
+					<input type="submit" name="experiment_on" value="Отправить"disabled><br>
+				{% endif %}
+			</form>
+			<form name = "engine" method="POST" action="rotate_engine">						
+				Повернуть двигатель на n градусов<br>
+				<input type="text" required name="engine" pattern="\d+(\.\d{2})?"><br>
+				{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+					<input type="submit" name="experiment_on" value="Отправить"><br>
+				{% else %}
+					<input type="submit" name="experiment_on" value="Отправить"disabled><br>
+				{% endif %}
+			</form>
 			<br>
-			<input type="submit" name="experiment_on" value="Отправить параметры и начать эксперимент,если все ок">
-			<input type="reset"  value="Сбросить настройки">
-		</form>
-		<br>
+			<form name = "object" method="POST" action="rotate_object">						
+				Повернуть объект по вертикали на n мм<br>
+				<input type="text" required name="object_vert" pattern="\d+(\.\d{2})?"><br>
+				{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+					<input type="submit" name="experiment_on" value="Отправить"><br>
+				{% else %}
+					<input type="submit" name="experiment_on" value="Отправить"disabled><br>
+				{% endif %}
+			</form>
+			<form name = "object" method="POST" action="rotate_object">						
+				Повернуть объект по горизонтали на n мм<br>
+				<input type="text" required name="object_gor" pattern="\d+(\.\d{2})?"><br>
+				{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+					<input type="submit" name="experiment_on" value="Отправить"><br>
+				{% else %}
+					<input type="submit" name="experiment_on" value="Отправить"disabled><br>
+				{% endif %}
+			</form>
 	</body>
 	
 {% endblock content %}
