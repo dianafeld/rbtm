@@ -5,7 +5,7 @@ import json
 from django.shortcuts import render
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from requests.exceptions import Timeout
-from robotom.settings import STORAGE_EXPERIMENTS_HOST_GET
+from robotom.settings import STORAGE_EXPERIMENTS_HOST_GET, STORAGE_FRAMES_HOST
 
 rest_logger = logging.getLogger('rest_logger')
 
@@ -49,14 +49,8 @@ def create_pages(request, results, page):
 
 
 def make_info(post_args):
-    # PostArgs: ToDate
-    # PostArgs: specimen
-    # PostArgs: Finished
-    # PostArgs: SinceDate
-    # PostArgs: csrfmiddlewaretoken PJjr0RkK7BXfPnvnmdgiuLDuQ5Ej8mOp
-    # PostArgs: Advanced
     for arg in post_args:
-        rest_logger.debug(u'PostArgs: \'{}\' \'{}\''.format(arg, post_args[arg]))
+        rest_logger.debug(u'PostArgs: {} {}'.format(arg, post_args[arg]))
     # Внимание! Быдлокод!
     request = {}
 
@@ -129,7 +123,7 @@ def make_info(post_args):
             request['DATA.step count'] = {}
         request['DATA.step count']['$lte'] = int(post_args['DataToStepCount'])
 
-    rest_logger.debug(u'Получившийся запрос {}'.format(json.dumps(request)))
+    rest_logger.debug(u'Текст запроса к базе {}'.format(json.dumps(request)))
     return json.dumps(request)
 
 
@@ -169,6 +163,7 @@ def storage_view(request):
     return render(request, 'storage/storage_index.html', {
         'caption': 'Хранилище',
         'record_range': records,
+        'record_number': len(records),
         'toShowResult': to_show,
         'pages': xrange(1, num_pages + 1),
         'current_page': page,
@@ -179,6 +174,18 @@ def storage_view(request):
 
 def storage_record_view(request, storage_record_id):
     # TODO
+    try:
+        info = json.dumps({"experiment id": storage_record_id, "image_data.datetime": "30.04.2015 10:27:35"})
+        answer = requests.post(STORAGE_FRAMES_HOST, info, timeout=10)
+        if answer.status_code == 200:
+            frames = json.loads(answer.content)
+            rest_logger.debug(u'Найденные фреймы: {}'.format(frames))
+        else:
+            rest_logger.error(u'Не удается получить фреймы. Код ошибки: {}'.format(answer.status_code))
+    except Timeout as e:
+        rest_logger.error(u'Не удается получить фреймы. Ошибка: {}'.format(e.message))
+        message = u'Не удается получить фреймы. Сервер хранилища не отвечает. Попробуйте позже.'
+
     return render(request, 'storage/storage_record.html', {
         "record_id": storage_record_id,
         'caption': 'Запись хранилища номер ' + str(storage_record_id),
