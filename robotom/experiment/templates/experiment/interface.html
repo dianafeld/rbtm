@@ -6,30 +6,69 @@
 
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Adjustment</title>
+<title>Experiment</title>
 </head>
 	<body>
 		<h1 align = "center">Эксперимент</h1>
 		<hr noshade>
-		<form method="POST" action="send_parameters" class="form">
+		<body>
+		{% if messages %}
+		<div class="row">
+		{% for message in messages %}
+			<div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+				<div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+				    {{ message }}
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+{% endif %}
+		<br><h3>Заполните все поля для начала эксперимента</h3>
+	</body>
+		<form name = "manual" method="POST" action="send_parameters" class="form">
 			{% csrf_token %} 
-			<h2>Параметры образца<br></h2>
+			<h3>Параметры образца<br></h3>
 			Название:<br>
-			<input type = "text"  name = "name" size = "30", maxsize = "50" ><br>
-			Тип:<br>
-			<input type = "text"  name = "type" size = "30", maxsize = "50" ><br>
-			Другое:<br>
-			<input type = "text" name = "sample_other" size = "30", maxsize = "50"><br>
-			<h2>Параметры установки<br></h2>
-			Параметры источника:<br>
-			<input type = "text" name = "source" size = "30", maxsize = "50" ><br>
-			Другое:<br>
-			<input type = "text" name = "source_other" size = "30", maxsize = "50"><br>
-			<h2>Выбрать настройки из файла:<br></h2>
-			<input type="file" name="">Выбрать<br>
-			<input type="submit" name="processing" value="Задать параметры для эксперимента">
+			<input type = "text" name = "name" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
+			Теги:<br>
+			<input type = "text" name = "type" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
+			<h3>Кадры DARK<br></h3>
+			Количество:<br>
+			<input type = "text" name = "dark_quantity" size = "30", maxsize = "50" pattern="^[ 0-9]+$"><br>
+			Экспозиция, мс:<br>
+			<input type = "text" name = "dark_exposure" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
+			<h3>EMPTY shots<br></h3>
+			Количество:<br>
+			<input type = "text" name = "empty_quantity" size = "30", maxsize = "50" pattern="^[ 0-9]+$"><br>
+			Экспозиция, мс:<br>
+			<input type = "text" name = "empty_exposure" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
+			<h3>DATA shots:<br></h3>
+			Количество:<br>
+			<input type = "text" name = "data_quantity" size = "30", maxsize = "50" pattern="^[ 0-9]+$"><br>
+			Экспозиция, мс:<br>
+			<input type = "text" name = "data_exposure" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
+			Угловой шаг между кадрами, градусы:<br>
+			<input type = "text" name = "data_angle" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
+			Количество кадров снятых при одном угле поворота кадров DATA:<br>
+			<input type = "text" name = "data_same" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
+			<br>
+			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+				<input type="submit" name="parameters" value = "Начать эксперимент 1">
+			{% else %}
+				<input type="submit" name="parameters_adm" value = "Начать эксперимент"disabled>
+			{% endif %}
+			<input type="reset" value="Сбросить">
 		</form>
-		
+		<form name = "file" method="POST" action="" class="form">
+			<h3>Выбрать настройки из файла:<br></h3>
+			<input type = "file" name = "load" size = "50">
+			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+				<input type="submit" name="load" value = "Начать эксперимент"><br>
+			{% else %}
+				<input type="submit" name="load" value = "Начать эксперимент"disabled><br>
+
+			{% endif %}
+		</form>
 	</body>
 </html> 
 

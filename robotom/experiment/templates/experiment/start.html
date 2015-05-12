@@ -12,10 +12,34 @@
 		<h1 align = "center">Эксперимент</h1>
 		<hr noshade>
 		<body>
-		Статус эксперимента + для пользователя,что видно.
-		 <p><a href="adjustment">Настройка параметров томографа и начало эксперимента</a>
+		{% if messages %}
+		<div class="row">
+		{% for message in messages %}
+			<div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+				<div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+				    {{ message }}
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+{% endif %}
+		{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+					<form method="GET" action="turn_on">
+					<input type="submit" name="on_exp" value="Включить томограф"><br><br>
+					</form>
+				{% else %}
+					<input type="submit" name="on_admin" value="Включить томограф"disabled><br><br>
+				{% endif %}
+		{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+					<form method="GET" action="turn_off">
+					<input type="submit" name="of_exp" value="Выключить томограф"><br><br>
+					</form>
+				{% else %}
+					<input type="submit" name="of_admin" value="Выключить томограф"disabled><br><br>
+				{% endif %}
+		
+		 <p><a href="adjustment">Параметры томографа</a>
 		 <p><a href="interface">Параметры эксперимента</a>
-		 <p><a href="show_image">Посмотреть изображение</a>
 		 </body>
 </html>
 
