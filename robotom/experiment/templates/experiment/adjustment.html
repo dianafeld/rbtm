@@ -24,7 +24,7 @@
 		</div>
 {% endif %}
 			<h3>Параметры юстировки</h3>
-			<form method="POST" action="start_experiment">
+			<form method="POST" action="">
 			{% csrf_token %}
 				<br>Напряжение, кВ<br>
 				<input type="text" required name="voltage" pattern="\d+(\.\d{2})?"><br>						
@@ -36,32 +36,25 @@
 					<input type="submit" name="experiment_on_adm" value="Отправить"disabled><br>
 				{% endif %}
 			</form>
-			<form name = "gate" method="POST" action="gate">						
+			<br>
+			<form name = "gate" method="POST" action="gate">	
+			{% csrf_token %}					
 				Заслонка<br>
-				<input type = "radio" name = "gate" value = "open" checked>открыть
-				<input type = "radio" name = "gate" value = "close">закрыть<br> 
+				<input type = "text" required name = "text_gate" value = "" checked>
 				{% if user.is_authenticated and user.userprofile.role == 'EXP' %} 
-					<input type="submit" name="experiment_on" value="Отправить"><br>
+					<br><input type="submit" name="gate" value="Отправить"><br>
 				{% else %}
-					<input type="submit" name="experiment_on" value="Отправить"disabled><br>
-				{% endif %}
-			<form name = "gate" method="POST" action="gate">						
-				Заслонка<br>
-				<input type = "radio" name = "gate" value = "open" checked>открыть
-				<input type = "radio" name = "gate" value = "close">закрыть<br> 
-				{% if user.is_authenticated and user.userprofile.role == 'EXP' %} 
-					<input type="submit" name="experiment_on" value="Отправить"><br>
-				{% else %}
-					<input type="submit" name="experiment_on" value="Отправить"disabled><br>
+					<input type="submit" name="gate_adm" value="Отправить"disabled><br>
 				{% endif %}
 			</form>
-			<form name = "picture" method="POST" action="picture">
+			<form name = "picture" method="POST" action="get_picture">
+			{% csrf_token %}
 				Снять изображение с экспозицией в n мс<br>
-				<input type="text" required name="picture" pattern="\d+(\.\d{2})?"><br>
+				<input type="text" required name="picture_exposure" pattern="\d+(\.\d{2})?"><br>
 				{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-					<input type="submit" name="experiment_on" value="Отправить"><br>
+					<input type="submit" name="picture" value="Отправить"><br>
 				{% else %}
-					<input type="submit" name="experiment_on" value="Отправить"disabled><br>
+					<input type="submit" name="picture_adm" value="Отправить"disabled><br>
 				{% endif %}
 			</form>		
 				

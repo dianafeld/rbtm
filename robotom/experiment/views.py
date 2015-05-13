@@ -14,7 +14,7 @@ import requests
 import urllib2
 import json
 from models import Tomo, Experiment
-#from rest_framework import request.Request
+from rest_framework import request
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer, StaticHTMLRenderer
@@ -49,28 +49,21 @@ def experiment_view_interface(request):
     })     
              
 @api_view(['GET','POST'])
-#отправляет ток,напряжение,заслонку и т.д.
+#отправляет включить/выключить томограф,ток,напряжение,заслонку открыть/закрыть и т.д.
 def experiment_start(request):
+	exp = get_object_or_404(Experiment, pk=exp_id)
+	tomo = get_object_or_404(TOMO, pk=exp_id)
 	if request.method == 'GET':
-		if 'turn_on':
-			answer = requests.get('http://109.234.34.140:5001/tomograph/1/source/power-on', timeout=1)
-			answer_check=json.loads(answer.content)
-			print(answer_check['success'])
-			if answer_check['success'] == True:
-				Tomo.condition = True
-			return render(request, 'experiment/start.html', {
-				'full_access': (request.user.userprofile.role == 'EXP'),
-				'caption': 'Эксперимент',
-			})
-			try:
-				answer = requests.get('http://109.234.34.140:5001/tomograph/1/source/power-on', timeout=1)
-				answer_check=json.loads(answer.content)
-				if answer.status_code != "HTTP_200_OK":
-					messages.warning(request, u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(123, answer.status_code))
-					logger.error(u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-					return redirect(reverse('experiment:index'))
+		if 'on_exp':   #включить томограf
+			try: #обработка ошибок
+					answer = requests.get('http://109.234.34.140:5001/tomograph/1/source/power-on', timeout=1)
+					answer_check=json.loads(answer.content)
+					if answer.status_code != "HTTP_200_OK":
+						messages.warning(request, u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+						logger.error(u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+						return redirect(reverse('experiment:index'))
 			except Timeout as e:
-				messages.warning(request, 'Нет ответа от модуля "Эксперимент". {}.'. format(123))
+				messages.warning(request, 'Нет ответа от модуля "Эксперимент". {}.')
 				logger.error(e)
 				return redirect(reverse('experiment:index'))
 			except BaseException as e:
@@ -79,24 +72,19 @@ def experiment_start(request):
 				return redirect(reverse('experiment:index'))
 				if answer_check['success'] == True:
 					messages.success(request, u'Томограф включен')
-		if 'turn_off':
-			answer = requests.get('http://109.234.34.140:5001/tomograph/1/source/power-off', timeout=1)
-			answer_check=json.loads(answer.content)
-			print(answer_check['success'])
-			Tomo.condition = False
-			return render(request, 'experiment/start.html', {
-				'full_access': (request.user.userprofile.role == 'EXP'),
-				'caption': 'Эксперимент',
-			})	
+					print("here is on")
+					tomo.on = True
+					tomo.save()
+		if 'of_exp':  #выключение томографа
 			try:
 				answer = requests.get('http://109.234.34.140:5001/tomograph/1/source/power-off', timeout=1)
 				answer_check=json.loads(answer.content)
 				if answer.status_code != "HTTP_200_OK":
-					messages.warning(request, u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(123, answer.status_code))
-					logger.error(u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(123, answer.status_code))
+					messages.warning(request, u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+					logger.error(u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
 					return redirect(reverse('experiment:index'))
 			except Timeout as e:
-				messages.warning(request, 'Нет ответа от модуля "Эксперимент". {}.'. format(123))
+				messages.warning(request, 'Нет ответа от модуля "Эксперимент". {}.')
 				logger.error(e)
 				return redirect(reverse('experiment:index'))
 			except BaseException as e:
@@ -105,6 +93,44 @@ def experiment_start(request):
 				return redirect(reverse('experiment:index'))
 				if answer_check['success'] == True:
 					messages.success(request, u'Томограф выключен')
+					#TOMO флаг,что томограф включен
+		if 'gate':   #открыть заслонку
+			if 'gate_text' == 'up':
+				try:
+					answer = requests.get('http://109.234.34.140:5001/tomograph/1/shutter/open/<0>', timeout=1)
+					if answer.status_code != "HTTP_200_OK":
+							messages.warning(request, u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+							logger.error(u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+							return redirect(reverse('experiment:index_adjustment'))
+				except Timeout as e:
+					messages.warning(request, 'Нет ответа от модуля "Эксперимент". {}.')
+					logger.error(e)
+					return redirect(reverse('experiment:index_adjustment'))
+				except BaseException as e:
+					logger.error(e)
+					messages.warning(request, 'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
+					return redirect(reverse('experiment:index_adjustment'))
+					if answer_check['success'] == True:
+						messages.success(request, u'Заслогка открыта')
+						#отправляем  запрос на страницу,чтод заморозить данные
+			if 'gate_text' == 'down':
+				try:
+					answer = requests.get('http://109.234.34.140:5001/tomograph/1/shutter/close', timeout=1)
+					if answer.status_code != "HTTP_200_OK":
+							messages.warning(request, u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+							logger.error(u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+							return redirect(reverse('experiment:index_adjustment'))
+				except Timeout as e:
+					messages.warning(request, 'Нет ответа от модуля "Эксперимент". {}.')
+					logger.error(e)
+					return redirect(reverse('experiment:index_adjustment'))
+				except BaseException as e:
+					logger.error(e)
+					messages.warning(request, 'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
+					return redirect(reverse('experiment:index_adjustment'))
+					if answer_check['success'] == True:
+						messages.success(request, u'Заслогка открыта')
+						#отправляем  запрос на страницу,чтод заморозить данные
 	if request.method == 'POST':
 		if 'experiment_on' in request.POST:
 			Experiment.exp_id = uuid.uuid4()
@@ -112,18 +138,15 @@ def experiment_start(request):
 				'experiment_id': str(Experiment.exp_id),
 				'voltage': float(request.POST['voltage']),
 				'current': float(request.POST['current'])
-				})
-			#answer = requests.post('http://109.234.34.140:5001/tomograph/1/source/set-operating-mode', info, timeout=1)
-			#answer_check=json.loads(answer.content)
-			#print(answer_check['success'])	
+				})	
 			try:
 					answer = requests.post('http://109.234.34.140:5001/tomograph/1/source/set-operating-mode', info, timeout=1)
 					if answer.status_code != "HTTP_200_OK":
-						messages.warning(request, u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(123, answer.status_code))
-						logger.error(u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(123, answer.status_code))
+						messages.warning(request, u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+						logger.error(u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
 						return redirect(reverse('experiment:index_adjustment'))
 			except Timeout as e:
-				messages.warning(request, u'Нет ответа от модуля "Эксперимент". {}.'. format(123, answer.status_code))
+				messages.warning(request, u'Нет ответа от модуля "Эксперимент". {}.')
 				logger.error(e)
 				return redirect(reverse('experiment:index_adjustment'))
 			except BaseException as e:
@@ -132,14 +155,19 @@ def experiment_start(request):
 				return redirect(reverse('experiment:index_adjustment'))
 				if answer_check['success'] == True:
 					messages.success(request, u'Настройки установлены')
+					#requests.post('http://')
+					#отправляем  запрос на страницу,чтод заморозить данные return redirect(reverse('experiment:start_adjustment'))
 		return render(request, 'experiment/adjustment.html', {
 					'full_access': (request.user.userprofile.role == 'EXP'),
 					'caption': 'Эксперимент',
 				})						
-		
+
+#функция выводит данные на страницу при успешном запросе
+#def adjustment_accepted(reqiest):			
+@api_view(['GET','POST'])
 def in_process(request):
 	if request.method == 'POST':
-		if 'parameters' in request.POST:
+		if 'send_parameters' in request.POST:
 			Experiment.exp_id = uuid.uuid4()
 			simple_experiment = json.dumps({
 				'experiment id': str(Experiment.exp_id),
@@ -174,19 +202,26 @@ def in_process(request):
 			try:
 					answer = requests.post('http://109.234.34.140:5001/tomograph/1/experiment/begin', simple_experiment, timeout=1)
 					if answer.status_code != "HTTP_200_OK":
-						messages.warning(request, u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(123, answer.status_code))
-						logger.error(u'{}. Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(123, answer.status_code))
-						return redirect(reverse('experiment:send_parameters'))
+						messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+						logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+						return redirect(reverse('experiment:index_interface'))
 			except Timeout as e:
-					messages.warning(request, u'Нет ответа от модуля "Эксперимент". {}.'. format(123))
+					messages.warning(request, u'Нет ответа от модуля "Эксперимент"')
 					logger.error(e)
-					return redirect(reverse('experiment:send_parameters'))
+					return redirect(reverse('experiment:index_interface'))
 			except BaseException as e:
 					logger.error(e)
 					messages.warning(request, u'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-					return redirect(reverse('experiment:send_parameters'))
+					return redirect(reverse('experiment:index_interface'))
 					if answer_check['success'] == True:
-						messages.success(request, u'Настройки установлены')
+						messages.success(request, u'Эксперимент успешно начался')
+						#запрос отправляется нам на сохрание в формах на странице
+					if answer_check['success'] == False:
+						messages.success(request, u'Возникли проблемы в модуле "Эксперимент". Не можем продолжить.')
+		'''if 'picture':
+			
+			try:
+			'''
 	return render(request, 'experiment/interface.html', {
         'full_access': (request.user.userprofile.role == 'EXP'),
         'caption': 'Эксперимент',
@@ -209,7 +244,3 @@ def in_process(request):
         'full_access': (request.user.userprofile.role == 'EXP'),
         'caption': 'Эксперимент',
     })'''  
-        
-        
-        
-

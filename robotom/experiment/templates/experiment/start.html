@@ -24,22 +24,22 @@
 		</div>
 {% endif %}
 		{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-					<form method="GET" action="turn_on">
+					<form method="GET" action="">
 					<input type="submit" name="on_exp" value="Включить томограф"><br><br>
 					</form>
 				{% else %}
 					<input type="submit" name="on_admin" value="Включить томограф"disabled><br><br>
 				{% endif %}
 		{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-					<form method="GET" action="turn_off">
+					<form method="GET" action="">
 					<input type="submit" name="of_exp" value="Выключить томограф"><br><br>
 					</form>
 				{% else %}
 					<input type="submit" name="of_admin" value="Выключить томограф"disabled><br><br>
 				{% endif %}
 		
-		 <p><a href="adjustment">Параметры томографа</a>
-		 <p><a href="interface">Параметры эксперимента</a>
+		 <p><li><a href="{% url 'experiment:index_adjustment' %}">Параметры томографа</a></li>
+		 <p><li><a href="{% url 'experiment:index_interface' %}">Параметры эксперимента</a></li>
 		 </body>
 </html>
 
