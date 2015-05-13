@@ -66,30 +66,28 @@ class Motor (PyTango.Device_4Impl):
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(Motor.global_variables) ENABLED START -----#
 
-    def _read_angle_position(self):
-        self.debug_stream("In _read_angle_position()")
+    def _read_position(self, motor):
+        self.debug_stream("In _read_position()")
 
         self.debug_stream("Reading position...")
         try:
-            parrots = self.angle_motor.get_position()["Position"] 
+            steps = motor.get_position()["Position"]
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
             raise
         except Exception as e:
             self.error_stream(str(e))
             raise
-        self.debug_stream("Position = {}".format(parrots))
-        print parrots
-        return parrots
+        self.debug_stream("Position = {}".format(steps))
+        print steps
+        return steps
 
-    def _write_angle_position(self, angle):
-        self.debug_stream("In _write_angle_position()")
-
-        parrots = angle
+    def _write_position(self, motor, steps):
+        self.debug_stream("In _write_position()")
 
         try:
-            self.debug_stream("Setting position = {}".format(parrots))
-            self.angle_motor.move_to_position(parrots, 0)
+            self.debug_stream("Setting position = {}".format(steps))
+            self.motor.move_to_position(steps, 0)
             self.debug_stream("Position has been set")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -125,9 +123,10 @@ class Motor (PyTango.Device_4Impl):
         self.set_state(PyTango.DevState.OFF)
 
         try:
-            self.debug_stream("Creating link to motor driver...")
+            self.debug_stream("Creating link to motor drivers...")
             self.angle_motor = ximc.Motor("COM5")
-            self.debug_stream("Link created")
+            self.horizontal_motor = ximc.Motor("name")
+            self.debug_stream("Links were created")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
             raise
@@ -136,12 +135,17 @@ class Motor (PyTango.Device_4Impl):
             raise
 
         self.angle_motor.open()
-        self.angle_motor.set_move_settings(500, 500)    
+        self.angle_motor.set_move_settings(500, 500)
+        steps = self._read_position(self.angle_motor)
+        self.attr_angle_position_read = steps
 
-        parrots = self._read_angle_position()
+        self.horizontal_motor.open()
+        self.horizontal_motor.set_move_settings(500, 500)
+        steps = self._read_position(self.horizontal_motor)
+        self.attr_horizontal_position_read = steps
 
         self.set_state(PyTango.DevState.ON)
-        self.attr_angle_position_read = parrots
+
 
         #----- PROTECTED REGION END -----#	//	Motor.init_device
 
@@ -159,7 +163,7 @@ class Motor (PyTango.Device_4Impl):
         self.debug_stream("In read_angle_position()")
         #----- PROTECTED REGION ID(Motor.angle_position_read) ENABLED START -----#
 
-        self.attr_angle_position_read = self._read_angle_position()
+        self.attr_angle_position_read = self._read_position(self.angle_motor)
         attr.set_value(self.attr_angle_position_read)
 
         #----- PROTECTED REGION END -----#	//	Motor.angle_position_read
@@ -170,8 +174,8 @@ class Motor (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(Motor.angle_position_write) ENABLED START -----#
 
         angle = data
-        self._write_angle_position(angle)
-        self.attr_angle_position_read = self._read_angle_position()
+        steps = angle
+        self._write_position(self.angle_motor, steps)
 
         #----- PROTECTED REGION END -----#	//	Motor.angle_position_write 
         
@@ -212,6 +216,7 @@ class Motor (PyTango.Device_4Impl):
         self.debug_stream("In read_horizontal_position()")
         #----- PROTECTED REGION ID(Motor.horizontal_position_read) ENABLED START -----#
 
+        self.attr_horizontal_position_read = self._read_position(self.horizontal_motor)
         attr.set_value(self.attr_horizontal_position_read)
 
         #----- PROTECTED REGION END -----#	//	Motor.horizontal_position_read
@@ -221,7 +226,8 @@ class Motor (PyTango.Device_4Impl):
         data=attr.get_write_value()
         #----- PROTECTED REGION ID(Motor.horizontal_position_write) ENABLED START -----#
 
-        self.attr_horizontal_position_read = data
+        steps = data
+        self._write_position(self.horizontal_motor, steps)
 
         #----- PROTECTED REGION END -----#	//	Motor.horizontal_position_write
         
@@ -250,33 +256,26 @@ class Motor (PyTango.Device_4Impl):
     #    Motor command methods
     #-----------------------------------------------------------------------------
     
-    def ResetPosition(self):
+    def ResetAnglePosition(self):
         """ Resets the device to the initial position
         
         :param : 
         :type: PyTango.DevVoid
         :return: 
         :rtype: PyTango.DevVoid """
-        self.debug_stream("In ResetPosition()")
-        #----- PROTECTED REGION ID(Motor.ResetPosition) ENABLED START -----#
-
+        self.debug_stream("In ResetAnglePosition()")
+        #----- PROTECTED REGION ID(Motor.ResetAnglePosition) ENABLED START -----#
         self.debug_stream("Setting current angle position as new zero")
         self.angle_motor.set_zero()
         self.debug_stream("New zero has been set")
+        #----- PROTECTED REGION END -----#	//	Motor.ResetAnglePosition
         
-        self.attr_angle_position_read = self._read_angle_position()
-
-        self.attr_horizontal_position_read = 0
-        self.attr_vertical_position_read = 0
-
-        #----- PROTECTED REGION END -----#	//	Motor.ResetPosition
-        
-    def is_ResetPosition_allowed(self):
-        self.debug_stream("In is_ResetPosition_allowed()")
+    def is_ResetAnglePosition_allowed(self):
+        self.debug_stream("In is_ResetAnglePosition_allowed()")
         state_ok = not(self.get_state() in [PyTango.DevState.OFF])
-        #----- PROTECTED REGION ID(Motor.is_ResetPosition_allowed) ENABLED START -----#
-
-        #----- PROTECTED REGION END -----#	//	Motor.is_ResetPosition_allowed
+        #----- PROTECTED REGION ID(Motor.is_ResetAnglePosition_allowed) ENABLED START -----#
+        
+        #----- PROTECTED REGION END -----#	//	Motor.is_ResetAnglePosition_allowed
         return state_ok
         
 
@@ -317,7 +316,7 @@ class MotorClass(PyTango.DeviceClass):
 
     #    Command definitions
     cmd_list = {
-        'ResetPosition':
+        'ResetAnglePosition':
             [[PyTango.DevVoid, "none"],
             [PyTango.DevVoid, "none"]],
         }

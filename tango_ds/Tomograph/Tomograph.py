@@ -57,23 +57,24 @@ import json
 # ----- PROTECTED REGION END -----#	//	Tomograph.additionnal_import
 
 ## Device States Description
-## UNKNOWN : 
+## ON : 
+## OFF : 
 
-class Tomograph(PyTango.Device_4Impl):
+class Tomograph (PyTango.Device_4Impl):
 
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(Tomograph.global_variables) ENABLED START -----#
 
     #----- PROTECTED REGION END -----#	//	Tomograph.global_variables
 
-    def __init__(self, cl, name):
-        PyTango.Device_4Impl.__init__(self, cl, name)
+    def __init__(self,cl, name):
+        PyTango.Device_4Impl.__init__(self,cl,name)
         self.debug_stream("In __init__()")
         Tomograph.init_device(self)
         #----- PROTECTED REGION ID(Tomograph.__init__) ENABLED START -----#
 
         #----- PROTECTED REGION END -----#	//	Tomograph.__init__
-
+        
     def delete_device(self):
         self.debug_stream("In delete_device()")
         #----- PROTECTED REGION ID(Tomograph.delete_device) ENABLED START -----#
@@ -83,7 +84,14 @@ class Tomograph(PyTango.Device_4Impl):
     def init_device(self):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
+        self.attr_xraysource_voltage_read = 0
+        self.attr_xraysource_current_read = 0
+        self.attr_angle_position_read = 0
+        self.attr_horizontal_position_read = 0
+        self.attr_vertical_position_read = 0
         #----- PROTECTED REGION ID(Tomograph.init_device) ENABLED START -----#
+
+        self.set_state(PyTango.DevState.OFF)
 
         self.motor = PyTango.DeviceProxy('tomo/motor/1')
         self.source = PyTango.DeviceProxy('tomo/source/1')
@@ -91,6 +99,15 @@ class Tomograph(PyTango.Device_4Impl):
         self.detector = PyTango.DeviceProxy('tomo/detector/1')
 
         self.SelfTest()
+
+        self.attr_xraysource_voltage_read = self.source.voltage
+        self.attr_xraysource_current_read = self.source.current
+
+        self.attr_angle_position_read = self.motor.angle_position
+        self.attr_horizontal_position_read = self.motor.horizontal_position
+        self.attr_vertical_position_read = self.motor.vertical_position
+
+        self.set_state(PyTango.DevState.ON)
 
         #----- PROTECTED REGION END -----#	//	Tomograph.init_device
 
@@ -100,16 +117,88 @@ class Tomograph(PyTango.Device_4Impl):
 
         #----- PROTECTED REGION END -----#	//	Tomograph.always_executed_hook
 
-        # -----------------------------------------------------------------------------
-        #    Tomograph read/write attribute methods
-        #-----------------------------------------------------------------------------
+    #-----------------------------------------------------------------------------
+    #    Tomograph read/write attribute methods
+    #-----------------------------------------------------------------------------
+    
+    def read_xraysource_voltage(self, attr):
+        self.debug_stream("In read_xraysource_voltage()")
+        #----- PROTECTED REGION ID(Tomograph.xraysource_voltage_read) ENABLED START -----#
 
+        self.attr_xraysource_voltage_read = self.source.voltage
+        attr.set_value(self.attr_xraysource_voltage_read)
+        
+        #----- PROTECTED REGION END -----#	//	Tomograph.xraysource_voltage_read
+        
+    def read_xraysource_current(self, attr):
+        self.debug_stream("In read_xraysource_current()")
+        #----- PROTECTED REGION ID(Tomograph.xraysource_current_read) ENABLED START -----#
 
+        self.attr_xraysource_current_read = self.source.current
+        attr.set_value(self.attr_xraysource_current_read)
+        
+        #----- PROTECTED REGION END -----#	//	Tomograph.xraysource_current_read
+        
+    def read_angle_position(self, attr):
+        self.debug_stream("In read_angle_position()")
+        #----- PROTECTED REGION ID(Tomograph.angle_position_read) ENABLED START -----#
 
+        self.attr_angle_position_read = self.motor.angle_position
+        attr.set_value(self.attr_angle_position_read)
+        
+        #----- PROTECTED REGION END -----#	//	Tomograph.angle_position_read
+        
+    def write_angle_position(self, attr):
+        self.debug_stream("In write_angle_position()")
+        data=attr.get_write_value()
+        #----- PROTECTED REGION ID(Tomograph.angle_position_write) ENABLED START -----#
+
+        self.motor.angle_position = data
+        
+        #----- PROTECTED REGION END -----#	//	Tomograph.angle_position_write
+        
+    def read_horizontal_position(self, attr):
+        self.debug_stream("In read_horizontal_position()")
+        #----- PROTECTED REGION ID(Tomograph.horizontal_position_read) ENABLED START -----#
+
+        self.attr_horizontal_position_read = self.motor.horizontal_position
+        attr.set_value(self.attr_horizontal_position_read)
+        
+        #----- PROTECTED REGION END -----#	//	Tomograph.horizontal_position_read
+        
+    def write_horizontal_position(self, attr):
+        self.debug_stream("In write_horizontal_position()")
+        data=attr.get_write_value()
+        #----- PROTECTED REGION ID(Tomograph.horizontal_position_write) ENABLED START -----#
+
+        self.motor.horizontal_position = data
+        
+        #----- PROTECTED REGION END -----#	//	Tomograph.horizontal_position_write
+        
+    def read_vertical_position(self, attr):
+        self.debug_stream("In read_vertical_position()")
+        #----- PROTECTED REGION ID(Tomograph.vertical_position_read) ENABLED START -----#
+
+        self.attr_vertical_position_read = self.motor.vertical_position
+        attr.set_value(self.attr_vertical_position_read)
+        
+        #----- PROTECTED REGION END -----#	//	Tomograph.vertical_position_read
+        
+    def write_vertical_position(self, attr):
+        self.debug_stream("In write_vertical_position()")
+        data=attr.get_write_value()
+        #----- PROTECTED REGION ID(Tomograph.vertical_position_write) ENABLED START -----#
+
+        self.motor.vertical_position = data
+
+        #----- PROTECTED REGION END -----#	//	Tomograph.vertical_position_write
+        
+    
+    
         #----- PROTECTED REGION ID(Tomograph.initialize_dynamic_attributes) ENABLED START -----#
 
         #----- PROTECTED REGION END -----#	//	Tomograph.initialize_dynamic_attributes
-
+            
     def read_attr_hardware(self, data):
         self.debug_stream("In read_attr_hardware()")
         #----- PROTECTED REGION ID(Tomograph.read_attr_hardware) ENABLED START -----#
@@ -120,7 +209,7 @@ class Tomograph(PyTango.Device_4Impl):
     #-----------------------------------------------------------------------------
     #    Tomograph command methods
     #-----------------------------------------------------------------------------
-
+    
     def DevicesInfo(self):
         """ Returns information about available devices
         
@@ -134,7 +223,7 @@ class Tomograph(PyTango.Device_4Impl):
 
         # ----- PROTECTED REGION END -----#	//	Tomograph.DevicesInfo
         return argout
-
+        
     def SelfTest(self):
         """ Tests equipment
         
@@ -151,7 +240,7 @@ class Tomograph(PyTango.Device_4Impl):
         self.detector.ping()
 
         #----- PROTECTED REGION END -----#	//	Tomograph.SelfTest
-
+        
     def MotorStatus(self):
         """ Returns motor information
         
@@ -173,58 +262,19 @@ class Tomograph(PyTango.Device_4Impl):
 
         #----- PROTECTED REGION END -----#	//	Tomograph.MotorStatus
         return argout
-
-    def CurrentPosition(self):
-        """ Returns current motor position.
         
-        :param : 
-        :type: PyTango.DevVoid
-        :return: Array of 3 numbers: horizontal position, vertical position, angle position
-        :rtype: PyTango.DevVarShortArray """
-        self.debug_stream("In CurrentPosition()")
-        argout = [0]
-        #----- PROTECTED REGION ID(Tomograph.CurrentPosition) ENABLED START -----#
-        argout = [self.motor.horizontal_position, self.motor.vertical_position, self.motor.angle_position]
-        #----- PROTECTED REGION END -----#	//	Tomograph.CurrentPosition
-        return argout
-
-    def GotoPosition(self, argin):
-        """ Sets motor to the given position
-        
-        :param argin: 3 numbers: horizontal position, vertical position, angle position
-        :type: PyTango.DevVarShortArray
-        :return: 
-        :rtype: PyTango.DevVoid """
-        self.debug_stream("In GotoPosition()")
-        #----- PROTECTED REGION ID(Tomograph.GotoPosition) ENABLED START -----#
-
-        if len(argin) != 3:
-            PyTango.Except.throw_exception(
-                "Tomograph_InvalidArgument",
-                "Invalid number of arguments: {} provided, ".format(len(argin)) +
-                "3 needed (horizontal position, vertical position, angle position)",
-                "Tomograph::GotoPosition()")
-
-        self.motor.horizontal_position = argin[0]
-        self.motor.vertical_position = argin[1]
-        self.motor.angle_position = argin[2]
-
-        #----- PROTECTED REGION END -----#	//	Tomograph.GotoPosition
-
-    def ResetCurrentPosition(self):
+    def ResetAnglePosition(self):
         """ Sets current motor position to 0
         
         :param : 
         :type: PyTango.DevVoid
         :return: 
         :rtype: PyTango.DevVoid """
-        self.debug_stream("In ResetCurrentPosition()")
-        #----- PROTECTED REGION ID(Tomograph.ResetCurrentPosition) ENABLED START -----#
-
-        self.motor.ResetPosition()
-
-        #----- PROTECTED REGION END -----#	//	Tomograph.ResetCurrentPosition
-
+        self.debug_stream("In ResetAnglePosition()")
+        #----- PROTECTED REGION ID(Tomograph.ResetAnglePosition) ENABLED START -----#
+        self.motor.ResetAnglePosition()
+        #----- PROTECTED REGION END -----#	//	Tomograph.ResetAnglePosition
+        
     def XRaySourceStatus(self):
         """ 
         
@@ -245,7 +295,7 @@ class Tomograph(PyTango.Device_4Impl):
 
         #----- PROTECTED REGION END -----#	//	Tomograph.XRaySourceStatus
         return argout
-
+        
     def PowerOn(self):
         """ Turns on the X-ray source
         
@@ -274,20 +324,6 @@ class Tomograph(PyTango.Device_4Impl):
 
         #----- PROTECTED REGION END -----#	//	Tomograph.PowerOff
         
-    def SetOperatingMode(self, argin):
-        """ 
-        
-        :param argin: voltage, current
-        :type: PyTango.DevVarShortArray
-        :return: 
-        :rtype: PyTango.DevVoid """
-        self.debug_stream("In SetOperatingMode()")
-        #----- PROTECTED REGION ID(Tomograph.SetOperatingMode) ENABLED START -----#
-
-        self.source.SetOperatingMode(argin)
-
-        #----- PROTECTED REGION END -----#	//	Tomograph.SetOperatingMode
-
     def ShutterStatus(self):
         """ 
         
@@ -306,7 +342,7 @@ class Tomograph(PyTango.Device_4Impl):
 
         #----- PROTECTED REGION END -----#	//	Tomograph.ShutterStatus
         return argout
-
+        
     def OpenShutter(self, argin):
         """ 
         
@@ -320,7 +356,7 @@ class Tomograph(PyTango.Device_4Impl):
         self.shutter.Open(argin)
 
         # ----- PROTECTED REGION END -----#	//	Tomograph.OpenShutter
-
+        
     def CloseShutter(self, argin):
         """ 
         
@@ -334,7 +370,7 @@ class Tomograph(PyTango.Device_4Impl):
         self.shutter.Close(argin)
 
         #----- PROTECTED REGION END -----#	//	Tomograph.CloseShutter
-
+        
     def DetectorStatus(self):
         """ 
         
@@ -354,7 +390,7 @@ class Tomograph(PyTango.Device_4Impl):
 
         #----- PROTECTED REGION END -----#	//	Tomograph.DetectorStatus
         return argout
-
+        
     def GetFrame(self, argin):
         """ Return image from detector with metadata in JSON
         
@@ -375,7 +411,7 @@ class Tomograph(PyTango.Device_4Impl):
         detector_data = {'model': 'Ximea xiRAY'}
         image_data = {'image': image, 'exposure': exposure, 'datetime': current_datetime, 'detector': detector_data}
         object_data = {'angle position': self.motor.angle_position}
-        shutter_data = {'open': self.shutter.State() == PyTango._PyTango.DevState.OPEN}
+        shutter_data = {'open': self.shutter.State() == PyTango.DevState.OPEN}
         source_data = {'voltage': self.source.voltage, 'current': self.source.current}
 
         json_data = json.dumps({'image_data': image_data, 'object': object_data,
@@ -385,7 +421,7 @@ class Tomograph(PyTango.Device_4Impl):
 
         #----- PROTECTED REGION END -----#	//	Tomograph.GetFrame
         return argout
-
+        
 
 class TomographClass(PyTango.DeviceClass):
     #--------- Add you global class variables here --------------------------
@@ -400,7 +436,7 @@ class TomographClass(PyTango.DeviceClass):
     
         :param dev_list: list of devices
         :type dev_list: :class:`PyTango.DeviceImpl`"""
-
+    
         for dev in dev_list:
             try:
                 dev.initialize_dynamic_attributes()
@@ -408,87 +444,104 @@ class TomographClass(PyTango.DeviceClass):
                 import traceback
                 dev.warn_stream("Failed to initialize dynamic attributes")
                 dev.debug_stream("Details: " + traceback.format_exc())
-                #----- PROTECTED REGION ID(Tomograph.dyn_attr) ENABLED START -----#
+        #----- PROTECTED REGION ID(Tomograph.dyn_attr) ENABLED START -----#
 
                 #----- PROTECTED REGION END -----#	//	Tomograph.dyn_attr
 
     #    Class Properties
     class_property_list = {
-    }
+        }
 
 
     #    Device Properties
     device_property_list = {
-    }
+        }
 
 
     #    Command definitions
     cmd_list = {
         'DevicesInfo':
             [[PyTango.DevVoid, "none"],
-             [PyTango.DevString, "none"]],
+            [PyTango.DevString, "none"]],
         'SelfTest':
             [[PyTango.DevVoid, "none"],
-             [PyTango.DevVoid, "none"]],
+            [PyTango.DevVoid, "none"]],
         'MotorStatus':
             [[PyTango.DevVoid, "none"],
-             [PyTango.DevString, "Information about motor"]],
-        'CurrentPosition':
+            [PyTango.DevString, "Information about motor"]],
+        'ResetAnglePosition':
             [[PyTango.DevVoid, "none"],
-             [PyTango.DevVarShortArray, "Array of 3 numbers: horizontal position, vertical position, angle position"]],
-        'GotoPosition':
-            [[PyTango.DevVarShortArray, "3 numbers: horizontal position, vertical position, angle position"],
-             [PyTango.DevVoid, "none"]],
-        'ResetCurrentPosition':
-            [[PyTango.DevVoid, "none"],
-             [PyTango.DevVoid, "none"]],
+            [PyTango.DevVoid, "none"]],
         'XRaySourceStatus':
             [[PyTango.DevVoid, "none"],
-             [PyTango.DevString, "none"]],
+            [PyTango.DevString, "none"]],
         'PowerOn':
             [[PyTango.DevVoid, "none"],
-             [PyTango.DevVoid, "none"]],
+            [PyTango.DevVoid, "none"]],
         'PowerOff':
             [[PyTango.DevVoid, "none"],
-             [PyTango.DevVoid, "none"]],
-        'SetOperatingMode':
-            [[PyTango.DevVarShortArray, "voltage, current"],
-             [PyTango.DevVoid, "none"]],
+            [PyTango.DevVoid, "none"]],
         'ShutterStatus':
             [[PyTango.DevVoid, "none"],
-             [PyTango.DevString, "none"]],
+            [PyTango.DevString, "none"]],
         'OpenShutter':
             [[PyTango.DevLong, "none"],
-             [PyTango.DevVoid, "none"]],
+            [PyTango.DevVoid, "none"]],
         'CloseShutter':
             [[PyTango.DevLong, "none"],
-             [PyTango.DevVoid, "none"]],
+            [PyTango.DevVoid, "none"]],
         'DetectorStatus':
             [[PyTango.DevVoid, "none"],
-             [PyTango.DevString, "none"]],
+            [PyTango.DevString, "none"]],
         'GetFrame':
             [[PyTango.DevLong, "exposure"],
-             [PyTango.DevString, "none"]],
-    }
+            [PyTango.DevString, "none"]],
+        }
 
 
     #    Attribute definitions
     attr_list = {
-    }
+        'xraysource_voltage':
+            [[PyTango.DevShort,
+            PyTango.SCALAR,
+            PyTango.READ],
+            {
+                'unit': "kV",
+            } ],
+        'xraysource_current':
+            [[PyTango.DevShort,
+            PyTango.SCALAR,
+            PyTango.READ],
+            {
+                'unit': "mA",
+            } ],
+        'angle_position':
+            [[PyTango.DevLong,
+            PyTango.SCALAR,
+            PyTango.READ_WRITE]],
+        'horizontal_position':
+            [[PyTango.DevLong,
+            PyTango.SCALAR,
+            PyTango.READ_WRITE]],
+        'vertical_position':
+            [[PyTango.DevLong,
+            PyTango.SCALAR,
+            PyTango.READ_WRITE]],
+        }
 
 
 def main():
     try:
         py = PyTango.Util(sys.argv)
-        py.add_class(TomographClass, Tomograph, 'Tomograph')
+        py.add_class(TomographClass,Tomograph,'Tomograph')
 
         U = PyTango.Util.instance()
         U.server_init()
         U.server_run()
 
-    except PyTango.DevFailed, e:
-        print '-------> Received a DevFailed exception:', e
-    except Exception, e:
+    except PyTango.DevFailed,e:
+        print '-------> Received a DevFailed exception:',e
+    except Exception,e:
         print '-------> An unforeseen exception occured....',e
 
 if __name__ == '__main__':
