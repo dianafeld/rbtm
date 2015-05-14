@@ -38,7 +38,10 @@ class ExperimentRecord:
 
 def create_pages(request, results, page):
     record_list = [ExperimentRecord(result) for result in results]
-    pagin = Paginator(record_list, 15)
+
+    for i in xrange(2):
+        record_list += record_list
+    pagin = Paginator(record_list, 1500)
 
     try:
         records = pagin.page(page)
