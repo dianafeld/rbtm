@@ -37,7 +37,7 @@
 				{% endif %}
 			</form>
 			<br>
-			<form name = "gate" method="POST" action="gate">	
+			<form method="POST" action="">	
 			{% csrf_token %}					
 				Заслонка<br>
 				<input type = "text" required name = "text_gate" value = "" checked>
@@ -47,7 +47,7 @@
 					<input type="submit" name="gate_adm" value="Отправить"disabled><br>
 				{% endif %}
 			</form>
-			<form name = "picture" method="POST" action="get_picture">
+			<form name = "picture" method="POST" action="">
 			{% csrf_token %}
 				Снять изображение с экспозицией в n мс<br>
 				<input type="text" required name="picture_exposure" pattern="\d+(\.\d{2})?"><br>

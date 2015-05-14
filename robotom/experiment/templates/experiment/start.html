@@ -24,14 +24,16 @@
 		</div>
 {% endif %}
 		{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-					<form method="GET" action="">
+					<form method="POST" action="">
+					{% csrf_token %}
 					<input type="submit" name="on_exp" value="Включить томограф"><br><br>
 					</form>
 				{% else %}
 					<input type="submit" name="on_admin" value="Включить томограф"disabled><br><br>
 				{% endif %}
 		{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-					<form method="GET" action="">
+					<form method="POST" action="">
+					{% csrf_token %}
 					<input type="submit" name="of_exp" value="Выключить томограф"><br><br>
 					</form>
 				{% else %}
