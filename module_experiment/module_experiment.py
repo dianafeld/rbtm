@@ -6,7 +6,7 @@ import json
 import PyTango
 import requests
 import threading
-#import logging
+import logging
 
 
 #logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = u'experiment.log')
@@ -28,16 +28,14 @@ ADVANCED_EXPERIMENT_COMMANDS = ('open shutter', 'close shutter', 'reset current 
 TOMOGRAPHS = (
     {
         'id': 1,
-#        'address': '109.234.38.83:10000/tomo/tomograph/1',                      # real tomograph address
 #        'device': PyTango.DeviceProxy('109.234.38.83:10000/tomo/tomograph/1'),  # real tomograph
-        'address': '46.101.31.93:10000/tomo/tomograph/1',                       # fictitious tomograph address
         'device': PyTango.DeviceProxy('46.101.31.93:10000/tomo/tomograph/1'),   # fictitious tomograph
         'experiment is running': False,
     },
 )
 TOMOGRAPHS[0]['device'].set_timeout_millis(25000)
 
-def try_something_thrice(func, args = None):
+def try_thrice_function(func, args = None):
     success = True
     exception_message = ''
     for i in range(0, 3):
@@ -51,12 +49,29 @@ def try_something_thrice(func, args = None):
             break
     return success, answer, exception_message
 
+def try_thrice_change_attr(device, attr_name, new_value):
+    success = True
+    exception_message = ''
+    for i in range(0, 3):
+        try:
+            device.write_attribute(attr_name, new_value)
+            set_value = device[attr_name].value
+        except PyTango.DevFailed as e:
+            success = False
+            exception_message = e[-1].desc
+            set_value = None
+        else:
+            break
+    return success, set_value, exception_message
 
-def create_response(success = True, exception_message = '', error = ''):
+
+
+def create_response(success = True, exception_message = '', error = '', result = None):
     response_dict = {
         'success': success,
         'exception message': exception_message,
         'error': error,
+        'result': result,
     }
     return json.dumps(response_dict)
 
@@ -69,8 +84,7 @@ def check_request(request_data):
         print('Request is empty!')
         return False, None, create_response(success= False, error= 'Request is empty')
 
-    print('Request is NOT empty!')
-    print('Checking request\'s JSON...')
+    print('Request is NOT empty! Checking request\'s JSON...')
     try:
         request_data_dict = json.loads(request_data)
     except TypeError:
@@ -90,7 +104,7 @@ def source_power_on(tomo_num):
     tomo_num -= 1          #because in TOMOGRAPHS list numeration begins from 0
 
     print('Powering on source...')
-    success, useless, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].PowerOn)
+    success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].PowerOn)
     if success == False:
         print(exception_message)
         return create_response(success, exception_message, error= 'Could not power on source')
@@ -105,7 +119,7 @@ def source_power_off(tomo_num):
 
 
     print('Powering off source...')
-    success, useless, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].PowerOff)
+    success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].PowerOff)
     if success == False:
         print(exception_message)
         return create_response(success, exception_message, error= 'Could not power off source')
@@ -114,53 +128,75 @@ def source_power_off(tomo_num):
     return create_response(True)
 
 
-
-
-
-@app.route('/tomograph/<int:tomo_num>/source/set-operating-mode', methods=['POST'])
-def source_set_operating_mode(tomo_num):
-    print('\n\nREQUEST: SOURCE/SET OPERATING MODE')
+@app.route('/tomograph/<int:tomo_num>/source/set-voltage', methods=['POST'])
+def source_set_voltage(tomo_num):
+    print('\n\nREQUEST: SOURCE/SET VOLTAGE')
     tomo_num -= 1          #because in TOMOGRAPHS list numeration begins from 0
 
     if TOMOGRAPHS[tomo_num]['experiment is running']:
         print('On this tomograph experiment is running')
-        return False, None, create_response(success= False, error= 'On this tomograph experiment is running')
+        return create_response(success= False, error= 'On this tomograph experiment is running')
 
-    success, new_mode, response_if_fail = check_request(request.data)
+    success, voltage, response_if_fail = check_request(request.data)
     if not success:
         return response_if_fail
 
     print('Checking format...')
-    if not (('voltage' in new_mode.keys()) and ('current' in new_mode.keys())):
-        print('Incorrect format!')
-        return create_response(success= False, error= 'Incorrect format')
-
-    if not ((type(new_mode['voltage']) is float) and (type(new_mode['current']) is float)):
-        print('Incorrect format! Voltage and current types must be floats, but they are '
-              + str(type(new_mode['voltage'])) + str(type(new_mode['current'])))
+    if type(voltage) is not int:
+        print('Incorrect format! Voltage type must be int, but it is ' + str(type(voltage)))
         return create_response(success= False, error= 'Incorrect format')
 
 
     # TO DELETE THIS LATER
-    print('Format is normal, new mode: voltage is %f and current is %f...' % (new_mode['voltage'], new_mode['current']))
-    if new_mode['voltage'] < 2 or 60 < new_mode['voltage']:
-        print('Voltage must have value from 2 to 60')
+    print('Format is correct, new voltage value is %i...' % (voltage))
+    if voltage < 2 or 60 < voltage:
+        print('Voltage must have value from 2 to 60!')
         return create_response(success= False, error= 'Voltage must have value from 2 to 60')
-    if new_mode['current'] < 2 or 80 < new_mode['current']:
-        print('Current must have value from 2 to 80')
-        return create_response(success= False, error= 'Current must have value from 2 to 80')
 
-    print('Parameters are normal, setting operating mode...')
-    # Tomograph takes values multiplied by 10 and rounded
-    new_voltage = round(new_mode['voltage'] * 10)
-    new_current = round(new_mode['current'] * 10)
-    success, useless, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].SetOperatingMode, [new_voltage, new_current])
+    print('Parameters are normal, setting new voltage...')
+    success, set_voltage, exception_message = try_thrice_change_attr(TOMOGRAPHS[tomo_num]['device'], "xraysource_voltage", voltage)
     if success == False:
         print(exception_message)
-        return create_response(success, exception_message, error= 'Could not set operating mode')
+        return create_response(success, exception_message, error= 'Could not set voltage')
 
-    print('Success!')
-    return create_response(True)
+    print('Success! New value of voltage is %i' % set_voltage)
+    return create_response(success= True, result= set_voltage)
+
+@app.route('/tomograph/<int:tomo_num>/source/set-current', methods=['POST'])
+def source_set_current(tomo_num):
+    print('\n\nREQUEST: SOURCE/SET CURRENT')
+    tomo_num -= 1          #because in TOMOGRAPHS list numeration begins from 0
+
+    if TOMOGRAPHS[tomo_num]['experiment is running']:
+        print('On this tomograph experiment is running')
+        return create_response(success= False, error= 'On this tomograph experiment is running')
+
+    success, current, response_if_fail = check_request(request.data)
+    if not success:
+        return response_if_fail
+
+    print('Checking format...')
+    if type(current) is not int:
+        print('Incorrect format! Current type must be int, but it is ' + str(type(current)))
+        return create_response(success= False, error= 'Incorrect format')
+
+
+    # TO DELETE THIS LATER
+    print('Format is correct, new current value is %i...' % (current))
+    if current < 2 or 80 < current:
+        print('Current must have value from 2 to 60!')
+        return create_response(success= False, error= 'Current must have value from 2 to 80')
+
+    print('Parameters are normal, setting new current...')
+    success, set_current, exception_message = try_thrice_change_attr(TOMOGRAPHS[tomo_num]['device'], "xraysource_current", current)
+    if success == False:
+        print(exception_message)
+        return create_response(success, exception_message, error= 'Could not set current')
+
+    print('Success! New value of current is %i' % set_current)
+    return create_response(success= True, result= set_current)
+
+
 
 
 @app.route('/tomograph/<int:tomo_num>/shutter/open/<int:time>', methods=['GET'])
@@ -169,10 +205,10 @@ def shutter_open(tomo_num, time):
     tomo_num -= 1          #because in TOMOGRAPHS list numeration begins from 0
     if TOMOGRAPHS[tomo_num]['experiment is running']:
         print('On this tomograph experiment is running')
-        return False, None, create_response(success= False, error= 'On this tomograph experiment is running')
+        return create_response(success= False, error= 'On this tomograph experiment is running')
 
     print('Opening shutter...')
-    success, useless, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].OpenShutter, time)
+    success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].OpenShutter, time)
     if success == False:
         print(exception_message)
         return create_response(success, exception_message, error= 'Could not open shutter')
@@ -186,10 +222,10 @@ def shutter_close(tomo_num, time):
     tomo_num -= 1          #because in TOMOGRAPHS list numeration begins from 0
     if TOMOGRAPHS[tomo_num]['experiment is running']:
         print('On this tomograph experiment is running')
-        return False, None, create_response(success= False, error= 'On this tomograph experiment is running')
+        return create_response(success= False, error= 'On this tomograph experiment is running')
 
     print('Closing shutter...')
-    success, useless, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].CloseShutter, time)
+    success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].CloseShutter, time)
     if success == False:
         print(exception_message)
         return create_response(success, exception_message, error= 'Could not close shutter')
@@ -198,20 +234,149 @@ def shutter_close(tomo_num, time):
     return create_response(True)
 
 
-@app.route('/tomograph/<int:tomo_num>/detector/get-frame/<float:exposure>', methods=['GET'])
-def detector_get_frame(tomo_num, exposure):
+
+@app.route('/tomograph/<int:tomo_num>/motor/set-horizontal-position', methods=['POST'])
+def motor_set_horizontal_position(tomo_num):
+    print('\n\nREQUEST: MOTOR/SET HORIZONTAL POSITION')
+    tomo_num -= 1          #because in TOMOGRAPHS list numeration begins from 0
+
+    if TOMOGRAPHS[tomo_num]['experiment is running']:
+        print('On this tomograph experiment is running')
+        return create_response(success= False, error= 'On this tomograph experiment is running')
+
+    success, hor_pos, response_if_fail = check_request(request.data)
+    if not success:
+        return response_if_fail
+
+    print('Checking format...')
+    if type(hor_pos) is not float:
+        print('Incorrect format! Position type must be float, but it is ' + str(type(hor_pos)))
+        return create_response(success= False, error= 'Incorrect format')
+
+
+    # TO DELETE THIS LATER
+    print('Format is correct, new position value is %f...' % (hor_pos))
+    if hor_pos < -30 or 30 < hor_pos:
+        print('Position must have value from -30 to 30!')
+        return create_response(success= False, error= 'Position must have value from -30 to 30')
+
+    print('Parameters are normal, setting new position...')
+    success, set_hor_pos, exception_message = try_thrice_change_attr(TOMOGRAPHS[tomo_num]['device'], "horizontal_position", hor_pos)
+    if success == False:
+        print(exception_message)
+        return create_response(success, exception_message, error= 'Could not set new position')
+
+    print('Success! New value of horizontal position is %f' % set_hor_pos)
+    return create_response(success= True, result= set_hor_pos)
+
+@app.route('/tomograph/<int:tomo_num>/motor/set-vertical-position', methods=['POST'])
+def motor_set_vertical_position(tomo_num):
+    print('\n\nREQUEST: MOTOR/SET VERTICAL POSITION')
+    tomo_num -= 1          #because in TOMOGRAPHS list numeration begins from 0
+
+    if TOMOGRAPHS[tomo_num]['experiment is running']:
+        print('On this tomograph experiment is running')
+        return create_response(success= False, error= 'On this tomograph experiment is running')
+
+    success, ver_pos, response_if_fail = check_request(request.data)
+    if not success:
+        return response_if_fail
+
+    print('Checking format...')
+    if type(ver_pos) is not float:
+        print('Incorrect format! Position type must be float, but it is ' + str(type(ver_pos)))
+        return create_response(success= False, error= 'Incorrect format')
+
+
+    # TO DELETE THIS LATER
+    print('Format is correct, new position value is %f...' % (ver_pos))
+    if ver_pos < -30 or 30 < ver_pos:
+        print('Position must have value from -30 to 30!')
+        return create_response(success= False, error= 'Position must have value from -30 to 30')
+
+    print('Parameters are normal, setting new position...')
+    success, set_hor_pos, exception_message = try_thrice_change_attr(TOMOGRAPHS[tomo_num]['device'], "vertical_position", ver_pos)
+    if success == False:
+        print(exception_message)
+        return create_response(success, exception_message, error= 'Could not set new position')
+
+    print('Success! New value of vertical position is %f' % set_hor_pos)
+    return create_response(success= True, result= set_hor_pos)
+
+@app.route('/tomograph/<int:tomo_num>/motor/set-angle-position', methods=['POST'])
+def motor_set_angle_position(tomo_num):
+    print('\n\nREQUEST: MOTOR/SET ANGLE POSITION')
+    tomo_num -= 1          #because in TOMOGRAPHS list numeration begins from 0
+
+    if TOMOGRAPHS[tomo_num]['experiment is running']:
+        print('On this tomograph experiment is running')
+        return create_response(success= False, error= 'On this tomograph experiment is running')
+
+    success, angle, response_if_fail = check_request(request.data)
+    if not success:
+        return response_if_fail
+
+    print('Checking format...')
+    if type(angle) is not float:
+        print('Incorrect format! Angle type must be float, but it is ' + str(type(angle)))
+        return create_response(success= False, error= 'Incorrect format')
+
+
+    # TO DELETE THIS LATER
+    print('Format is correct, new angle value is %f...' % (angle))
+    angle = angle % 360
+    success, set_angle, exception_message = try_thrice_change_attr(TOMOGRAPHS[tomo_num]['device'], "angle_position", angle)
+    if success == False:
+        print(exception_message)
+        return create_response(success, exception_message, error= 'Could not set new angle')
+
+    print('Success! New value of angle position is %f' % set_angle)
+    return create_response(success= True, result= set_angle)
+
+@app.route('/tomograph/<int:tomo_num>/motor/reset-angle', methods=['GET'])
+def motor_reset_angle(tomo_num):
+    print('\n\nREQUEST: MOTOR/RESET ANGLE')
+    tomo_num -= 1          #because in TOMOGRAPHS list numeration begins from 0
+
+    if TOMOGRAPHS[tomo_num]['experiment is running']:
+        print('On this tomograph experiment is running')
+        return create_response(success= False, error= 'On this tomograph experiment is running')
+
+
+    print('Resetting angle...')
+    success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].ResetAnglePosition)
+    if success == False:
+        print(exception_message)
+        return create_response(success, exception_message, error= 'Could not reset angle')
+
+    print('Success!')
+    return create_response(True)
+
+
+
+@app.route('/tomograph/<int:tomo_num>/detector/get-frame', methods=['POST'])
+def detector_get_frame(tomo_num):
     print('\n\nREQUEST: DETECTOR/GET FRAME')
     tomo_num -= 1          #because in TOMOGRAPHS list numeration begins from 0
     if TOMOGRAPHS[tomo_num]['experiment is running']:
         print('On this tomograph experiment is running')
-        return False, None, create_response(success= False, error= 'On this tomograph experiment is running')
+        return create_response(success= False, error= 'On this tomograph experiment is running')
 
-    # Tomograph takes values multiplied by 10 and rounded
+    success, exposure, response_if_fail = check_request(request.data)
+    if not success:
+        return response_if_fail
+
+    print('Checking format...')
+    if type(exposure) is not float:
+        print('Incorrect format! Position type must be float, but it is ' + str(type(exposure)))
+        return create_response(success= False, error= 'Incorrect format')
+
+    # Tomograph takes exposure multiplied by 10 and rounded
     exposure = round(exposure * 10)
 
     print('Success!')
     print('Getting frame with exposure %.1f milliseconds...' % (exposure/10))
-    success, frame_json, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].GetFrame, exposure)
+    success, frame_json, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].GetFrame, exposure)
     if success == False:
         print(exception_message)
         return create_response(success, exception_message, error= 'Could not get frame')
@@ -219,7 +384,7 @@ def detector_get_frame(tomo_num, exposure):
     frame_dict = json.loads(frame_json)
     print('Success!')
     # The only case, when we send response without using function  create_response()
-    return json.dumps({'success': True, 'image': frame_dict})
+    return create_response(success= True, result= frame_dict)
 
 
 
@@ -245,7 +410,7 @@ def create_event(type, exp_id, MoF, exception_message = '', error = ''):
 
     return None
 
-# MAYBE NEED TO EDIT (NEED TO ADD CHECKING STORAGE'S RESPONSE)
+# NEED TO ADD CHECKING STORAGE'S RESPONSE
 def send_messages_to_storage_webpage(event):
     # 'event' must be dictionary with format that is returned by  'create_event()'
     print('Sending to storage...')
@@ -401,7 +566,7 @@ def carry_out_simple_experiment(tomo_num, exp_param):
     # Closing shutter to get DARK images
     print TOMOGRAPHS[tomo_num]['device'].ping
     print('Closing shutter...')
-    success, useless, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].CloseShutter, 0)
+    success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].CloseShutter, 0)
     if success == False:
         return handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error= 'Could not close shutter')
 
@@ -412,7 +577,7 @@ def carry_out_simple_experiment(tomo_num, exp_param):
             return stop_experiment_because_someone(exp_id)
 
         print('  Getting DARK image %d from tomograph...' % (i))
-        success, frame_json, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].GetFrame, exp_param['DARK']['exposure'])
+        success, frame_json, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].GetFrame, exp_param['DARK']['exposure'])
         if success == False:
             return handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error = 'Could not get frame')
 
@@ -425,13 +590,13 @@ def carry_out_simple_experiment(tomo_num, exp_param):
 
 
     print('Opening shutter...')
-    success, useless, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].OpenShutter, 0)
+    success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].OpenShutter, 0)
     if success == False:
         return handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error = 'Could not open shutter')
 
     print('Success!')
     print('Resetting current position...')
- #   success, useless, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].ResetCurrentPosition)
+ #   success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].ResetCurrentPosition)
     if success == False:
         return handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error = 'Could not reset current position')
 
@@ -448,7 +613,7 @@ def carry_out_simple_experiment(tomo_num, exp_param):
                 return stop_experiment_because_someone(exp_id)
 
             print('    Getting image %d from tomograph...' % (j))
-            success, frame_json, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].GetFrame, exp_param['DARK']['exposure'])
+            success, frame_json, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].GetFrame, exp_param['DARK']['exposure'])
             if success == False:
                 return handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error = 'Could not get frame')
 
@@ -460,7 +625,7 @@ def carry_out_simple_experiment(tomo_num, exp_param):
         # Rounding angles here, not in  check_and_prepare_exp_parameters(), cause it will be more accurately this way
         new_angle = (round( i*angle_step ,  1)) % 360
         print('    Finished with this angle, turning to new angle %.1f...' % (new_angle))
-        #success, frame_json, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].GotoPosition, [0, 0,  new_angle * 10])  # x = 0, y = 0 ?
+        #success, frame_json, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].GotoPosition, [0, 0,  new_angle * 10])  # x = 0, y = 0 ?
         if success == False:
             return handle_emergency_stop(exp_id= exp_id, exception_message= exception_message,  error = 'Could not turn motor')
 
@@ -485,7 +650,7 @@ def carry_out_advanced_experiment(tomo_num, exp_param):
 
         if command['type'] == 'open shutter':
             print('Opening shutter...')
-            success, useless, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].OpenShutter, command['args'])
+            success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].OpenShutter, command['args'])
             if success == False:
                 return handle_emergency_stop(exp_id= exp_id, exception_message= exception_message,
                                              error = 'Error in command ' + str(cmd_num) + ': Could not open shutter')
@@ -493,7 +658,7 @@ def carry_out_advanced_experiment(tomo_num, exp_param):
 
         elif command['type'] == 'close shutter':
             print('Closing shutter...')
-            success, useless, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].OpenShutter, command['args'])
+            success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].OpenShutter, command['args'])
             if success == False:
                 return handle_emergency_stop(exp_id= exp_id, exception_message= exception_message,
                                              error = 'Error in command ' + str(cmd_num) + ': Could not close shutter')
@@ -501,7 +666,7 @@ def carry_out_advanced_experiment(tomo_num, exp_param):
 
         elif command['type'] == 'reset current position':
             print('Resetting current position...')
-            success, useless, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].ResetCurrentPosition, command['args'])
+            success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].ResetCurrentPosition, command['args'])
             if success == False:
                 return handle_emergency_stop(exp_id= exp_id, exception_message= exception_message,
                                              error = 'Error in command ' + str(cmd_num) + ': Could not reset current position')
@@ -512,7 +677,7 @@ def carry_out_advanced_experiment(tomo_num, exp_param):
             y = str(command['args'][1])
             angle = str(command['args'][2]/10)
             print('Changing position to:  x = ' + x + ', y = ' + y + ', angle = ' + angle + '...')
-            success, useless, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].GotoPosition, command['args'])
+            success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].GotoPosition, command['args'])
             if success == False:
                 return handle_emergency_stop(exp_id= exp_id, exception_message= exception_message,
                                              error = 'Error in command ' + str(cmd_num) + ': Could not go to position: '
@@ -521,7 +686,7 @@ def carry_out_advanced_experiment(tomo_num, exp_param):
 
         elif command['type'] == 'get frame':
             print('Getting image...')
-            success, frame_json, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].GetFrame, command['args'])
+            success, frame_json, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].GetFrame, command['args'])
             if success == False:
                 return handle_emergency_stop(exp_id= exp_id, exception_message= exception_message,
                                              error = 'Error in command ' + str(cmd_num) + ': Could not get frame')
@@ -548,7 +713,7 @@ def experiment_start(tomo_num):
     tomo_num -= 1          #because in TOMOGRAPHS list numeration begins from 0
     if TOMOGRAPHS[tomo_num]['experiment is running']:
         print('On this tomograph experiment is running')
-        return False, None, create_response(success= False, error= 'On this tomograph experiment is running')
+        return create_response(success= False, error= 'On this tomograph experiment is running')
 
     success, data, response_if_fail = check_request(request.data)
     if not success:
@@ -576,7 +741,7 @@ def experiment_start(tomo_num):
 
     print('Parameters are normal!')
     print('Powering on tomograph...')
-    success, useless, exception_message = try_something_thrice(TOMOGRAPHS[tomo_num]['device'].PowerOn)
+    success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].PowerOn)
     if success == False:
         return handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error= 'Could not power on tomograph')
 
