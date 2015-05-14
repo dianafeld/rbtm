@@ -6,7 +6,7 @@ import json
 from django.shortcuts import render
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from requests.exceptions import Timeout
-from robotom.settings import STORAGE_EXPERIMENTS_HOST_GET, STORAGE_FRAMES_HOST
+from robotom.settings import STORAGE_EXPERIMENTS_HOST, STORAGE_FRAMES_HOST, STORAGE_FRAMES_INFO_HOST
 
 rest_logger = logging.getLogger('rest_logger')
 
@@ -148,7 +148,7 @@ def storage_view(request):
     elif request.method == "POST":
         info = make_info(request.POST)
         try:
-            answer = requests.post(STORAGE_EXPERIMENTS_HOST_GET, info, timeout=1)
+            answer = requests.post(STORAGE_EXPERIMENTS_HOST, info, timeout=1)
             if answer.status_code == 200:
                 experiments = json.loads(answer.content)
                 rest_logger.debug(u'Найденные эксперименты: {}'.format(experiments))
@@ -178,25 +178,42 @@ def storage_view(request):
 def storage_record_view(request, storage_record_id):
     # TODO
     record = {}
-    to_show = False
+    to_show = True
     try:
-        # info = json.dumps({"experiment id": storage_record_id, "image_data.datetime": "30.04.2015 10:27:35"})
         info = json.dumps({"experiment id": storage_record_id})
-        experiment = requests.post(STORAGE_EXPERIMENTS_HOST_GET, info, timeout=10)
+        experiment = requests.post(STORAGE_EXPERIMENTS_HOST, info, timeout=1)
         if experiment.status_code == 200:
             experiment_info = json.loads(experiment.content)
             rest_logger.debug(u'Страница записи: Данные эксперимента: {}'.format(experiment_info))
             if len(experiment_info) == 0:
                 messages.error(request, u'Эксперимент с данным идентификатором не найден')
+                to_show = False
             else:
-                to_show = True
                 record = ExperimentRecord(experiment_info[0])
         else:
             rest_logger.error(u'Не удается получить эксперимент. Ошибка: {}'.format(experiment.status_code))
             messages.error(request, u'Не удается получить эксперимент. Ошибка: {}')
+            to_show = False
     except Timeout as e:
         rest_logger.error(u'Не удается получить эксперимент. Ошибка: {}'.format(e.message))
         messages.error(request, u'Не удается получить эксперимент. Сервер хранилища не отвечает. Попробуйте позже.')
+        to_show = False
+
+    try:
+        info = json.dumps({"experiment id": storage_record_id})
+        frames = requests.post(STORAGE_FRAMES_INFO_HOST, info, timeout=1)
+        if frames.status_code == 200:
+            frames_info = json.loads(frames.content)
+            rest_logger.debug(u'Страница записи: Список изображений: {}'.format(frames_info))
+        else:
+            rest_logger.error(u'Не удается получить список изображений. Ошибка: {}'.format(frames.status_code))
+            messages.error(request, u'Не удается получить список изображений. Ошибка: {}'.format(frames.status_code))
+            to_show = False
+    except Timeout as e:
+        rest_logger.error(u'Не удается получить список изображений. Ошибка: {}'.format(e.message))
+        messages.error(request,
+                       u'Не удается получить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
+        to_show = False
 
     return render(request, 'storage/storage_record.html', {
         "record_id": storage_record_id,
