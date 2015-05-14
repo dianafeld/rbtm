@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Start page</title>
+</head>
+	<body>
+		<h1 align = "center">Эксперимент</h1>
+		<hr noshade>
+		<body>
+		{% if messages %}
+		<div class="row">
+		{% for message in messages %}
+			<div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+				<div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+				    {{ message }}
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+{% endif %}
+		{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+					<form method="POST" action="">
+					{% csrf_token %}
+					<input type="submit" name="on_exp" value="Включить томограф"><br><br>
+					</form>
+				{% else %}
+					<input type="submit" name="on_admin" value="Включить томограф"disabled><br><br>
+				{% endif %}
+		{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+					<form method="POST" action="">
+					{% csrf_token %}
+					<input type="submit" name="of_exp" value="Выключить томограф"><br><br>
+					</form>
+				{% else %}
+					<input type="submit" name="of_admin" value="Выключить томограф"disabled><br><br>
+				{% endif %}
+		
+		 <p><li><a href="{% url 'experiment:index_adjustment' %}">Параметры томографа</a></li>
+		 <p><li><a href="{% url 'experiment:index_interface' %}">Параметры эксперимента</a></li>
+		 </body>
+</html>
+
+{% endblock content %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Adjustment</title>
+</head>
+	<body>
+		<h1 align = "center">Юстировка</h1>
+		<hr noshade>
+		<body>
+		{% if messages %}
+		<div class="row">
+		{% for message in messages %}
+			<div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+				<div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+				    {{ message }}
+				</div>
+			</div>
+			{% endfor %}
+		</div>
+{% endif %}
+			<h3>Параметры юстировки</h3>
+			<form method="POST" action="">
+			{% csrf_token %}
+				<br>Напряжение, кВ<br>
+				<input type="text" required name="voltage" pattern="\d+(\.\d{2})?"><br>						
+				<br>Ток, мА<br>
+				<input type="text" required name="current" pattern="\d+(\.\d{2})?"><br>
+				{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+					<input type="submit" name="experiment_on" value="Отправить"><br>
+				{% else %}
+					<input type="submit" name="experiment_on_adm" value="Отправить"disabled><br>
+				{% endif %}
+			</form>
+			<br>
+			<form method="POST" action="">	
+			{% csrf_token %}					
+				Заслонка<br>
+				<input type = "text" required name = "text_gate" value = "" checked>
+				{% if user.is_authenticated and user.userprofile.role == 'EXP' %} 
+					<br><input type="submit" name="gate" value="Отправить"><br>
+				{% else %}
+					<input type="submit" name="gate_adm" value="Отправить"disabled><br>
+				{% endif %}
+			</form>
+			<form name = "picture" method="POST" action="">
+			{% csrf_token %}
+				Снять изображение с экспозицией в n мс<br>
+				<input type="text" required name="picture_exposure" pattern="\d+(\.\d{2})?"><br>
+				{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+					<input type="submit" name="picture" value="Отправить"><br>
+				{% else %}
+					<input type="submit" name="picture_adm" value="Отправить"disabled><br>
+				{% endif %}
+			</form>		
+				
+	</body>
+	
+{% endblock content %}
