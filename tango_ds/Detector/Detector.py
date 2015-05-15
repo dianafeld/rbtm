@@ -54,7 +54,7 @@ import PyTango
 import sys
 # Add additional import
 # ----- PROTECTED REGION ID(Detector.additionnal_import) ENABLED START -----#
-import xiApi
+
 from multiprocessing import Process, Value
 
 

@@ -53,7 +53,7 @@ import PyTango
 import sys
 # Add additional import
 # ----- PROTECTED REGION ID(Motor.additionnal_import) ENABLED START -----#
-import ximc
+
 #----- PROTECTED REGION END -----#  //  Motor.additionnal_import
 
 ## Device States Description
