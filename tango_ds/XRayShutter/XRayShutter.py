@@ -51,7 +51,7 @@ import sys
 #----- PROTECTED REGION ID(XRayShutter.additionnal_import) ENABLED START -----#
 import threading
 from shutter import Shutter
-#----- PROTECTED REGION END -----#	//	XRayShutter.additionnal_import
+#----- PROTECTED REGION END -----#  //  XRayShutter.additionnal_import
 
 ## Device States Description
 ## CLOSE : Shutter is closed.
@@ -61,7 +61,7 @@ class XRayShutter (PyTango.Device_4Impl):
 
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(XRayShutter.global_variables) ENABLED START -----#
-    #----- PROTECTED REGION END -----#	//	XRayShutter.global_variables
+    #----- PROTECTED REGION END -----#  //  XRayShutter.global_variables
 
     def __init__(self,cl, name):
         PyTango.Device_4Impl.__init__(self,cl,name)
@@ -69,12 +69,12 @@ class XRayShutter (PyTango.Device_4Impl):
         XRayShutter.init_device(self)
         #----- PROTECTED REGION ID(XRayShutter.__init__) ENABLED START -----#
         
-        #----- PROTECTED REGION END -----#	//	XRayShutter.__init__
+        #----- PROTECTED REGION END -----#  //  XRayShutter.__init__
         
     def delete_device(self):
         self.debug_stream("In delete_device()")
         #----- PROTECTED REGION ID(XRayShutter.delete_device) ENABLED START -----#
-        #----- PROTECTED REGION END -----#	//	XRayShutter.delete_device
+        #----- PROTECTED REGION END -----#  //  XRayShutter.delete_device
 
     def init_device(self):
         self.debug_stream("In init_device()")
@@ -86,13 +86,13 @@ class XRayShutter (PyTango.Device_4Impl):
         else:
             self.set_state(PyTango.DevState.CLOSE)
 
-        #----- PROTECTED REGION END -----#	//	XRayShutter.init_device
+        #----- PROTECTED REGION END -----#  //  XRayShutter.init_device
 
     def always_executed_hook(self):
         self.debug_stream("In always_excuted_hook()")
         #----- PROTECTED REGION ID(XRayShutter.always_executed_hook) ENABLED START -----#
         
-        #----- PROTECTED REGION END -----#	//	XRayShutter.always_executed_hook
+        #----- PROTECTED REGION END -----#  //  XRayShutter.always_executed_hook
 
     #-----------------------------------------------------------------------------
     #    XRayShutter read/write attribute methods
@@ -102,13 +102,13 @@ class XRayShutter (PyTango.Device_4Impl):
     
         #----- PROTECTED REGION ID(XRayShutter.initialize_dynamic_attributes) ENABLED START -----#
         
-        #----- PROTECTED REGION END -----#	//	XRayShutter.initialize_dynamic_attributes
+        #----- PROTECTED REGION END -----#  //  XRayShutter.initialize_dynamic_attributes
             
     def read_attr_hardware(self, data):
         self.debug_stream("In read_attr_hardware()")
         #----- PROTECTED REGION ID(XRayShutter.read_attr_hardware) ENABLED START -----#
         
-        #----- PROTECTED REGION END -----#	//	XRayShutter.read_attr_hardware
+        #----- PROTECTED REGION END -----#  //  XRayShutter.read_attr_hardware
 
 
     #-----------------------------------------------------------------------------
@@ -136,7 +136,7 @@ class XRayShutter (PyTango.Device_4Impl):
         if time != 0:
             threading.Timer(time, self.Close, args=[0]).start()
 
-        #----- PROTECTED REGION END -----#	//	XRayShutter.Open
+        #----- PROTECTED REGION END -----#  //  XRayShutter.Open
 
     def Close(self, argin):
         """ Closes the shutter
@@ -156,14 +156,14 @@ class XRayShutter (PyTango.Device_4Impl):
         if time != 0:
             threading.Timer(time, self.Open, args=[0]).start()
 
-        #----- PROTECTED REGION END -----#	//	XRayShutter.Close
+        #----- PROTECTED REGION END -----#  //  XRayShutter.Close
         
 
 class XRayShutterClass(PyTango.DeviceClass):
     #--------- Add you global class variables here --------------------------
     #----- PROTECTED REGION ID(XRayShutter.global_class_variables) ENABLED START -----#
     
-    #----- PROTECTED REGION END -----#	//	XRayShutter.global_class_variables
+    #----- PROTECTED REGION END -----#  //  XRayShutter.global_class_variables
 
     def dyn_attr(self, dev_list):
         """Invoked to create dynamic attributes for the given devices.
@@ -182,7 +182,7 @@ class XRayShutterClass(PyTango.DeviceClass):
                 dev.debug_stream("Details: " + traceback.format_exc())
         #----- PROTECTED REGION ID(XRayShutter.dyn_attr) ENABLED START -----#
         
-        #----- PROTECTED REGION END -----#	//	XRayShutter.dyn_attr
+        #----- PROTECTED REGION END -----#  //  XRayShutter.dyn_attr
 
     #    Class Properties
     class_property_list = {

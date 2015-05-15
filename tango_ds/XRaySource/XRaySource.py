@@ -51,7 +51,7 @@ import sys
 # Add additional import
 #----- PROTECTED REGION ID(XRaySource.additionnal_import) ENABLED START -----#
 from driver_source import Source
-#----- PROTECTED REGION END -----#	//	XRaySource.additionnal_import
+#----- PROTECTED REGION END -----#  //  XRaySource.additionnal_import
 
 ## Device States Description
 ## ON : The state in which the source is active
@@ -114,26 +114,26 @@ class XRaySource (PyTango.Device_4Impl):
             self.error_stream(str(e))
             raise
 
-    #----- PROTECTED REGION END -----#	//	XRaySource.global_variables
+    #----- PROTECTED REGION END -----#  //  XRaySource.global_variables
 
     def __init__(self,cl, name):
         PyTango.Device_4Impl.__init__(self,cl,name)
         self.debug_stream("In __init__()")
         XRaySource.init_device(self)
         #----- PROTECTED REGION ID(XRaySource.__init__) ENABLED START -----#
-        #----- PROTECTED REGION END -----#	//	XRaySource.__init__
+        #----- PROTECTED REGION END -----#  //  XRaySource.__init__
         
     def delete_device(self):
         self.debug_stream("In delete_device()")
         #----- PROTECTED REGION ID(XRaySource.delete_device) ENABLED START -----#
         
-        #----- PROTECTED REGION END -----#	//	XRaySource.delete_device
+        #----- PROTECTED REGION END -----#  //  XRaySource.delete_device
 
     def init_device(self):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
-        self.attr_voltage_read = 0
-        self.attr_current_read = 0
+        self.attr_voltage_read = 0.0
+        self.attr_current_read = 0.0
         #----- PROTECTED REGION ID(XRaySource.init_device) ENABLED START -----#
         try:
             self.source_driver = Source("COM8")
@@ -154,13 +154,13 @@ class XRaySource (PyTango.Device_4Impl):
 
         # read actual values from source
 
-        #----- PROTECTED REGION END -----#	//	XRaySource.init_device
+        #----- PROTECTED REGION END -----#  //  XRaySource.init_device
 
     def always_executed_hook(self):
         self.debug_stream("In always_excuted_hook()")
         #----- PROTECTED REGION ID(XRaySource.always_executed_hook) ENABLED START -----#
         
-        #----- PROTECTED REGION END -----#	//	XRaySource.always_executed_hook
+        #----- PROTECTED REGION END -----#  //  XRaySource.always_executed_hook
 
     #-----------------------------------------------------------------------------
     #    XRaySource read/write attribute methods
@@ -170,43 +170,43 @@ class XRaySource (PyTango.Device_4Impl):
         self.debug_stream("In read_voltage()")
         #----- PROTECTED REGION ID(XRaySource.voltage_read) ENABLED START -----#
         voltage = self._read_voltage()
-        attr.set_value(voltage)
-        #----- PROTECTED REGION END -----#	//	XRaySource.voltage_read
+        attr.set_value(voltage / 10.)
+        #----- PROTECTED REGION END -----#  //  XRaySource.voltage_read
         
     def write_voltage(self, attr):
         self.debug_stream("In write_voltage()")
         data=attr.get_write_value()
         # ----- PROTECTED REGION ID(XRaySource.voltage_write) ENABLED START -----#
-        new_voltage = data
+        new_voltage = int(round(data * 10))
         self._write_voltage(new_voltage)
-        #----- PROTECTED REGION END -----#	//	XRaySource.voltage_write
+        #----- PROTECTED REGION END -----#  //  XRaySource.voltage_write
         
     def read_current(self, attr):
         self.debug_stream("In read_current()")
         # ----- PROTECTED REGION ID(XRaySource.current_read) ENABLED START -----#
         current = self._read_current()
-        attr.set_value(current)
-        # ----- PROTECTED REGION END -----#	//	XRaySource.current_read
+        attr.set_value(current / 10.)
+        # ----- PROTECTED REGION END -----# //  XRaySource.current_read
         
     def write_current(self, attr):
         self.debug_stream("In write_current()")
         data=attr.get_write_value()
         # ----- PROTECTED REGION ID(XRaySource.current_write) ENABLED START -----#
-        new_current = data
+        new_current = int(round(data * 10))
         self._write_current(new_current)
-        # ----- PROTECTED REGION END -----#	//	XRaySource.current_write
+        # ----- PROTECTED REGION END -----# //  XRaySource.current_write
         
     
     
         #----- PROTECTED REGION ID(XRaySource.initialize_dynamic_attributes) ENABLED START -----#
         
-        #----- PROTECTED REGION END -----#	//	XRaySource.initialize_dynamic_attributes
+        #----- PROTECTED REGION END -----#  //  XRaySource.initialize_dynamic_attributes
             
     def read_attr_hardware(self, data):
         self.debug_stream("In read_attr_hardware()")
         #----- PROTECTED REGION ID(XRaySource.read_attr_hardware) ENABLED START -----#
         
-        #----- PROTECTED REGION END -----#	//	XRaySource.read_attr_hardware
+        #----- PROTECTED REGION END -----#  //  XRaySource.read_attr_hardware
 
 
     #-----------------------------------------------------------------------------
@@ -235,7 +235,7 @@ class XRaySource (PyTango.Device_4Impl):
 
         self.set_state(PyTango.DevState.OFF)
 
-        #----- PROTECTED REGION END -----#	//	XRaySource.Off
+        #----- PROTECTED REGION END -----#  //  XRaySource.Off
         
     def On(self):
         """ Turns on the X-Ray source
@@ -259,14 +259,14 @@ class XRaySource (PyTango.Device_4Impl):
 
         self.set_state(PyTango.DevState.ON)
 
-        #----- PROTECTED REGION END -----#	//	XRaySource.On
+        #----- PROTECTED REGION END -----#  //  XRaySource.On
         
     def is_On_allowed(self):
         self.debug_stream("In is_On_allowed()")
         state_ok = not(self.get_state() in [PyTango.DevState.FAULT])
         # ----- PROTECTED REGION ID(XRaySource.is_On_allowed) ENABLED START -----#
 
-        #----- PROTECTED REGION END -----#	//	XRaySource.is_On_allowed
+        #----- PROTECTED REGION END -----#  //  XRaySource.is_On_allowed
         return state_ok
         
 
@@ -274,7 +274,7 @@ class XRaySourceClass(PyTango.DeviceClass):
     #--------- Add you global class variables here --------------------------
     #----- PROTECTED REGION ID(XRaySource.global_class_variables) ENABLED START -----#
     
-    #----- PROTECTED REGION END -----#	//	XRaySource.global_class_variables
+    #----- PROTECTED REGION END -----#  //  XRaySource.global_class_variables
 
     def dyn_attr(self, dev_list):
         """Invoked to create dynamic attributes for the given devices.
@@ -293,7 +293,7 @@ class XRaySourceClass(PyTango.DeviceClass):
                 dev.debug_stream("Details: " + traceback.format_exc())
         #----- PROTECTED REGION ID(XRaySource.dyn_attr) ENABLED START -----#
         
-        #----- PROTECTED REGION END -----#	//	XRaySource.dyn_attr
+        #----- PROTECTED REGION END -----#  //  XRaySource.dyn_attr
 
     #    Class Properties
     class_property_list = {
@@ -319,7 +319,7 @@ class XRaySourceClass(PyTango.DeviceClass):
     #    Attribute definitions
     attr_list = {
         'voltage':
-            [[PyTango.DevShort,
+            [[PyTango.DevDouble,
             PyTango.SCALAR,
             PyTango.READ_WRITE],
             {
@@ -327,11 +327,11 @@ class XRaySourceClass(PyTango.DeviceClass):
                 'unit': "kV",
                 'standard unit': "10E+3",
                 'max value': "60",
-                'min value': "0",
+                'min value': "2",
                 'description': "voltage of the X-Ray source",
             } ],
         'current':
-            [[PyTango.DevShort,
+            [[PyTango.DevDouble,
             PyTango.SCALAR,
             PyTango.READ_WRITE],
             {
@@ -339,7 +339,7 @@ class XRaySourceClass(PyTango.DeviceClass):
                 'unit': "mA",
                 'standard unit': "10E-3",
                 'max value': "80",
-                'min value': "0",
+                'min value': "2",
                 'description': "current of the X-Ray source",
             } ],
         }

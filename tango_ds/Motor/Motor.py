@@ -54,7 +54,7 @@ import sys
 # Add additional import
 # ----- PROTECTED REGION ID(Motor.additionnal_import) ENABLED START -----#
 import ximc
-#----- PROTECTED REGION END -----#	//	Motor.additionnal_import
+#----- PROTECTED REGION END -----#  //  Motor.additionnal_import
 
 ## Device States Description
 ## ON : The motor is powered on
@@ -87,7 +87,7 @@ class Motor (PyTango.Device_4Impl):
 
         try:
             self.debug_stream("Setting position = {}".format(steps))
-            self.motor.move_to_position(steps, 0)
+            motor.move_to_position(steps, 0)
             self.debug_stream("Position has been set")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -96,7 +96,7 @@ class Motor (PyTango.Device_4Impl):
             self.error_stream(str(e))
             raise
 
-    #----- PROTECTED REGION END -----#	//	Motor.global_variables
+    #----- PROTECTED REGION END -----#  //  Motor.global_variables
 
     def __init__(self,cl, name):
         PyTango.Device_4Impl.__init__(self,cl,name)
@@ -104,18 +104,18 @@ class Motor (PyTango.Device_4Impl):
         Motor.init_device(self)
         #----- PROTECTED REGION ID(Motor.__init__) ENABLED START -----#
 
-        #----- PROTECTED REGION END -----#	//	Motor.__init__
+        #----- PROTECTED REGION END -----#  //  Motor.__init__
         
     def delete_device(self):
         self.debug_stream("In delete_device()")
         #----- PROTECTED REGION ID(Motor.delete_device) ENABLED START -----#
         self.angle_motor.close()
-        #----- PROTECTED REGION END -----#	//	Motor.delete_device
+        #----- PROTECTED REGION END -----#  //  Motor.delete_device
 
     def init_device(self):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
-        self.attr_angle_position_read = 0
+        self.attr_angle_position_read = 0.0
         self.attr_vertical_position_read = 0
         self.attr_horizontal_position_read = 0
         #----- PROTECTED REGION ID(Motor.init_device) ENABLED START -----#
@@ -125,7 +125,7 @@ class Motor (PyTango.Device_4Impl):
         try:
             self.debug_stream("Creating link to motor drivers...")
             self.angle_motor = ximc.Motor("COM5")
-            self.horizontal_motor = ximc.Motor("name")
+            self.horizontal_motor = ximc.Motor("COM3")
             self.debug_stream("Links were created")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -147,13 +147,13 @@ class Motor (PyTango.Device_4Impl):
         self.set_state(PyTango.DevState.ON)
 
 
-        #----- PROTECTED REGION END -----#	//	Motor.init_device
+        #----- PROTECTED REGION END -----#  //  Motor.init_device
 
     def always_executed_hook(self):
         self.debug_stream("In always_excuted_hook()")
         #----- PROTECTED REGION ID(Motor.always_executed_hook) ENABLED START -----#
 
-        #----- PROTECTED REGION END -----#	//	Motor.always_executed_hook
+        #----- PROTECTED REGION END -----#  //  Motor.always_executed_hook
 
     #-----------------------------------------------------------------------------
     #    Motor read/write attribute methods
@@ -163,10 +163,10 @@ class Motor (PyTango.Device_4Impl):
         self.debug_stream("In read_angle_position()")
         #----- PROTECTED REGION ID(Motor.angle_position_read) ENABLED START -----#
 
-        self.attr_angle_position_read = self._read_position(self.angle_motor)
+        self.attr_angle_position_read = self._read_position(self.angle_motor) * 360. / 32300
         attr.set_value(self.attr_angle_position_read)
 
-        #----- PROTECTED REGION END -----#	//	Motor.angle_position_read
+        #----- PROTECTED REGION END -----#  //  Motor.angle_position_read
         
     def write_angle_position(self, attr):
         self.debug_stream("In write_angle_position()")
@@ -174,17 +174,17 @@ class Motor (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(Motor.angle_position_write) ENABLED START -----#
 
         angle = data
-        steps = angle
+        steps = int(angle * 32300 / 360.)
         self._write_position(self.angle_motor, steps)
 
-        #----- PROTECTED REGION END -----#	//	Motor.angle_position_write 
+        #----- PROTECTED REGION END -----#  //  Motor.angle_position_write 
         
     def is_angle_position_allowed(self, attr):
         self.debug_stream("In is_angle_position_allowed()")
         state_ok = not(self.get_state() in [PyTango.DevState.OFF])
         #----- PROTECTED REGION ID(Motor.is_angle_position_allowed) ENABLED START -----#
 
-        #----- PROTECTED REGION END -----#	//	Motor.is_angle_position_allowed
+        #----- PROTECTED REGION END -----#  //  Motor.is_angle_position_allowed
         return state_ok
         
     def read_vertical_position(self, attr):
@@ -193,7 +193,7 @@ class Motor (PyTango.Device_4Impl):
 
         attr.set_value(self.attr_vertical_position_read)
 
-        #----- PROTECTED REGION END -----#	//	Motor.vertical_position_read
+        #----- PROTECTED REGION END -----#  //  Motor.vertical_position_read
         
     def write_vertical_position(self, attr):
         self.debug_stream("In write_vertical_position()")
@@ -202,14 +202,14 @@ class Motor (PyTango.Device_4Impl):
 
         self.attr_vertical_position_read = data
 
-        #----- PROTECTED REGION END -----#	//	Motor.vertical_position_write
+        #----- PROTECTED REGION END -----#  //  Motor.vertical_position_write
         
     def is_vertical_position_allowed(self, attr):
         self.debug_stream("In is_vertical_position_allowed()")
         state_ok = not(self.get_state() in [PyTango.DevState.OFF])
         #----- PROTECTED REGION ID(Motor.is_vertical_position_allowed) ENABLED START -----#
 
-        #----- PROTECTED REGION END -----#	//	Motor.is_vertical_position_allowed
+        #----- PROTECTED REGION END -----#  //  Motor.is_vertical_position_allowed
         return state_ok
         
     def read_horizontal_position(self, attr):
@@ -219,7 +219,7 @@ class Motor (PyTango.Device_4Impl):
         self.attr_horizontal_position_read = self._read_position(self.horizontal_motor)
         attr.set_value(self.attr_horizontal_position_read)
 
-        #----- PROTECTED REGION END -----#	//	Motor.horizontal_position_read
+        #----- PROTECTED REGION END -----#  //  Motor.horizontal_position_read
         
     def write_horizontal_position(self, attr):
         self.debug_stream("In write_horizontal_position()")
@@ -229,27 +229,27 @@ class Motor (PyTango.Device_4Impl):
         steps = data
         self._write_position(self.horizontal_motor, steps)
 
-        #----- PROTECTED REGION END -----#	//	Motor.horizontal_position_write
+        #----- PROTECTED REGION END -----#  //  Motor.horizontal_position_write
         
     def is_horizontal_position_allowed(self, attr):
         self.debug_stream("In is_horizontal_position_allowed()")
         state_ok = not(self.get_state() in [PyTango.DevState.OFF])
         #----- PROTECTED REGION ID(Motor.is_horizontal_position_allowed) ENABLED START -----#
 
-        #----- PROTECTED REGION END -----#	//	Motor.is_horizontal_position_allowed
+        #----- PROTECTED REGION END -----#  //  Motor.is_horizontal_position_allowed
         return state_ok
         
     
     
         #----- PROTECTED REGION ID(Motor.initialize_dynamic_attributes) ENABLED START -----#
 
-        #----- PROTECTED REGION END -----#	//	Motor.initialize_dynamic_attributes
+        #----- PROTECTED REGION END -----#  //  Motor.initialize_dynamic_attributes
             
     def read_attr_hardware(self, data):
         self.debug_stream("In read_attr_hardware()")
         #----- PROTECTED REGION ID(Motor.read_attr_hardware) ENABLED START -----#
 
-        #----- PROTECTED REGION END -----#	//	Motor.read_attr_hardware
+        #----- PROTECTED REGION END -----#  //  Motor.read_attr_hardware
 
 
     #-----------------------------------------------------------------------------
@@ -268,14 +268,14 @@ class Motor (PyTango.Device_4Impl):
         self.debug_stream("Setting current angle position as new zero")
         self.angle_motor.set_zero()
         self.debug_stream("New zero has been set")
-        #----- PROTECTED REGION END -----#	//	Motor.ResetAnglePosition
+        #----- PROTECTED REGION END -----#  //  Motor.ResetAnglePosition
         
     def is_ResetAnglePosition_allowed(self):
         self.debug_stream("In is_ResetAnglePosition_allowed()")
         state_ok = not(self.get_state() in [PyTango.DevState.OFF])
         #----- PROTECTED REGION ID(Motor.is_ResetAnglePosition_allowed) ENABLED START -----#
         
-        #----- PROTECTED REGION END -----#	//	Motor.is_ResetAnglePosition_allowed
+        #----- PROTECTED REGION END -----#  //  Motor.is_ResetAnglePosition_allowed
         return state_ok
         
 
@@ -283,7 +283,7 @@ class MotorClass(PyTango.DeviceClass):
     #--------- Add you global class variables here --------------------------
     #----- PROTECTED REGION ID(Motor.global_class_variables) ENABLED START -----#
 
-    #----- PROTECTED REGION END -----#	//	Motor.global_class_variables
+    #----- PROTECTED REGION END -----#  //  Motor.global_class_variables
 
     def dyn_attr(self, dev_list):
         """Invoked to create dynamic attributes for the given devices.
@@ -302,7 +302,7 @@ class MotorClass(PyTango.DeviceClass):
                 dev.debug_stream("Details: " + traceback.format_exc())
         #----- PROTECTED REGION ID(Motor.dyn_attr) ENABLED START -----#
 
-                #----- PROTECTED REGION END -----#	//	Motor.dyn_attr
+                #----- PROTECTED REGION END -----#  //  Motor.dyn_attr
 
     #    Class Properties
     class_property_list = {
@@ -325,7 +325,7 @@ class MotorClass(PyTango.DeviceClass):
     #    Attribute definitions
     attr_list = {
         'angle_position':
-            [[PyTango.DevLong,
+            [[PyTango.DevDouble,
             PyTango.SCALAR,
             PyTango.READ_WRITE],
             {
@@ -348,11 +348,6 @@ class MotorClass(PyTango.DeviceClass):
             PyTango.READ_WRITE],
             {
                 'label': "horizontal position",
-                'unit': "mm",
-                'standard unit': "10E-3",
-                'format': "%5.2f",
-                'max value': "500",
-                'min value': "0",
             } ],
         }
 

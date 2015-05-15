@@ -55,15 +55,17 @@ import sys
 # Add additional import
 # ----- PROTECTED REGION ID(Detector.additionnal_import) ENABLED START -----#
 import xiApi
-# from threading import Thread
+from multiprocessing import Process, Value
 
 
-#class AcquisitionThread(Thread):
+def func(is_run):
+    a = 0
 
-#    def run(self, detector):
-#        self.image = detector.get_image()
+    while is_run.value:
+        a += 1
 
-# ----- PROTECTED REGION END -----#	//	Detector.additionnal_import
+
+# ----- PROTECTED REGION END -----# //  Detector.additionnal_import
 
 ## Device States Description
 ## ON : detector is on
@@ -106,7 +108,7 @@ class Detector (PyTango.Device_4Impl):
             raise
         self.debug_stream("Exposure has been set")
 
-    #----- PROTECTED REGION END -----#	//	Detector.global_variables
+    #----- PROTECTED REGION END -----#  //  Detector.global_variables
 
     def __init__(self,cl, name):
         PyTango.Device_4Impl.__init__(self,cl,name)
@@ -114,13 +116,13 @@ class Detector (PyTango.Device_4Impl):
         Detector.init_device(self)
         #----- PROTECTED REGION ID(Detector.__init__) ENABLED START -----#
 
-        #----- PROTECTED REGION END -----#	//	Detector.__init__
+        #----- PROTECTED REGION END -----#  //  Detector.__init__
         
     def delete_device(self):
         self.debug_stream("In delete_device()")
         #----- PROTECTED REGION ID(Detector.delete_device) ENABLED START -----#
 
-        #----- PROTECTED REGION END -----#	//	Detector.delete_device
+        #----- PROTECTED REGION END -----#  //  Detector.delete_device
 
     def init_device(self):
         self.debug_stream("In init_device()")
@@ -144,13 +146,13 @@ class Detector (PyTango.Device_4Impl):
         self.set_state(PyTango.DevState.ON)
         self.attr_exposure_read = self._read_exposure()
 
-        #----- PROTECTED REGION END -----#	//	Detector.init_device
+        #----- PROTECTED REGION END -----#  //  Detector.init_device
 
     def always_executed_hook(self):
         self.debug_stream("In always_excuted_hook()")
         #----- PROTECTED REGION ID(Detector.always_executed_hook) ENABLED START -----#
 
-        #----- PROTECTED REGION END -----#	//	Detector.always_executed_hook
+        #----- PROTECTED REGION END -----#  //  Detector.always_executed_hook
 
     #-----------------------------------------------------------------------------
     #    Detector read/write attribute methods
@@ -160,7 +162,7 @@ class Detector (PyTango.Device_4Impl):
         self.debug_stream("In read_exposure()")
         # ----- PROTECTED REGION ID(Detector.exposure_read) ENABLED START -----#
         attr.set_value(self.attr_exposure_read)
-        # ----- PROTECTED REGION END -----#	//	Detector.exposure_read
+        # ----- PROTECTED REGION END -----# //  Detector.exposure_read
         
     def write_exposure(self, attr):
         self.debug_stream("In write_exposure()")
@@ -171,19 +173,19 @@ class Detector (PyTango.Device_4Impl):
         self._write_exposure(new_exposure)
         self.attr_exposure_read = self._read_exposure()
 
-        #----- PROTECTED REGION END -----#	//	Detector.exposure_write
+        #----- PROTECTED REGION END -----#  //  Detector.exposure_write
         
     
     
         #----- PROTECTED REGION ID(Detector.initialize_dynamic_attributes) ENABLED START -----#
 
-        #----- PROTECTED REGION END -----#	//	Detector.initialize_dynamic_attributes
+        #----- PROTECTED REGION END -----#  //  Detector.initialize_dynamic_attributes
             
     def read_attr_hardware(self, data):
         self.debug_stream("In read_attr_hardware()")
         #----- PROTECTED REGION ID(Detector.read_attr_hardware) ENABLED START -----#
 
-        #----- PROTECTED REGION END -----#	//	Detector.read_attr_hardware
+        #----- PROTECTED REGION END -----#  //  Detector.read_attr_hardware
 
 
     #-----------------------------------------------------------------------------
@@ -204,6 +206,11 @@ class Detector (PyTango.Device_4Impl):
         prev_state = self.get_state()
         self.set_state(PyTango.DevState.RUNNING)
 
+        is_run = Value("i", 1)
+        p = Process(target=func, args=(is_run, ))
+        p.start()
+        
+
         self.debug_stream("Starting acquisition...")
         try:
             image = self.detector.get_image()
@@ -217,12 +224,16 @@ class Detector (PyTango.Device_4Impl):
             raise
         self.debug_stream("Image returned")
 
+        is_run.value = 0
+        p.join()
+
         self.set_state(prev_state)
 
-        print(str(image))
-        argout = str(image)
+        
+        argout = str(image.tolist())
+        #print(argout)
 
-        # ----- PROTECTED REGION END -----#	//	Detector.GetFrame
+        # ----- PROTECTED REGION END -----# //  Detector.GetFrame
         return argout
         
 
@@ -230,7 +241,7 @@ class DetectorClass(PyTango.DeviceClass):
     #--------- Add you global class variables here --------------------------
     #----- PROTECTED REGION ID(Detector.global_class_variables) ENABLED START -----#
 
-    #----- PROTECTED REGION END -----#	//	Detector.global_class_variables
+    #----- PROTECTED REGION END -----#  //  Detector.global_class_variables
 
     def dyn_attr(self, dev_list):
         """Invoked to create dynamic attributes for the given devices.
@@ -249,7 +260,7 @@ class DetectorClass(PyTango.DeviceClass):
                 dev.debug_stream("Details: " + traceback.format_exc())
         #----- PROTECTED REGION ID(Detector.dyn_attr) ENABLED START -----#
 
-                #----- PROTECTED REGION END -----#	//	Detector.dyn_attr
+                #----- PROTECTED REGION END -----#  //  Detector.dyn_attr
 
     #    Class Properties
     class_property_list = {
