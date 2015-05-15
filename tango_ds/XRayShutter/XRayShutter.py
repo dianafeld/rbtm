@@ -80,11 +80,7 @@ class XRayShutter (PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         #----- PROTECTED REGION ID(XRayShutter.init_device) ENABLED START -----#
-        self.shutter = Shutter('COM7', 4)
-        if self.shutter.is_open():
-            self.set_state(PyTango.DevState.OPEN)
-        else:
-            self.set_state(PyTango.DevState.CLOSE)
+        self.set_state(PyTango.DevState.CLOSE)
 
         #----- PROTECTED REGION END -----#  //  XRayShutter.init_device
 
@@ -130,7 +126,6 @@ class XRayShutter (PyTango.Device_4Impl):
         
         time = argin
 
-        self.shutter.open()
         self.set_state(PyTango.DevState.OPEN)
 
         if time != 0:
@@ -150,7 +145,6 @@ class XRayShutter (PyTango.Device_4Impl):
 
         time = argin
 
-        self.shutter.close()
         self.set_state(PyTango.DevState.CLOSE)
 
         if time != 0:

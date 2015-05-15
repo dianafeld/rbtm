@@ -134,7 +134,6 @@ class Detector (PyTango.Device_4Impl):
 
         try:
             self.debug_stream("Creating link to detector driver...")
-            self.detector = xiApi.Detector()
             self.debug_stream("Link created")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -144,7 +143,6 @@ class Detector (PyTango.Device_4Impl):
             raise
 
         self.set_state(PyTango.DevState.ON)
-        self.attr_exposure_read = self._read_exposure()
 
         #----- PROTECTED REGION END -----#  //  Detector.init_device
 
@@ -170,8 +168,7 @@ class Detector (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(Detector.exposure_write) ENABLED START -----#
 
         new_exposure = data
-        self._write_exposure(new_exposure)
-        self.attr_exposure_read = self._read_exposure()
+        self.attr_exposure_read = new_exposure
 
         #----- PROTECTED REGION END -----#  //  Detector.exposure_write
         
@@ -209,11 +206,11 @@ class Detector (PyTango.Device_4Impl):
         is_run = Value("i", 1)
         p = Process(target=func, args=(is_run, ))
         p.start()
-        
 
         self.debug_stream("Starting acquisition...")
         try:
-            image = self.detector.get_image()
+            with open('Detector/DATA_14') as f:
+                image = f.read()
         except PyTango.DevFailed as df:
             self.set_state(PyTango.DevState.FAULT)
             self.error_stream(str(df))
@@ -229,9 +226,8 @@ class Detector (PyTango.Device_4Impl):
 
         self.set_state(prev_state)
 
-        
-        argout = str(image.tolist())
-        #print(argout)
+        argout = image
+        # print(argout)
 
         # ----- PROTECTED REGION END -----# //  Detector.GetFrame
         return argout

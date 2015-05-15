@@ -109,7 +109,7 @@ class Motor (PyTango.Device_4Impl):
     def delete_device(self):
         self.debug_stream("In delete_device()")
         #----- PROTECTED REGION ID(Motor.delete_device) ENABLED START -----#
-        self.angle_motor.close()
+
         #----- PROTECTED REGION END -----#  //  Motor.delete_device
 
     def init_device(self):
@@ -124,8 +124,7 @@ class Motor (PyTango.Device_4Impl):
 
         try:
             self.debug_stream("Creating link to motor drivers...")
-            self.angle_motor = ximc.Motor("COM5")
-            self.horizontal_motor = ximc.Motor("COM3")
+
             self.debug_stream("Links were created")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -133,16 +132,6 @@ class Motor (PyTango.Device_4Impl):
         except Exception as e:
             self.error_stream(str(e))
             raise
-
-        self.angle_motor.open()
-        self.angle_motor.set_move_settings(500, 500)
-        steps = self._read_position(self.angle_motor)
-        self.attr_angle_position_read = steps
-
-        self.horizontal_motor.open()
-        self.horizontal_motor.set_move_settings(500, 500)
-        steps = self._read_position(self.horizontal_motor)
-        self.attr_horizontal_position_read = steps
 
         self.set_state(PyTango.DevState.ON)
 
@@ -163,7 +152,6 @@ class Motor (PyTango.Device_4Impl):
         self.debug_stream("In read_angle_position()")
         #----- PROTECTED REGION ID(Motor.angle_position_read) ENABLED START -----#
 
-        self.attr_angle_position_read = self._read_position(self.angle_motor) * 360. / 32300
         attr.set_value(self.attr_angle_position_read)
 
         #----- PROTECTED REGION END -----#  //  Motor.angle_position_read
@@ -174,8 +162,7 @@ class Motor (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(Motor.angle_position_write) ENABLED START -----#
 
         angle = data
-        steps = int(angle * 32300 / 360.)
-        self._write_position(self.angle_motor, steps)
+        self.attr_angle_position_read = angle
 
         #----- PROTECTED REGION END -----#  //  Motor.angle_position_write 
         
@@ -216,7 +203,6 @@ class Motor (PyTango.Device_4Impl):
         self.debug_stream("In read_horizontal_position()")
         #----- PROTECTED REGION ID(Motor.horizontal_position_read) ENABLED START -----#
 
-        self.attr_horizontal_position_read = self._read_position(self.horizontal_motor)
         attr.set_value(self.attr_horizontal_position_read)
 
         #----- PROTECTED REGION END -----#  //  Motor.horizontal_position_read
@@ -227,7 +213,7 @@ class Motor (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(Motor.horizontal_position_write) ENABLED START -----#
 
         steps = data
-        self._write_position(self.horizontal_motor, steps)
+        self.attr_horizontal_position_read = steps
 
         #----- PROTECTED REGION END -----#  //  Motor.horizontal_position_write
         
@@ -266,7 +252,7 @@ class Motor (PyTango.Device_4Impl):
         self.debug_stream("In ResetAnglePosition()")
         #----- PROTECTED REGION ID(Motor.ResetAnglePosition) ENABLED START -----#
         self.debug_stream("Setting current angle position as new zero")
-        self.angle_motor.set_zero()
+        self.attr_angle_position_read = 0
         self.debug_stream("New zero has been set")
         #----- PROTECTED REGION END -----#  //  Motor.ResetAnglePosition
         
