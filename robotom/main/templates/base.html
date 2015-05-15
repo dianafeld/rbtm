@@ -4,24 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ caption }}</title>
-    
+
     {% load staticfiles %}
     <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
 	<link rel="stylesheet" href="{% static 'base_styles.css' %}">
 
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="//blueimp.github.io/Gallery/css/blueimp-gallery.min.css">
-    <link rel="stylesheet" href="{% static 'storage/css/bootstrap-image-gallery.min.css' %}">
+{#    <link rel="stylesheet" href="//blueimp.github.io/Gallery/css/blueimp-gallery.min.css">#}
+{#    <link rel="stylesheet" href="{% static 'storage/css/bootstrap-image-gallery.min.css' %}">#}
 	
     <!--magic links-->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="{% static 'bootstrap/js/bootstrap.js' %}" type="text/javascript"></script>
+
 
 
 </head>
 <body>
 
-<nav class="navbar navbar-default navbar-fixed-top navbar-inverse">
+<nav class="navbar-default navbar-fixed-top navbar-inverse">
     <div class="container-fluid">
 
         <div class="navbar-header">

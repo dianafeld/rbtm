@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+<link rel="stylesheet" href="{% static 'storage/styles.css' %}">
+
+{% block content %}
+    <div class="page-header" style="margin-left: 10px">
+        <h1>Запись хранилища номер {{ record_id }}</h1>
+    </div>
+    {% if messages %}
+        <div class="row">
+            {% for message in messages %}
+            <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+                <div class="alert alert-{% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
+                    <a class="close" data-dismiss="alert" href="{% url 'storage:index' %}">&times;</a>
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% if to_show %}
+        <div class="container">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered">
+                            <thead>
+                            <tr>
+                                <th rowspan="2" style="vertical-align: middle">Образец</th>
+                                <th rowspan="2" style="vertical-align: middle">Закончен</th>
+                                <th rowspan="2" style="vertical-align: middle">Advanced</th>
+                                <th colspan="4" style="text-align: center">DATA</th>
+                                <th colspan="2" style="text-align: center">EMPTY</th>
+                                <th colspan="2" style="text-align: center">DARK</th>
+                            </tr>
+                            <tr>
+                                <th>Angle Step</th>
+                                <th>Count per step</th>
+                                <th>Step Count</th>
+                                <th>Exposure</th>
+                                <th>Сount</th>
+                                <th>Exposure</th>
+                                <th>Count</th>
+                                <th>Exposure</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ info.specimen }}</td>
+                                    <td>{{ info.finished }}</td>
+                                    <td>{{ info.advanced }}</td>
+                                    <td>{{ info.data_angle_step }}</td>
+                                    <td>{{ info.data_count_per_step }}</td>
+                                    <td>{{ info.data_step_count }}</td>
+                                    <td>{{ info.data_exposure }}</td>
+                                    <td>{{ info.empty_count }}</td>
+                                    <td>{{ info.empty_exposure }}</td>
+                                    <td>{{ info.dark_count }}</td>
+                                    <td>{{ info.dark_exposure }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a class="btn btn-default" data-toggle="modal" href="#myModalBox">КНОПКА</a>
+
+        <div id="myModalBox" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                <!-- Заголовок модального окна -->
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title">Подтверждение</h4>
+                    </div>
+                <!-- Основной текст сообщения -->
+                <div class="modal-body">
+                    <p>Вы хотите сохранить изменения, сделанные в документе перед закрытием?</p>
+                    <p class="text-warning"><small>Если Вы не сохраните, изменения будут потеряны.</small></p>
+                </div>
+                <!-- Нижняя часть модального окна -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                    <button type="button" class="btn btn-primary">Сохранить изменения</button>
+                 </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid" style="margin-top: 30px">
+            <!-- images -->
+            <div id="links" class="row">
+                {% for image_id in image_range %}
+                    <div class="col-xs-4">
+                        {% load static %}
+                        {% static "" as base_url %}
+                        <a href="{{ base_url }}storage/{{ image_id }}.png"
+                           data-description="image {{ image_id }} description"
+                           title="Image {{ image_id }}" class="thumbnail">
+                            <img src="{{ base_url }}storage/{{ image_id }}.png" alt="Image {{ image_id }}"/>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+{% endblock content %}

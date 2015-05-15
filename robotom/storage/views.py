@@ -164,7 +164,7 @@ def storage_view(request):
                 messages.error(request, u'Не удается найти эксперименты. Код ошибки: {}'.format(answer.status_code))
         except Timeout as e:
             rest_logger.error(u'Не удается найти эксперименты. Ошибка: {}'.format(e.message))
-            messages.success(request, u'Не удается найти эксперименты. Сервер хранилища не отвечает. Попробуйте позже.')
+            messages.error(request, u'Не удается найти эксперименты. Сервер хранилища не отвечает. Попробуйте позже.')
 
     return render(request, 'storage/storage_index.html', {
         'caption': 'Хранилище',
@@ -179,43 +179,43 @@ def storage_record_view(request, storage_record_id):
     # TODO
     record = {}
     to_show = True
-    try:
-        info = json.dumps({"experiment id": storage_record_id})
-        experiment = requests.post(STORAGE_EXPERIMENTS_HOST, info, timeout=1)
-        if experiment.status_code == 200:
-            experiment_info = json.loads(experiment.content)
-            rest_logger.debug(u'Страница записи: Данные эксперимента: {}'.format(experiment_info))
-            if len(experiment_info) == 0:
-                messages.error(request, u'Эксперимент с данным идентификатором не найден')
-                to_show = False
-            else:
-                record = ExperimentRecord(experiment_info[0])
-        else:
-            rest_logger.error(u'Не удается получить эксперимент. Ошибка: {}'.format(experiment.status_code))
-            messages.error(request, u'Не удается получить эксперимент. Ошибка: {}')
-            to_show = False
-    except Timeout as e:
-        rest_logger.error(u'Не удается получить эксперимент. Ошибка: {}'.format(e.message))
-        messages.error(request, u'Не удается получить эксперимент. Сервер хранилища не отвечает. Попробуйте позже.')
-        to_show = False
+    # try:
+    #     info = json.dumps({"experiment id": storage_record_id})
+    #     experiment = requests.post(STORAGE_EXPERIMENTS_HOST, info, timeout=1)
+    #     if experiment.status_code == 200:
+    #         experiment_info = json.loads(experiment.content)
+    #         rest_logger.debug(u'Страница записи: Данные эксперимента: {}'.format(experiment_info))
+    #         if len(experiment_info) == 0:
+    #             messages.error(request, u'Эксперимент с данным идентификатором не найден')
+    #             to_show = False
+    #         else:
+    #             record = ExperimentRecord(experiment_info[0])
+    #     else:
+    #         rest_logger.error(u'Не удается получить эксперимент. Ошибка: {}'.format(experiment.status_code))
+    #         messages.error(request, u'Не удается получить эксперимент. Ошибка: {}')
+    #         to_show = False
+    # except Timeout as e:
+    #     rest_logger.error(u'Не удается получить эксперимент. Ошибка: {}'.format(e.message))
+    #     messages.error(request, u'Не удается получить эксперимент. Сервер хранилища не отвечает. Попробуйте позже.')
+    #     to_show = False
+    #
+    # try:
+    #     info = json.dumps({"experiment id": storage_record_id})
+    #     frames = requests.post(STORAGE_FRAMES_INFO_HOST, info, timeout=1)
+    #     if frames.status_code == 200:
+    #         frames_info = json.loads(frames.content)
+    #         rest_logger.debug(u'Страница записи: Список изображений: {}'.format(frames_info))
+    #     else:
+    #         rest_logger.error(u'Не удается получить список изображений. Ошибка: {}'.format(frames.status_code))
+    #         messages.error(request, u'Не удается получить список изображений. Ошибка: {}'.format(frames.status_code))
+    #         to_show = False
+    # except Timeout as e:
+    #     rest_logger.error(u'Не удается получить список изображений. Ошибка: {}'.format(e.message))
+    #     messages.error(request,
+    #                    u'Не удается получить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
+    #     to_show = False
 
-    try:
-        info = json.dumps({"experiment id": storage_record_id})
-        frames = requests.post(STORAGE_FRAMES_INFO_HOST, info, timeout=1)
-        if frames.status_code == 200:
-            frames_info = json.loads(frames.content)
-            rest_logger.debug(u'Страница записи: Список изображений: {}'.format(frames_info))
-        else:
-            rest_logger.error(u'Не удается получить список изображений. Ошибка: {}'.format(frames.status_code))
-            messages.error(request, u'Не удается получить список изображений. Ошибка: {}'.format(frames.status_code))
-            to_show = False
-    except Timeout as e:
-        rest_logger.error(u'Не удается получить список изображений. Ошибка: {}'.format(e.message))
-        messages.error(request,
-                       u'Не удается получить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
-        to_show = False
-
-    return render(request, 'storage/storage_record.html', {
+    return render(request, 'storage/storage_record_new.html', {
         "record_id": storage_record_id,
         'caption': 'Запись хранилища номер ' + str(storage_record_id),
         'image_range': xrange(1, 5),  # TODO
