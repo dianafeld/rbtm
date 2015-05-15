@@ -35,26 +35,6 @@ class ExperimentRecord:
         self.empty_count = record['experiment parameters']['EMPTY']['count']
         self.empty_exposure = record['experiment parameters']['EMPTY']['exposure']
 
-
-def create_pages(request, results, page):
-    record_list = [ExperimentRecord(result) for result in results]
-
-    for i in xrange(2):
-        record_list += record_list
-    pagin = Paginator(record_list, 1500)
-
-    try:
-        records = pagin.page(page)
-    except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
-        records = pagin.page(1)
-    except EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
-        records = pagin.page(pagin.num_pages)
-
-    return records
-
-
 def make_info(post_args):
     for arg in post_args:
         rest_logger.debug(u'PostArgs: {} {}'.format(arg, post_args[arg]))
@@ -135,16 +115,12 @@ def make_info(post_args):
 
 
 def storage_view(request):
-    # TODO паджинация
-
-    page = request.GET.get('page')
     records = []
     num_pages = 0
     to_show = False
 
     if request.method == "GET":
-        if page is not None:
-            to_show = True
+        pass
     elif request.method == "POST":
         info = make_info(request.POST)
         try:
@@ -152,13 +128,12 @@ def storage_view(request):
             if answer.status_code == 200:
                 experiments = json.loads(answer.content)
                 rest_logger.debug(u'Найденные эксперименты: {}'.format(experiments))
-                page = 1
-                records = create_pages(request, experiments, page)
+                records = [ExperimentRecord(result) for result in experiments]
                 if len(records) == 0:
                     messages.error(request, u'Не найдено ни одной записи')
                 else:
                     to_show = True
-                num_pages = len(experiments) / 15
+                num_pages = len(records) / 8
             else:
                 rest_logger.error(u'Не удается найти эксперименты. Код ошибки: {}'.format(answer.status_code))
                 messages.error(request, u'Не удается найти эксперименты. Код ошибки: {}'.format(answer.status_code))
@@ -170,8 +145,7 @@ def storage_view(request):
         'caption': 'Хранилище',
         'record_range': records,
         'toShowResult': to_show,
-        'pages': xrange(1, num_pages + 1),
-        'current_page': page,
+        'pages': range(1, num_pages + 2),
     })
 
 

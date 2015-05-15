@@ -20,10 +20,10 @@ class StorageIndexTest(TestCase):
 
     def test_search_response(self):
         response = self.client.post('/storage/',
-                                    {'Specimen': '', 'DarkFromCount': '', 'DarkToCount': '', 'DarkFromExposure': '', 'DarkToExposure': '', 'EmptyFromCount': '',
-                                     'EmptyToCount': '', 'EmptyFromExposure': '', 'EmptyToExposure': '', 'Finished': '', 'Advanced': '',
-                                     'DataFromExposure': '', 'DataToExposure': '', 'DataFromAngleStep': '', 'DataToAngleStep': '', 'DataFromCountPerStep': '',
+                                    {'Specimen': '', 'DarkFromCount': '', 'DarkToCount': '', 'DarkFromExposure': '',
+                                     'DarkToExposure': '', 'EmptyFromCount': '', 'EmptyToCount': '',
+                                     'EmptyFromExposure': '', 'EmptyToExposure': '', 'Finished': '',
+                                     'Advanced': '', 'DataFromExposure': '', 'DataToExposure': '',
+                                     'DataFromAngleStep': '', 'DataToAngleStep': '', 'DataFromCountPerStep': '',
                                      'DataToCountPerStep': '', 'DataFromStepCount': '', 'DataToStepCount': ''})
         self.assertEqual(response.status_code, 200)
-        if response.context['has_message']:
-            self.assertEqual(response.context['toShowResult'], False)
