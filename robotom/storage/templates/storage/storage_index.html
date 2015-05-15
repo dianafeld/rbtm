@@ -247,41 +247,35 @@
                 </div>
                 <div class="panel-footer">
                     <ul class="pagination">
-                        {% if record_range.has_previous %}
-                            <li><a href="?page={{ record_range.previous_page_number }}#">
-                                <span class="glyphicon glyphicon-chevron-left"></span>
-                            </a></li>
-                        {% else %}
-                            <li class="disabled"><a href="#">
-                                <span class="glyphicon glyphicon-chevron-left"></span>
-                            </a></li>
-                        {% endif %}
+{#                        {% if record_range.has_previous %}#}
+{#                            <li><a href="?page={{ record_range.previous_page_number }}#">#}
+{#                                <span class="glyphicon glyphicon-chevron-left"></span>#}
+{#                            </a></li>#}
+{#                        {% else %}#}
+{#                            <li class="disabled"><a href="#">#}
+{#                                <span class="glyphicon glyphicon-chevron-left"></span>#}
+{#                            </a></li>#}
+{#                        {% endif %}#}
                         {% for page_id in pages %}
-                            <li><a href="?page={{ page_id }}#">{{ page_id }}</a></li>
+                            <li {% if page_id == 1 %}class="active"{% endif %}><a href="#">{{ page_id }}</a></li>
                         {% endfor %}
-                        {% if record_range.has_next %}
-                            <li><a href="?page={{ record_range.next_page_number }}#">
-                                <span class="glyphicon glyphicon-chevron-right"></span>
-                            </a></li>
-                        {% else %}
-                            <li class="disabled"><a href="#">
-                                <span class="glyphicon glyphicon-chevron-right"></span>
-                            </a></li>
-                        {% endif %}
+{#                        {% if record_range.has_next %}#}
+{#                            <li><a href="?page={{ record_range.next_page_number }}#">#}
+{#                                <span class="glyphicon glyphicon-chevron-right"></span>#}
+{#                            </a></li>#}
+{#                        {% else %}#}
+{#                            <li class="disabled"><a href="#">#}
+{#                                <span class="glyphicon glyphicon-chevron-right"></span>#}
+{#                            </a></li>#}
+{#                        {% endif %}#}
                     </ul>
-                    <ol id="pagin">
-                        <li><a class="current" href="#">1</a></li>
-                        <li><a href="#">2</a></li>
-                        <li><a href="#">3</a></li>
-                        <li><a href="#">4</a></li>
-                    </ol>
                 </div>
             </div>
         </div>
     {% endif %}
 
     <script type="text/javascript">
-        pageSize = 3;
+        pageSize = 8;
 
         showPage = function(page) {
             var divs = $( ".paginated-content" );
@@ -294,9 +288,9 @@
 
         showPage(1);
 
-        $("#pagin").find("li").find("a").click(function() {
-            $("#pagin").find("li").find("a").removeClass("current");
-            $(this).addClass("current");
+        $(".pagination").find("li").find("a").click(function() {
+            $(".pagination").find("li").removeClass("active");
+            $(this).parent().addClass("active");
             showPage(parseInt($(this).text()))
         });
     </script>
