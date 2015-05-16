@@ -223,14 +223,6 @@ class XRaySource (PyTango.Device_4Impl):
 
         #----- PROTECTED REGION END -----#  //  XRaySource.On
         
-    def is_On_allowed(self):
-        self.debug_stream("In is_On_allowed()")
-        state_ok = not(self.get_state() in [PyTango.DevState.FAULT])
-        # ----- PROTECTED REGION ID(XRaySource.is_On_allowed) ENABLED START -----#
-
-        #----- PROTECTED REGION END -----#  //  XRaySource.is_On_allowed
-        return state_ok
-        
 
 class XRaySourceClass(PyTango.DeviceClass):
     #--------- Add you global class variables here --------------------------
