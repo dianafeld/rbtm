@@ -16,14 +16,6 @@
                         </div>
                         <div class="row" style="margin-top: 5px">
                             <div class="col-xs-2">
-                                <label for="SinceDate" class="control-label">С даты</label>
-                                <input type="date" class="form-control" id="SinceDate" name="SinceDate">
-                            </div>
-                            <div class="col-xs-2">
-                                <label for="ToDate" class="control-label">До даты</label>
-                                <input type="date" class="form-control" id="ToDate" name="ToDate">
-                            </div>
-                            <div class="col-xs-2">
                                 <label for="Finished">Завершен</label>
                                 <select class="form-control" id="Finished" name="Finished">
                                     <option></option>
@@ -187,9 +179,16 @@
         </div>
     </div>
 
-    {% if has_message %}
-        <div class="container">
-            <div class="alert alert-danger">{{ message }}</div>
+    {% if messages %}
+        <div class="row">
+            {% for message in messages %}
+            <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+                <div class="alert alert-{% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
+                    <a class="close" data-dismiss="alert" href="{% url 'storage:index' %}">&times;</a>
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
         </div>
     {% endif %}
 
@@ -225,7 +224,7 @@
                             </thead>
                             <tbody>
                             {% for record in record_range %}
-                                <tr>
+                                <tr class="paginated-content">
                                     <td>{{ record.specimen }}</td>
                                     <td>{{ record.finished }}</td>
                                     <td>{{ record.advanced }}</td>
@@ -248,36 +247,52 @@
                 </div>
                 <div class="panel-footer">
                     <ul class="pagination">
-                        {% if record_range.has_previous %}
-                            <li><a href="?page={{ record_range.previous_page_number }}#">
-                                <span class="glyphicon glyphicon-chevron-left"></span>
-                            </a></li>
-                        {% else %}
-                            <li class="disabled"><a href="#">
-                                <span class="glyphicon glyphicon-chevron-left"></span>
-                            </a></li>
-                        {% endif %}
+{#                        {% if record_range.has_previous %}#}
+{#                            <li><a href="?page={{ record_range.previous_page_number }}#">#}
+{#                                <span class="glyphicon glyphicon-chevron-left"></span>#}
+{#                            </a></li>#}
+{#                        {% else %}#}
+{#                            <li class="disabled"><a href="#">#}
+{#                                <span class="glyphicon glyphicon-chevron-left"></span>#}
+{#                            </a></li>#}
+{#                        {% endif %}#}
                         {% for page_id in pages %}
-                            <li><a href="?page={{ page_id }}#">{{ page_id }}</a></li>
+                            <li {% if page_id == 1 %}class="active"{% endif %}><a href="#">{{ page_id }}</a></li>
                         {% endfor %}
-                        {% if record_range.has_next %}
-                            <li><a href="?page={{ record_range.next_page_number }}#">
-                                <span class="glyphicon glyphicon-chevron-right"></span>
-                            </a></li>
-                        {% else %}
-                            <li class="disabled"><a href="#">
-                                <span class="glyphicon glyphicon-chevron-right"></span>
-                            </a></li>
-                        {% endif %}
+{#                        {% if record_range.has_next %}#}
+{#                            <li><a href="?page={{ record_range.next_page_number }}#">#}
+{#                                <span class="glyphicon glyphicon-chevron-right"></span>#}
+{#                            </a></li>#}
+{#                        {% else %}#}
+{#                            <li class="disabled"><a href="#">#}
+{#                                <span class="glyphicon glyphicon-chevron-right"></span>#}
+{#                            </a></li>#}
+{#                        {% endif %}#}
                     </ul>
                 </div>
             </div>
         </div>
-    {% else %}
-        {% if toShowResult and record_number == 0 %}
-            <div class="container">
-                <div class="alert alert-danger">Не найдено ни одной записи</div>
-            </div>
-        {% endif %}
     {% endif %}
+
+    <script type="text/javascript">
+        pageSize = 8;
+
+        showPage = function(page) {
+            var divs = $( ".paginated-content" );
+            divs.hide();
+            divs.each(function(n) {
+                if (n >= pageSize * (page - 1) && n < pageSize * page)
+                    $(this).show();
+            });
+        };
+
+        showPage(1);
+
+        $(".pagination").find("li").find("a").click(function() {
+            $(".pagination").find("li").removeClass("active");
+            $(this).parent().addClass("active");
+            showPage(parseInt($(this).text()))
+        });
+    </script>
+
 {% endblock content %}

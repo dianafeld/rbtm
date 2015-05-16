@@ -25,13 +25,13 @@
 {% endif %}
 		<br><h3>Заполните все поля для начала эксперимента</h3>
 	</body>
-		<form name = "manual" method="POST" action="send_parameters" class="form">
+		<form name = "manual" method="POST" >
 			{% csrf_token %} 
 			<h3>Параметры образца<br></h3>
 			Название:<br>
-			<input type = "text" name = "name" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
+			<input type = "text" name = "name" size = "30", maxsize = "50" ><br>
 			Теги:<br>
-			<input type = "text" name = "type" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
+			<input type = "text" name = "type" size = "30", maxsize = "50" ><br>
 			<h3>Кадры DARK<br></h3>
 			Количество:<br>
 			<input type = "text" name = "dark_quantity" size = "30", maxsize = "50" pattern="^[ 0-9]+$"><br>
@@ -44,16 +44,16 @@
 			<input type = "text" name = "empty_exposure" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
 			<h3>DATA shots:<br></h3>
 			Количество:<br>
-			<input type = "text" name = "data_quantity" size = "30", maxsize = "50" pattern="^[ 0-9]+$"><br>
+			<input type = "text" name = "data_shots_quantity" size = "30", maxsize = "50" pattern="^[ 0-9]+$"><br>
 			Экспозиция, мс:<br>
-			<input type = "text" name = "data_exposure" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
+			<input type = "text" name = "data_shots_exposure" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
 			Угловой шаг между кадрами, градусы:<br>
 			<input type = "text" name = "data_angle" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
 			Количество кадров снятых при одном угле поворота кадров DATA:<br>
 			<input type = "text" name = "data_same" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
 			<br>
 			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-				<input type="submit" name="parameters" value = "Начать эксперимент 1">
+				<input type="submit" name="parameters" value = "Начать эксперимент">
 			{% else %}
 				<input type="submit" name="parameters_adm" value = "Начать эксперимент"disabled>
 			{% endif %}
@@ -63,9 +63,18 @@
 			<h3>Выбрать настройки из файла:<br></h3>
 			<input type = "file" name = "load" size = "50">
 			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-				<input type="submit" name="load" value = "Начать эксперимент"><br>
+				<br><input type="submit" name="load" value = "Начать эксперимент"><br>
 			{% else %}
-				<input type="submit" name="load" value = "Начать эксперимент"disabled><br>
+				<br><input type="submit" name="load" value = "Начать эксперимент"disabled><br>
+
+			{% endif %}
+		</form>
+		<form name = "file" method="POST" action="" class="form">
+		{% csrf_token %} 
+			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+				<br><input type="submit" name="turn_down" value = "Закончить эксперимент"><br>
+			{% else %}
+				<br><input type="submit" name="turn_down_adm" value = "Закончить эксперимент"disabled><br>
 
 			{% endif %}
 		</form>
