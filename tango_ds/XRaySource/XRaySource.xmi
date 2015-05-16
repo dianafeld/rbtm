@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ASCII"?>
 <pogoDsl:PogoSystem xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:pogoDsl="http://www.esrf.fr/tango/pogo/PogoDsl">
   <classes name="XRaySource" pogoRevision="8.1">
-    <description description="It is a class for XRay sourse, which is used for setting operating mode (voltage)" title="XRaySource" sourcePath="C:\Users\tomo\workspace\rbtm-drivers\tango_ds\XRaySource" language="Python" filestogenerate="XMI   file,Code files" license="GPL" hasMandatoryProperty="false" hasConcreteProperty="false" hasAbstractCommand="false" hasAbstractAttribute="false">
+    <description description="It is a class for XRay sourse, which is used for setting operating mode (voltage)" title="XRaySource" sourcePath="/home/itsnotme/rbtm-drivers/tango_ds/XRaySource" language="Python" filestogenerate="XMI   file,Code files" license="GPL" hasMandatoryProperty="false" hasConcreteProperty="false" hasAbstractCommand="false" hasAbstractAttribute="false">
       <inheritances classname="Device_Impl" sourcePath=""/>
       <identification contact="at gmail.com - mariya.ryabova" author="mariya.ryabova" emailDomain="gmail.com" classFamily="Miscellaneous" siteSpecific="" platform="All Platforms" bus="Not Applicable" manufacturer="none" reference=""/>
     </description>
@@ -40,7 +40,6 @@
         <type xsi:type="pogoDsl:VoidType"/>
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-      <excludedStates>FAULT</excludedStates>
     </commands>
     <attributes name="voltage" attType="Scalar" rwType="READ_WRITE" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="true" isDynamic="false">
       <dataType xsi:type="pogoDsl:DoubleType"/>
@@ -48,8 +47,7 @@
       <archiveEvent fire="false" libCheckCriteria="false"/>
       <dataReadyEvent fire="false" libCheckCriteria="true"/>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-      <properties description="voltage of the X-Ray source" label="voltage" unit="kV" standardUnit="10E+3" displayUnit="" format="" maxValue="60" minValue="2" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
-      <writeExcludedStates>OFF</writeExcludedStates>
+      <properties description="voltage of the X-Ray source" label="voltage" unit="kV" standardUnit="10E+3" displayUnit="" format="%3.1f" maxValue="60" minValue="2" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
     </attributes>
     <attributes name="current" attType="Scalar" rwType="READ_WRITE" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="true" isDynamic="false">
       <dataType xsi:type="pogoDsl:DoubleType"/>
@@ -57,8 +55,7 @@
       <archiveEvent fire="false" libCheckCriteria="false"/>
       <dataReadyEvent fire="false" libCheckCriteria="true"/>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-      <properties description="current of the X-Ray source" label="current" unit="mA" standardUnit="10E-3" displayUnit="" format="" maxValue="80" minValue="2" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
-      <writeExcludedStates>OFF</writeExcludedStates>
+      <properties description="current of the X-Ray source" label="current" unit="mA" standardUnit="10E-3" displayUnit="" format="%3.1f" maxValue="80" minValue="2" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
     </attributes>
     <states name="ON" description="The state in which the source is active">
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
@@ -72,6 +69,6 @@
     <states name="STANDBY" description="">
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </states>
-    <preferences docHome="./doc_html" makefileHome="/home/taurel/tmp/tango_install/share/pogo/preferences"/>
+    <preferences docHome="./doc_html" makefileHome="/usr/local/share/pogo/preferences"/>
   </classes>
 </pogoDsl:PogoSystem>

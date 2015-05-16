@@ -330,6 +330,7 @@ class MotorClass(PyTango.DeviceClass):
             PyTango.READ_WRITE],
             {
                 'label': "angle position",
+                'format': "%4.1f",
             } ],
         'vertical_position':
             [[PyTango.DevShort,
@@ -343,11 +344,12 @@ class MotorClass(PyTango.DeviceClass):
                 'min value': "0",
             } ],
         'horizontal_position':
-            [[PyTango.DevShort,
+            [[PyTango.DevLong,
             PyTango.SCALAR,
             PyTango.READ_WRITE],
             {
                 'label': "horizontal position",
+                'format': "%5d",
             } ],
         }
 

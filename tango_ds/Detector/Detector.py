@@ -290,6 +290,7 @@ class DetectorClass(PyTango.DeviceClass):
                 'label': "exposure time",
                 'unit': "0,1 ms",
                 'standard unit': "10E-4",
+                'format': "%6d",
                 'max value': "160000",
                 'min value': "1",
                 'description': "exposure time",

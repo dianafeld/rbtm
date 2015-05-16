@@ -8,7 +8,8 @@
 ### Run server
     
 ```sh
-$ tango_ds/run.sh
+$ cd tango_ds
+$ ./run.sh
 ```
   
 ### Stop server
@@ -16,7 +17,8 @@ $ tango_ds/run.sh
   **Warning:** stop script just kills all processes containing `python` substring in their name
   
 ```sh
-$ tango_ds/stop.sh
+$ cd tango_ds
+$ ./stop.sh
 ```
   
 ### Run tests

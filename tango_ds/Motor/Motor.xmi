@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ASCII"?>
 <pogoDsl:PogoSystem xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:pogoDsl="http://www.esrf.fr/tango/pogo/PogoDsl">
   <classes name="Motor" pogoRevision="8.1">
-    <description description="Class for motors and its commands&#xA;&#xA;http://sourceforge.net/p/tango-ds/code/HEAD/tree/DeviceClasses/Simulators/SimuMotor/trunk/src/SimuMotor.py&#xA;http://sourceforge.net/p/tango-ds/code/HEAD/tree/DeviceClasses/Simulators/SimMotor/trunk/SimMotor.cpp" title="Motor" sourcePath="C:\Users\tomo\workspace\rbtm-drivers\tango_ds\Motor" language="Python" filestogenerate="XMI   file,Code files" license="GPL" hasMandatoryProperty="false" hasConcreteProperty="false" hasAbstractCommand="false" hasAbstractAttribute="false">
+    <description description="Class for motors and its commands&#xA;&#xA;http://sourceforge.net/p/tango-ds/code/HEAD/tree/DeviceClasses/Simulators/SimuMotor/trunk/src/SimuMotor.py&#xA;http://sourceforge.net/p/tango-ds/code/HEAD/tree/DeviceClasses/Simulators/SimMotor/trunk/SimMotor.cpp" title="Motor" sourcePath="/home/itsnotme/rbtm-drivers/tango_ds/Motor" language="Python" filestogenerate="XMI   file,Code files" license="GPL" hasMandatoryProperty="false" hasConcreteProperty="false" hasAbstractCommand="false" hasAbstractAttribute="false">
       <inheritances classname="Device_Impl" sourcePath=""/>
       <identification contact="at gmail.com - mariya.ryabova" author="mariya.ryabova" emailDomain="gmail.com" classFamily="Miscellaneous" siteSpecific="" platform="All Platforms" bus="Not Applicable" manufacturer="none" reference=""/>
     </description>
@@ -39,7 +39,7 @@
       <archiveEvent fire="false" libCheckCriteria="false"/>
       <dataReadyEvent fire="false" libCheckCriteria="true"/>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-      <properties description="" label="angle position" unit="" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+      <properties description="" label="angle position" unit="" standardUnit="" displayUnit="" format="%4.1f" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
       <readExcludedStates>OFF</readExcludedStates>
       <writeExcludedStates>OFF</writeExcludedStates>
     </attributes>
@@ -54,12 +54,12 @@
       <writeExcludedStates>OFF</writeExcludedStates>
     </attributes>
     <attributes name="horizontal_position" attType="Scalar" rwType="READ_WRITE" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="true" isDynamic="false">
-      <dataType xsi:type="pogoDsl:ShortType"/>
+      <dataType xsi:type="pogoDsl:IntType"/>
       <changeEvent fire="false" libCheckCriteria="false"/>
       <archiveEvent fire="false" libCheckCriteria="false"/>
       <dataReadyEvent fire="false" libCheckCriteria="true"/>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
-      <properties description="" label="horizontal position" unit="" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
+      <properties description="" label="horizontal position" unit="" standardUnit="" displayUnit="" format="%5d" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
       <readExcludedStates>OFF</readExcludedStates>
       <writeExcludedStates>OFF</writeExcludedStates>
     </attributes>
@@ -72,6 +72,6 @@
     <states name="MOVING" description="The motor is moving">
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </states>
-    <preferences docHome="./doc_html" makefileHome="/home/taurel/tmp/tango_install/share/pogo/preferences"/>
+    <preferences docHome="./doc_html" makefileHome="/usr/local/share/pogo/preferences"/>
   </classes>
 </pogoDsl:PogoSystem>

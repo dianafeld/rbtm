@@ -551,6 +551,7 @@ class TomographClass(PyTango.DeviceClass):
             PyTango.READ_WRITE],
             {
                 'unit': "kV",
+                'format': "%3.1f",
             } ],
         'xraysource_current':
             [[PyTango.DevDouble,
@@ -558,15 +559,22 @@ class TomographClass(PyTango.DeviceClass):
             PyTango.READ_WRITE],
             {
                 'unit': "mA",
+                'format': "%3.1f",
             } ],
         'angle_position':
             [[PyTango.DevDouble,
             PyTango.SCALAR,
-            PyTango.READ_WRITE]],
+            PyTango.READ_WRITE],
+            {
+                'format': "%4.1f",
+            } ],
         'horizontal_position':
             [[PyTango.DevLong,
             PyTango.SCALAR,
-            PyTango.READ_WRITE]],
+            PyTango.READ_WRITE],
+            {
+                'format': "%5d",
+            } ],
         'vertical_position':
             [[PyTango.DevLong,
             PyTango.SCALAR,

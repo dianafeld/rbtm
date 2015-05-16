@@ -261,14 +261,6 @@ class XRaySource (PyTango.Device_4Impl):
 
         #----- PROTECTED REGION END -----#  //  XRaySource.On
         
-    def is_On_allowed(self):
-        self.debug_stream("In is_On_allowed()")
-        state_ok = not(self.get_state() in [PyTango.DevState.FAULT])
-        # ----- PROTECTED REGION ID(XRaySource.is_On_allowed) ENABLED START -----#
-
-        #----- PROTECTED REGION END -----#  //  XRaySource.is_On_allowed
-        return state_ok
-        
 
 class XRaySourceClass(PyTango.DeviceClass):
     #--------- Add you global class variables here --------------------------
@@ -326,6 +318,7 @@ class XRaySourceClass(PyTango.DeviceClass):
                 'label': "voltage",
                 'unit': "kV",
                 'standard unit': "10E+3",
+                'format': "%3.1f",
                 'max value': "60",
                 'min value': "2",
                 'description': "voltage of the X-Ray source",
@@ -338,6 +331,7 @@ class XRaySourceClass(PyTango.DeviceClass):
                 'label': "current",
                 'unit': "mA",
                 'standard unit': "10E-3",
+                'format': "%3.1f",
                 'max value': "80",
                 'min value': "2",
                 'description': "current of the X-Ray source",
