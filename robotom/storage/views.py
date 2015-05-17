@@ -165,6 +165,9 @@ def storage_view(request):
         except Timeout as e:
             rest_logger.error(u'Не удается найти эксперименты. Ошибка: {}'.format(e.message))
             messages.error(request, u'Не удается найти эксперименты. Сервер хранилища не отвечает. Попробуйте позже.')
+        except BaseException as e:
+            rest_logger.error(u'Не удается найти эксперименты. Ошибка: {}'.format(e.message))
+            messages.error(request, u'Не удается найти эксперименты. Сервер хранилища не отвечает. Попробуйте позже.')
 
     return render(request, 'storage/storage_index.html', {
         'caption': 'Хранилище',
@@ -174,14 +177,50 @@ def storage_view(request):
         'current_page': page,
     })
 
+class FrameRecord:
+    def __init__(self, frame):
+        self.num = ""
+        self.type = ""
+        self.date_time = ""
+        self.detector_model = ""
+        self.exposure = ""
+        self.shutter_open = ""
+        self.angle_position = ""
+        self.current = ""
+        self.voltage = ""
+        if "num" in frame:
+            self.num = frame["num"]
+        if "type" in frame:
+            self.type = frame["type"]
+        if "frame" in frame:
+            if "image_data" in frame["frame"]:
+                if "datetime" in frame["frame"]["image_data"]:
+                    self.date_time = frame["frame"]["image_data"]["datetime"]
+                if "detector" in frame["frame"]["image_data"]:
+                    if "model" in frame["frame"]["image_data"]["detector"]:
+                        self.detector_model = frame["frame"]["image_data"]["detector"]["model"]
+                if "exposure" in frame["frame"]["image_data"]:
+                    self.exposure = frame["frame"]["image_data"]["exposure"]
+            if "shutter" in frame["frame"]:
+                if "open" in frame["frame"]["shutter"]:
+                    self.shutter_open = frame["frame"]["shutter"]["open"]
+            if "object" in frame["frame"]:
+                if "angle position" in frame["frame"]["object"]:
+                    self.angle_position = frame["frame"]["object"]["angle position"]
+            if "X-ray source" in frame["frame"]:
+                if "current" in frame["frame"]["X-ray source"]:
+                    self.current = frame["frame"]["X-ray source"]["current"]
+                if "voltage" in frame["frame"]["X-ray source"]:
+                    self.voltage = frame["frame"]["X-ray source"]["voltage"]
+
 
 def storage_record_view(request, storage_record_id):
     # TODO
     record = {}
     to_show = True
     # try:
-    #     info = json.dumps({"experiment id": storage_record_id})
-    #     experiment = requests.post(STORAGE_EXPERIMENTS_HOST, info, timeout=1)
+    #     exp_info = json.dumps({"experiment id": storage_record_id})
+    #     experiment = requests.post(STORAGE_EXPERIMENTS_HOST, exp_info, timeout=1)
     #     if experiment.status_code == 200:
     #         experiment_info = json.loads(experiment.content)
     #         rest_logger.debug(u'Страница записи: Данные эксперимента: {}'.format(experiment_info))
@@ -198,13 +237,21 @@ def storage_record_view(request, storage_record_id):
     #     rest_logger.error(u'Не удается получить эксперимент. Ошибка: {}'.format(e.message))
     #     messages.error(request, u'Не удается получить эксперимент. Сервер хранилища не отвечает. Попробуйте позже.')
     #     to_show = False
-    #
+    # except BaseException as e:
+    #     rest_logger.error(u'Не удается получить эксперимент. Ошибка: {}'.format(e.message))
+    #     messages.error(request, u'Не удается получить эксперимент. Сервер хранилища не отвечает. Попробуйте позже.')
+    #     to_show = False
+
+    frames_list = [FrameRecord({"num": i}) for i in xrange(4)]
     # try:
-    #     info = json.dumps({"experiment id": storage_record_id})
-    #     frames = requests.post(STORAGE_FRAMES_INFO_HOST, info, timeout=1)
+    #     # frame_info = json.dumps({"exp_id": storage_record_id, "num": 1})
+    #     frame_info = json.dumps({"exp_id": storage_record_id})
+    #     rest_logger.debug(u'Страница записи: {}'.format(frame_info))
+    #     frames = requests.post(STORAGE_FRAMES_INFO_HOST, frame_info, timeout=1)
     #     if frames.status_code == 200:
     #         frames_info = json.loads(frames.content)
     #         rest_logger.debug(u'Страница записи: Список изображений: {}'.format(frames_info))
+    #         frames_list = [FrameRecord(frame) for frame in frames_info]
     #     else:
     #         rest_logger.error(u'Не удается получить список изображений. Ошибка: {}'.format(frames.status_code))
     #         messages.error(request, u'Не удается получить список изображений. Ошибка: {}'.format(frames.status_code))
@@ -214,12 +261,17 @@ def storage_record_view(request, storage_record_id):
     #     messages.error(request,
     #                    u'Не удается получить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
     #     to_show = False
+    # except BaseException as e:
+    #     rest_logger.error(u'Не удается получить список изображений. Ошибка: {}'.format(e.message))
+    #     messages.error(request,
+    #                    u'Не удается получить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
+    #     to_show = False
 
     return render(request, 'storage/storage_record_new.html', {
         "record_id": storage_record_id,
         'caption': 'Запись хранилища номер ' + str(storage_record_id),
         'image_range': xrange(1, 5),  # TODO
-        'user': request.user,
         'to_show': to_show,
         'info': record,
+        'frames_list': frames_list,
     })

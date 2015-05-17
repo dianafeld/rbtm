@@ -71,12 +71,21 @@ USE_TZ = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/var/www/example.com/media/"
-MEDIA_ROOT = ''
+MEDIA_ROOT = (os.path.join(BASE_DIR, 'media'))
 
-# URL that handles the media served from MEDIA_ROOT. Make sure to use a
-# trailing slash.
-# Examples: "http://example.com/media/", "http://media.example.com/"
-MEDIA_URL = ''
+SENDFILE_ROOT = MEDIA_ROOT
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+    'django.contrib.auth.context_processors.auth',
+    'django.core.context_processors.debug',
+    'django.core.context_processors.i18n',
+    'django.core.context_processors.media',
+    'django.core.context_processors.static',
+    'django.core.context_processors.tz',
+    'django.contrib.messages.context_processors.messages',
+)
+
+SENDFILE_BACKEND = 'sendfile.backends.development'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
@@ -138,7 +147,7 @@ INSTALLED_APPS = (
     'registration',
     'bootstrap3',
     'rest_framework',
-    
+
     'main',
     'experiment',
     'storage',

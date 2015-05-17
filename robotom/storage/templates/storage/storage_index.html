@@ -8,14 +8,14 @@
                     <div class="control-group">
                         {% csrf_token %}
                         <div class="row">
-                            <div class="col-xs-4">
+                            <div class="col-xs-12 col-md-4">
                                 <label for="Specimen" style="font-size: x-large"><b>Образец</b></label>
                                 <input type="text" class="form-control" id="Specimen" name="Specimen"
                                        placeholder="Название образца">
                             </div>
                         </div>
                         <div class="row" style="margin-top: 5px">
-                            <div class="col-xs-2">
+                            <div class="col-xs-6 col-md-2">
                                 <label for="Finished">Завершен</label>
                                 <select class="form-control" id="Finished" name="Finished">
                                     <option></option>
@@ -23,7 +23,7 @@
                                     <option>Не завершен</option>
                                 </select>
                             </div>
-                            <div class="col-xs-2">
+                            <div class="col-xs-6 col-md-2">
                                 <label for="Advanced">Продвинутый</label>
                                 <select class="form-control" id="Advanced" name="Advanced">
                                     <option></option>
@@ -225,7 +225,7 @@
                             <tbody>
                             {% for record in record_range %}
                                 <tr class="paginated-content">
-                                    <td>{{ record.specimen }}</td>
+                                    <td >{{ record.specimen }}</td>
                                     <td>{{ record.finished }}</td>
                                     <td>{{ record.advanced }}</td>
                                     <td>{{ record.data_angle_step }}</td>
@@ -300,5 +300,4 @@
             showPage(parseInt($(this).text()))
         });
     </script>
-
 {% endblock content %}
