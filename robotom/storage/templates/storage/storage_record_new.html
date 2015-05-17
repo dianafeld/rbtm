@@ -149,9 +149,7 @@
         function set_image(clicked_id) {
             var img = document.createElement('img');
             img.className = "img-responsive";
-            {% load static %}
-            {% static "" as base_url %}
-            img.setAttribute('src', "{{ base_url }}storage/" + clicked_id + ".png");
+            img.setAttribute('src', "/media/" + clicked_id + ".png");
             var mod_body = document.getElementById('modal-body');
             mod_body.appendChild(img);
 

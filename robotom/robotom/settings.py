@@ -73,6 +73,8 @@ USE_TZ = True
 # Example: "/var/www/example.com/media/"
 MEDIA_ROOT = (os.path.join(BASE_DIR, 'media'))
 
+MEDIA_URL = '/media/'
+
 SENDFILE_ROOT = MEDIA_ROOT
 
 TEMPLATE_CONTEXT_PROCESSORS = (
