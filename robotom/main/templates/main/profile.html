@@ -4,8 +4,6 @@
 {% load bootstrap3 %}
 {% load staticfiles %}
 
-<link rel="stylesheet" href="{% static 'reg_styles.css' %}">
-
 {% if messages %}
 <div class="row">
     {% for message in messages %}
@@ -34,30 +32,68 @@
 {% endfor %}
     
 <div class="row">
-<div class="col-sm-10 col-sm-offset-1 col-md-8 col-md-offset-2 col-lg-6 col-lg-offset-3">
+<div class="col-sm-6 col-sm-offset-3">
 <div class="panel panel-primary">
 <div class="panel-heading">
-<h1 class="panel-title"><strong>Профиль пользователя</strong></h1> 
+<h1 class="panel-title"><strong>Профиль пользователя {{ user.username }}</strong></h1> 
 </div>
-<div class="panel-body">
-    <p>Ваша текущая роль: <strong>"{{ user.userprofile.get_role_display }}"</strong>.</p>
+<div class="panel-body" style="margin:15px">
+<p>Ваша текущая роль: <strong>&laquo;{{ user.userprofile.get_role_display }}&raquo;</strong>.</p>
     {% if user.userprofile.rolerequest.role = 'NONE' or not user.userprofile.rolerequest.role %}
     {% else %}
-    <p>Ваш запрос на присвоение роли <strong>"{{ user.userprofile.rolerequest.get_role_display }}"</strong> ещё не был рассмотрен администратором.</p>
+    <p>Ваш запрос на присвоение роли <strong>&laquo;{{ user.userprofile.rolerequest.get_role_display }}&raquo;</strong> ещё не был рассмотрен администратором.</p>
     {% endif %}
     <p>Вы можете <a href="{% url 'main:role_request' %}">послать новую заявку на изменение Вашей роли на сайте</a> или <a href="{% url 'password_change' %}">изменить пароль</a>.</p>
 
-    <form action="" method="post" class="form">    
+    {% if mode = 'view' %}
+    <form action="" method="post" class="form-horizontal" role="form"> 
+    {% csrf_token %}
+    <br>
+    {% for field in profile_form %}
+    <div class="form-group" style="padding-bottom:10px; border-bottom:1px solid LightGrey">
+    <label class="control-label col-sm-4" style="padding:0px; color:#4F4F4F">
+    {% if field.label|slice:"-1:" == '*' %}
+        {{ field.label|slice:":-2" }}:
+    {% else %}
+        {{ field.label }}:
+    {% endif %}
+    </label>
+    <div class="col-sm-6">
+    <p class="form-control-static" style="padding:0px">
+    {% if field.value %}
+        {% if field.name == 'gender' %}
+            {% if field.value == 'N' %}
+            <p style='color:grey; padding:0px'><i>Нет данных</i></p>
+            {% else %}
+                {{ user.userprofile.get_gender_display }}
+            {% endif %}
+        {% else %}
+            {{ field.value }}
+        {% endif %}
+    {% else %}
+    <p style='color:grey; padding:0px'><i>Нет данных</i></p>
+    {% endif %}
+    </p>
+    </div>
+    </div>
+    {% endfor %}
+    <br>
+    {% buttons %}
+    <div style="text-align:center">
+    <button type="submit" name="edit_profile" class="btn btn-success btn-lg">Изменить данные</button>
+    </div>
+    {% endbuttons %}
+    
+    {% else %}
+    <form action="" method="post" class="form"> 
     {% csrf_token %}
     {% bootstrap_form profile_form %}
-    {% buttons %}
-    {% if mode = 'view' %}
-    <button type="submit" name="edit_profile" class="btn btn-success btn-lg" style="margin-left: 15px">Изменить данные</button>
-    {% else %}
+    
+    {% buttons %}    
     <button type="submit" name="save_profile" class="btn btn-success" style="margin-left: 15px">Сохранить</button>
     <button type="submit" name="cancel" class="btn btn-default" style="margin-left: 15px">Отмена</button>
-    {% endif %}
     {% endbuttons %}
+    {% endif %}
     </form>
 </div>
 </div>  
