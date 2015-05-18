@@ -1,17 +1,5 @@
 {% extends "base.html" %}
-
 {% block content %}
-
-<html>
-
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Adjustment</title>
-</head>
-	<body>
-		<h1 align = "center">Юстировка</h1>
-		<hr noshade>
-		<body>
 		{% if messages %}
 		<div class="row">
 		{% for message in messages %}
@@ -22,42 +10,69 @@
 			</div>
 			{% endfor %}
 		</div>
-{% endif %}
-			<h3>Параметры юстировки</h3>
-			<form method="POST" action="">
-			{% csrf_token %}
-				<br>Напряжение, кВ<br>
-				<input type="text" required name="voltage" pattern="\d+(\.\d{2})?"><br>						
-				<br>Ток, мА<br>
-				<input type="text" required name="current" pattern="\d+(\.\d{2})?"><br>
-				{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-					<input type="submit" name="experiment_on" value="Отправить"><br>
-				{% else %}
-					<input type="submit" name="experiment_on_adm" value="Отправить"disabled><br>
-				{% endif %}
-			</form>
-			<br>
-			<form method="POST" action="">	
-			{% csrf_token %}					
-				Заслонка<br>
-				<input type = "text" required name = "text_gate" value = "" checked>
-				{% if user.is_authenticated and user.userprofile.role == 'EXP' %} 
-					<br><input type="submit" name="gate" value="Отправить"><br>
-				{% else %}
-					<input type="submit" name="gate_adm" value="Отправить"disabled><br>
-				{% endif %}
-			</form>
-			<form name = "picture" method="POST" action="">
-			{% csrf_token %}
-				Снять изображение с экспозицией в n мс<br>
-				<input type="text" required name="picture_exposure" pattern="\d+(\.\d{2})?"><br>
-				{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-					<input type="submit" name="picture" value="Отправить"><br>
-				{% else %}
-					<input type="submit" name="picture_adm" value="Отправить"disabled><br>
-				{% endif %}
-			</form>		
-				
-	</body>
-	
+        {% endif %}
+        
+        <div class="container">
+        <div class="panel panel-default">
+        
+        <div class="panel-heading">
+        <h3>Юстировка томографа</h3>
+        </div>
+        
+        <div class="panel-body">
+        <div class="row">
+        <div class="col-xs-4">
+
+        <form method="POST" action="">
+        <div class="control-group">
+        {% csrf_token %}
+        <label for="voltage">Напряжение, кВ</label>
+        <input type="text" class="form-control" required id="voltage" name="voltage" pattern="\d+(\.\d{2})?" placeholder="Напряжение">                     
+        <label for="current">Ток, мА</label>
+        <input type="text" class="form-control" required id="current" name="current" pattern="\d+(\.\d{2})?" placeholder="Ток">
+        
+        {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+        <input type="submit" class="btn btn-default btn-md" name="experiment_on" value="Отправить" style="margin-top:7px">
+        {% else %}
+        <input type="submit" class="btn btn-default btn-md" name="experiment_on_adm" value="Отправить" style="margin-top:7px" disabled>
+        {% endif %}
+        </div>
+        </form>
+        </div>
+        
+        <div class="col-xs-4">
+        <form method="POST" action="">
+        <div class="control-group">
+        {% csrf_token %}                    
+        <label for="text_gate">Заслонка</label>
+        <input type="text" class="form-control" required id="text_gate" name="text_gate" value="" checked placeholder="Заслонка">
+        
+        {% if user.is_authenticated and user.userprofile.role == 'EXP' %} 
+        <input type="submit" class="btn btn-default btn-md" name="gate" value="Отправить" style="margin-top:7px">
+        {% else %}
+        <input type="submit" class="btn btn-default btn-md" name="gate_adm" value="Отправить" disabled style="margin-top:7px">
+        {% endif %}
+        </div>
+        </form>
+        </div>
+        
+        <div class="col-xs-4">
+        <form name="picture" method="POST" action="">
+        <div class="control-group">
+        {% csrf_token %}
+        <label for="picture_exposure">Экспозиция, мс</label>
+        <input type="text" class="form-control" required id="picture_exposure" name="picture_exposure" pattern="\d+(\.\d{2})?" placeholder="Экспозиция">
+        {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+        <input type="submit" class="btn btn-default btn-md" name="picture" value="Отправить" style="margin-top:7px">
+        {% else %}
+        <input type="submit" class="btn btn-default btn-md" name="picture_adm" value="Отправить" disabled style="margin-top:7px">
+        {% endif %}
+        </div>
+        </form>
+        </div>
+        </div>
+        </div>
+        
+        </div>
+        </div>
 {% endblock content %}

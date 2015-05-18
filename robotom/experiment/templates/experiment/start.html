@@ -1,17 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-
-<html>
-
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Start page</title>
-</head>
-	<body>
-		<h1 align = "center">Эксперимент</h1>
-		<hr noshade>
-		<body>
 		{% if messages %}
 		<div class="row">
 		{% for message in messages %}
@@ -22,27 +11,40 @@
 			</div>
 			{% endfor %}
 		</div>
-{% endif %}
-		{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-					<form method="POST" action="">
-					{% csrf_token %}
-					<input type="submit" name="on_exp" value="Включить томограф"><br><br>
-					</form>
-				{% else %}
-					<input type="submit" name="on_admin" value="Включить томограф"disabled><br><br>
-				{% endif %}
-		{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-					<form method="POST" action="">
-					{% csrf_token %}
-					<input type="submit" name="of_exp" value="Выключить томограф"><br><br>
-					</form>
-				{% else %}
-					<input type="submit" name="of_admin" value="Выключить томограф"disabled><br><br>
-				{% endif %}
-		
-		 <p><li><a href="{% url 'experiment:index_adjustment' %}">Параметры томографа</a></li>
-		 <p><li><a href="{% url 'experiment:index_interface' %}">Параметры эксперимента</a></li>
-		 </body>
-</html>
+        {% endif %}
+        
+        <div class="container">
+        <div class="panel panel-default">
+        
+        <div class="panel-heading">
+        <h3>Эксперимент</h3>
+        </div>
+        
+        <div class="panel-body">
+        <div class="row">
+        <div class="col-xs-6">
+        <h4> Изменить состояние томографа </h4>
+        <form method="POST" action="">
+        {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+        {% csrf_token %}
+        <input type="submit" class="btn btn-default btn-md" name="on_exp" value="Включить томограф" style="white-space:normal">
+        <input type="submit" name="of_exp" class="btn btn-default btn-md" value="Выключить томограф" style="white-space:normal">
+        {% else %}
+        <input type="submit" class="btn btn-default btn-md" name="on_admin" value="Включить томограф" disabled style="white-space:normal">
+        <input type="submit" name="of_admin" class="btn btn-default btn-md" value="Выключить томограф" disabled style="white-space:normal">
+        {% endif %}
+        </form>
+        </div>
+
+        <div class="col-xs-6">
+        <h4> Изменить параметры </h4>
+        <a class="btn btn-default btn-md" href="{% url 'experiment:index_adjustment' %}" style="white-space:normal">Параметры томографа</a>
+        <a class="btn btn-default btn-md" href="{% url 'experiment:index_interface' %}" style="white-space:normal">Параметры эксперимента</a>
+        </div>
+        </div>
+        </div>
+        </div>
+        </div>
+
 
 {% endblock content %}
