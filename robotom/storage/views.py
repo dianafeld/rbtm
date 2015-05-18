@@ -269,7 +269,6 @@ def storage_record_view(request, storage_record_id):
     return render(request, 'storage/storage_record_new.html', {
         "record_id": storage_record_id,
         'caption': 'Запись хранилища номер ' + str(storage_record_id),
-        'image_range': xrange(1, 5),  # TODO
         'to_show': to_show,
         'info': record,
         'frames_list': frames_list,
