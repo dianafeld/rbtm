@@ -27,9 +27,9 @@
         <div class="control-group">
         {% csrf_token %}
         <label for="voltage">Напряжение, кВ</label>
-        <input type="text" class="form-control" required id="voltage" name="voltage" pattern="\d+(\.\d{2})?" placeholder="Напряжение">                     
+        <input type="number" step="0.01" min="0" class="form-control" required id="voltage" name="voltage" placeholder="Напряжение">                     
         <label for="current">Ток, мА</label>
-        <input type="text" class="form-control" required id="current" name="current" pattern="\d+(\.\d{2})?" placeholder="Ток">
+        <input type="number" step="0.01" min="0" class="form-control" required id="current" name="current"  placeholder="Ток">
         
         {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
         <input type="submit" class="btn btn-default btn-md" name="experiment_on" value="Отправить" style="margin-top:7px">
@@ -61,7 +61,7 @@
         <div class="control-group">
         {% csrf_token %}
         <label for="picture_exposure">Экспозиция, мс</label>
-        <input type="text" class="form-control" required id="picture_exposure" name="picture_exposure" pattern="\d+(\.\d{2})?" placeholder="Экспозиция">
+        <input type="number" step="0.01" min="0" class="form-control" required id="picture_exposure" name="picture_exposure" placeholder="Экспозиция">
         {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
         <input type="submit" class="btn btn-default btn-md" name="picture" value="Отправить" style="margin-top:7px">
         {% else %}
