@@ -119,11 +119,6 @@
 			<br>
 			{% csrf_token %} 
 			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-			<input type="submit" class="btn btn-default btn-lg" name="load" value = "Начать эксперимент">
-			{% else %}
-			<input type="submit" class="btn btn-default btn-lg" name="load" value = "Начать эксперимент" disabled>
-			{% endif %}
-			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
 			<input type="submit" class="btn btn-default btn-lg" name="turn_down" value = "Закончить эксперимент">
 			{% else %}
 			<input type="submit" class="btn btn-default btn-lg" name="turn_down_adm" value = "Закончить эксперимент" disabled>
