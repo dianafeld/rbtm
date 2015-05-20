@@ -1,6 +1,6 @@
 .jumbotron{
     background: url("images/tomo_img.jpg") no-repeat center center fixed;
-    height: 100%;
+    background-size: cover; 
 }
 
 body { 
@@ -15,6 +15,6 @@ body {
 
 .jumbotron p{
 	color: #000000;
-	text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
+	
 	text-align: left;
 }

@@ -310,10 +310,12 @@ def experiment_adjustment(request):
             if 'picture_exposure_submit' in request.POST: #preview a picture
                 try:
                     exposure = request.POST['picture_exposure']
+                    #image_url = 'http://pngimg.com/upload/cat_PNG100.png'
+                    #response = requests.get(image_url, stream=True)
                     image_url = 'http://109.234.34.140:5001/tomograph/1/detector/get-frame'
                     data = json.dumps(float(exposure))
                     response = requests.post(image_url, data, stream=True)
-                    print(response)
+                    #print(response.content)
                     if response.status_code != 200:
                         messages.warning(request, u'Не удалось получить картинку') 
                         logger.error(u'Не удалось получить картинку, код ошибки: {}'.format(response.status_code))
@@ -327,11 +329,12 @@ def experiment_adjustment(request):
                             temp_file.write(block)
                         
                         path = default_storage.save(os.path.join(settings.MEDIA_ROOT, file_name), temp_file)
-                        print(path)
                         return render(request, 'experiment/adjustment.html', {
                             'full_access': (request.user.userprofile.role == 'EXP'),
                             'caption': 'Эксперимент',
                             'preview_path': os.path.join(settings.MEDIA_URL, file_name),
+                            'preview': True,
+                            'exposure': exposure,
                         }) 
                 except BaseException as e:
                     messages.warning(request,u'Не удалось выполнить предпросмотр. Попробуйте повторно') 
@@ -446,21 +449,3 @@ def experiment_interface(request):
             'full_access': (request.user.userprofile.role == 'EXP'),
             'caption': 'Эксперимент',
         })
-
-''' function for viewing picture
-            def plotImage(arr):
-                fig = plt.figure(figsize=(5, 5), dpi=80, facecolor='w', edgecolor='w', frameon=True)
-                imAx = plt.imshow(arr, origin='lower', interpolation='nearest')
-                fig.colorbar(imAx, pad=0.01, fraction=0.1, shrink=1.00, aspect=20)'''
-                    
-'''def show_image(request):
-    if request.method == 'POST':
-        if 'show_image' in request.POST:
-            info = json.dumps({
-                'experiment_id': '552aa5546c8dc50c93edacf0'})
-            requests.post('http://mardanov@109.234.34.140:5006/storage/frames/get', info)
-            show image
-        return render(request, 'experiment/show_image.html', {
-        'full_access': (request.user.userprofile.role == 'EXP'),
-        'caption': 'Эксперимент',
-    })'''  
