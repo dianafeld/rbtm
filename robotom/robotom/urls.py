@@ -1,8 +1,9 @@
 from django.conf.urls import patterns, include, url
+from django.conf.urls.static import static
 from django.contrib import admin
+from robotom import settings
 
 admin.autodiscover()
-from django.core.urlresolvers import reverse
 
 urlpatterns = patterns('',
                        url('', include('main.urls', namespace='main')),
@@ -14,4 +15,4 @@ urlpatterns = patterns('',
 
                        url(r'^accounts/', include('registration.backends.simple.urls')),
                        url(r'^accounts/', include('django.contrib.auth.urls')),
-                       )
+                       ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

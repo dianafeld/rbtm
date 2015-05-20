@@ -1,17 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-
-<html>
-
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Experiment</title>
-</head>
-	<body>
-		<h1 align = "center">Эксперимент</h1>
-		<hr noshade>
-		<body>
 		{% if messages %}
 		<div class="row">
 		{% for message in messages %}
@@ -22,63 +11,122 @@
 			</div>
 			{% endfor %}
 		</div>
-{% endif %}
-		<br><h3>Заполните все поля для начала эксперимента</h3>
-	</body>
-		<form name = "manual" method="POST" >
+        {% endif %}
+        
+        <div class="container">
+        <div class="panel panel-default">
+        <div class="panel-heading">
+        <h3>Эксперимент <small>Заполните все поля для начала эксперимента.</small></h3>
+            
+        </div>
+        <div class="panel-body">
+        
+		<form name = "manual" method="POST">
+            <div class="control-group">
 			{% csrf_token %} 
-			<h3>Параметры образца<br></h3>
-			Название:<br>
-			<input type = "text" name = "name" size = "30", maxsize = "50" ><br>
-			Теги:<br>
-			<input type = "text" name = "type" size = "30", maxsize = "50" ><br>
-			<h3>Кадры DARK<br></h3>
-			Количество:<br>
-			<input type = "text" name = "dark_quantity" size = "30", maxsize = "50" pattern="^[ 0-9]+$"><br>
-			Экспозиция, мс:<br>
-			<input type = "text" name = "dark_exposure" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
-			<h3>EMPTY shots<br></h3>
-			Количество:<br>
-			<input type = "text" name = "empty_quantity" size = "30", maxsize = "50" pattern="^[ 0-9]+$"><br>
-			Экспозиция, мс:<br>
-			<input type = "text" name = "empty_exposure" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
-			<h3>DATA shots:<br></h3>
-			Количество:<br>
-			<input type = "text" name = "data_shots_quantity" size = "30", maxsize = "50" pattern="^[ 0-9]+$"><br>
-			Экспозиция, мс:<br>
-			<input type = "text" name = "data_shots_exposure" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
-			Угловой шаг между кадрами, градусы:<br>
-			<input type = "text" name = "data_angle" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
-			Количество кадров снятых при одном угле поворота кадров DATA:<br>
-			<input type = "text" name = "data_same" size = "30", maxsize = "50" pattern="\d+(\.\d{2})?"><br>
+			<h3>Параметры образца</h3>
+			<div class="row">
+			<div class="col-xs-4">
+			<label for="name">Название образца</label>
+			<input type="text" class="form-control" id="name" name="name"
+			placeholder="Название образца">
+			</div>
+			<div class="col-xs-4">
+			<label for="type">Теги</label>
+			<input type="text" class="form-control" id="type" name="type"
+			placeholder="Теги">			
+			</div>
+			</div>
+
+            <div class="row">
+            <div class="col-xs-6">
+            <h3>Кадры DARK</h3>
+            </div>
+            <div class="col-xs-6">
+            <h3>Кадры EMPTY</h3>
+            </div>
+            </div>
+            <div class="row">
+            <div class="col-xs-3">
+            <label for="dark_quantity">Количество</label>
+            <input type="number" step="1" min="0" id="dark_quantity" class="form-control" name="dark_quantity" placeholder="Количество">
+            </div>
+            <div class="col-xs-3">
+            <label for="dark_exposure">Экспозиция, мс</label>
+            <input type="number" step="0.01" min="0" class="form-control" id="dark_exposure" name="dark_exposure"
+            placeholder="Экспозиция">
+            </div>
+            
+            <div class="col-xs-3">
+            <label for="empty_quantity">Количество</label>
+            <input type="number" step="1" min="0" id="empty_quantity" class="form-control" name="empty_quantity" placeholder="Количество">
+            </div>
+            <div class="col-xs-3">
+            <label for="empty_exposure">Экспозиция, мс</label>
+            <input type="number" step="0.01" min="0" class="form-control" id="empty_exposure" name="empty_exposure"
+            placeholder="Экспозиция">
+            </div>
+            </div>
+
+			
+			<h3>Кадры DATA</h3>
+			<div class="row">
+			<div class="col-xs-3">
+			<label for="data_shots_quantity">Количество</label>
+			</div>
+			<div class="col-xs-3">
+			<label for="data_shots_exposure">Экспозиция, мс</label>
+			</div>
+			<div class="col-xs-3">
+			<label for="data_angle">Угловой шаг, градусы</label>
+			</div>
+			<div class="col-xs-3">
+			<label for="data_same">Кадров на угол поворота</label>
+			</div>
+			</div>
+			
+			<div class="row">
+			<div class="col-xs-3">
+			<input type="number" step="1" min="0" id="data_shots_quantity" class="form-control" name="data_shots_quantity" placeholder="Количество">
+			</div>
+			<div class="col-xs-3">
+			<input type="number" step="0.01" min="0" class="form-control" id="data_shots_exposure" name="data_shots_exposure"
+			placeholder="Экспозиция">
+			</div>
+			
+			<div class="col-xs-3">
+			<input type="number" step="0.01" min="0" id="data_angle" class="form-control" name="data_angle" placeholder="Угловой шаг">
+			</div>
+			<div class="col-xs-3">
+			<input type="number" step="1" min="0" class="form-control" id="data_same" name="data_same" placeholder="Количество кадров">
+			</div>
+			</div>
+			
 			<br>
 			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-				<input type="submit" name="parameters" value = "Начать эксперимент">
+			<input type="submit" class="btn btn-success btn-lg" name="parameters" value="Начать эксперимент">
 			{% else %}
-				<input type="submit" name="parameters_adm" value = "Начать эксперимент"disabled>
+				<input type="submit" name="parameters_adm" value = "Начать эксперимент" disabled>
 			{% endif %}
-			<input type="reset" value="Сбросить">
+			<input type="reset" class="btn btn-default btn-lg" value="Сбросить настройки">
+			</div>
 		</form>
+		
 		<form name = "file" method="POST" action="" class="form">
+            <div class="control-group">
 			<h3>Выбрать настройки из файла:<br></h3>
-			<input type = "file" name = "load" size = "50">
+			<input type="file" name="load">
+			<br>
+			{% csrf_token %} 
 			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-				<br><input type="submit" name="load" value = "Начать эксперимент"><br>
+			<input type="submit" class="btn btn-default btn-lg" name="turn_down" value = "Закончить эксперимент">
 			{% else %}
-				<br><input type="submit" name="load" value = "Начать эксперимент"disabled><br>
-
+			<input type="submit" class="btn btn-default btn-lg" name="turn_down_adm" value = "Закончить эксперимент" disabled>
 			{% endif %}
-		</form>
-		<form name = "file" method="POST" action="" class="form">
-		{% csrf_token %} 
-			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-				<br><input type="submit" name="turn_down" value = "Закончить эксперимент"><br>
-			{% else %}
-				<br><input type="submit" name="turn_down_adm" value = "Закончить эксперимент"disabled><br>
-
-			{% endif %}
-		</form>
-	</body>
-</html> 
+			</div>
+		</form> 
+        </div>
+        </div>
+        </div>
 
 {% endblock content %}
