@@ -209,7 +209,7 @@ class Detector (PyTango.Device_4Impl):
 
         self.debug_stream("Starting acquisition...")
         try:
-            with open('Detector/DATA_14') as f:
+            with open('Detector/data.txt') as f:
                 image = f.read()
         except PyTango.DevFailed as df:
             self.set_state(PyTango.DevState.FAULT)
