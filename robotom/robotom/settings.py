@@ -71,7 +71,7 @@ USE_TZ = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/var/www/example.com/media/"
-MEDIA_ROOT = (os.path.join(BASE_DIR, 'media'))
+MEDIA_ROOT = (os.path.join(BASE_DIR, 'media/'))
 
 MEDIA_URL = '/media/'
 

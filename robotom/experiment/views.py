@@ -13,12 +13,15 @@ import datetime
 import random
 import requests
 import tempfile
+import os
 from django.core import files
 import urllib2
 import json
 from requests.exceptions import Timeout
 from django.forms import ValidationError
 import uuid
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
 logger = logging.getLogger('django.request')
 
@@ -315,31 +318,30 @@ def experiment_adjustment(request):
                     #deserialize(answer_check['image'])
                     # Steam the image from the url
                     exposure = request.POST['picture_exposure']
-                    image_url = 'http://cdn.playbuzz.com/cdn/0079c830-3406-4c05-a5c1-bc43e8f01479/7dd84d70-768b-492b-88f7-a6c70f2db2e9.jpg'
-                    response = requests.get(image_url, stream=True)
-                    # Was the request OK?
+                    #image_url = 'http://cdn.playbuzz.com/cdn/0079c830-3406-4c05-a5c1-bc43e8f01479/7dd84d70-768b-492b-88f7-a6c70f2db2e9.jpg'
+                    image_url = 'http://109.234.34.140:5001/tomograph/1/detector/get-frame'
+                    data = json.dumps(float(exposure))
+                    response = requests.post(image_url, data, stream=True)
+                    print(response)
                     if response.status_code != 200:
                         messages.warning(request, u'Не удалось получить картинку') 
                         logger.error(u'Не удалось получить картинку, код ошибки: {}'.format(response.status_code))
                     else:
-                        #image name
                         salt = hashlib.sha1(str(random.random())).hexdigest()[:5]
-                        file_name = hashlib.sha1(salt + str(request.user.id)).hexdigest()
-                        # Create a temporary file
-                        temp_file = tempfile.NamedTemporaryFile(delete=True)
-                        #from django.core.files.storage import default_storage
-                        #from django.core.files.base import ContentFile
-                        #file = request.FILES['your_file_fieldname']
-                        #path = default_storage.save('heart_of_the_swarm.txt', ContentFile(file.read()))
-                        # Read the streamed image in sections
+                        file_name = hashlib.sha1(salt + str(request.user.id)).hexdigest() + '.png'
+                        temp_file = tempfile.TemporaryFile()
                         for block in response.iter_content(1024 * 8):
-                            # If no more file then stop
                             if not block:
                                 break
-                            # Write image block to temporary file
                             temp_file.write(block)
-                        temp_file.file.name = file_name
-                        print(temp_file)
+                        
+                        path = default_storage.save(os.path.join(settings.MEDIA_ROOT, file_name), temp_file)
+                        print(path)
+                        return render(request, 'experiment/adjustment.html', {
+                            'full_access': (request.user.userprofile.role == 'EXP'),
+                            'caption': 'Эксперимент',
+                            'preview_path': os.path.join(settings.MEDIA_URL, file_name),
+                        }) 
                 except BaseException as e:
                     messages.warning(request,u'Не удалось выполнить предпросмотр. Попробуйте повторно') 
                     logger.error(e)
