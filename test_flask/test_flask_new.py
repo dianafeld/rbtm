@@ -10,6 +10,10 @@ import os
 
 app = Flask(__name__)
 
+logs_path = os.path.join('logs', 'storage_log.log')
+logging.basicConfig(format = u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
+                    level=logging.DEBUG,
+                    filename=logs_path)
 
 
 # TODO login and pass not secure
@@ -31,6 +35,34 @@ def incorrect_format(error):
 def incorrect_format(error):
     return make_response(jsonify({'error': 'Internal Server'}), 500)
 
+
+# return experiments by request json file. return json
+@app.route('/storage/experiments/get', methods=['POST'])
+def get_experiments():
+    if not request.data:
+        logging.error(u'Incorrect format')
+        abort(400)
+
+    try:
+        find_query = json.loads(request.data)
+        logging.debug(find_query)
+
+        experiments = db[u'experiments']
+
+        if u'select' in find_query and find_query[u'select'] == u'all':
+            cursor = experiments.find()
+        else:
+            cursor = experiments.find(find_query)
+
+        resp = Response(response=dumps(cursor),
+                        status=200,
+                        mimetype="application/json")
+
+        return resp
+
+    except BaseException, e:
+        logging.error(e)
+        abort(500)
 
 
 # create new user, need json file as request return result:success json if success
@@ -128,37 +160,6 @@ def update_users():
 
 
 
-# return experiments by request json file. return json
-@app.route('/storage/experiments/get', methods=['POST'])
-def get_experiments():
-    if not request.data:
-        logging.error(u'Incorrect format')
-        abort(400)
-
-    try:
-        find_query = json.loads(request.data)
-        logging.debug(find_query)
-
-        experiments = db[u'experiments']
-
-        if u'select' in find_query and find_query[u'select'] == u'all':
-            cursor = experiments.find()
-        else:
-            cursor = experiments.find(find_query)
-
-        resp = Response(response=dumps(cursor),
-                        status=200,
-                        mimetype="application/json")
-
-        return resp
-
-    except BaseException, e:
-        logging.error(e)
-        abort(500)
-
-
-
-
 # create new experiment, need json file as request return result:success json if success
 @app.route('/storage/experiments/post', methods=['POST'])
 def create_experiment():
@@ -196,7 +197,7 @@ def new_frame():
 
     try:
         json_frame = json.loads(request.data)
-        experiment_id = json_frame[u'experiment id']
+        experiment_id = json_frame[u'exp_id']
 
         if json_frame[u'type'] == u'message':
             if json_frame[u'message'] == u'Experiment was finished successfully':
@@ -204,8 +205,8 @@ def new_frame():
             else:
                 logging.WARNING(json_frame[u'exception message'] + json_frame[u'error'])
         elif json_frame[u'type'] == u'frame':
-            frame = json_frame[u'image_data'][u'image']
-            json_frame[u'image_data'].pop(u'image')
+            frame = json_frame[u'frame'][u'image_data'][u'image']
+            json_frame[u'frame'][u'image_data'].pop(u'image')
             frame_id = db[u'frames'].insert(json_frame)
 
             logging.info(u'experiment id: ' + str(experiment_id) + u'frame id: ' + str(frame_id))
@@ -233,11 +234,34 @@ def get_frame():
         cursor = frames.find(find_query)
         frames_list = list(cursor)
         for frame in frames_list:
-            frame_id = frame[u'_id']
-            experiment_id = frame[u'experiment id']
-            frame[u'image_data'][u'image'] = pyframes.extract_frame(frame_id, experiment_id)
-
+            if frame[u'type']== u'frame':
+                frame_id = frame[u'_id']
+                experiment_id = frame[u'exp_id']
+                frame[u'frame'][u'image_data'][u'image'] = pyframes.extract_frame(frame_id, experiment_id)
+        logging.info('done')
         resp = Response(response=dumps(frames_list),
+                        status=200,
+                        mimetype="application/json")
+
+        return resp
+
+    except BaseException, e:
+        logging.error(e)
+        abort(500)
+
+
+@app.route('/storage/frames_info/get', methods=['POST'])
+def get_frame_info():
+    if not request.data:
+        logging.error(u'Incorrect format')
+        abort(400)
+
+    try:
+        frames = db[u'frames']
+        find_query = json.loads(request.data)
+        cursor = frames.find(find_query)
+
+        resp = Response(response=dumps(cursor),
                         status=200,
                         mimetype="application/json")
 
