@@ -79,7 +79,7 @@
     </commands>
     <commands name="OpenShutter" description="" execMethod="open_shutter" displayLevel="OPERATOR" polledPeriod="0">
       <argin description="">
-        <type xsi:type="pogoDsl:IntType"/>
+        <type xsi:type="pogoDsl:DoubleType"/>
       </argin>
       <argout description="">
         <type xsi:type="pogoDsl:VoidType"/>
@@ -88,7 +88,7 @@
     </commands>
     <commands name="CloseShutter" description="" execMethod="close_shutter" displayLevel="OPERATOR" polledPeriod="0">
       <argin description="">
-        <type xsi:type="pogoDsl:IntType"/>
+        <type xsi:type="pogoDsl:DoubleType"/>
       </argin>
       <argout description="">
         <type xsi:type="pogoDsl:VoidType"/>

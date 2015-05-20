@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*- 
 
+
 ##############################################################################
 ## license :
 ##============================================================================
@@ -61,6 +62,7 @@ class XRayShutter (PyTango.Device_4Impl):
 
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(XRayShutter.global_variables) ENABLED START -----#
+    EPS = 1e-5
     #----- PROTECTED REGION END -----#  //  XRayShutter.global_variables
 
     def __init__(self,cl, name):
@@ -114,12 +116,12 @@ class XRayShutter (PyTango.Device_4Impl):
     #-----------------------------------------------------------------------------
     #    XRayShutter command methods
     #-----------------------------------------------------------------------------
-
+    
     def Open(self, argin):
         """ Opens the shutter
         
         :param argin: Automatically closes the shutter after the given time. Stays opened if 0.
-        :type: PyTango.DevULong
+        :type: PyTango.DevDouble
         :return: 
         :rtype: PyTango.DevVoid """
         self.debug_stream("In Open()")
@@ -133,16 +135,22 @@ class XRayShutter (PyTango.Device_4Impl):
         self.shutter.open()
         self.set_state(PyTango.DevState.OPEN)
 
-        if time != 0:
+        if abs(time) < XRayShutter.EPS:
+            pass
+        elif time < 0:
+            PyTango.Except.throw_exception("XRayShutter_IllegalArgument",
+                                           "Time can't be negative",
+                                           "XRayShutter.Open()")
+        else:
             threading.Timer(time, self.Close, args=[0]).start()
 
         #----- PROTECTED REGION END -----#  //  XRayShutter.Open
-
+        
     def Close(self, argin):
         """ Closes the shutter
         
         :param argin: Automatically opens the shutter after the given time. Stays closed if 0.
-        :type: PyTango.DevULong
+        :type: PyTango.DevDouble
         :return: 
         :rtype: PyTango.DevVoid """
         self.debug_stream("In Close()")
@@ -153,7 +161,13 @@ class XRayShutter (PyTango.Device_4Impl):
         self.shutter.close()
         self.set_state(PyTango.DevState.CLOSE)
 
-        if time != 0:
+        if abs(time) < XRayShutter.EPS:
+            pass
+        elif time < 0:
+            PyTango.Except.throw_exception("XRayShutter_IllegalArgument",
+                                           "Time can't be negative",
+                                           "XRayShutter.Close()")
+        else:
             threading.Timer(time, self.Open, args=[0]).start()
 
         #----- PROTECTED REGION END -----#  //  XRayShutter.Close
@@ -197,10 +211,10 @@ class XRayShutterClass(PyTango.DeviceClass):
     #    Command definitions
     cmd_list = {
         'Open':
-            [[PyTango.DevULong, "Automatically closes the shutter after the given time. Stays opened if 0."],
+            [[PyTango.DevDouble, "Automatically closes the shutter after the given time. Stays opened if 0."],
             [PyTango.DevVoid, "none"]],
         'Close':
-            [[PyTango.DevULong, "Automatically opens the shutter after the given time. Stays closed if 0."],
+            [[PyTango.DevDouble, "Automatically opens the shutter after the given time. Stays closed if 0."],
             [PyTango.DevVoid, "none"]],
         }
 

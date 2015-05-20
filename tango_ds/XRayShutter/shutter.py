@@ -39,7 +39,7 @@ class Shutter(object):
             if serial_port.readline() != "#REL,OK\r\n":
                 PyTango.Except.throw_exception("XRayShutter_IOException",
                                                "Can't set value 1 to relay",
-                                               "Shutter::open()")
+                                               "Shutter.open()")
 
     def close(self):
         """
@@ -51,7 +51,7 @@ class Shutter(object):
             if serial_port.readline() != "#REL,OK\r\n":
                 PyTango.Except.throw_exception("XRayShutter_IOException",
                                                "Can't set value 0 to relay",
-                                               "Shutter::close()")
+                                               "Shutter.close()")
 
     def answer_is_correct(self, message, regex):
         pattern = re.compile(regex)

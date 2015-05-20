@@ -267,9 +267,9 @@ class Tomograph (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(Tomograph.MotorStatus) ENABLED START -----#
 
         motor_data = {'state': str(self.motor.State()),
-                      'horizontal_position': self.motor.horizontal_position,
-                      'vertical_position': self.motor.vertical_position,
-                      'angle_position': self.motor.angle_position}
+                      'horizontal position': self.motor.horizontal_position,
+                      'vertical position': self.motor.vertical_position,
+                      'angle position': self.motor.angle_position}
 
         json_data = json.dumps(motor_data)
         argout = json_data
@@ -361,7 +361,7 @@ class Tomograph (PyTango.Device_4Impl):
         """ 
         
         :param argin: 
-        :type: PyTango.DevLong
+        :type: PyTango.DevDouble
         :return: 
         :rtype: PyTango.DevVoid """
         self.debug_stream("In OpenShutter()")
@@ -375,7 +375,7 @@ class Tomograph (PyTango.Device_4Impl):
         """ 
         
         :param argin: 
-        :type: PyTango.DevLong
+        :type: PyTango.DevDouble
         :return: 
         :rtype: PyTango.DevVoid """
         self.debug_stream("In CloseShutter()")
@@ -397,7 +397,8 @@ class Tomograph (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(Tomograph.DetectorStatus) ENABLED START -----#
 
         detector_data = {'model': 'Ximea xiRAY',
-                         'state': str(self.detector.State())}
+                         'state': str(self.detector.State()),
+                         'exposure': self.detector.exposure}
 
         json_data = json.dumps(detector_data)
         argout = json_data
@@ -424,7 +425,10 @@ class Tomograph (PyTango.Device_4Impl):
 
         detector_data = {'model': 'Ximea xiRAY'}
         image_data = {'image': image, 'exposure': exposure, 'datetime': current_datetime, 'detector': detector_data}
-        object_data = {'angle position': self.motor.angle_position}
+        object_data = {'present': self.motor.horizontal_position < 4000,  # TODO
+                       'angle position': self.motor.angle_position,
+                       'horizontal position': self.motor.horizontal_position,
+                       'vertical position': self.motor.vertical_position}
         shutter_data = {'open': self.shutter.State() == PyTango.DevState.OPEN}
         source_data = {'voltage': self.source.voltage, 'current': self.source.current}
 
@@ -523,10 +527,10 @@ class TomographClass(PyTango.DeviceClass):
             [[PyTango.DevVoid, "none"],
             [PyTango.DevString, "none"]],
         'OpenShutter':
-            [[PyTango.DevLong, "none"],
+            [[PyTango.DevDouble, "none"],
             [PyTango.DevVoid, "none"]],
         'CloseShutter':
-            [[PyTango.DevLong, "none"],
+            [[PyTango.DevDouble, "none"],
             [PyTango.DevVoid, "none"]],
         'DetectorStatus':
             [[PyTango.DevVoid, "none"],
