@@ -30,8 +30,6 @@ TOMO={'state':'off'}
 def has_experiment_access(user):
     return user.userprofile.role in ['ADM', 'EXP']
 
-@login_required
-@user_passes_test(has_experiment_access)
 #отправляет включить/выключить томограф,ток,напряжение,заслонку открыть/закрыть и т.д.
    
 def info_once_only(request, msg):
@@ -40,7 +38,9 @@ def info_once_only(request, msg):
 
 def set_state(TOMO,new_state):
 	TOMO['state'] = new_state
-	
+
+@login_required
+@user_passes_test(has_experiment_access)
 def experiment_view(request):
     '''if TOMO['state'] == 'off':
         info_once_only(request, u'Текущее состояние томографа: выключен')
@@ -108,6 +108,8 @@ def experiment_view(request):
         'caption': 'Эксперимент',
     })
     
+@login_required
+@user_passes_test(has_experiment_access)
 def experiment_adjustment(request):
     '''if TOMO['state'] == 'off':
         info_once_only(request, u'Текущее состояние томографа: выключен')
@@ -307,10 +309,7 @@ def experiment_adjustment(request):
                     
             if 'picture_exposure_submit' in request.POST: #preview a picture
                 try:
-                    #deserialize(answer_check['image'])
-                    # Steam the image from the url
                     exposure = request.POST['picture_exposure']
-                    #image_url = 'http://cdn.playbuzz.com/cdn/0079c830-3406-4c05-a5c1-bc43e8f01479/7dd84d70-768b-492b-88f7-a6c70f2db2e9.jpg'
                     image_url = 'http://109.234.34.140:5001/tomograph/1/detector/get-frame'
                     data = json.dumps(float(exposure))
                     response = requests.post(image_url, data, stream=True)
@@ -343,6 +342,9 @@ def experiment_adjustment(request):
                 'caption': 'Эксперимент',
             })                      
           
+          
+@login_required
+@user_passes_test(has_experiment_access)
 def experiment_interface(request):
     '''if TOMO['state'] == 'off':
         info_once_only(request, u'Текущее состояние томографа: выключен')
