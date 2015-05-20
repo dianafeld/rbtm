@@ -240,13 +240,13 @@ class Detector (PyTango.Device_4Impl):
 
         self.set_state(prev_state)
 
-        image = json.dumps(image.tolist())
-        image = zlib.compress(image, 6)
-        print(len(image))
+        #image = json.dumps(image.tolist())
+        #image = zlib.compress(image, 6)
+        #print(len(image))
 
-        self.attr_image_read = image
+        #self.attr_image_read = image
 
-        return ('image', image)
+        #return ('image', image)
 
         with open('Detector/DATA_14') as f:
             argout = f.read()
