@@ -199,15 +199,17 @@
             document.getElementById('Voltage').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[15].textContent;
 
             var left_button = document.getElementsByClassName('prev')[0];
-            if (left_button.id > 0)
+            if (left_button.id > 0) {
                 left_button.id = parseInt(clicked_id) - 1;
+                alert(clicked_id);
+            }
             else
-                left_button.id = {{ frames_list|length }} -1;
+                left_button.id = {{ frames_list|length }} - 1;
             left_button = document.getElementsByClassName('prev')[1];
             if (left_button.id > 0)
                 left_button.id = parseInt(clicked_id) - 1;
             else
-                left_button.id = {{ frames_list|length }} -1;
+                left_button.id = {{ frames_list|length }} - 1;
             var right_button = document.getElementsByClassName('next')[0];
             if (right_button.id < {{ frames_list|length }} -1)
                 right_button.id = parseInt(clicked_id) + 1;
