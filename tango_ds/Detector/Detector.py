@@ -130,7 +130,7 @@ class Detector (PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         self.attr_exposure_read = 0
-        self.attr_image_read = [0]
+        self.attr_image_read = ''
         #----- PROTECTED REGION ID(Detector.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
@@ -205,7 +205,7 @@ class Detector (PyTango.Device_4Impl):
         :param : 
         :type: PyTango.DevVoid
         :return: 
-        :rtype: PyTango.DevEncoded """
+        :rtype: PyTango.DevString """
         self.debug_stream("In GetFrame()")
         argout = ''
         #----- PROTECTED REGION ID(Detector.GetFrame) ENABLED START -----#
@@ -295,7 +295,7 @@ class DetectorClass(PyTango.DeviceClass):
     cmd_list = {
         'GetFrame':
             [[PyTango.DevVoid, "none"],
-            [PyTango.DevEncoded, "none"]],
+            [PyTango.DevString, "none"]],
         }
 
 
@@ -314,9 +314,9 @@ class DetectorClass(PyTango.DeviceClass):
                 'description': "exposure time",
             } ],
         'image':
-            [[PyTango.DevLong,
-            PyTango.SPECTRUM,
-            PyTango.READ, 100000000]],
+            [[PyTango.DevEncoded,
+            PyTango.SCALAR,
+            PyTango.READ]],
         }
 
 
