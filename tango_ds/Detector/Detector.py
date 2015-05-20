@@ -55,6 +55,8 @@ import sys
 # Add additional import
 # ----- PROTECTED REGION ID(Detector.additionnal_import) ENABLED START -----#
 import numpy as np
+import zlib
+import json
 from multiprocessing import Process, Value
 
 
@@ -128,7 +130,7 @@ class Detector (PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         self.attr_exposure_read = 0
-        self.attr_image_read = ''
+        self.attr_image_read = [0]
         #----- PROTECTED REGION ID(Detector.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
@@ -142,8 +144,6 @@ class Detector (PyTango.Device_4Impl):
         except Exception as e:
             self.error_stream(str(e))
             raise
-
-        self.attr_image_read = PyTango.EncodedAttribute()
 
         self.set_state(PyTango.DevState.ON)
 
@@ -205,7 +205,7 @@ class Detector (PyTango.Device_4Impl):
         :param : 
         :type: PyTango.DevVoid
         :return: 
-        :rtype: PyTango.DevString """
+        :rtype: PyTango.DevEncoded """
         self.debug_stream("In GetFrame()")
         argout = ''
         #----- PROTECTED REGION ID(Detector.GetFrame) ENABLED START -----#
@@ -240,8 +240,13 @@ class Detector (PyTango.Device_4Impl):
 
         self.set_state(prev_state)
 
+        image = json.dumps(image.tolist())
+        image = zlib.compress(image, 6)
+        print(len(image))
 
-        self.attr_image_read.encode_gray16(image)
+        self.attr_image_read = image
+
+        return ('image', image)
 
         with open('Detector/DATA_14') as f:
             argout = f.read()
@@ -290,7 +295,7 @@ class DetectorClass(PyTango.DeviceClass):
     cmd_list = {
         'GetFrame':
             [[PyTango.DevVoid, "none"],
-            [PyTango.DevString, "none"]],
+            [PyTango.DevEncoded, "none"]],
         }
 
 
@@ -309,9 +314,9 @@ class DetectorClass(PyTango.DeviceClass):
                 'description': "exposure time",
             } ],
         'image':
-            [[PyTango.DevEncoded,
-            PyTango.SCALAR,
-            PyTango.READ]],
+            [[PyTango.DevLong,
+            PyTango.SPECTRUM,
+            PyTango.READ, 100000000]],
         }
 
 
