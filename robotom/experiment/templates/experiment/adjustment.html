@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
+<html>
+<head>
 		{% if messages %}
 		<div class="row">
 		{% for message in messages %}
@@ -12,6 +14,9 @@
 		</div>
         {% endif %}
         
+       <script type='text/javascript' src='jquery.js'></script>
+    </head>
+    <body>    
         <div class="container">
         <div class="panel panel-default">
         
@@ -27,7 +32,7 @@
         <div class="control-group">
         {% csrf_token %}
         <label for="voltage">Напряжение, кВ</label>
-        <input type="number" step="0.001" min="2" max="60" class="form-control" required id="voltage" name="voltage" pattern="\d+(\.\d{2})?" placeholder="Напряжение, 2-60 кВ">                 
+        <input type="number" step="0.001" min="2" max="60" class="form-control ntSaveForms" required id="voltage" name="voltage" pattern="\d+(\.\d{2})?" placeholder="Напряжение, 2-60 кВ">                 
         {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
         <input type="submit" class="btn btn-default btn-md" name="experiment_on_voltage" value="Отправить" style="margin-top:7px">
         {% else %}
@@ -41,7 +46,7 @@
         <div class="col-xs-4">
         {% csrf_token %}                
         <label for="current">Ток, мА</label>
-        <input type="number" step="0.001" min="2" max="80" class="form-control" required id="current" name="current"  pattern = "\d+(\.\d{2})?" placeholder="Ток, 2-80 мА">
+        <input type="number" step="0.001" min="2" max="80" class="form-control ntSaveForms" required id="current" name="current"  pattern = "\d+(\.\d{2})?" placeholder="Ток, 2-80 мА">
         
         {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
         <input type="submit" class="btn btn-default btn-md" name="experiment_on_current" value="Отправить" style="margin-top:7px">
@@ -59,7 +64,7 @@
         <div class="control-group">
         {% csrf_token %}                    
         <label for="text_gate">Заслонка</label>
-        <input type="text" class="form-control" required id="text_gate" name="text_gate" value="" pattern="(open)|(close)" checked placeholder="Заслонка:open/close">
+        <input type="text" class="form-control ntSaveForms" required id="text_gate" name="text_gate" value="" pattern="(open)|(close)" checked placeholder="Заслонка:open/close">
         
         {% if user.is_authenticated and user.userprofile.role == 'EXP' %} 
         <input type="submit" class="btn btn-default btn-md" name="gate" value="Отправить" style="margin-top:7px">
@@ -75,7 +80,7 @@
         <div class="control-group">
         {% csrf_token %}
         <label for="move_hor">Подвинуть по горизонтали</label>
-        <input type="number" step="0.001" min="0" class="form-control" required id="move_hor" pattern = "\d+(\.\d{2})?"  name="move_hor" placeholder="">
+        <input type="number" step="0.001" min="0" class="form-control ntSaveForms" required id="move_hor" pattern = "\d+(\.\d{2})?"  name="move_hor" placeholder="">
         {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
         <input type="submit" class="btn btn-default btn-md" name="move_hor" value="Подвинуть образец" style="margin-top:7px">
         {% else %}
@@ -90,7 +95,7 @@
         <div class="control-group">
         {% csrf_token %}
         <label for="move_ver">Подвинуть по вертикали</label>
-        <input type="number" step="0.001" min="0" class="form-control" required id="move_hor" pattern = "\d+(\.\d{2})?"  name="move_ver" placeholder="">
+        <input type="number" step="0.001" min="0" class="form-control ntSaveForms" required id="move_hor" pattern = "\d+(\.\d{2})?"  name="move_ver" placeholder="">
         {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
         <input type="submit" class="btn btn-default btn-md" name="move_ver" value="Подвинуть образец" style="margin-top:7px">
         {% else %}
@@ -105,7 +110,7 @@
         <div class="control-group">
         {% csrf_token %}
         <label for="rotate">Изменить угловое положение</label>
-        <input type="number" step="0.001" min="0" class="form-control" required id="rotate" pattern = "\d+(\.\d{2})?"  name="move_ver" placeholder="">
+        <input type="number" step="0.001" min="0" class="form-control ntSaveForms" required id="rotate" pattern = "\d+(\.\d{2})?"  name="move_ver" placeholder="">
         {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
         <input type="submit" class="btn btn-default btn-md" name="rotate" value="Повернуть" style="margin-top:7px">
         {% else %}
@@ -134,7 +139,6 @@
         <div class="control-group">
         {% csrf_token %}
         <label for="picture_exposure">Экспозиция, мс</label>
-        <input type="number" step="0.1" min="0.1" max="16000" class="form-control" required id="picture_exposure" name="picture_exposure" placeholder="Экспозиция, 0.1 - 16000 мс">
         {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
         <button type="submit" class="btn btn-default btn-md" name="picture_exposure_submit" style="margin-top:7px">Снять изображение</button>
         {% else %}
@@ -148,7 +152,13 @@
         
         </div>
         </div>
+<<<<<<< HEAD
         
         <img class="img-responsive" src="{{ preview_path }}">
         
+=======
+       <script type='text/javascript' src='ntsaveforms.js'></script>
+       </body>
+       
+>>>>>>> e3d0ff76f73a883f28c5be3e96db1c24cd1402e1
 {% endblock content %}
