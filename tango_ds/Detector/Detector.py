@@ -219,12 +219,13 @@ class Detector (PyTango.Device_4Impl):
 
         self.debug_stream("Starting acquisition...")
         try:
-            with open('Detector/data.txt') as f:
-                # image = f.read()
-                import csv
-                reader = csv.reader(f, delimiter='\t')
-                your_list = list(reader)
-                image = np.asarray(your_list, dtype=np.int16)
+            pass
+            # with open('Detector/data.txt') as f:
+            #     # image = f.read()
+            #     import csv
+            #     reader = csv.reader(f, delimiter='\t')
+            #     your_list = list(reader)
+            #     image = np.asarray(your_list, dtype=np.int16)
         except PyTango.DevFailed as df:
             self.set_state(PyTango.DevState.FAULT)
             self.error_stream(str(df))
