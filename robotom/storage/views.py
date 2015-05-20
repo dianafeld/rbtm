@@ -4,7 +4,6 @@ from django.contrib import messages
 import requests
 import json
 from django.shortcuts import render
-from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from requests.exceptions import Timeout
 from robotom.settings import STORAGE_EXPERIMENTS_HOST, STORAGE_FRAMES_HOST, STORAGE_FRAMES_INFO_HOST
 
@@ -34,6 +33,7 @@ class ExperimentRecord:
         self.data_exposure = record['experiment parameters']['DATA']['exposure']
         self.empty_count = record['experiment parameters']['EMPTY']['count']
         self.empty_exposure = record['experiment parameters']['EMPTY']['exposure']
+
 
 def make_info(post_args):
     for arg in post_args:
@@ -151,6 +151,7 @@ def storage_view(request):
         'pages': range(1, num_pages + 2),
     })
 
+
 class FrameRecord:
     def __init__(self, frame):
         self.num = ""
@@ -189,7 +190,6 @@ class FrameRecord:
 
 
 def storage_record_view(request, storage_record_id):
-    # TODO
     record = {}
     to_show = True
     try:
@@ -217,6 +217,7 @@ def storage_record_view(request, storage_record_id):
         to_show = False
 
     frames_list = []
+
     try:
         frame_info = json.dumps({"exp_id": storage_record_id})
         rest_logger.debug(u'Страница записи: {}'.format(frame_info))
@@ -237,7 +238,7 @@ def storage_record_view(request, storage_record_id):
     except BaseException as e:
         rest_logger.error(u'Не удается получить список изображений. Ошибка: {}'.format(e.message))
         messages.error(request,
-                       u'Не удается получить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
+                       u'Не удется поучить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
         to_show = False
 
     return render(request, 'storage/storage_record_new.html', {
