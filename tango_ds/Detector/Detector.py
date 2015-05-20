@@ -54,7 +54,7 @@ import PyTango
 import sys
 # Add additional import
 # ----- PROTECTED REGION ID(Detector.additionnal_import) ENABLED START -----#
-
+import numpy as np
 from multiprocessing import Process, Value
 
 
@@ -128,6 +128,7 @@ class Detector (PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         self.attr_exposure_read = 0
+        self.attr_image_read = ''
         #----- PROTECTED REGION ID(Detector.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
@@ -141,6 +142,8 @@ class Detector (PyTango.Device_4Impl):
         except Exception as e:
             self.error_stream(str(e))
             raise
+
+        self.attr_image_read = PyTango.EncodedAttribute()
 
         self.set_state(PyTango.DevState.ON)
 
@@ -172,6 +175,13 @@ class Detector (PyTango.Device_4Impl):
 
         #----- PROTECTED REGION END -----#  //  Detector.exposure_write
         
+    def read_image(self, attr):
+        self.debug_stream("In read_image()")
+        #----- PROTECTED REGION ID(Detector.image_read) ENABLED START -----#
+        attr.set_value(self.attr_image_read)
+        
+        #----- PROTECTED REGION END -----#	//	Detector.image_read
+        
     
     
         #----- PROTECTED REGION ID(Detector.initialize_dynamic_attributes) ENABLED START -----#
@@ -194,10 +204,9 @@ class Detector (PyTango.Device_4Impl):
         
         :param : 
         :type: PyTango.DevVoid
-        :return: image
-        :rtype: PyTango.DevString """
+        :return: 
+        :rtype: PyTango.DevVoid """
         self.debug_stream("In GetFrame()")
-        argout = ''
         #----- PROTECTED REGION ID(Detector.GetFrame) ENABLED START -----#
 
         prev_state = self.get_state()
@@ -210,7 +219,11 @@ class Detector (PyTango.Device_4Impl):
         self.debug_stream("Starting acquisition...")
         try:
             with open('Detector/data.txt') as f:
-                image = f.read()
+                # image = f.read()
+                import csv
+                reader = csv.reader(f, delimiter='\t')
+                your_list = list(reader)
+                image = np.asarray(your_list, dtype=np.int16)
         except PyTango.DevFailed as df:
             self.set_state(PyTango.DevState.FAULT)
             self.error_stream(str(df))
@@ -227,10 +240,10 @@ class Detector (PyTango.Device_4Impl):
         self.set_state(prev_state)
 
         argout = image
+        self.attr_image_read.encode_gray16(image)
         # print(argout)
 
         # ----- PROTECTED REGION END -----# //  Detector.GetFrame
-        return argout
         
 
 class DetectorClass(PyTango.DeviceClass):
@@ -272,7 +285,7 @@ class DetectorClass(PyTango.DeviceClass):
     cmd_list = {
         'GetFrame':
             [[PyTango.DevVoid, "none"],
-            [PyTango.DevString, "image"]],
+            [PyTango.DevVoid, "none"]],
         }
 
 
@@ -290,6 +303,10 @@ class DetectorClass(PyTango.DeviceClass):
                 'min value': "1",
                 'description': "exposure time",
             } ],
+        'image':
+            [[PyTango.DevEncoded,
+            PyTango.SCALAR,
+            PyTango.READ]],
         }
 
 
