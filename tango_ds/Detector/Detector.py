@@ -205,8 +205,9 @@ class Detector (PyTango.Device_4Impl):
         :param : 
         :type: PyTango.DevVoid
         :return: 
-        :rtype: PyTango.DevVoid """
+        :rtype: PyTango.DevString """
         self.debug_stream("In GetFrame()")
+        argout = ''
         #----- PROTECTED REGION ID(Detector.GetFrame) ENABLED START -----#
 
         prev_state = self.get_state()
@@ -239,11 +240,15 @@ class Detector (PyTango.Device_4Impl):
 
         self.set_state(prev_state)
 
-        argout = image
+
         self.attr_image_read.encode_gray16(image)
+
+        with open('Detector/DATA_14') as f:
+            argout = f.read()
         # print(argout)
 
         # ----- PROTECTED REGION END -----# //  Detector.GetFrame
+        return argout
         
 
 class DetectorClass(PyTango.DeviceClass):
@@ -285,7 +290,7 @@ class DetectorClass(PyTango.DeviceClass):
     cmd_list = {
         'GetFrame':
             [[PyTango.DevVoid, "none"],
-            [PyTango.DevVoid, "none"]],
+            [PyTango.DevString, "none"]],
         }
 
 
