@@ -1,22 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<html>
-<head>
-		{% if messages %}
-		<div class="row">
-		{% for message in messages %}
-			<div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
-				<div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
-				    {{ message }}
-				</div>
-			</div>
-			{% endfor %}
-		</div>
-        {% endif %}
-        
-       <script type='text/javascript' src='jquery.js'></script>
-    </head>
-    <body>    
+
+    {% if messages %}
+    <div class="row">
+    {% for message in messages %}
+    <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+    <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+    {{ message }}
+    </div>
+    </div>
+    {% endfor %}
+    </div>
+    {% endif %}
+    
         <div class="container">
         <div class="panel panel-default">
         
@@ -152,13 +148,7 @@
         
         </div>
         </div>
-<<<<<<< HEAD
         
         <img class="img-responsive" src="{{ preview_path }}">
-        
-=======
        <script type='text/javascript' src='ntsaveforms.js'></script>
-       </body>
-       
->>>>>>> e3d0ff76f73a883f28c5be3e96db1c24cd1402e1
 {% endblock content %}
