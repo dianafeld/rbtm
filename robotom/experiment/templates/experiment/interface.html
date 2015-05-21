@@ -27,13 +27,13 @@
 			<div class="row">
 			<div class="col-xs-4">
 			<label for="name">Название образца</label>
-			<input type="text" class="form-control" pattern="^[a-zA-Z]+$" placeholder="Название латиницей" id="name" name="name"
+			<input type="text" class="form-control ntSaveForms" placeholder="Название латиницей" id="name" name="name"
 			placeholder="Название образца">
 			</div>
 			<div class="col-xs-4">
 			<label for="type">Теги</label>
-			<input type="text" class="form-control" id="type" name="type"
-			placeholder="Теги">			
+			<input type="text" class="form-control ntSaveForms" id="type" name="type"
+			placeholder="Теги">
 			</div>
 			</div>
 
@@ -48,21 +48,21 @@
             <div class="row">
             <div class="col-xs-3">
             <label for="dark_quantity">Количество</label>
-            <input type="number" step="1" min="0" id="dark_quantity" class="form-control" pattern="^[ 0-9]+$" name="dark_quantity" placeholder="Количество">
+            <input type="number" step="1" min="0" id="dark_quantity" class="form-control ntSaveForms" name="dark_quantity" placeholder="Количество">
             </div>
             <div class="col-xs-3">
             <label for="dark_exposure">Экспозиция, мс</label>
-            <input type="number" step="0.1" min="0.1" max="16000" class="form-control" pattern = "\d+(\.\d{2})?" id="dark_exposure" name="dark_exposure"
+            <input type="number" step="0.1" min="0.1" max="16000" class="form-control ntSaveForms" id="dark_exposure" name="dark_exposure"
             placeholder="Экспозиция">
             </div>
             
             <div class="col-xs-3">
             <label for="empty_quantity">Количество</label>
-            <input type="number" step="1" min="0" id="empty_quantity" class="form-control" pattern="^[ 0-9]+$" name="empty_quantity" placeholder="Количество">
+            <input type="number" step="1" min="0" id="empty_quantity" class="form-control ntSaveForms" name="empty_quantity" placeholder="Количество">
             </div>
             <div class="col-xs-3">
             <label for="empty_exposure">Экспозиция, мс</label>
-            <input type="number" step="0.1" min="0.1" max="16000" class="form-control" pattern = "\d+(\.\d{2})?" id="empty_exposure" name="empty_exposure"
+            <input type="number" step="0.1" min="0.1" max="16000" class="form-control ntSaveForms" id="empty_exposure" name="empty_exposure"
             placeholder="Экспозиция">
             </div>
             </div>
@@ -86,10 +86,10 @@
 			
 			<div class="row">
 			<div class="col-xs-3">
-			<input type="number" step="1" min="0" id="data_shots_quantity" class="form-control" pattern="^[ 0-9]+$" name="data_shots_quantity" placeholder="Количество">
+			<input type="number" step="1" min="0" id="data_shots_quantity" class="form-control" name="data_shots_quantity" placeholder="Количество">
 			</div>
 			<div class="col-xs-3">
-			<input type="number" step="0.1" min="0.1" class="form-control" id="data_shots_exposure"  pattern = "\d+(\.\d{2})?" name="data_shots_exposure"
+			<input type="number" step="0.1" min="0.1" class="form-control" id="data_shots_exposure"  name="data_shots_exposure"
 			placeholder="Экспозиция">
 			</div>
 			
@@ -97,7 +97,7 @@
 			<input type="number" step="0.01" id="data_angle" class="form-control" name="data_angle" placeholder="Угловой шаг">
 			</div>
 			<div class="col-xs-3">
-			<input type="number" step="1" min="0" class="form-control" id="data_same" pattern="^[ 0-9]+$" name="data_same" placeholder="Количество кадров">
+			<input type="number" step="1" min="0" class="form-control" id="data_same" name="data_same" placeholder="Количество кадров">
 			</div>
 			</div>
 			
@@ -105,27 +105,22 @@
 			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
 			<input type="submit" class="btn btn-success btn-lg" name="parameters" value="Начать эксперимент">
 			{% else %}
-				<input type="submit" name="parameters_adm" value = "Начать эксперимент" disabled>
+			<input type="submit" class="btn btn-default btn-lg" name="parameters_adm" value="Начать эксперимент" disabled>
 			{% endif %}
+			
+			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+			<input type="submit" class="btn btn-default btn-lg" name="turn_down" value="Закончить эксперимент">
+			{% else %}
+			<input type="submit" class="btn btn-default btn-lg" name="turn_down_adm" value="Закончить эксперимент" disabled>
+			{% endif %}
+			
 			<input type="reset" class="btn btn-default btn-lg" value="Сбросить настройки">
+			
 			</div>
 		</form>
-		
-		<div class="col-xs-4">
-        <form name="turn_down" method="POST" action="">
-        <div class="control-group">
-        {% csrf_token %}
-        {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-        <input type="submit" class="btn btn-default btn-lg" name="turn_down" value="Закончить эксперимент" style="margin-top:7px">
-        {% else %}
-        <input type="submit" class="btn btn-default btn-lg" name="turn_down_adm" value="Закончить эксперимент" disabled style="margin-top:7px">
-        {% endif %}
-        </div>
-        </form>
-        </div>
-		
         </div>
         </div>
         </div>
-        <script type='text/javascript' src='ntsaveforms.js'></script>
+        {% load staticfiles %}
+        <script type='text/javascript' src="{% static 'experiment/js/ntsaveforms.js' %}"></script>
 {% endblock content %}

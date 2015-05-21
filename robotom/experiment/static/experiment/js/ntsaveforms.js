@@ -17,7 +17,7 @@ wls:wc,get:isLS?rls:rc,remove:isLS?dls:dc}})})(jQuery);
 		}
 	});
 
-	$(".ntSaveForms").keyup(function() {
+	$(".ntSaveForms").change(function() {
 		$.Storage.set($(this).attr("class").split(" ")[$(this).attr("class").split(" ").length -1], $(this).val()); // save field data
 	});
 
