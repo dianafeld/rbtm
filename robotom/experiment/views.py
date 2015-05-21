@@ -30,21 +30,23 @@ def has_experiment_access(user):
 @login_required
 @user_passes_test(has_experiment_access)
 #отправляет включить/выключить томограф,ток,напряжение,заслонку открыть/закрыть и т.д.
-#@api_view(['GET','POST'])
    
 def info_once_only(request, msg):
     if msg not in [m.message for m in get_messages(request)]:
         messages.info(request, msg)
 
+def set_state(TOMO,new_state):
+	TOMO['state'] = new_state
+	
 def experiment_view(request):
-    if TOMO['state'] == 'off':
+    '''if TOMO['state'] == 'off':
         info_once_only(request, u'Текущее состояние томографа: выключен')
         if TOMO['state'] == 'waiting':
-            messages.info_once_only(request, u'Текущее состояние томографа: ожидание')
+            info_once_only(request, u'Текущее состояние томографа: ожидание')
             if TOMO['state'] == 'adjustment':
-                messages.info_once_only(request, u'Текущее состояние томографа: юстировка')
+                info_once_only(request, u'Текущее состояние томографа: юстировка')
                 if TOMO['state'] == 'experiment':
-                    messages.info_once_only(request, u'Текущее состояние томографа: эксперимент')
+                    info_once_only(request, u'Текущее состояние томографа: эксперимент')'''
     if request.method == 'POST':
         if 'on_exp' in request.POST:   #включить томограф
             if TOMO['state'] == 'off':
@@ -66,7 +68,7 @@ def experiment_view(request):
                     return redirect(reverse('experiment:index'))
                 if answer_check['success'] == True:
                         messages.success(request, u'Томограф включен')
-                        TOMO['state'] = 'waiting'
+                        set_state(TOMO,'waiting')
                 else:
                     logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
                     messages.warning(request,u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
@@ -91,7 +93,7 @@ def experiment_view(request):
                     return redirect(reverse('experiment:index'))
                 if answer_check['success'] == True:
                         messages.success(request, u'Томограф включен')
-                        TOMO['state'] = 'off'
+                        set_state(TOMO,'off')
                 else:
                     logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
                     messages.warning(request,u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
@@ -104,22 +106,20 @@ def experiment_view(request):
     })
     
 def experiment_adjustment(request):
-    if TOMO['state'] == 'off':
+    '''if TOMO['state'] == 'off':
         info_once_only(request, u'Текущее состояние томографа: выключен')
     elif TOMO['state'] == 'waiting':
-        messages.info_once_only(request, u'Текущее состояние томографа: ожидание')
+        info_once_only(request, u'Текущее состояние томографа: ожидание')
     elif TOMO['state'] == 'adjustment':
-        messages.info_once_only(request, u'Текущее состояние томографа: юстировка')
+        info_once_only(request, u'Текущее состояние томографа: юстировка')
     elif TOMO['state'] == 'experiment':
-        messages.info_once_only(request, u'Текущее состояние томографа: эксперимент')
+        info_once_only(request, u'Текущее состояние томографа: эксперимент')'''
         
     if request.method == 'POST':
         #if TOMO['state'] == 'waiting' or TOMO['state'] == 'adjustment' :
             if 'move_hor' in request.POST:   #подвинуть по горизонтали
                     try:
-                        info = json.dumps({
-                        float(request.POST['move_hor'])
-                        })  
+                        info = json.dumps(float(request.POST['move_hor']))  
                         answer = requests.post('http://109.234.34.140:5001/tomograph/1/motor/set-horizontal-position', info, timeout=1)
                         answer_check=json.loads(answer.content)
                         if answer.status_code != 200:
@@ -136,15 +136,13 @@ def experiment_adjustment(request):
                         return redirect(reverse('experiment:index_adjustment'))
                     if answer_check['success'] == True:
                         messages.success(request, u'Горизонтальное положение образца изменено.')
-                        TOMO['state'] = 'adjustment'
+                        set_state(TOMO,'adjustment')
                     else:
                         logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
                         messages.warning(request,u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
             if 'move_ver' in request.POST:   #подвинуть по вертикали
                     try:
-                        info = json.dumps({
-                        float(request.POST['move_ver'])
-                        })  
+                        info = json.dumps(float(request.POST['move_ver']))  
                         answer = requests.post('http://109.234.34.140:5001/tomograph/1/motor/set-vertical-position', info, timeout=1)
                         answer_check=json.loads(answer.content)
                         if answer.status_code != 200:
@@ -161,15 +159,13 @@ def experiment_adjustment(request):
                         return redirect(reverse('experiment:index_adjustment'))
                     if answer_check['success'] == True:
                         messages.success(request, u'Вертикальное положение образца изменено.')
-                        TOMO['state'] = 'adjustment'
+                        set_state(TOMO,'adjustment')
                     else:
                         logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
                         messages.warning(request,u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
             if 'rotate' in request.POST:   #повернуть
                     try:
-                        info = json.dumps({
-                        float(request.POST['rotate'])
-                        })  
+                        info = json.dumps(float(request.POST['rotate']))  
                         answer = requests.post('http://109.234.34.140:5001/tomograph/1/motor/set-angle-position', info, timeout=1)
                         answer_check=json.loads(answer.content)
                         if answer.status_code != 200:
@@ -186,7 +182,7 @@ def experiment_adjustment(request):
                         return redirect(reverse('experiment:index_adjustment'))
                     if answer_check['success'] == True:
                         messages.success(request, u'Образец повернут.')
-                        TOMO['state'] = 'adjustment'
+                        set_state(TOMO,'adjustment')
                     else:
                         logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
                         messages.warning(request,u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
@@ -208,7 +204,7 @@ def experiment_adjustment(request):
                         return redirect(reverse('experiment:index_adjustment'))
                     if answer_check['success'] == True:
                         messages.success(request, u'Текущее положение установлено за 0.')
-                        TOMO['state'] = 'adjustment'
+                        set_state(TOMO,'adjustment')
                     else:
                         logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
                         messages.warning(request,u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
@@ -231,7 +227,7 @@ def experiment_adjustment(request):
                         return redirect(reverse('experiment:index_adjustment'))
                     if answer_check['success'] == True:
                         messages.success(request, u'Заслонка открыта')
-                        TOMO['state'] = 'adjustment'
+                        set_state(TOMO,'adjustment')
                     else:
                         logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
                         messages.warning(request,u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
@@ -253,14 +249,12 @@ def experiment_adjustment(request):
                         return redirect(reverse('experiment:index_adjustment'))
                 if answer_check['success'] == True:
                     messages.success(request, u'Заслонка закрыта')
-                    TOMO['state'] = 'adjustment'
+                    set_state(TOMO,'adjustment')
                 else:
                     logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
                     messages.warning(request,u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
             if 'experiment_on_voltage' in request.POST: #задать напряжение
-                info = json.dumps({
-                    'voltage': float(request.POST['voltage'])
-                    })  
+                info = json.dumps(float(request.POST['voltage']))  
                 try:
                     answer = requests.post('http://109.234.34.140:5001/tomograph/1/source/set-voltage', info, timeout=1)
                     answer_check = json.loads(answer.content)
@@ -279,14 +273,12 @@ def experiment_adjustment(request):
                 print(answer_check)
                 if answer_check['success'] == True:
                     messages.success(request, u'Настройки установлены')
-                    TOMO['state'] = 'adjustment'
+                    set_state(TOMO,'adjustment')
                 else:
                     logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
                     messages.warning(request,u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
             if 'experiment_on_current' in request.POST: #задать силу тока
-                info = json.dumps({
-                    'current': float(request.POST['current'])
-                    })
+                info = json.dumps(float(request.POST['current']))
                 try:
                     answer = requests.post('http://109.234.34.140:5001/tomograph/1/source/set-current', info, timeout=1)
                     answer_check = json.loads(answer.content)
@@ -305,7 +297,7 @@ def experiment_adjustment(request):
                 print(answer_check)
                 if answer_check['success'] == True:
                     messages.success(request, u'Настройки установлены')
-                    TOMO['state'] = 'adjustment'
+                    set_state(TOMO,'adjustment')
                 else:
                     logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
                     messages.warning(request,u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
@@ -344,23 +336,20 @@ def experiment_adjustment(request):
                     messages.warning(request,u'Не удалось выполнить предпросмотр. Попробуйте повторно') 
                     logger.error(e)
                 
-        #else:
-            #print TOMO['state']
-            #messages.warning(request,u'Невозможно установить параметры. Начните юстировку')
     return render(request, 'experiment/adjustment.html', {
                 'full_access': (request.user.userprofile.role == 'EXP'),
                 'caption': 'Эксперимент',
             })                      
           
 def experiment_interface(request):
-    if TOMO['state'] == 'off':
+    '''if TOMO['state'] == 'off':
         info_once_only(request, u'Текущее состояние томографа: выключен')
         if TOMO['state'] == 'waiting':
-            messages.info_once_only(request, u'Текущее состояние томографа: ожидание')
+            info_once_only(request, u'Текущее состояние томографа: ожидание')
             if TOMO['state'] == 'adjustment':
-                messages.info_once_only(request, u'Текущее состояние томографа: юстировка')
+                info_once_only(request, u'Текущее состояние томографа: юстировка')
                 if TOMO['state'] == 'experiment':
-                    messages.info_once_only(request, u'Текущее состояние томографа: эксперимент')
+                    info_once_only(request, u'Текущее состояние томографа: эксперимент')'''
     if request.method == 'POST':
         if 'parameters' in request.POST:
             if TOMO['state'] == 'waiting' or TOMO['state'] == 'adjustment': 
@@ -412,7 +401,7 @@ def experiment_interface(request):
                         return redirect(reverse('experiment:index_interface'))
                 if answer_check['success'] == True:
                     messages.success(request, u'Эксперимент успешно начался')
-                    TOMO['state'] = 'experiment'
+                    set_state(TOMO,'experiment')
                 else:
                     logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
                     messages.warning(request,u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
@@ -438,6 +427,7 @@ def experiment_interface(request):
                     return redirect(reverse('experiment:index_interface'))
                 if answer_check['message'] == 'Experiment was finished successfully':
                     messages.success(request, u'Эксперимент окончен')
+                    set_state(TOMO,'off')
                 else:
                     if answer_check['message'] == 'Experiment was emergency stopped':
                         messages.warning(request,u'Аварийное завершение эксперимента {}',error)
