@@ -221,10 +221,9 @@ def experiment_adjustment(request):
                     else:
                         logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
                         messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
-            if 'gate' in request.POST:
-                if request.POST['text_gate'] == 'open': #открыть заслонку
+            if 'text_gate' in request.POST:
+                if request.POST['gate_state'] == 'open': #открыть заслонку
                     try:
-                    	print tomo.state
                         answer = requests.get('http://109.234.34.140:5001/tomograph/1/shutter/open/0', timeout=100)
                         answer_check=json.loads(answer.content)
                         if answer.status_code != 200:
@@ -246,7 +245,7 @@ def experiment_adjustment(request):
                     else:
                         logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
                         messages.warning(request,u'Модуль "Эксперимент" неработает корректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
-                if request.POST['text_gate'] == 'close': #закрыть заслонку
+                if request.POST['gate_state'] == 'close': #закрыть заслонку
                     try:
                         answer = requests.get('http://109.234.34.140:5001/tomograph/1/shutter/close/0', timeout=100)
                         answer_check=json.loads(answer.content)
