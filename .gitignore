@@ -13,3 +13,5 @@ robotom/static/rest_framework/
 *.log
 
 robotom/robotom/test-reports/*
+**/media/*
+**/robotom/static/*
