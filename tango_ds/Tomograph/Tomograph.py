@@ -97,7 +97,7 @@ class Tomograph (PyTango.Device_4Impl):
         self.source = PyTango.DeviceProxy('tomo/source/1')
         self.shutter = PyTango.DeviceProxy('tomo/shutter/1')
         self.detector = PyTango.DeviceProxy('tomo/detector/1')
-        self.detector.set_timeout_millis(70000)
+        self.detector.set_timeout_millis(320000)
         self.motor.set_timeout_millis(70000)
 
         self.SelfTest()
