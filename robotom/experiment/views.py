@@ -35,7 +35,7 @@ def info_once_only(request, msg):
         messages.info(request, msg)
 
 def migrations():
-	if len(Tomograph.objects.all()) != 0:
+	if len(Tomograph.objects.all()) == 0:
 		Tomo = Tomograph(state='off')
 		Tomo.save()
   
