@@ -55,7 +55,7 @@ def experiment_view(request):
    	if request.method == 'POST':
    		if 'on_exp' in request.POST:   #включить томограф
    			try: 
-   				answer = requests.get('http://109.234.34.140:5001/tomograph/1/source/power-on', timeout=1)
+   				answer = requests.get('http://109.234.34.140:5001/tomograph/1/source/power-on', timeout=100)
    				print answer.content
    				answer_check=json.loads(answer.content)
    				if answer.status_code != 200:
@@ -79,7 +79,7 @@ def experiment_view(request):
    				messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
    		if 'of_exp' in request.POST:  #выключение томографа
    			try:
-   				answer = requests.get('http://109.234.34.140:5001/tomograph/1/source/power-off', timeout=1)
+   				answer = requests.get('http://109.234.34.140:5001/tomograph/1/source/power-off', timeout=100)
    				answer_check=json.loads(answer.content)
    				if answer.status_code != 200:
    					messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
@@ -128,7 +128,7 @@ def experiment_adjustment(request):
             if 'move_hor_submit' in request.POST:   #подвинуть по горизонтали
                     try:
                         info = json.dumps(float(request.POST['move_hor']))  
-                        answer = requests.post('http://109.234.34.140:5001/tomograph/1/motor/set-horizontal-position', info, timeout=1)
+                        answer = requests.post('http://109.234.34.140:5001/tomograph/1/motor/set-horizontal-position', info, timeout=100)
                         answer_check=json.loads(answer.content)
                         if answer.status_code != 200:
                             messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
@@ -153,7 +153,7 @@ def experiment_adjustment(request):
             if 'move_ver_submit' in request.POST:   #подвинуть по вертикали
                     try:
                         info = json.dumps(float(request.POST['move_ver']))  
-                        answer = requests.post('http://109.234.34.140:5001/tomograph/1/motor/set-vertical-position', info, timeout=1)
+                        answer = requests.post('http://109.234.34.140:5001/tomograph/1/motor/set-vertical-position', info, timeout=100)
                         answer_check=json.loads(answer.content)
                         if answer.status_code != 200:
                             messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
@@ -177,7 +177,7 @@ def experiment_adjustment(request):
             if 'rotate_submit' in request.POST:   #повернуть
                     try:
                         info = json.dumps(float(request.POST['rotate']))  
-                        answer = requests.post('http://109.234.34.140:5001/tomograph/1/motor/set-angle-position', info, timeout=1)
+                        answer = requests.post('http://109.234.34.140:5001/tomograph/1/motor/set-angle-position', info, timeout=100)
                         answer_check=json.loads(answer.content)
                         if answer.status_code != 200:
                             messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
@@ -200,7 +200,7 @@ def experiment_adjustment(request):
                         messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
             if 'reset_submit' in request.POST:   #установить текущее положение за 0
                     try:    
-                        answer = requests.get('http://109.234.34.140:5001/tomograph/1/motor/reset-angle-position', timeout=1)
+                        answer = requests.get('http://109.234.34.140:5001/tomograph/1/motor/reset-angle-position', timeout=100)
                         answer_check=json.loads(answer.content)
                         if answer.status_code != 200:
                             messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
@@ -225,7 +225,7 @@ def experiment_adjustment(request):
                 if request.POST['text_gate'] == 'open': #открыть заслонку
                     try:
                     	print tomo.state
-                        answer = requests.get('http://109.234.34.140:5001/tomograph/1/shutter/open/0', timeout=1)
+                        answer = requests.get('http://109.234.34.140:5001/tomograph/1/shutter/open/0', timeout=100)
                         answer_check=json.loads(answer.content)
                         if answer.status_code != 200:
                             messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
@@ -248,7 +248,7 @@ def experiment_adjustment(request):
                         messages.warning(request,u'Модуль "Эксперимент" неработает корректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
                 if request.POST['text_gate'] == 'close': #закрыть заслонку
                     try:
-                        answer = requests.get('http://109.234.34.140:5001/tomograph/1/shutter/close/0', timeout=1)
+                        answer = requests.get('http://109.234.34.140:5001/tomograph/1/shutter/close/0', timeout=100)
                         answer_check=json.loads(answer.content)
                         if answer.status_code != 200:
                                 messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
@@ -272,7 +272,7 @@ def experiment_adjustment(request):
             if 'experiment_on_voltage' in request.POST: #задать напряжение
                 info = json.dumps(float(request.POST['voltage']))  
                 try:
-                    answer = requests.post('http://109.234.34.140:5001/tomograph/1/source/set-voltage', info, timeout=1)
+                    answer = requests.post('http://109.234.34.140:5001/tomograph/1/source/set-voltage', info, timeout=100)
                     answer_check = json.loads(answer.content)
                     if answer.status_code != 200:
                         messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
@@ -296,7 +296,7 @@ def experiment_adjustment(request):
             if 'experiment_on_current' in request.POST: #задать силу тока
                 info = json.dumps(float(request.POST['current']))
                 try:
-                    answer = requests.post('http://109.234.34.140:5001/tomograph/1/source/set-current', info, timeout=1)
+                    answer = requests.post('http://109.234.34.140:5001/tomograph/1/source/set-current', info, timeout=100)
                     answer_check = json.loads(answer.content)
                     if answer.status_code != 200:
                         messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
@@ -406,7 +406,7 @@ def experiment_interface(request):
                     }
                 })
 			try:
-		        	answer = requests.post('http://109.234.34.140:5001/tomograph/1/experiment/start', simple_experiment, timeout=1)
+		        	answer = requests.post('http://109.234.34.140:5001/tomograph/1/experiment/start', simple_experiment, timeout=100)
 		        	answer_check=json.loads(answer.content)
 		        	if answer.status_code != 200:
 		        		messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
@@ -429,7 +429,7 @@ def experiment_interface(request):
 		        		messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
 		if 'turn_down' in request.POST:
 		            try:    
-		                answer = requests.get('http://109.234.34.140:5001/tomograph/1/experiment/stop', timeout=1)
+		                answer = requests.get('http://109.234.34.140:5001/tomograph/1/experiment/stop', timeout=100)
 		                answer_check=json.loads(answer.content)
 		                if answer.status_code != 200:
 		                    messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
