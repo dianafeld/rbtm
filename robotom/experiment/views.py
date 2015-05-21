@@ -29,15 +29,13 @@ logger = logging.getLogger('django.request')
 
 def has_experiment_access(user):
     return user.userprofile.role in ['ADM', 'EXP']
-
-#отправляет включить/выключить томограф,ток,напряжение,заслонку открыть/закрыть и т.д.
    
 def info_once_only(request, msg):
     if msg not in [m.message for m in get_messages(request)]:
         messages.info(request, msg)
 
 def migrations():
-	if get_object_or_404(Tomograph,pk=1) == 404:
+	if len(Tomograph.objects.all()) == 0:
 		Tomo = Tomograph(state='off')
 		Tomo.save()
   
@@ -77,8 +75,8 @@ def experiment_view(request):
    				tomo.state='waiting'
    				tomo.save()
    			else:
-   				logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже{}',answer_check['error'])
-   				messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже{}',answer_check['error'])
+   				logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
+   				messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
    		if 'of_exp' in request.POST:  #выключение томографа
    			try:
    				answer = requests.get('http://109.234.34.140:5001/tomograph/1/source/power-off', timeout=1)
@@ -100,12 +98,15 @@ def experiment_view(request):
    				tomo.state='off'
    				tomo.save()
    			else:
-   				logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже{}',answer_check['error'])
-   				messages.warning(request,u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже{}',answer_check['error'])
+   				logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
+   				messages.warning(request,u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
    	return render(request, 'experiment/start.html', {
         'full_access': (request.user.userprofile.role == 'EXP'),
         'caption': 'Эксперимент',
-        'tomo': tomo.state
+        'off': (tomo.state == 'off'),
+        'waiting': (tomo.state == 'waiting'),
+        'adj': (tomo.state == 'adjustment'),
+        'exper': (tomo.state == 'experiment')
     })
 
 @login_required
@@ -147,8 +148,8 @@ def experiment_adjustment(request):
                         tomo.save()
                         print tomo.state
                     else:
-                        logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
-                        messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
+                        logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
+                        messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
             if 'move_ver_submit' in request.POST:   #подвинуть по вертикали
                     try:
                         info = json.dumps(float(request.POST['move_ver']))  
@@ -171,8 +172,8 @@ def experiment_adjustment(request):
                         tomo.state ='adjustment'
                         tomo.save()
                     else:
-                        logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
-                        messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
+                        logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
+                        messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
             if 'rotate_submit' in request.POST:   #повернуть
                     try:
                         info = json.dumps(float(request.POST['rotate']))  
@@ -195,8 +196,8 @@ def experiment_adjustment(request):
                         tomo.state ='adjustment'
                         tomo.save()
                     else:
-                        logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
-                        messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
+                        logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
+                        messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
             if 'reset_submit' in request.POST:   #установить текущее положение за 0
                     try:    
                         answer = requests.get('http://109.234.34.140:5001/tomograph/1/motor/reset-angle-position', timeout=1)
@@ -218,8 +219,8 @@ def experiment_adjustment(request):
                         tomo.state ='adjustment'
                         tomo.save()
                     else:
-                        logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
-                        messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
+                        logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
+                        messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
             if 'gate' in request.POST:
                 if request.POST['text_gate'] == 'open': #открыть заслонку
                     try:
@@ -243,8 +244,8 @@ def experiment_adjustment(request):
                         tomo.state ='adjustment'
                         tomo.save()
                     else:
-                        logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
-                        messages.warning(request,u'Модуль "Эксперимент" неработает корректно в данный момент. Попробуйте позже')
+                        logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
+                        messages.warning(request,u'Модуль "Эксперимент" неработает корректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
                 if request.POST['text_gate'] == 'close': #закрыть заслонку
                     try:
                         answer = requests.get('http://109.234.34.140:5001/tomograph/1/shutter/close/0', timeout=1)
@@ -266,8 +267,8 @@ def experiment_adjustment(request):
                 		tomo.state='adjustment'
                 		tomo.save()
                 	else:
-                		logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
-                		messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
+                		logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
+                		messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
             if 'experiment_on_voltage' in request.POST: #задать напряжение
                 info = json.dumps(float(request.POST['voltage']))  
                 try:
@@ -285,14 +286,13 @@ def experiment_adjustment(request):
                     messages.warning(request, u'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
                     logger.error(e)
                     return redirect(reverse('experiment:index_adjustment'))
-                print(answer_check)
                 if answer_check['success'] == True:
                     messages.success(request, u'Напряжение установлено')
                     tomo.state ='adjustment'
                     tomo.save()
                 else:
-                    logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
-                    messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
+                    logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
+                    messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
             if 'experiment_on_current' in request.POST: #задать силу тока
                 info = json.dumps(float(request.POST['current']))
                 try:
@@ -316,8 +316,8 @@ def experiment_adjustment(request):
                     tomo.state ='adjustment'
                     tomo.save()
                 else:
-                    logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
-                    messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
+                    logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
+                    messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
                     
             if 'picture_exposure_submit' in request.POST: #preview a picture
                 try:
@@ -354,7 +354,10 @@ def experiment_adjustment(request):
 	return render(request, 'experiment/adjustment.html', {
                 'full_access': (request.user.userprofile.role == 'EXP'),
                 'caption': 'Эксперимент',
-                'state': tomo.state
+                'off': (tomo.state == 'off'),
+        		'waiting': (tomo.state == 'waiting'),
+        		'adj': (tomo.state == 'adjustment'),
+        		'exper': (tomo.state == 'experiment')
             })                      
 
 @login_required
@@ -422,8 +425,8 @@ def experiment_interface(request):
 		        		tomo.state='experiment'
 		        		tomo.save()
 		        else:
-		        		logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
-		        		messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
+		        		logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
+		        		messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
 		if 'turn_down' in request.POST:
 		            try:    
 		                answer = requests.get('http://109.234.34.140:5001/tomograph/1/experiment/stop', timeout=1)
@@ -442,13 +445,16 @@ def experiment_interface(request):
 		                return redirect(reverse('experiment:index_interface'))
 		            if answer_check['success'] == True:
 		                messages.success(request, u'Эксперимент окончен')
-		                tomo.state ='off'
+		                tomo.state ='waiting'
 		                tomo.save()
 		            else:
-		            	logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
-		                messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
+		            	logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
+		                messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
 	return render(request, 'experiment/interface.html', {
             'full_access': (request.user.userprofile.role == 'EXP'),
             'caption': 'Эксперимент',
-            'tomo': tomo.state
+            'off': (tomo.state == 'off'),
+        	'waiting': (tomo.state == 'waiting'),
+        	'adj': (tomo.state == 'adjustment'),
+        	'exper': (tomo.state == 'experiment')
         }) 
