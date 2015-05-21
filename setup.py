@@ -10,16 +10,18 @@ import numpy
 
 
 ext_modules=[
-    Extension("ximc",
-              sources=["tango_ds/Motor/ximc.pyx"],
-              libraries=["tango_ds/Motor/libximc"] # Unix-like specific
+    # Extension("ximc",
+    #           sources=["tango_ds/Motor/ximc.pyx"],
+    #           libraries=["tango_ds/Motor/libximc"], # Unix-like specific
+    #           #build_lib=["tango_ds/Motor"]
+    # )
+    # ,
+    Extension("xiApi",
+            sources=["tango_ds/Detector/xiApi.pyx"],
+            libraries=["tango_ds/Detector/m3apiX64"], # Unix-like specific
+            include_dirs=[numpy.get_include()],
+            #build_lib=["tango_ds/Detector"]
     )
-    #,
-    #Extension("xiApi",
-    #          sources=["tango_ds/Detector/xiApi.pyx"],
-    #          libraries=["tango_ds/Detector/m3apiX64"], # Unix-like specific
-    #          include_dirs=[numpy.get_include()]
-    #)
 ]
 
 

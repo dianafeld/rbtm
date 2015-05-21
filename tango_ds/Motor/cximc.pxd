@@ -11,6 +11,11 @@ cdef extern from "ximc.h":
     cdef int result_nodevice = -4
     cdef int device_undefined = -1
 
+    cdef int BORDER_IS_ENCODER = 0x01    # Borders are fixed by predetermined encoder values, if set; borders position on limit switches, if not set. \endenglish \russian Если флаг установлен, границы определяются предустановленными точками на шкале позиции. Если флаг сброшен, границы определяются концевыми выключателями. \endrussian */
+    cdef int BORDER_STOP_LEFT = 0x02    # Motor should stop on left border. \endenglish \russian Если флаг установлен, мотор останавливается при достижении левой границы. \endrussian */
+    cdef int BORDER_STOP_RIGHT = 0x04   # Motor should stop on right border. \endenglish \russian Если флаг установлен, мотор останавливается при достижении правой границы. \endrussian */
+    cdef int BORDERS_SWAP_MISSET_DETECTION = 0x08
+
     ctypedef struct status_t:
         unsigned int MoveSts  # flagset_movestate "Flags of move state".
         unsigned int MvCmdSts  # flagset_mvcmdstatus "Move command state".
@@ -43,6 +48,14 @@ cdef extern from "ximc.h":
         int uPosition  # Microstep position is only used with stepper motors
         long EncPosition  # Encoder position.
 
+    ctypedef struct edges_settings_t:
+        unsigned int BorderFlags # flagset_borderflags "Border flags". \endenglish \russian \ref flagset_borderflags "Флаги границ". \endrussian */
+        unsigned int EnderFlags  # flagset_enderflags "Limit switches flags". \endenglish \russian \ref flagset_enderflags "Флаги концевых выключателей". \endrussian */
+        int LeftBorder   # Left border position, used if BORDER_IS_ENCODER flag is set. Range: -2147483647..2147483647. \endenglish \russian Позиция левой границы, используется если установлен флаг BORDER_IS_ENCODER. Диапазон: -2147483647..2147483647. \endrussian */
+        int uLeftBorder # Left border position in 1/256 microsteps(used with stepper motor only). Range: -255..255. \endenglish \russian Позиция левой границы в 1/256 микрошагах( используется только с шаговым двигателем). Диапазон: -255..255. \endrussian */
+        int RightBorder  # Right border position, used if BORDER_IS_ENCODER flag is set. Range: -2147483647..2147483647. \endenglish \russian Позиция правой границы, используется если установлен флаг BORDER_IS_ENCODER. Диапазон: -2147483647..2147483647. \endrussian */
+        int uRightBorder # Right border position in 1/256 microsteps. Range: -255..255(used with stepper motor only). \endenglish \russian Позиция правой границы в 1/256 микрошагах( используется только с шаговым двигателем). Диапазон: -255..255. \endrussian */
+
     device_enumeration_t enumerate_devices(int probe_flags)
     result_t free_enumerate_devices(int probe_flags)
     int get_device_count(device_enumeration_t device_enumeration)
@@ -59,6 +72,9 @@ cdef extern from "ximc.h":
 
     result_t get_move_settings(device_t id, move_settings_t *move_settings)
     result_t set_move_settings(device_t id, const move_settings_t *move_settings)
+
+    result_t get_edges_settings(device_t id, edges_settings_t* edges_settings)
+    result_t set_edges_settings(device_t id, const edges_settings_t* edges_settings)
 
     result_t get_position(device_t id, get_position_t *the_get_position)
 

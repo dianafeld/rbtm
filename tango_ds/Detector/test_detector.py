@@ -1,6 +1,5 @@
 from xiApi import Detector
 
-import numpy as np
 import pylab as plt
 d = Detector()
 

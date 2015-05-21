@@ -1,6 +1,7 @@
 from cxiapi cimport *
 from libc.string cimport memset, memchr, memcmp, memcpy, memmove
 cimport numpy
+import numpy
 import PyTango
 
 error_codes = { XI_OK: "Function call succeeded",
@@ -98,7 +99,7 @@ cdef void handle_error(return_code, func_name) except *:
 cdef class Detector:
 
     cdef HANDLE handle
-    TIMEOUT = 30 * 1000  # in ms
+    TIMEOUT = 60 * 1000  # in ms
 
     def __cinit__(self):
         cdef DWORD a

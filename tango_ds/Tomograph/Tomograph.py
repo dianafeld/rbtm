@@ -97,6 +97,8 @@ class Tomograph (PyTango.Device_4Impl):
         self.source = PyTango.DeviceProxy('tomo/source/1')
         self.shutter = PyTango.DeviceProxy('tomo/shutter/1')
         self.detector = PyTango.DeviceProxy('tomo/detector/1')
+        self.detector.set_timeout_millis(70000)
+        self.motor.set_timeout_millis(70000)
 
         self.SelfTest()
 
@@ -424,7 +426,7 @@ class Tomograph (PyTango.Device_4Impl):
         current_datetime = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
         detector_data = {'model': 'Ximea xiRAY'}
-        image_data = {'image': image, 'exposure': exposure, 'datetime': current_datetime, 'detector': detector_data}
+        image_data = {'exposure': exposure, 'datetime': current_datetime, 'detector': detector_data} #'image': image, 
         object_data = {'present': self.motor.horizontal_position < 4000,  # TODO
                        'angle position': self.motor.angle_position,
                        'horizontal position': self.motor.horizontal_position,

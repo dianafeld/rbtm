@@ -1,3 +1,4 @@
+numpy
 Cython
 PyTango>=8.1.1
 pytest>=2.6.4

@@ -44,6 +44,11 @@ cdef class Motor:
         if self.device_id == device_undefined:
             create_exception("Motor.open()", "open failed")
 
+        cdef edges_settings_t edges_settings
+        get_edges_settings(self.device_id, &edges_settings)
+        edges_settings.BorderFlags = 0
+        set_edges_settings(self.device_id, &edges_settings)
+
     def close(self):
         cdef int tmp_device_id = self.device_id
         result_code = close_device(&tmp_device_id)

@@ -54,6 +54,7 @@ import sys
 # Add additional import
 # ----- PROTECTED REGION ID(Motor.additionnal_import) ENABLED START -----#
 import ximc
+import time
 #----- PROTECTED REGION END -----#  //  Motor.additionnal_import
 
 ## Device States Description
@@ -79,7 +80,6 @@ class Motor (PyTango.Device_4Impl):
             self.error_stream(str(e))
             raise
         self.debug_stream("Position = {}".format(steps))
-        print steps
         return steps
 
     def _write_position(self, motor, steps):
@@ -88,6 +88,12 @@ class Motor (PyTango.Device_4Impl):
         try:
             self.debug_stream("Setting position = {}".format(steps))
             motor.move_to_position(steps, 0)
+            time.sleep(0.5)
+            status = motor.get_status()
+            while (status["MvCmdSts"] & 0x80) != 0:
+                time.sleep(0.5) 
+                status = motor.get_status()
+
             self.debug_stream("Position has been set")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -110,6 +116,7 @@ class Motor (PyTango.Device_4Impl):
         self.debug_stream("In delete_device()")
         #----- PROTECTED REGION ID(Motor.delete_device) ENABLED START -----#
         self.angle_motor.close()
+        self.horizontal_motor.close()
         #----- PROTECTED REGION END -----#  //  Motor.delete_device
 
     def init_device(self):
@@ -173,9 +180,14 @@ class Motor (PyTango.Device_4Impl):
         data=attr.get_write_value()
         #----- PROTECTED REGION ID(Motor.angle_position_write) ENABLED START -----#
 
+        prev_state = self.get_state()
+        self.set_state(PyTango.DevState.MOVING)
+
         angle = data
         steps = int(angle * 32300 / 360.)
         self._write_position(self.angle_motor, steps)
+
+        self.set_state(prev_state)
 
         #----- PROTECTED REGION END -----#  //  Motor.angle_position_write 
         
@@ -225,9 +237,13 @@ class Motor (PyTango.Device_4Impl):
         self.debug_stream("In write_horizontal_position()")
         data=attr.get_write_value()
         #----- PROTECTED REGION ID(Motor.horizontal_position_write) ENABLED START -----#
+        prev_state = self.get_state()
+        self.set_state(PyTango.DevState.MOVING)
 
         steps = data
         self._write_position(self.horizontal_motor, steps)
+
+        self.set_state(prev_state)
 
         #----- PROTECTED REGION END -----#  //  Motor.horizontal_position_write
         

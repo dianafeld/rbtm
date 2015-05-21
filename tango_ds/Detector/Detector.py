@@ -128,6 +128,7 @@ class Detector (PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         self.attr_exposure_read = 0
+        self.attr_image_read = ''
         #----- PROTECTED REGION ID(Detector.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
@@ -145,6 +146,8 @@ class Detector (PyTango.Device_4Impl):
 
         self.set_state(PyTango.DevState.ON)
         self.attr_exposure_read = self._read_exposure()
+
+        self.attr_image_read = PyTango.EncodedAttribute()
 
         #----- PROTECTED REGION END -----#  //  Detector.init_device
 
@@ -174,6 +177,13 @@ class Detector (PyTango.Device_4Impl):
         self.attr_exposure_read = self._read_exposure()
 
         #----- PROTECTED REGION END -----#  //  Detector.exposure_write
+        
+    def read_image(self, attr):
+        self.debug_stream("In read_image()")
+        #----- PROTECTED REGION ID(Detector.image_read) ENABLED START -----#
+        attr.set_value(self.attr_image_read)
+        
+        #----- PROTECTED REGION END -----#	//	Detector.image_read
         
     
     
@@ -229,8 +239,14 @@ class Detector (PyTango.Device_4Impl):
 
         self.set_state(prev_state)
 
-        
-        argout = str(image.tolist())
+        # argout = []
+        # for lst in image.tolist():
+        #     argout.append(' '.join(lst))
+        # argout = '\n'.join(argout)
+
+        # argout = str(image.tolist())
+        self.attr_image_read.encode_gray16(image)
+
         #print(argout)
 
         # ----- PROTECTED REGION END -----# //  Detector.GetFrame
@@ -295,6 +311,10 @@ class DetectorClass(PyTango.DeviceClass):
                 'min value': "1",
                 'description': "exposure time",
             } ],
+        'image':
+            [[PyTango.DevEncoded,
+            PyTango.SCALAR,
+            PyTango.READ]],
         }
 
 
