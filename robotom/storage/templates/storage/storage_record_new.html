@@ -67,7 +67,9 @@
             </div>
         </div>
 
-
+        <div class="container">
+            <div class="alert alert-info" id="LoadStatus">Статус загрузки изображений: загружается</div>
+        </div>
         <div class="container">
             <div class="panel panel-default">
                 <div class="panel-heading">
@@ -239,9 +241,16 @@
                 dataType: 'text',
                 success: function (data, textStatus, jqXHR) {
 {#                    alert(data + " " + textStatus + " " + jqXHR);#}
+                    var status = document.getElementById("LoadStatus");
+                    status.innerText = "Статус загрузки сообщений: загружено";
+                    status.className = "alert alert-success"
+
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
 {#                    alert(jqXHR.responseText);#}
+                    var status = document.getElementById("LoadStatus");
+                    status.innerText = "Статус загрузки сообщений: ошибка";
+                    status.className = "alert alert-danger"
                 }
             });
         });
