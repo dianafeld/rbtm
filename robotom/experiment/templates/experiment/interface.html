@@ -105,25 +105,19 @@
 			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
 			<input type="submit" class="btn btn-success btn-lg" name="parameters" value="Начать эксперимент">
 			{% else %}
-				<input type="submit" name="parameters_adm" value = "Начать эксперимент" disabled>
+			<input type="submit" class="btn btn-default btn-lg" name="parameters_adm" value="Начать эксперимент" disabled>
 			{% endif %}
+			
+			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+			<input type="submit" class="btn btn-default btn-lg" name="turn_down" value="Закончить эксперимент">
+			{% else %}
+			<input type="submit" class="btn btn-default btn-lg" name="turn_down_adm" value="Закончить эксперимент" disabled>
+			{% endif %}
+			
 			<input type="reset" class="btn btn-default btn-lg" value="Сбросить настройки">
+			
 			</div>
 		</form>
-		
-		<div class="col-xs-4">
-        <form name="turn_down" method="POST" action="">
-        <div class="control-group">
-        {% csrf_token %}
-        {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-        <input type="submit" class="btn btn-default btn-lg" name="turn_down" value="Закончить эксперимент" style="margin-top:7px">
-        {% else %}
-        <input type="submit" class="btn btn-default btn-lg" name="turn_down_adm" value="Закончить эксперимент" disabled style="margin-top:7px">
-        {% endif %}
-        </div>
-        </form>
-        </div>
-		
         </div>
         </div>
         </div>
