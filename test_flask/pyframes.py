@@ -1,6 +1,10 @@
 import h5py
 import os
 import logging
+#import pylab as plt
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 logs_path = os.path.join('logs', 'storage_log.log')
 logging.basicConfig(format = u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
@@ -13,7 +17,6 @@ def extract_frame(frame_id, experiment_id):
         frames_file_path = os.path.join('storage', 'experiments', str(experiment_id), 'before_processing', 'frames.h5')
         frames_file = h5py.File(frames_file_path, 'r')
         frame = frames_file[str(frame_id)][()]
-        logging.error(frame)
         return frame
     except BaseException, e:
             logging.error(e)
@@ -44,3 +47,12 @@ def delete_frame(frame_id, experiment_id):
     except BaseException, e:
         logging.error(e)
     return
+
+
+def make_png(res):
+    plt.ioff()
+    plt.figure()
+    plt.imshow(res, cmap=plt.cm.gray)
+    plt.colorbar()
+    plt.savefig('data.png', bbox_inches='tight')
+    

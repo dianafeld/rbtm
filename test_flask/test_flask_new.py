@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from flask import Flask, jsonify, make_response, request, abort, Response
+from flask import Flask, jsonify, make_response, request, abort, Response, send_file
 from bson.json_util import dumps
 import pymongo as pm
 import pyframes
@@ -7,6 +7,8 @@ import pyfileSystem as fs
 import json
 import logging
 import os
+import numpy as np
+import csv
 
 app = Flask(__name__)
 
@@ -112,6 +114,29 @@ def find_user():
 
 
 
+# update informations about user, return json file
+@app.route('/storage/users/update', methods=['POST'])
+def update_users():
+    if not request.json:
+        logging.error(u'Incorrect format')
+        abort(400)
+
+    try:
+        users = db[u'users']
+        find_query = json.loads(request.data)
+        logging.info(find_query)
+
+        cursor = users.find(find_query)
+        users.update({'user':find_query['user']}, find_query)
+
+        return jsonify({'updated': cursor.count()})
+
+    except BaseException, e:
+            logging.error(e)
+            abort(500)
+
+
+
 # delete user, return json file
 @app.route('/storage/users/delete', methods=['POST'])
 def delete_users():
@@ -128,32 +153,6 @@ def delete_users():
         users.remove(find_query)
 
         return jsonify({'deleted': cursor.count()})
-
-    except BaseException, e:
-            logging.error(e)
-            abort(500)
-
-
-
-# update informations about user, return json file
-#!!!!!!!!!!!!DON'T WORK!!!!!!!!!!!!
-#!!!!!!!!!!!!DON'T WORK!!!!!!!!!!!!
-#!!!!!!!!!!!!DON'T WORK!!!!!!!!!!!!
-@app.route('/storage/users/update', methods=['POST'])
-def update_users():
-    if not request.json:
-        logging.error(u'Incorrect format')
-        abort(400)
-
-    try:
-        users = db[u'users']
-        find_query = json.loads(request.data)
-        logging.info(find_query)
-
-        cursor = users.find(find_query)
-        users.update(request.data, find_query)
-
-        return jsonify({'updated': cursor.count()})
 
     except BaseException, e:
             logging.error(e)
@@ -327,7 +326,29 @@ def delete_experiment():
             logging.error(e)
             abort(500)
 
+@app.route('/storage/png/get', methods=['POST'])
+def get_png():
+    if not request.data:
+        logging.error(u'Incorrect format')
+        abort(400)
 
+    try:
+        find_query = json.loads(request.data)
+        frame_id = find_query[u'id']
+        experiment_id = find_query[u'exp_id']
+        logging.error('1')
+        frame = pyframes.extract_frame(frame_id, experiment_id)
+        reader = csv.reader(frame[11:].split('\n'), delimiter=' ')
+        your_list = list(reader)
+        #print(your_list)
+        del your_list[-1]
+        frame = np.asarray(your_list, dtype=np.int16)
+        pyframes.make_png(frame)
+        return send_file('data.png', mimetype='image/png')
+
+    except BaseException, e:
+        logging.error(e)
+        abort(500)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5006)
