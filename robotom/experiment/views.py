@@ -35,9 +35,15 @@ def has_experiment_access(user):
 def info_once_only(request, msg):
     if msg not in [m.message for m in get_messages(request)]:
         messages.info(request, msg)
+
+def migrations():
+	if get_object_or_404(Tomograph,pk=1) == 404:
+		Tomo = Tomograph(state='off')
+  
 @login_required
 @user_passes_test(has_experiment_access)	
 def experiment_view(request):
+	migrations()
 	tomo=get_object_or_404(Tomograph,pk=1)
 	if tomo.state == 'off':
 		info_once_only(request, u'Текущее состояние томографа: выключен')
@@ -104,6 +110,7 @@ def experiment_view(request):
 @login_required
 @user_passes_test(has_experiment_access)    
 def experiment_adjustment(request):
+	migrations()
 	tomo=get_object_or_404(Tomograph,pk=1)
 	print tomo.state
 	if tomo.state == 'off':
@@ -352,8 +359,8 @@ def experiment_adjustment(request):
 @login_required
 @user_passes_test(has_experiment_access)          
 def experiment_interface(request):
+	migrations()
 	tomo=get_object_or_404(Tomograph,pk=1)
-	tomo.save()
 	if tomo.state == 'off':
 		info_once_only(request, u'Текущее состояние томографа: выключен')
 	elif tomo.state == 'waiting':
