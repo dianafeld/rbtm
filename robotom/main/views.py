@@ -79,6 +79,7 @@ def try_user_sending(request, err_text, address, user=None, user_info=None):
 
 def registration_view(request):
     if request.method == 'POST':
+        print(request.POST)
         user_form = UserRegistrationForm(request.POST)
         userprofile_form = UserProfileRegistrationForm(request.POST)
         if user_form.is_valid() and userprofile_form.is_valid():            
