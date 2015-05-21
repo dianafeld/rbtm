@@ -2,7 +2,9 @@
 
 {% load staticfiles %}
 <link rel="stylesheet" href="{% static 'storage/styles.css' %}">
+
 {% block content %}
+
     <div class="page-header" style="margin-left: 10px">
         <h1>Запись хранилища номер {{ record_id }}</h1>
     </div>
@@ -45,19 +47,19 @@
                             </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>{{ info.specimen }}</td>
-                                    <td>{{ info.finished }}</td>
-                                    <td>{{ info.advanced }}</td>
-                                    <td>{{ info.data_angle_step }}</td>
-                                    <td>{{ info.data_count_per_step }}</td>
-                                    <td>{{ info.data_step_count }}</td>
-                                    <td>{{ info.data_exposure }}</td>
-                                    <td>{{ info.empty_count }}</td>
-                                    <td>{{ info.empty_exposure }}</td>
-                                    <td>{{ info.dark_count }}</td>
-                                    <td>{{ info.dark_exposure }}</td>
-                                </tr>
+                            <tr>
+                                <td>{{ info.specimen }}</td>
+                                <td>{{ info.finished }}</td>
+                                <td>{{ info.advanced }}</td>
+                                <td>{{ info.data_angle_step }}</td>
+                                <td>{{ info.data_count_per_step }}</td>
+                                <td>{{ info.data_step_count }}</td>
+                                <td>{{ info.data_exposure }}</td>
+                                <td>{{ info.empty_count }}</td>
+                                <td>{{ info.empty_exposure }}</td>
+                                <td>{{ info.dark_count }}</td>
+                                <td>{{ info.dark_exposure }}</td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>
@@ -65,84 +67,121 @@
             </div>
         </div>
 
-        <div class="container-fluid" style="margin-top: 30px">
-            <!-- images -->
-            <div id="links" class="row">
-                {% for image_id in image_range %}
-                    <div class="col-xs-4">
-                        {% load static %}
-                        {% static "" as base_url %}
-                        <a href="{{ base_url }}storage/{{ image_id }}.png"
-                           data-description="image {{ image_id }} description"
-                           title="Image {{ image_id }}" class="thumbnail">
-                            <img src="{{ base_url }}storage/{{ image_id }}.png" alt="Image {{ image_id }}"/>
-                        </a>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
 
-        <div id="blueimp-gallery" class="blueimp-gallery blueimp-gallery-controls" data-use-bootstrap-modal="true">
-            <!-- The container for the modal slides -->
-            <div class="slides"></div>
-            <!-- Controls for the borderless lightbox -->
-            <h3 class="title"></h3>
-            <p class="description"></p>
-            <a class="prev">‹</a>
-            <a class="next">›</a>
-            <a class="close">×</a>
-            <!-- The modal dialog, which will be used to wrap the lightbox content -->
-            <div class="modal fade">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title"></h4>
-                        </div>
-                        <div class="row">
-                            <div class="col-xs-4">
-                                <p class="description"></p>
-                            </div>
-                            <div class="col-xs-4">
-                                <div class="modal-body next"></div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-default pull-left prev">
-                                <i class="glyphicon glyphicon-chevron-left"></i>
-                                Previous
-                            </button>
-                            <button type="button" class="btn btn-primary next">
-                                Next
-                                <i class="glyphicon glyphicon-chevron-right"></i>
-                            </button>
-                        </div>
+        <div class="container">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4>Список изображений эксперимента</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered">
+                            <thead>
+                            <tr>
+                                <th>Num</th>
+                                <th>Type</th>
+                                <th>DateTime</th>
+                                <th>Exposure</th>
+                                <th>Shutter open</th>
+                                <th>Angle position</th>
+                                <th>X-Ray current</th>
+                                <th>X-Ray voltage</th>
+                                <th>Detector model</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for frame in frames_list %}
+                                <tr class="paginated-content">
+                                    <td><a id="{{ frame.num }}" onClick="table_click(this.id)" href="#">{{ frame.num }}</a></td>
+                                    <td>{{ frame.type }}</td>
+                                    <td>{{ frame.date_time }}</td>
+                                    <td>{{ frame.exposure }}</td>
+                                    <td>{{ frame.shutter_open }}</td>
+                                    <td>{{ frame.angle_position }}</td>
+                                    <td>{{ frame.current }}</td>
+                                    <td>{{ frame.voltage }}</td>
+                                    <td>{{ frame.detector_model }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div id="myModalBox" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <!-- Заголовок модального окна -->
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                            <span class="glyphicon glyphicon-remove"></span>
+                        </button>
+                        <h4 class="modal-title" id="ImageTitle">Изображение</h4>
+                    </div>
+                    <!-- Основной текст сообщения -->
+                    <div class="modal-body" id="modal-body">
+                    </div>
+                    <!-- Нижняя часть модального окна -->
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left prev" id="0" onClick="nav_click(this.id)">
+                            <i class="glyphicon glyphicon-chevron-left"></i>
+                            Previous
+                        </button>
+                        <button type="button" class="btn btn-default next" id="1" onClick="nav_click(this.id)">
+                            Next
+                            <i class="glyphicon glyphicon-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     {% endif %}
 
-    <script src="{% static 'storage/js/bootstrap-image-gallery-bluimp.js' %}"></script>
-    <script src="{% static 'storage/js/descriptions.js' %}"></script>
     <script type="text/javascript">
-        blueimp.Gallery(
-            document.getElementById('links'),
-            {
-                onslide: function (index, slide) {
-                    var text = this.list[index].getAttribute('data-description'),
-                        node = this.container.find('.description');
-                    node.empty();
-                    if (text) {
-                        node[0].appendChild(document.createTextNode(text));
-                    }
-                }
-            }
-        );
-    </script>
-    <script type="text/javascript">
+        function remove_image() {
+            var mod = document.getElementById('modal-body');
+            mod.removeChild(mod.firstElementChild);
+        }
+
+        function set_image(clicked_id) {
+            var img = document.createElement('img');
+            img.className = "img-responsive";
+            img.setAttribute('src', "/media/" + clicked_id + ".png");
+            var mod_body = document.getElementById('modal-body');
+            mod_body.appendChild(img);
+
+            var mod_title = document.getElementById('ImageTitle');
+            mod_title.innerText = 'Изображение ' + clicked_id;
+
+            var left_button = document.getElementsByClassName('prev')[0];
+            if (left_button.id > 0)
+                left_button.id = parseInt(clicked_id) - 1;
+            else
+                left_button.id = {{ frames_list|length }} - 1;
+            var right_button = document.getElementsByClassName('next')[0];
+            if (right_button.id < {{ frames_list|length }} - 1)
+                right_button.id = parseInt(clicked_id) + 1;
+            else
+                right_button.id = 0;
+        }
+
         $(document).ready(function () {
-            $('[data-toggle="popover"]').popover();
+            $("#myModalBox").on('hidden.bs.modal', function () {
+                remove_image();
+            });
         });
+
+        function table_click(clicked_id) {
+            set_image(clicked_id);
+            $("#myModalBox").modal();
+        }
+
+        function nav_click(clicked_id) {
+            remove_image();
+            table_click(clicked_id);
+        }
     </script>
 {% endblock content %}

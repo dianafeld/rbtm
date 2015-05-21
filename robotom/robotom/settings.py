@@ -4,6 +4,7 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 REQUEST_DEBUG = False
 
+STORAGE_FRAMES_PNG = 'http://109.234.34.140:5006/storage/png/get'
 STORAGE_FRAMES_INFO_HOST = 'http://109.234.34.140:5006/storage/frames_info/get'
 STORAGE_FRAMES_HOST = 'http://109.234.34.140:5006/storage/frames/get'
 STORAGE_EXPERIMENTS_HOST = 'http://109.234.34.140:5006/storage/experiments/get'

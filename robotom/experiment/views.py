@@ -29,7 +29,7 @@ logger = logging.getLogger('django.request')
 
 def has_experiment_access(user):
     return user.userprofile.role in ['ADM', 'EXP']
-   
+
 def info_once_only(request, msg):
     if msg not in [m.message for m in get_messages(request)]:
         messages.info(request, msg)
@@ -274,16 +274,19 @@ def experiment_adjustment(request):
                     answer = requests.post('http://109.234.34.140:5001/tomograph/1/source/set-voltage', info, timeout=100)
                     answer_check = json.loads(answer.content)
                     if answer.status_code != 200:
-                        messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                        logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+                        messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(
+                            answer.status_code))
+                        logger.error(
+                            u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
                         return redirect(reverse('experiment:index_adjustment'))
                 except Timeout as e:
-                    messages.warning(request, u'Нет ответа от модуля "Эксперимент".')
+                    messages.warning(request, 'Нет ответа от модуля "Эксперимент".')
                     logger.error(e)
                     return redirect(reverse('experiment:index_adjustment'))
                 except BaseException as e:
-                    messages.warning(request, u'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
                     logger.error(e)
+                    messages.warning(request,
+                                     'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
                     return redirect(reverse('experiment:index_adjustment'))
                 if answer_check['success'] == True:
                     messages.success(request, u'Напряжение установлено')
@@ -298,16 +301,19 @@ def experiment_adjustment(request):
                     answer = requests.post('http://109.234.34.140:5001/tomograph/1/source/set-current', info, timeout=100)
                     answer_check = json.loads(answer.content)
                     if answer.status_code != 200:
-                        messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                        logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+                        messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(
+                            answer.status_code))
+                        logger.error(
+                            u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
                         return redirect(reverse('experiment:index_adjustment'))
                 except Timeout as e:
-                    messages.warning(request, u'Нет ответа от модуля "Эксперимент".')
+                    messages.warning(request, 'Нет ответа от модуля "Эксперимент".')
                     logger.error(e)
                     return redirect(reverse('experiment:index_adjustment'))
                 except BaseException as e:
-                    messages.warning(request, u'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
                     logger.error(e)
+                    messages.warning(request,
+                                     'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
                     return redirect(reverse('experiment:index_adjustment'))
                 print(answer_check)
                 if answer_check['success'] == True:

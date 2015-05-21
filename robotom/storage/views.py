@@ -1,11 +1,19 @@
 # coding=utf-8
+import csv
+import hashlib
 import logging
+import os
+import random
+import tempfile
 from django.contrib import messages
+from django.core.files.storage import default_storage
+from django.http import HttpResponseBadRequest, HttpResponse
 import requests
 import json
 from django.shortcuts import render
 from requests.exceptions import Timeout
-from robotom.settings import STORAGE_EXPERIMENTS_HOST, STORAGE_FRAMES_HOST, STORAGE_FRAMES_INFO_HOST
+from robotom.settings import STORAGE_EXPERIMENTS_HOST, STORAGE_FRAMES_HOST, STORAGE_FRAMES_INFO_HOST, MEDIA_ROOT, \
+    STORAGE_FRAMES_PNG
 
 rest_logger = logging.getLogger('rest_logger')
 
@@ -36,8 +44,8 @@ class ExperimentRecord:
 
 
 def make_info(post_args):
-    for arg in post_args:
-        rest_logger.debug(u'PostArgs: {} {}'.format(arg, post_args[arg]))
+    # for arg in post_args:
+    #     rest_logger.debug(u'PostArgs: {} {}'.format(arg, post_args[arg]))
     # Внимание! Быдлокод!
     request = {}
 
@@ -154,7 +162,8 @@ def storage_view(request):
 
 class FrameRecord:
     def __init__(self, frame):
-        self.num = ""
+        self.id = ""
+        self.num = "0"
         self.type = ""
         self.date_time = ""
         self.detector_model = ""
@@ -163,8 +172,13 @@ class FrameRecord:
         self.angle_position = ""
         self.current = ""
         self.voltage = ""
-        if "num" in frame:
-            self.num = frame["num"]
+        if "_id" in frame:
+            if "$oid" in frame['_id']:
+                self.id = str(frame["_id"]['$oid'])
+            else:
+                self.id = str(frame["_id"])
+        if "number" in frame:
+            self.num = frame["number"]
         if "type" in frame:
             self.type = frame["type"]
         if "frame" in frame:
@@ -205,7 +219,7 @@ def storage_record_view(request, storage_record_id):
                 record = ExperimentRecord(experiment_info[0])
         else:
             rest_logger.error(u'Не удается получить эксперимент. Ошибка: {}'.format(experiment.status_code))
-            messages.error(request, u'Не удается получить эксперимент. Ошибка: {}')
+            messages.error(request, u'Не удается получить эксперимент. Ошибка: {}'.format(experiment.status_code))
             to_show = False
     except Timeout as e:
         rest_logger.error(u'Не удается получить эксперимент. Ошибка: {}'.format(e.message))
@@ -227,18 +241,19 @@ def storage_record_view(request, storage_record_id):
             rest_logger.debug(u'Страница записи: Список изображений: {}'.format(frames_info))
             frames_list = [FrameRecord(frame) for frame in frames_info]
         else:
-            rest_logger.error(u'Не удается получить список изображений. Ошибка: {}'.format(frames.status_code))
+            rest_logger.error(
+                u'Страница записи: Не удается получить список изображений. Ошибка: {}'.format(frames.status_code))
             messages.error(request, u'Не удается получить список изображений. Ошибка: {}'.format(frames.status_code))
             to_show = False
     except Timeout as e:
-        rest_logger.error(u'Не удается получить список изображений. Ошибка: {}'.format(e.message))
+        rest_logger.error(u'Страница записи: Не удается получить список изображений. Ошибка: {}'.format(e.message))
         messages.error(request,
                        u'Не удается получить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
         to_show = False
     except BaseException as e:
-        rest_logger.error(u'Не удается получить список изображений. Ошибка: {}'.format(e.message))
+        rest_logger.error(u'Страница записи: Не удается получить список изображений. Ошибка: {}'.format(e.message))
         messages.error(request,
-                       u'Не удется поучить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
+                       u'Не удается получить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
         to_show = False
 
     return render(request, 'storage/storage_record_new.html', {
@@ -247,4 +262,77 @@ def storage_record_view(request, storage_record_id):
         'to_show': to_show,
         'info': record,
         'frames_list': frames_list,
+        'frames_info_url': STORAGE_FRAMES_INFO_HOST
     })
+
+
+def frames_downloading(request, storage_record_id):
+    frames_list = []
+    try:
+        frame_request = json.dumps({"exp_id": storage_record_id})
+        rest_logger.debug(u'Получение изображений: Запрос списка изображений {}'.format(frame_request))
+        frames = requests.post(STORAGE_FRAMES_INFO_HOST, frame_request, timeout=1)
+        if frames.status_code == 200:
+            frames_info = json.loads(frames.content)
+            rest_logger.debug(u'Получение изображений: Список изображений: {}'.format(frames_info))
+            frames_list = [FrameRecord(frame) for frame in frames_info]
+        else:
+            rest_logger.error(
+                u'Получение изображений: Не удается получить список изображений. Ошибка: {}'.format(frames.status_code))
+            messages.error(request, u'Не удается получить список изображений. Ошибка: {}'.format(frames.status_code))
+            return HttpResponseBadRequest(u'Ошибкa {} при получении списка изображений'.format(frames.status_code),
+                                          content_type='text/plain')
+    except Timeout as e:
+        rest_logger.error(
+            u'Получение изображений: Не удается получить список изображений. Ошибка: {}'.format(e.message))
+        messages.error(request,
+                       u'Не удается получить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
+        return HttpResponseBadRequest(u"Не удалось получить список изображений. Истекло время ожидания ответа",
+                                      content_type='text/plain')
+    except BaseException as e:
+        rest_logger.error(
+            u'Получение изображений: Не удается получить список изображений. Ошибка: {}'.format(e.message))
+        messages.error(request,
+                       u'Не удается получить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
+        return HttpResponseBadRequest(u'Не удалось получить список изображений. Сервер хранилища не отвечает.',
+                                      content_type='text/plain')
+
+    for frame in frames_list:
+        try:
+            frame_request = json.dumps({"id": frame.id, "exp_id": storage_record_id})
+            rest_logger.debug(
+                u'Получение изображений: Запрос на получение изображения номер {}: {}'.format(frame.id, frame_request))
+            frame_response = requests.post(STORAGE_FRAMES_PNG, frame_request, timeout=100, stream=True)
+            if frame_response.status_code == 200:
+                file_name = frame.id + '.png'
+                if not os.path.isfile(file_name):
+                    temp_file = tempfile.TemporaryFile()
+                    for block in frame_response.iter_content(1024 * 8):
+                        if not block:
+                            break
+                        temp_file.write(block)
+                    default_storage.save(os.path.join(MEDIA_ROOT, file_name), temp_file)
+            else:
+                rest_logger.error(u'Получение изображений: Не удается получить изображениe {}. Ошибка: {}'.format(
+                    frame.id, frame_response.status_code))
+                messages.error(request,
+                               u'Не удается получить изображения. Ошибка: {}'.format(frame_response.status_code))
+                return HttpResponseBadRequest(
+                    u'Ошибкa {} при получении изображения'.format(frame_response.status_code),
+                    content_type='text/plain')
+        except Timeout as e:
+            rest_logger.error(u'Получение изображений: Не удается получить изображения. Ошибка: {}'.format(e.message))
+            messages.error(request,
+                           u'Не удается получить изображения. Сервер хранилища не отвечает. Попробуйте позже.')
+            return HttpResponseBadRequest(
+                u'Не удалось получить изображение номер {}. Истекло время ожидания ответа'.format(frame.id),
+                content_type='text/plain')
+        except BaseException as e:
+            rest_logger.error(u'Получение изображений: Не удается получить изображения. Ошибка: {}'.format(e.message))
+            messages.error(request,
+                           u'Не удается получить изображения. Сервер хранилища не отвечает. Попробуйте позже.')
+            return HttpResponseBadRequest(
+                u'Не удалось получить изображение номер {}. Сервер хранилища не отвечает.'.format(frame.id),
+                content_type='text/plain')
+
+    return HttpResponse(u'Изображения получены успешно', content_type='text/plain')

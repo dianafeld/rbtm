@@ -92,7 +92,8 @@
                             <tbody>
                             {% for frame in frames_list %}
                                 <tr class="paginated-content">
-                                    <td><a id="{{ frame.num }}" onClick="table_click(this.id)" href="#">{{ frame.num }}</a></td>
+                                    <td><a id="{{ frame.num }}" onClick="table_click(this.id)"
+                                           href="#">{{ frame.num }}</a></td>
                                     <td>{{ frame.type }}</td>
                                     <td>{{ frame.date_time }}</td>
                                     <td>{{ frame.exposure }}</td>
@@ -101,6 +102,7 @@
                                     <td>{{ frame.current }}</td>
                                     <td>{{ frame.voltage }}</td>
                                     <td>{{ frame.detector_model }}</td>
+                                    <td hidden>{{ frame.id }}</td>
                                 </tr>
                             {% endfor %}
                             </tbody>
@@ -122,10 +124,45 @@
                     </div>
                     <!-- Основной текст сообщения -->
                     <div class="modal-body" id="modal-body">
+                        <button type="button" class="btn btn-default pull-left prev" id="1"
+                                onClick="nav_click(this.id)">
+                            <i class="glyphicon glyphicon-chevron-left"></i>
+                            Previous
+                        </button>
+                        <button type="button" class="btn btn-default pull-right next" id="1"
+                                onClick="nav_click(this.id)">
+                            Next
+                            <i class="glyphicon glyphicon-chevron-right"></i>
+                        </button>
+                        <table class="table table-responsive">
+                            <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Date Time</th>
+                                <th>Exposure</th>
+                                <th>Shutter open</th>
+                                <th>Angle position</th>
+                                <th>X-Ray current</th>
+                                <th>X-Ray voltage</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td id="Type"></td>
+                                <td id="DateTime"></td>
+                                <td id="Exposure"></td>
+                                <td id="Shutter"></td>
+                                <td id="Angle"></td>
+                                <td id="Current"></td>
+                                <td id="Voltage"></td>
+                            </tr>
+                            </tbody>
+                        </table>
                     </div>
                     <!-- Нижняя часть модального окна -->
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default pull-left prev" id="0" onClick="nav_click(this.id)">
+                        <button type="button" class="btn btn-default pull-left prev" id="1"
+                                onClick="nav_click(this.id)">
                             <i class="glyphicon glyphicon-chevron-left"></i>
                             Previous
                         </button>
@@ -141,28 +178,51 @@
     {% endif %}
 
     <script type="text/javascript">
+        function get_id_by_number(number) {
+            return document.getElementById(number).parentNode.parentNode.childNodes[19].textContent;
+        }
+
         function remove_image() {
             var mod = document.getElementById('modal-body');
-            mod.removeChild(mod.firstElementChild);
+            mod.removeChild(mod.lastElementChild);
         }
 
         function set_image(clicked_id) {
             var img = document.createElement('img');
             img.className = "img-responsive";
-            img.setAttribute('src', "/media/" + clicked_id + ".png");
+            img.setAttribute('src', "/media/" + get_id_by_number(clicked_id) + ".png");
             var mod_body = document.getElementById('modal-body');
             mod_body.appendChild(img);
 
             var mod_title = document.getElementById('ImageTitle');
             mod_title.innerText = 'Изображение ' + clicked_id;
 
+            document.getElementById('Type').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[1].textContent;
+            document.getElementById('DateTime').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[5].textContent;
+            document.getElementById('Exposure').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[7].textContent;
+            document.getElementById('Shutter').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[9].textContent;
+            document.getElementById('Angle').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[11].textContent;
+            document.getElementById('Current').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[13].textContent;
+            document.getElementById('Voltage').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[1].textContent;
+
             var left_button = document.getElementsByClassName('prev')[0];
+            if (left_button.id > 0) {
+                left_button.id = parseInt(clicked_id) - 1;
+            }
+            else
+                left_button.id = {{ frames_list|length }} -1;
+            left_button = document.getElementsByClassName('prev')[1];
             if (left_button.id > 0)
                 left_button.id = parseInt(clicked_id) - 1;
             else
-                left_button.id = {{ frames_list|length }} - 1;
+                left_button.id = {{ frames_list|length }} -1;
             var right_button = document.getElementsByClassName('next')[0];
-            if (right_button.id < {{ frames_list|length }} - 1)
+            if (right_button.id < {{ frames_list|length }} -1)
+                right_button.id = parseInt(clicked_id) + 1;
+            else
+                right_button.id = 0;
+            right_button = document.getElementsByClassName('next')[1];
+            if (right_button.id < {{ frames_list|length }} -1)
                 right_button.id = parseInt(clicked_id) + 1;
             else
                 right_button.id = 0;
@@ -171,6 +231,18 @@
         $(document).ready(function () {
             $("#myModalBox").on('hidden.bs.modal', function () {
                 remove_image();
+            });
+
+            $.ajax({
+                url: '{% url 'storage:frames_downloading' record_id %}',
+                method: 'GET',
+                dataType: 'text',
+                success: function (data, textStatus, jqXHR) {
+{#                    alert(data + " " + textStatus + " " + jqXHR);#}
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+{#                    alert(jqXHR.responseText);#}
+                }
             });
         });
 
