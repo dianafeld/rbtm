@@ -82,11 +82,11 @@
                             <div class="control-group">
                                 {% csrf_token %}
                                 <label for="move_ver">Подвинуть по вертикали</label>
-                                <input type="number" step="0.01" min="0" class="form-control ntSaveForms" required
-                                       id="move_hor" pattern="\d+(\.\d{2})?" name="move_ver" placeholder="">
+                                <input type="number" step="0.01" min="0" class="form-control ntSaveForms" required disabled
+                                       id="move_hor" name="move_ver" placeholder="">
                                 {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
                                     <input type="submit" class="btn btn-default btn-md" name="move_ver"
-                                           value="Подвинуть образец" style="margin-top:7px">
+                                           value="Подвинуть образец" disabled style="margin-top:7px">
                                 {% else %}
                                     <input type="submit" class="btn btn-default btn-md" name="move_ver_adm"
                                            value="Подвинуть образец" disabled style="margin-top:7px">
