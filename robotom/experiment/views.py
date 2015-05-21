@@ -322,12 +322,9 @@ def experiment_adjustment(request):
             if 'picture_exposure_submit' in request.POST: #preview a picture
                 try:
                     exposure = request.POST['picture_exposure']
-                    #image_url = 'http://pngimg.com/upload/cat_PNG100.png'
-                    #response = requests.get(image_url, stream=True)
                     image_url = 'http://109.234.34.140:5001/tomograph/1/detector/get-frame'
                     data = json.dumps(float(exposure))
                     response = requests.post(image_url, data, stream=True)
-                    #print(response.content)
                     if response.status_code != 200:
                         messages.warning(request, u'Не удалось получить картинку') 
                         logger.error(u'Не удалось получить картинку, код ошибки: {}'.format(response.status_code))

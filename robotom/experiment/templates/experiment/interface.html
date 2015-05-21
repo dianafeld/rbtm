@@ -111,16 +111,15 @@
 			
 			<br>
 			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-			<input type="submit" class="btn btn-success btn-lg" name="parameters" value="Начать эксперимент">
+			<input type="submit" style="white-space:normal" class="btn btn-success btn-lg" name="parameters" value="Начать эксперимент">
 			{% else %}
-
-			<input type="submit" class="btn btn-default btn-lg" name="parameters_adm" value="Начать эксперимент" disabled>
+			<input type="submit" style="white-space:normal" class="btn btn-default btn-lg" name="parameters_adm" value="Начать эксперимент" disabled>
 			{% endif %}
 			
 			{% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-			<input type="submit" class="btn btn-default btn-lg" name="turn_down" value="Закончить эксперимент">
+			<input type="submit" style="white-space:normal" class="btn btn-default btn-lg" name="turn_down" value="Закончить эксперимент">
 			{% else %}
-			<input type="submit" class="btn btn-default btn-lg" name="turn_down_adm" value="Закончить эксперимент" disabled>
+			<input type="submit" style="white-space:normal" class="btn btn-default btn-lg" name="turn_down_adm" value="Закончить эксперимент" disabled>
 			{% endif %}
 			
 			<input type="reset" class="btn btn-default btn-lg" value="Сбросить настройки">
