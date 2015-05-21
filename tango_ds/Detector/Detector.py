@@ -147,6 +147,8 @@ class Detector (PyTango.Device_4Impl):
 
         self.set_state(PyTango.DevState.ON)
 
+        self.attr_image_read = PyTango.EncodedAttribute()
+
         #----- PROTECTED REGION END -----#  //  Detector.init_device
 
     def always_executed_hook(self):
@@ -219,13 +221,11 @@ class Detector (PyTango.Device_4Impl):
 
         self.debug_stream("Starting acquisition...")
         try:
-            pass
-            # with open('Detector/data.txt') as f:
-            #     # image = f.read()
-            #     import csv
-            #     reader = csv.reader(f, delimiter='\t')
-            #     your_list = list(reader)
-            #     image = np.asarray(your_list, dtype=np.int16)
+            with open('Detector/data.txt') as f:
+                import csv
+                reader = csv.reader(f, delimiter='\t')
+                your_list = list(reader)
+                image = np.asarray(your_list, dtype=np.int16)
         except PyTango.DevFailed as df:
             self.set_state(PyTango.DevState.FAULT)
             self.error_stream(str(df))
@@ -245,12 +245,12 @@ class Detector (PyTango.Device_4Impl):
         #image = zlib.compress(image, 6)
         #print(len(image))
 
-        #self.attr_image_read = image
+        self.attr_image_read.encode_gray16(image)
 
         #return ('image', image)
 
-        with open('Detector/DATA_14') as f:
-            argout = f.read()
+        # with open('Detector/DATA_14') as f:
+        #    argout = f.read()
         # print(argout)
 
         # ----- PROTECTED REGION END -----# //  Detector.GetFrame
