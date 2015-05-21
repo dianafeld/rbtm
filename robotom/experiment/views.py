@@ -39,6 +39,7 @@ def info_once_only(request, msg):
 def migrations():
 	if get_object_or_404(Tomograph,pk=1) == 404:
 		Tomo = Tomograph(state='off')
+		Tomo.save()
   
 @login_required
 @user_passes_test(has_experiment_access)	
@@ -76,8 +77,8 @@ def experiment_view(request):
    				tomo.state='waiting'
    				tomo.save()
    			else:
-   				logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
-   				messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже')
+   				logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже{}',answer_check['error'])
+   				messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже{}',answer_check['error'])
    		if 'of_exp' in request.POST:  #выключение томографа
    			try:
    				answer = requests.get('http://109.234.34.140:5001/tomograph/1/source/power-off', timeout=1)
@@ -99,8 +100,8 @@ def experiment_view(request):
    				tomo.state='off'
    				tomo.save()
    			else:
-   				logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
-   				messages.warning(request,u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже')
+   				logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже{}',answer_check['error'])
+   				messages.warning(request,u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже{}',answer_check['error'])
    	return render(request, 'experiment/start.html', {
         'full_access': (request.user.userprofile.role == 'EXP'),
         'caption': 'Эксперимент',
