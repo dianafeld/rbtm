@@ -68,7 +68,7 @@
                                 <input type="number" step="0.01" min="0" class="form-control ntSaveForms" required
                                        id="move_hor" name="move_hor" placeholder="">
                                 {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-                                    <input type="submit" class="btn btn-default btn-md" name="move_hor"
+                                    <input type="submit" class="btn btn-default btn-md" name="move_hor_submit"
                                            value="Подвинуть образец" style="margin-top:7px">
                                 {% else %}
                                     <input type="submit" class="btn btn-default btn-md" name="move_hor_adm"
@@ -85,8 +85,7 @@
                                 <input type="number" step="0.01" min="0" class="form-control ntSaveForms" required disabled
                                        id="move_hor" name="move_ver" placeholder="">
                                 {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-                                    <input type="submit" class="btn btn-default btn-md" name="move_ver"
-                                           value="Подвинуть образец" disabled style="margin-top:7px">
+                                <input type="submit" class="btn btn-default btn-md" disabled name="move_ver_submit">
                                 {% else %}
                                     <input type="submit" class="btn btn-default btn-md" name="move_ver_adm"
                                            value="Подвинуть образец" disabled style="margin-top:7px">
@@ -102,9 +101,9 @@
                                 {% csrf_token %}
                                 <label for="rotate">Изменить угловое положение</label>
                                 <input type="number" step="0.01" min="0" class="form-control ntSaveForms" required
-                                       id="rotate" name="move_ver" placeholder="">
+                                       id="rotate" name="rotate" placeholder="">
                                 {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-                                    <input type="submit" class="btn btn-default btn-md" name="rotate" value="Повернуть"
+                                    <input type="submit" class="btn btn-default btn-md" name="rotate_submit" value="Повернуть"
                                            style="margin-top:7px">
                                 {% else %}
                                     <input type="submit" class="btn btn-default btn-md" name="rotate_adm"
@@ -119,7 +118,7 @@
                                 {% csrf_token %}
                                 <label for="reset">Принять текущее угловое положение за 0</label>
                                 {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
-                                    <input type="submit" class="btn btn-default btn-md" name="reset" value="Принять"
+                                    <input type="submit" class="btn btn-default btn-md" name="reset_submit" value="Принять"
                                            style="margin-top:7px">
                                 {% else %}
                                     <input type="submit" class="btn btn-default btn-md" name="reset_adm" value="Принять"
