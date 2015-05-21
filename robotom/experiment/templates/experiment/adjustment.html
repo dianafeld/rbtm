@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
+<html>
+<head>
 		{% if messages %}
 		<div class="row">
 		{% for message in messages %}
@@ -12,10 +14,9 @@
 		</div>
         {% endif %}
         
-        <script type='text/javascript' src='/jquery-latest.min.js'></script>
-        <script type='text/javascript' src='/ntsaveforms.js'></script>
-        <script type='text/javascript' src='/jquery.Storage.js'></script>
-        
+       <script type='text/javascript' src='jquery.js'></script>
+    </head>
+    <body>    
         <div class="container">
         <div class="panel panel-default">
         
@@ -151,5 +152,7 @@
         
         </div>
         </div>
+       <script type='text/javascript' src='ntsaveforms.js'></script>
+       </body>
        
 {% endblock content %}
