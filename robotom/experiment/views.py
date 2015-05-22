@@ -380,11 +380,8 @@ def experiment_interface(request):
 			exp_id = uuid.uuid4()
 			simple_experiment = json.dumps({
 				'experiment id': str(exp_id),
-                'for storage':
-                    {
-                        'name':request.POST['name'],
-                        'tegs':request.POST['type']
-                    },
+                'specimen':request.POST['name'],
+                'tags':request.POST['tags']
                 'experiment parameters':
                     {
                         'advanced': False,
