@@ -29,6 +29,9 @@ WEBPAGE_OF_ADJUSTMENT_IS_FICTITIOUS = True
 TOMOGRAPH_IS_FICTITIOUS = True
 
 
+TIMEOUT_MILLIS = 200000
+
+
 
 
 if STORAGE_IS_FICTITIOUS:
@@ -53,8 +56,6 @@ else:
 
 
 
-
-
 TOMOGRAPHS = (
     {
         'id': 1,
@@ -63,8 +64,8 @@ TOMOGRAPHS = (
         'experiment is running': False,
     },
 )
-TOMOGRAPHS[0]['device'].set_timeout_millis(200000)
-TOMOGRAPHS[0]['detector'].set_timeout_millis(200000)
+TOMOGRAPHS[0]['device'].set_timeout_millis(TIMEOUT_MILLIS)
+TOMOGRAPHS[0]['detector'].set_timeout_millis(TIMEOUT_MILLIS)
 
 
 
@@ -287,7 +288,7 @@ def set_x(tomo_num, new_x, exp_id = ''):
 
     # TO DELETE THIS LATER
     print('Setting value %.1f...' % (new_x))
-    if new_x < -30 or 30 < new_x:
+    if new_x < -5000 or 2000 < new_x:
         error = 'Position must have value from -30 to 30'
         print(error)
         if exp_id:
@@ -324,7 +325,7 @@ def set_y(tomo_num, new_y, exp_id = ''):
 
     # TO DELETE THIS LATER
     print('Setting value %.1f...' % (new_y))
-    if new_y < -30 or 30 < new_y:
+    if new_y < -5000 or 2000 < new_y:
         error = 'Position must have value from -30 to 30'
         print(error)
         if exp_id:
@@ -1098,7 +1099,7 @@ def internal_server_error(error):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port = 5002)
+    app.run(host='0.0.0.0', port = 5001)
 
 
 
