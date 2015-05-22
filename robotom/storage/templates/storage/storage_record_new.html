@@ -6,7 +6,7 @@
 {% block content %}
 
     <div class="page-header" style="margin-left: 10px">
-        <h1>Запись хранилища номер {{ record_id }}</h1>
+        <h1>Запись хранилища {{ record_id }}</h1>
     </div>
     {% if messages %}
         <div class="row">
@@ -30,20 +30,20 @@
                             <tr>
                                 <th rowspan="2" style="vertical-align: middle">Образец</th>
                                 <th rowspan="2" style="vertical-align: middle">Закончен</th>
-                                <th rowspan="2" style="vertical-align: middle">Advanced</th>
+                                <th rowspan="2" style="vertical-align: middle">Продвинутый</th>
                                 <th colspan="4" style="text-align: center">DATA</th>
                                 <th colspan="2" style="text-align: center">EMPTY</th>
                                 <th colspan="2" style="text-align: center">DARK</th>
                             </tr>
                             <tr>
-                                <th>Angle Step</th>
-                                <th>Count per step</th>
-                                <th>Step Count</th>
-                                <th>Exposure</th>
-                                <th>Сount</th>
-                                <th>Exposure</th>
-                                <th>Count</th>
-                                <th>Exposure</th>
+                                <th>Шаг угла</th>
+                                <th>Изображений на шаг</th>
+                                <th>Количество шагов</th>
+                                <th>Экспозиция</th>
+                                <th>Количество</th>
+                                <th>Экспозиция</th>
+                                <th>Количество</th>
+                                <th>Экспозиция</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -51,14 +51,14 @@
                                 <td>{{ info.specimen }}</td>
                                 <td>{{ info.finished }}</td>
                                 <td>{{ info.advanced }}</td>
-                                <td>{{ info.data_angle_step }}</td>
+                                <td>{{ info.data_angle_step }}&deg;</td>
                                 <td>{{ info.data_count_per_step }}</td>
                                 <td>{{ info.data_step_count }}</td>
-                                <td>{{ info.data_exposure }}</td>
+                                <td>{{ info.data_exposure|floatformat }} мс</td>
                                 <td>{{ info.empty_count }}</td>
-                                <td>{{ info.empty_exposure }}</td>
+                                <td>{{ info.empty_exposure|floatformat }} мс</td>
                                 <td>{{ info.dark_count }}</td>
-                                <td>{{ info.dark_exposure }}</td>
+                                <td>{{ info.dark_exposure|floatformat }} мс</td>
                             </tr>
                             </tbody>
                         </table>
@@ -80,15 +80,15 @@
                         <table class="table table-hover table-bordered">
                             <thead>
                             <tr>
-                                <th>Num</th>
-                                <th>Type</th>
-                                <th>DateTime</th>
-                                <th>Exposure</th>
-                                <th>Shutter open</th>
-                                <th>Angle position</th>
-                                <th>X-Ray current</th>
-                                <th>X-Ray voltage</th>
-                                <th>Detector model</th>
+                                <th>#</th>
+                                <th>Тип</th>
+                                <th>Время</th>
+                                <th>Экспозиция</th>
+                                <th>Заслонка</th>
+                                <th>Угол поворота</th>
+                                <th>X-Ray ток</th>
+                                <th>X-Ray напряжение</th>
+                                <th>Модель детектора</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -98,9 +98,14 @@
                                            href="#">{{ frame.num }}</a></td>
                                     <td>{{ frame.type }}</td>
                                     <td>{{ frame.date_time }}</td>
-                                    <td>{{ frame.exposure }}</td>
-                                    <td>{{ frame.shutter_open }}</td>
-                                    <td>{{ frame.angle_position }}</td>
+                                    <td>{{ frame.exposure }} мс</td>
+                                    <td>{% if frame.shutter_open %}
+                                        Открыта
+                                        {% else %}
+                                        Закрыта
+                                        {% endif %}
+                                     </td>
+                                     <td>{{ frame.angle_position|floatformat:2 }}&deg;</td>
                                     <td>{{ frame.current }}</td>
                                     <td>{{ frame.voltage }}</td>
                                     <td>{{ frame.detector_model }}</td>
@@ -242,14 +247,14 @@
                 success: function (data, textStatus, jqXHR) {
 {#                    alert(data + " " + textStatus + " " + jqXHR);#}
                     var status = document.getElementById("LoadStatus");
-                    status.innerText = "Статус загрузки сообщений: загружено";
+                    status.innerText = "Статус загрузки изображений: загружено";
                     status.className = "alert alert-success"
 
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
 {#                    alert(jqXHR.responseText);#}
                     var status = document.getElementById("LoadStatus");
-                    status.innerText = "Статус загрузки сообщений: ошибка";
+                    status.innerText = "Статус загрузки изображений: ошибка";
                     status.className = "alert alert-danger"
                 }
             });

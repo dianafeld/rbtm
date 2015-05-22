@@ -172,16 +172,18 @@ class FrameRecord:
         self.angle_position = ""
         self.current = ""
         self.voltage = ""
+
         if "_id" in frame:
             if "$oid" in frame['_id']:
                 self.id = str(frame["_id"]['$oid'])
             else:
                 self.id = str(frame["_id"])
-        if "number" in frame:
-            self.num = frame["number"]
+        
         if "type" in frame:
             self.type = frame["type"]
         if "frame" in frame:
+            if "number" in frame['frame']:
+                self.num = frame["frame"]["number"]
             if "image_data" in frame["frame"]:
                 if "datetime" in frame["frame"]["image_data"]:
                     self.date_time = frame["frame"]["image_data"]["datetime"]
@@ -189,7 +191,7 @@ class FrameRecord:
                     if "model" in frame["frame"]["image_data"]["detector"]:
                         self.detector_model = frame["frame"]["image_data"]["detector"]["model"]
                 if "exposure" in frame["frame"]["image_data"]:
-                    self.exposure = frame["frame"]["image_data"]["exposure"]
+                    self.exposure = frame["frame"]["image_data"]["exposure"] // 10
             if "shutter" in frame["frame"]:
                 if "open" in frame["frame"]["shutter"]:
                     self.shutter_open = frame["frame"]["shutter"]["open"]
@@ -234,7 +236,7 @@ def storage_record_view(request, storage_record_id):
 
     try:
         frame_info = json.dumps({"exp_id": storage_record_id})
-        rest_logger.debug(u'Страница записи: {}'.format(frame_info))
+        #rest_logger.debug(u'Страница записи: {}'.format(frame_info))
         frames = requests.post(STORAGE_FRAMES_INFO_HOST, frame_info, timeout=1)
         if frames.status_code == 200:
             frames_info = json.loads(frames.content)
@@ -251,7 +253,7 @@ def storage_record_view(request, storage_record_id):
                        u'Не удается получить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
         to_show = False
     except BaseException as e:
-        rest_logger.error(u'Страница записи: Не удается получить список изображений. Ошибка: {}'.format(e.message))
+        rest_logger.error(u'Страница записи: Не удается получить список изображений. Ошибка: {}'.format(e))
         messages.error(request,
                        u'Не удается получить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
         to_show = False
@@ -291,7 +293,7 @@ def frames_downloading(request, storage_record_id):
                                       content_type='text/plain')
     except BaseException as e:
         rest_logger.error(
-            u'Получение изображений: Не удается получить список изображений. Ошибка: {}'.format(e.message))
+            u'Получение изображений: Не удается получить список изображений. Ошибка: {}'.format(e))
         messages.error(request,
                        u'Не удается получить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
         return HttpResponseBadRequest(u'Не удалось получить список изображений. Сервер хранилища не отвечает.',
