@@ -381,7 +381,7 @@ def experiment_interface(request):
 			simple_experiment = json.dumps({
 				'experiment id': str(exp_id),
                 'specimen':request.POST['name'],
-                'tags':request.POST['tags']
+                'tags':request.POST['tags'],
                 'experiment parameters':
                     {
                         'advanced': False,
