@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<script type="text/javascript">    
+<!--<script type="text/javascript">    
     function Disable() {  
         document.getElementById('picture_exposure_submit').value="Получение..."; 
         document.getElementById('picture_exposure_submit').disabled = true;        
@@ -8,7 +8,7 @@
         document.forms['picture_exposure_form'].submit();
         return false;
     } 
-</script> 
+</script> -->
 
     {% if messages %}
         <div class="row">
@@ -174,7 +174,7 @@
                                 
                                 {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
                                 <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="picture_exposure_submit" id="picture_exposure_submit"
-                                value="Предпросмотр" onclick="return Disable()">  
+                                value="Предпросмотр">  
                                 {% else %}
                                     <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="picture_exposure_adm"
                                            value="Предпросмотр" disabled >

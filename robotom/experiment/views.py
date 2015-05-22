@@ -325,8 +325,10 @@ def experiment_adjustment(request):
                     messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
                     
             if 'picture_exposure_submit' in request.POST: #preview a picture
+
                 try:
                     exposure = request.POST['picture_exposure']
+                    print(exposure)
                     image_url = 'http://109.234.34.140:5001/tomograph/1/detector/get-frame'
                     data = json.dumps(float(exposure))
                     response = requests.post(image_url, data, stream=True)
