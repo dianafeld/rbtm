@@ -14,6 +14,7 @@ import threading
 import csv
 import numpy as np
 import pylab as plt
+import zlib
 
 import logging
 #logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = u'experiment.log')
@@ -21,7 +22,7 @@ app = Flask(__name__)
 
 
 
-STORAGE_IS_FICTITIOUS = True
+STORAGE_IS_FICTITIOUS = False
 
 WEBPAGE_OF_ADJUSTMENT_IS_FICTITIOUS = True
 
@@ -34,8 +35,10 @@ if STORAGE_IS_FICTITIOUS:
     STORAGE_URI = "http://109.234.34.140:5020/fictitious-storage"
     STORAGE_EXPERIMENT_URI = "http://109.234.34.140:5020/fictitious-storage"
 else:
-    STORAGE_URI = "http://109.234.34.140:5006/storage/frames/post"                     # To send frames
-    STORAGE_EXPERIMENT_URI = "http://109.234.34.140:5006/storage/experiments/post"     # To send experiment parameters
+    STORAGE_URI = "http://188.166.66.37:5006/storage/frames/post"                     # To send frames
+    STORAGE_EXPERIMENT_URI = "http://188.166.66.37:5006/storage/experiments/post"     # To send experiment parameters
+    #STORAGE_URI = "http://109.234.34.140:5006/storage/frames/post"                     # To send frames
+    #STORAGE_EXPERIMENT_URI = "http://109.234.34.140:5006/storage/experiments/post"     # To send experiment parameters
 
 if WEBPAGE_OF_ADJUSTMENT_IS_FICTITIOUS:
     WEBPAGE_URI = "http://109.234.34.140:5021/fictitious-webpage"
@@ -43,9 +46,9 @@ else:
     WEBPAGE_URI = "http://109.234.34.140:5021/fictitious-webpage"
 
 if TOMOGRAPH_IS_FICTITIOUS:
-    TOMO_DEVICE = PyTango.DeviceProxy('188.166.73.250:10000/tomo/tomograph/1')
+    TOMO_ADDR = '188.166.73.250:10000'
 else:
-    TOMO_DEVICE = PyTango.DeviceProxy('109.234.38.83:10000/tomo/tomograph/1')
+    TOMO_ADDR = '109.234.38.83:10000'
 
 
 
@@ -55,16 +58,19 @@ else:
 TOMOGRAPHS = (
     {
         'id': 1,
-        'device': TOMO_DEVICE,
+        'device': PyTango.DeviceProxy(TOMO_ADDR + '/tomo/tomograph/1'),
+        'detector': PyTango.DeviceProxy(TOMO_ADDR + '/tomo/detector/1'),
         'experiment is running': False,
     },
 )
-TOMOGRAPHS[0]['device'].set_timeout_millis(40000)
+TOMOGRAPHS[0]['device'].set_timeout_millis(200000)
+TOMOGRAPHS[0]['detector'].set_timeout_millis(200000)
 
 
 
 #is being used in     check_and_prepare_advanced_experiment_command(command)
 ADVANCED_EXPERIMENT_COMMANDS = ('open shutter', 'close shutter', 'reset current position', 'go to position', 'get frame')
+FRAME_PNG_FILENAME = 'image.png'
 
 def try_thrice_function(func, args = None):
     success = True
@@ -73,6 +79,8 @@ def try_thrice_function(func, args = None):
         try:
             answer = func(args)
         except PyTango.DevFailed as e:
+            for stage in e:
+                print stage.desc
             success = False
             exception_message = e[-1].desc
             answer = None
@@ -144,6 +152,27 @@ def create_event(type, exp_id, MoF, exception_message = '', error = ''):
 
     return None
 
+def make_png(res):
+    plt.ioff()
+    plt.figure()
+    plt.imshow(res, cmap=plt.cm.gray)
+    plt.colorbar()
+    return plt.savefig(FRAME_PNG_FILENAME, bbox_inches='tight')
+
+def create_png_file(frame_dict):
+
+    """ converts frame to png and save it, to send it to webpage of adjustment
+    :param frame_dict:
+    """
+
+    try:
+        image_list = frame_dict["image_data"]["image"]
+        image_numpy = np.asarray(image_list)
+        make_png(image_numpy)
+    except Exception as e:
+        print e.message
+    return
+
 # NEED TO ADD CHECKING STORAGE'S RESPONSE
 def send_messages_to_storage_webpage(event):
     # 'event' must be dictionary with format that is returned by  'create_event()'
@@ -172,16 +201,30 @@ def send_messages_to_storage_webpage(event):
 
     else:
         print(req_storage.content)                              #NEED TO CHANGE  TO LOG RESULT, NOT ALL
-        print('Sending to web page...')
-        try:
-            req_webpage = requests.post(WEBPAGE_URI, data = message)
-        except requests.ConnectionError as e:
-            print('Could not send to web page of adjustment')
-        else:
-            print(req_webpage.content)
+
+        # commented 22.05, because frames are too heavy
+        """
+        if event['type'] == 'frame':
+            create_png_file(event['frame'])
+            files = {'file': open(FRAME_PNG_FILENAME, 'rb')}
+            print('Sending to web page...')
+            try:
+                req_webpage = requests.post(WEBPAGE_URI, files=files)
+            except requests.ConnectionError as e:
+                print('Could not send to web page of adjustment')
+            else:
+                print(req_webpage.content)
+        """
         return True
 
+"""
+def send_frame_storage(frame_dict):
+    frame_json = json.dumps(frame_dict)
+    files = {'file': ('report.csv', 'some,data,to,send\nanother,row,to,send\n')}
 
+    r = requests.post(STORAGE_URI, files=files)
+    r.text
+"""
 
 
 def handle_emergency_stop(**stop_event):
@@ -252,6 +295,7 @@ def set_x(tomo_num, new_x, exp_id = ''):
             return False
         else:
             return create_response(success= False, error= error)
+
 
     success, set_x, exception_message = try_thrice_change_attr(TOMOGRAPHS[tomo_num]['device'], "horizontal_position", new_x)
     if success == False:
@@ -382,12 +426,42 @@ def move_back(tomo_num, exp_id = ''):
     else:      return create_response(True)
 
 
-def make_png(res):
-    plt.ioff()
-    plt.figure()
-    plt.imshow(res, cmap=plt.cm.gray)
-    plt.colorbar()
-    return plt.savefig('image.png', bbox_inches='tight')
+def read_image_from_detector_attr(tomo_num):
+
+    """
+    returns frame attribute from detector as a numpy.array
+    """
+    det = TOMOGRAPHS[tomo_num]['detector']
+    try:
+        da = det.read_attribute("image", extract_as=PyTango.ExtractAs.Nothing)
+    except PyTango.DevFailed as e:
+        for stage in e:
+            print stage.desc
+
+    enc = PyTango.EncodedAttribute()
+    data = enc.decode_gray16(da)
+    return data
+
+def join_image_with_metadata(image_numpy, frame_metadata_dict):
+    """
+    tmp_list_of_strs = []
+    for lst in image_numpy.tolist():
+        tmp_list_of_strs.append(' '.join(map(str,lst)))
+    image_str = '\n'.join(tmp_list_of_strs)
+    frame_metadata_dict['image_data']['image'] = image_str
+    """
+    k = ''
+    for i in image_numpy:
+        k = k + ' '.join(str(e) for e in i)
+        k=k+'\n'
+
+    frame_metadata_dict['image_data']['image'] = k
+
+    #image_list = image_numpy.tolist()
+    #frame_metadata_dict['image_data']['image'] = image_list
+    return frame_metadata_dict
+
+
 
 def get_frame(tomo_num, exposure, exp_id = ''):
     print('Going to get image...')
@@ -414,7 +488,7 @@ def get_frame(tomo_num, exposure, exp_id = ''):
 
     # Tomograph takes exposure multiplied by 10 and rounded
     exposure = round(exposure * 10)
-    success, frame_json, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].GetFrame, exposure)
+    success, frame_metadata_json, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].GetFrame, exposure)
     if success == False:
         error = 'Could not get image because of tomograph'
         print(exception_message)
@@ -424,8 +498,9 @@ def get_frame(tomo_num, exposure, exp_id = ''):
         else:
             return create_response(success, exception_message, error= error)
 
+
     try:
-        frame_dict = json.loads(frame_json)
+        frame_metadata_dict = json.loads(frame_metadata_json)
     except TypeError:
         error = 'Could not convert frame\'s JSON into dict'
         print(error)
@@ -435,34 +510,18 @@ def get_frame(tomo_num, exposure, exp_id = ''):
         else:
             return create_response(success = False, error= error)
 
-    image = frame_dict["image_data"]["image"]
-    reader = csv.reader(image[11:].split('\n'), delimiter=' ')
-    your_list = list(reader)
-    del your_list[-1]
-
-    res = np.asarray(your_list, dtype= np.int16)
-
-    """
-    d = PyTango.DeviceProxy("188.166.73.250:10000/tomo/detector/1")
-    d.set_timeout_millis(20000)
-    try:
-        da = d.read_attribute("image", extract_as=PyTango.ExtractAs.Nothing)
-    except PyTango.DevFailed as e:
-        for stage in e:
-            print stage.desc
-
-    enc = PyTango.EncodedAttribute()
-    data = enc.decode_gray16(da)
-    """
-    make_png(res)
+    image_numpy = read_image_from_detector_attr(tomo_num)
 
     print('Success!')
     if exp_id:
+        frame_dict = join_image_with_metadata(image_numpy, frame_metadata_dict)
         return True, frame_dict
     else:
-        sf = send_file('image.png', mimetype='image/png')
-        print(sf)
-        return sf
+        print(1)
+        make_png(image_numpy)
+        print(2)
+        return send_file(FRAME_PNG_FILENAME, mimetype= 'image/png')
+
 
 
 
@@ -700,7 +759,6 @@ def detector_get_frame(tomo_num):
 
 
 
-
 def stop_experiment_because_someone(exp_id):
     exp_stop_event = create_event('message', exp_id, 'Experiment was stopped by someone')
     if send_messages_to_storage_webpage(exp_stop_event) == False:
@@ -787,14 +845,6 @@ def check_and_prepare_exp_parameters(exp_param):
             return False, 'Bad parameters in \'DATA\' parameters'
 
 
-        # Preparing parameters for tomograph
-        # Tomograph takes values multiplied by 10 and rounded
-        exp_param['DARK']['exposure']  *= 10
-        exp_param['DARK']['exposure']  = round(exp_param['DARK']['exposure'])
-        exp_param['EMPTY']['exposure'] *= 10
-        exp_param['EMPTY']['exposure'] = round(exp_param['EMPTY']['exposure'])
-        exp_param['DATA']['exposure']  *= 10
-        exp_param['DATA']['exposure']  = round(exp_param['DATA']['exposure'])
         # we don't multiply and round  exp_param['DATA']['angle step'] here, we will do it during experiment,
         # because it will be more accurate this way
         return True, ''
@@ -1048,7 +1098,7 @@ def internal_server_error(error):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port = 5001)
+    app.run(host='0.0.0.0', port = 5002)
 
 
 
