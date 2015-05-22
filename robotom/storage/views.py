@@ -132,7 +132,7 @@ def storage_view(request):
     elif request.method == "POST":
         info = make_info(request.POST)
         try:
-            answer = requests.post(STORAGE_EXPERIMENTS_HOST, info, timeout=1)
+            answer = requests.post(STORAGE_EXPERIMENTS_HOST, info, timeout=5)
             if answer.status_code == 200:
                 experiments = json.loads(answer.content)
                 rest_logger.debug(u'Найденные эксперименты: {}'.format(experiments))
@@ -149,8 +149,15 @@ def storage_view(request):
             rest_logger.error(u'Не удается найти эксперименты. Ошибка: {}'.format(e.message))
             messages.error(request, u'Не удается найти эксперименты. Сервер хранилища не отвечает. Попробуйте позже.')
         except BaseException as e:
-            rest_logger.error(u'Не удается найти эксперименты. Ошибка: {}'.format(e.message))
-            messages.error(request, u'Не удается найти эксперименты. Сервер хранилища не отвечает. Попробуйте позже.')
+            try:
+                rest_logger.error(u'Не удается найти эксперименты1. Ошибка: {}'.format(e.message))
+                rest_logger.error(u'Не удается найти эксперименты1. Ошибка: {}'.format(e.message))
+                messages.error(request,
+                               u'Не удается найти эксперименты. Сервер хранилища не отвечает. Попробуйте позже.')
+            except BaseException as e2:
+                rest_logger.error(u'Не удается найти эксперименты2. Ошибка: {}'.format(e2.message))
+                messages.error(request,
+                               u'Не удается найти эксперименты. Сервер хранилища не отвечает. Попробуйте позже.')
 
     return render(request, 'storage/storage_index.html', {
         'caption': 'Хранилище',
@@ -178,7 +185,7 @@ class FrameRecord:
                 self.id = str(frame["_id"]['$oid'])
             else:
                 self.id = str(frame["_id"])
-        
+
         if "type" in frame:
             self.type = frame["type"]
         if "frame" in frame:
@@ -236,7 +243,7 @@ def storage_record_view(request, storage_record_id):
 
     try:
         frame_info = json.dumps({"exp_id": storage_record_id})
-        #rest_logger.debug(u'Страница записи: {}'.format(frame_info))
+        # rest_logger.debug(u'Страница записи: {}'.format(frame_info))
         frames = requests.post(STORAGE_FRAMES_INFO_HOST, frame_info, timeout=1)
         if frames.status_code == 200:
             frames_info = json.loads(frames.content)
@@ -301,27 +308,27 @@ def frames_downloading(request, storage_record_id):
 
     for frame in frames_list:
         try:
-            frame_request = json.dumps({"id": frame.id, "exp_id": storage_record_id})
-            rest_logger.debug(
-                u'Получение изображений: Запрос на получение изображения номер {}: {}'.format(frame.id, frame_request))
-            frame_response = requests.post(STORAGE_FRAMES_PNG, frame_request, timeout=100, stream=True)
-            if frame_response.status_code == 200:
-                file_name = frame.id + '.png'
-                if not os.path.isfile(file_name):
+            file_name = frame.id + '.png'
+            if not os.path.isfile(file_name):
+                frame_request = json.dumps({"id": frame.id, "exp_id": storage_record_id})
+                rest_logger.debug(
+                    u'Получение изображений: Запрос на получение изображения номер {}: {}'.format(frame.id, frame_request))
+                frame_response = requests.post(STORAGE_FRAMES_PNG, frame_request, timeout=100, stream=True)
+                if frame_response.status_code == 200:
                     temp_file = tempfile.TemporaryFile()
                     for block in frame_response.iter_content(1024 * 8):
                         if not block:
                             break
                         temp_file.write(block)
                     default_storage.save(os.path.join(MEDIA_ROOT, file_name), temp_file)
-            else:
-                rest_logger.error(u'Получение изображений: Не удается получить изображениe {}. Ошибка: {}'.format(
-                    frame.id, frame_response.status_code))
-                messages.error(request,
-                               u'Не удается получить изображения. Ошибка: {}'.format(frame_response.status_code))
-                return HttpResponseBadRequest(
-                    u'Ошибкa {} при получении изображения'.format(frame_response.status_code),
-                    content_type='text/plain')
+                else:
+                    rest_logger.error(u'Получение изображений: Не удается получить изображениe {}. Ошибка: {}'.format(
+                        frame.id, frame_response.status_code))
+                    messages.error(request,
+                                   u'Не удается получить изображения. Ошибка: {}'.format(frame_response.status_code))
+                    return HttpResponseBadRequest(
+                        u'Ошибкa {} при получении изображения'.format(frame_response.status_code),
+                        content_type='text/plain')
         except Timeout as e:
             rest_logger.error(u'Получение изображений: Не удается получить изображения. Ошибка: {}'.format(e.message))
             messages.error(request,
