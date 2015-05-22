@@ -17,6 +17,7 @@ import pylab as plt
 import zlib
 
 import logging
+from StringIO import StringIO
 #logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = u'experiment.log')
 app = Flask(__name__)
 
@@ -451,12 +452,15 @@ def join_image_with_metadata(image_numpy, frame_metadata_dict):
     image_str = '\n'.join(tmp_list_of_strs)
     frame_metadata_dict['image_data']['image'] = image_str
     """
-    k = ''
-    for i in image_numpy:
-        k = k + ' '.join(str(e) for e in i)
-        k=k+'\n'
+    #k = ''
+    #for i in image_numpy:
+    #    k = k + ' '.join(str(e) for e in i)
+    #    k=k+'\n'
 
-    frame_metadata_dict['image_data']['image'] = k
+    s = StringIO()
+    np.savetxt(s, image_numpy, fmt="%d")
+    print(s.getvalue()[:10])
+    frame_metadata_dict['image_data']['image'] = s.getvalue()
 
     #image_list = image_numpy.tolist()
     #frame_metadata_dict['image_data']['image'] = image_list
@@ -851,7 +855,7 @@ def check_and_prepare_exp_parameters(exp_param):
         return True, ''
 
 
-def loop_of_get_send_frames(tomo_num, exp_id, count, exposure, frame_num, getting_frame_message):
+def loop_of_get_send_frames(tomo_num, exp_id, count, exposure, frame_num, getting_frame_message, mode):
     for i in range(0, count):
         if TOMOGRAPHS[tomo_num]['experiment is running'] == False:
             stop_experiment_because_someone(exp_id)
@@ -862,6 +866,7 @@ def loop_of_get_send_frames(tomo_num, exp_id, count, exposure, frame_num, gettin
         if not success:
             return False, frame_num
 
+        frame_dict['mode'] = mode
         frame_dict['number'] = frame_num
         frame_num =+ 1
         frame_with_data = create_event('frame', exp_id, frame_dict)
@@ -880,7 +885,7 @@ def carry_out_simple_experiment(tomo_num, exp_param):
     frame_num = 0
     print('Going to get DARK images!\n')
     success, frame_num = loop_of_get_send_frames(tomo_num, exp_id, exp_param['DARK']['count'], exp_param['DARK']['exposure'],
-                                                 frame_num, getting_frame_message= 'Getting DARK image %d from tomograph...')
+                                                 frame_num, getting_frame_message='Getting DARK image %d from tomograph...', mode="dark")
     if not success:
         return
     print('Finished with DARK images!\n')
@@ -892,7 +897,7 @@ def carry_out_simple_experiment(tomo_num, exp_param):
 
     print('Going to get EMPTY images!\n')
     success, frame_num = loop_of_get_send_frames(tomo_num, exp_id, exp_param['EMPTY']['count'], exp_param['EMPTY']['exposure'],
-                                                 frame_num, getting_frame_message= 'Getting EMPTY image %d from tomograph...')
+                                                 frame_num, getting_frame_message= 'Getting EMPTY image %d from tomograph...', mode="empty")
     if not success:
         return
     print('Finished with EMPTY images!\n')
@@ -904,17 +909,17 @@ def carry_out_simple_experiment(tomo_num, exp_param):
 
     print('Going to get DATA images, step count is %d!\n' % (exp_param['DATA']['step count']))
     angle_step = exp_param['DATA']['angle step']
-    for i in range(1, exp_param['DATA']['step count']):
-        current_angle = (round( ((i-1)*angle_step) ,  1)) % 360
-        print('Getting DATA images: angle is %.1f' % current_angle)
+    for i in range(0, exp_param['DATA']['step count']):
+        current_angle = (round( (i*angle_step) ,  2)) % 360
+        print('Getting DATA images: angle is %.2f' % current_angle)
 
         success, frame_num = loop_of_get_send_frames(tomo_num, exp_id, exp_param['DATA']['count per step'], exp_param['DATA']['exposure'],
-                                                     frame_num, getting_frame_message= 'Getting DATA image %d from tomograph...')
+                                                     frame_num, getting_frame_message= 'Getting DATA image %d from tomograph...', mode="data")
         if not success:
             return
         # Rounding angles here, not in  check_and_prepare_exp_parameters(), cause it will be more accurately this way
-        new_angle = (round( i*angle_step ,  1)) % 360
-        print('Finished with this angle, turning to new angle %.1f...' % (new_angle))
+        new_angle = (round( (i + 1)*angle_step ,  2)) % 360
+        print('Finished with this angle, turning to new angle %.2f...' % (new_angle))
         if set_angle(tomo_num, new_angle, exp_id) == False:
             return
     print('Finished with DATA images!\n')
