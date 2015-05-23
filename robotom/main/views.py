@@ -198,8 +198,7 @@ def profile_view(request):
             userprofile_form = UserProfileFormEnabled(request.POST, instance=request.user.userprofile)
             if userprofile_form.is_valid():
                 profile = userprofile_form.save(commit=False)
-                user_info = json.dumps({'username': profile.user.username, 'password': profile.user.password,
-                                        'role': profile.rolerequest.role})
+                user_info = json.dumps({'username': profile.user.username, 'password': profile.user.password, 'role': profile.role})
                 attempt = try_user_sending(request, u'Невозможно сохранить изменения профиля',
                                            settings.STORAGE_ALT_USER_HOST, user_info=user_info)
                 if attempt:  # if something went wrong
