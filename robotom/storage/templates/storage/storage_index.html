@@ -34,15 +34,18 @@
                         </div>
                         <div class="row">
                             <div class="col-xs-6">
-                                <button type="button" class="btn btn-default btn-lg" data-toggle="collapse" data-target="#DATA" style="margin-top: 10px; margin-right: 5px">
+                                <button type="button" class="btn btn-default btn-lg" data-toggle="collapse"
+                                        data-target="#DATA" style="margin-top: 10px; margin-right: 5px">
                                     <b>DATA</b>
                                     <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
                                 </button>
-                                <button type="button" class="btn btn-default btn-lg" data-toggle="collapse" data-target="#DARK" style="margin-top: 10px; margin-right: 5px">
+                                <button type="button" class="btn btn-default btn-lg" data-toggle="collapse"
+                                        data-target="#DARK" style="margin-top: 10px; margin-right: 5px">
                                     <b>DARK</b>
                                     <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
                                 </button>
-                                <button type="button" class="btn btn-default btn-lg" data-toggle="collapse" data-target="#EMPTY" style="margin-top: 10px; margin-right: 5px">
+                                <button type="button" class="btn btn-default btn-lg" data-toggle="collapse"
+                                        data-target="#EMPTY" style="margin-top: 10px; margin-right: 5px">
                                     <b>EMPTY</b>
                                     <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
                                 </button>
@@ -120,7 +123,8 @@
                                            placeholder="От">
                                 </div>
                                 <div class="col-xs-3">
-                                    <input type="number" min="0" class="form-control" id="DarkToCount" name="DarkToCount"
+                                    <input type="number" min="0" class="form-control" id="DarkToCount"
+                                           name="DarkToCount"
                                            placeholder="До">
                                 </div>
                                 <div class="col-xs-3">
@@ -129,7 +133,8 @@
                                            placeholder="От">
                                 </div>
                                 <div class="col-xs-3">
-                                    <input type="number" min="0" class="form-control" id="DarkToExposure" name="DarkToExposure"
+                                    <input type="number" min="0" class="form-control" id="DarkToExposure"
+                                           name="DarkToExposure"
                                            placeholder="До">
                                 </div>
                             </div>
@@ -151,7 +156,8 @@
                                            placeholder="От">
                                 </div>
                                 <div class="col-xs-3">
-                                    <input type="number" min="0" class="form-control" id="EmptyToCount" name="EmptyToCount"
+                                    <input type="number" min="0" class="form-control" id="EmptyToCount"
+                                           name="EmptyToCount"
                                            placeholder="До">
                                 </div>
                                 <div class="col-xs-3">
@@ -160,7 +166,8 @@
                                            placeholder="От">
                                 </div>
                                 <div class="col-xs-3">
-                                    <input type="number" min="0" class="form-control" id="EmptyToExposure" name="EmptyToExposure"
+                                    <input type="number" min="0" class="form-control" id="EmptyToExposure"
+                                           name="EmptyToExposure"
                                            placeholder="До">
                                 </div>
                             </div>
@@ -182,12 +189,13 @@
     {% if messages %}
         <div class="row">
             {% for message in messages %}
-            <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
-                <div class="alert alert-{% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
-                    <a class="close" data-dismiss="alert" href="{% url 'storage:index' %}">&times;</a>
-                    {{ message }}
+                <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+                    <div class="alert alert-
+                            {% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
+                        <a class="close" data-dismiss="alert" href="{% url 'storage:index' %}">&times;</a>
+                        {{ message }}
+                    </div>
                 </div>
-            </div>
             {% endfor %}
         </div>
     {% endif %}
@@ -240,27 +248,27 @@
                 </div>
                 <div class="panel-footer">
                     <ul class="pagination">
-{#                        {% if record_range.has_previous %}#}
-{#                            <li><a href="?page={{ record_range.previous_page_number }}#">#}
-{#                                <span class="glyphicon glyphicon-chevron-left"></span>#}
-{#                            </a></li>#}
-{#                        {% else %}#}
-                            <li class="disabled"><a href="#">
-                                <span class="glyphicon glyphicon-chevron-left"></span>
-                            </a></li>
-{#                        {% endif %}#}
+                        {#                        {% if record_range.has_previous %}#}
+                        {#                            <li><a href="?page={{ record_range.previous_page_number }}#">#}
+                        {#                                <span class="glyphicon glyphicon-chevron-left"></span>#}
+                        {#                            </a></li>#}
+                        {#                        {% else %}#}
+                        <li class="disabled">
+                            <span class="glyphicon glyphicon-chevron-left"></span>
+                        </li>
+                        {#                        {% endif %}#}
                         {% for page_id in pages %}
                             <li {% if page_id == 1 %}class="active"{% endif %}><a href="#">{{ page_id }}</a></li>
                         {% endfor %}
-{#                        {% if record_range.has_next %}#}
-{#                            <li><a href="?page={{ record_range.next_page_number }}#">#}
-{#                                <span class="glyphicon glyphicon-chevron-right"></span>#}
-{#                            </a></li>#}
-{#                        {% else %}#}
-                            <li class="disabled"><a href="#">
-                                <span class="glyphicon glyphicon-chevron-right"></span>
-                            </a></li>
-{#                        {% endif %}#}
+                        {#                        {% if record_range.has_next %}#}
+                        {#                            <li><a href="?page={{ record_range.next_page_number }}#">#}
+                        {#                                <span class="glyphicon glyphicon-chevron-right"></span>#}
+                        {#                            </a></li>#}
+                        {#                        {% else %}#}
+                        <li class="disabled">
+                            <span class="glyphicon glyphicon-chevron-right"></span>
+                        </li>
+                        {#                        {% endif %}#}
                     </ul>
                 </div>
             </div>
@@ -270,10 +278,10 @@
     <script type="text/javascript">
         pageSize = 8;
 
-        showPage = function(page) {
-            var divs = $( ".paginated-content" );
+        showPage = function (page) {
+            var divs = $(".paginated-content");
             divs.hide();
-            divs.each(function(n) {
+            divs.each(function (n) {
                 if (n >= pageSize * (page - 1) && n < pageSize * page)
                     $(this).show();
             });
@@ -281,7 +289,7 @@
 
         showPage(1);
 
-        $(".pagination").find("li").find("a").click(function() {
+        $(".pagination").find("li").find("a").click(function () {
             $(".pagination").find("li").removeClass("active");
             $(this).parent().addClass("active");
             showPage(parseInt($(this).text()))

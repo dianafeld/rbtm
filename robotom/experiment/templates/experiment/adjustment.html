@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-<!--<script type="text/javascript">    
-    function Disable() {  
-        document.getElementById('picture_exposure_submit').value="Получение..."; 
-        document.getElementById('picture_exposure_submit').disabled = true;        
-        document.getElementById('picture_exposure_submit').readonly = true; 
-        document.forms['picture_exposure_form'].submit();
-        return false;
-    } 
-</script> -->
+    <!--<script type="text/javascript">
+        function Disable() {
+            document.getElementById('picture_exposure_submit').value="Получение...";
+            document.getElementById('picture_exposure_submit').disabled = true;
+            document.getElementById('picture_exposure_submit').readonly = true;
+            document.forms['picture_exposure_form'].submit();
+            return false;
+        }
+    </script> -->
 
     {% if messages %}
         <div class="row">
             {% for message in messages %}
                 <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
-                    <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+                    <div class="alert alert-{% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
                         {{ message }}
                     </div>
                 </div>
@@ -22,190 +22,247 @@
         </div>
     {% endif %}
 
-    <div class="container">
-    <div class="row">
-    <div class="col-xs-8 col-md-6 col-lg-6">
-    <div class="panel panel-default">
-
-        <div class="panel-heading">
-            <h3>Юстировка томографа</h3>
-        </div>
-
-        <div class="panel-body">
+    <div class="container-fluid">
         <div class="row">
-            <div class="col-xs-6">
-                    <form method="POST" action="">
-                        <div class="control-group">
-                            {% csrf_token %}
-                            <label for="voltage">Напряжение</label>
-                            <div class="input-group">
-                            <input type="number" step="0.01" min="2" max="60" class="form-control ntSaveForms" required
-                                   id="voltage" name="voltage" placeholder="2-60">
-                            <div class="input-group-addon">кВ</div>
-                            </div>
-                            {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
-                                <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="experiment_on_voltage"
-                                       value="Отправить" >
-                            {% else %}
-                                <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="experiment_on_voltage_adm"
-                                       value="Отправить"  disabled>
-                            {% endif %}
-                        </div>
-                    </form>
-                </div>
-                <div class="col-xs-6">
-                <form method="POST" action="">
-                        {% csrf_token %}
-                        <label for="current">Ток</label>
-                        <div class="input-group">
-                        <input type="number" step="0.01" min="2" max="80" class="form-control ntSaveForms" required id="current" name="current" placeholder="2-80">
-                        <div class="input-group-addon">мА</div>
-                        </div>
-                        {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
-                            <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="experiment_on_current"
-                                   value="Отправить" >
-                        {% else %}
-                            <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="experiment_on_current_adm"
-                                   value="Отправить"  disabled>
-                        {% endif %}
-                </form>
-                </div>
-                </div>
-
-            <div class="row">
-                    <div class="col-xs-6">
-                        <form method="POST" action="">
-                            <div class="control-group">
-                                {% csrf_token %}
-                                <label for="move_hor">Подвинуть по горизонтали</label>
-                                <input type="number" step="0.01" min="0" class="form-control ntSaveForms" required id="move_hor" name="move_hor" placeholder="">
-                                {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
-                                    <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="move_hor_submit"
-                                           value="Подвинуть образец" >
-                                {% else %}
-                                    <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="move_hor_adm"
-                                           value="Подвинуть образец" disabled >
-                                {% endif %}
-                            </div>
-                        </form>
-                    </div>
-                    <div class="col-xs-6">
-                        <form method="POST" action="">
-                            <div class="control-group">
-                                {% csrf_token %}
-                                <label for="move_ver">Подвинуть по вертикали</label>
-                                <input type="number" step="0.01" min="0" class="form-control ntSaveForms" required disabled
-                                       id="move_hor" name="move_ver" placeholder="">
-                                {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
-                                <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" disabled  name="move_ver_submit" value="Подвинуть образец">
-                                {% else %}
-                                    <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="move_ver_adm"
-                                           value="Подвинуть образец" disabled >
-                                {% endif %}
-                            </div>
-                        </form>
-                    </div>
-                    </div>
-                    <div class="row">
-                    <div class="col-xs-6">
-                        <form method="POST" action="">
-                            <div class="control-group">
-                                {% csrf_token %}
-                                <label for="rotate">Изменить угловое положение</label>
-                                <div class="input-group">
-                                <input type="number" step="0.01" min="0" class="form-control ntSaveForms" required id="rotate" name="rotate" placeholder="">
-                                <div class="input-group-addon">&deg;</div>
-                                </div>
-                                {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
-                                    <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="rotate_submit" value="Повернуть">
-                                {% else %}
-                                    <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="rotate_adm"
-                                           value="Повернуть" disabled >
-                                {% endif %}
-                            </div>
-                        </form>
-                    </div>
-                    <div class="col-xs-6">
-                    <form method="POST" action="">
-                    <div class="control-group">
-                    {% csrf_token %}
-                    <label for="text_gate">Заслонка</label>                    
-                    <div id="text_gate" class="btn-group" data-toggle="buttons">
-                    <label class="btn btn-default" id="open"> <input id="open" name="gate_state" type="radio" value="open">Открыта</label>
-                    <label class="btn btn-default" id="close"> <input id="close" name="gate_state" type="radio" value="close">Закрыта</label>
-                    </div>
-                    
-                    {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
-                    <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="text_gate"
-                    value="Установить заслонку">                               
-                    {% else %}
-                    <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="text_gate_adm"
-                    value="Установить заслонку" disabled >
-                    {% endif %}
-                    
-                    </div>
-                    </form>
-                    </div>
-                    </div>
-                    <div class="row">
-                    <div class="col-xs-6">
-                    <form method="POST" action="">
-                    <div class="control-group">
-                    {% csrf_token %}
-                    {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
-                    <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="reset_submit" value="Принять текущий угол поворота за 0">
-                    {% else %}
-                    <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="reset_adm" value="Принять текущий угол поворота за 0" disabled >
-                    {% endif %}
-                    </div>
-                    </form>
-                    
-                    </div>
-                    <div class="col-xs-6">
-                    <form name="picture_exposure_form" method="POST" action="">
-                            <div class="control-group">
-                                {% csrf_token %}
-                                <label for="picture_exposure">Экспозиция</label>
-                                <div class="input-group">
-                                <input type="number" min="0" step="0.01" name="picture_exposure" id=
-                                "picture_exposure" class="form-control ntSaveForms" required>
-                                <div class="input-group-addon">мс</div>
-                                </div>
-                                
-                                {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0  %}
-                                <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="picture_exposure_submit" id="picture_exposure_submit"
-                                value="Предпросмотр">  
-                                {% else %}
-                                    <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="picture_exposure_adm"
-                                           value="Предпросмотр" disabled >
-                                {% endif %}
-                            </div>
-                        </form>
-                    </div>
-                    </div>
-                    </div>
-                </div>
-                </div>
-                <div class="col-xs-8 col-md-6 col-lg-6">
+            <div class="col-xs-12 col-md-6 col-lg-6">
                 <div class="panel panel-default">
-                <div class="panel-heading">
-                <h3>Предпросмотр  {% if preview %} <small>Экспозиция: {{ exposure }} мс</small>{% endif %}</h3>
-                </div>
-                <div class="panel-body">
-                {% if preview %}
-                <img class="img-responsive center-block" src="{{ preview_path }}">
-                {% else %}
-                {% load staticfiles %}
-                <img class="img-responsive center-block" height="75%" width="75%" src="{% static 'experiment/images/noimage.png' %}">
-                {% endif %}
-                </div>
-                </div>
+
+                    <div class="panel-heading">
+                        <h3>Юстировка томографа</h3>
+                    </div>
+
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <form method="POST" action="">
+                                    <div class="control-group">
+                                        {% csrf_token %}
+                                        <label for="voltage">Напряжение</label>
+
+                                        <div class="input-group">
+                                            <input type="number" step="0.01" min="2" max="60"
+                                                   class="form-control ntSaveForms" required
+                                                   id="voltage" name="voltage" placeholder="2-60">
+
+                                            <div class="input-group-addon">кВ</div>
+                                        </div>
+                                        {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
+                                            <input type="submit"
+                                                   style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                                   class="btn btn-default btn-md" name="experiment_on_voltage"
+                                                   value="Отправить">
+                                        {% else %}
+                                            <input type="submit"
+                                                   style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                                   class="btn btn-default btn-md" name="experiment_on_voltage_adm"
+                                                   value="Отправить" disabled>
+                                        {% endif %}
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-xs-6">
+                                <form method="POST" action="">
+                                    {% csrf_token %}
+                                    <label for="current">Ток</label>
+
+                                    <div class="input-group">
+                                        <input type="number" step="0.01" min="2" max="80"
+                                               class="form-control ntSaveForms" required id="current" name="current"
+                                               placeholder="2-80">
+
+                                        <div class="input-group-addon">мА</div>
+                                    </div>
+                                    {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
+                                        <input type="submit"
+                                               style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                               class="btn btn-default btn-md" name="experiment_on_current"
+                                               value="Отправить">
+                                    {% else %}
+                                        <input type="submit"
+                                               style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                               class="btn btn-default btn-md" name="experiment_on_current_adm"
+                                               value="Отправить" disabled>
+                                    {% endif %}
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <form method="POST" action="">
+                                    <div class="control-group">
+                                        {% csrf_token %}
+                                        <label for="move_hor">Подвинуть по горизонтали</label>
+                                        <input type="number" step="0.01" min="0" class="form-control ntSaveForms"
+                                               required id="move_hor" name="move_hor" placeholder="">
+                                        {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
+                                            <input type="submit"
+                                                   style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                                   class="btn btn-default btn-md" name="move_hor_submit"
+                                                   value="Подвинуть образец">
+                                        {% else %}
+                                            <input type="submit"
+                                                   style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                                   class="btn btn-default btn-md" name="move_hor_adm"
+                                                   value="Подвинуть образец" disabled>
+                                        {% endif %}
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-xs-6">
+                                <form method="POST" action="">
+                                    <div class="control-group">
+                                        {% csrf_token %}
+                                        <label for="move_ver">Подвинуть по вертикали</label>
+                                        <input type="number" step="0.01" min="0" class="form-control ntSaveForms"
+                                               required disabled
+                                               id="move_hor" name="move_ver" placeholder="">
+                                        {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
+                                            <input type="submit"
+                                                   style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                                   class="btn btn-default btn-md" disabled name="move_ver_submit"
+                                                   value="Подвинуть образец">
+                                        {% else %}
+                                            <input type="submit"
+                                                   style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                                   class="btn btn-default btn-md" name="move_ver_adm"
+                                                   value="Подвинуть образец" disabled>
+                                        {% endif %}
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <form method="POST" action="">
+                                    <div class="control-group">
+                                        {% csrf_token %}
+                                        <label for="rotate">Изменить угловое положение</label>
+
+                                        <div class="input-group">
+                                            <input type="number" step="0.01" min="0" class="form-control ntSaveForms"
+                                                   required id="rotate" name="rotate" placeholder="">
+
+                                            <div class="input-group-addon">&deg;</div>
+                                        </div>
+                                        {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
+                                            <input type="submit"
+                                                   style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                                   class="btn btn-default btn-md" name="rotate_submit"
+                                                   value="Повернуть">
+                                        {% else %}
+                                            <input type="submit"
+                                                   style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                                   class="btn btn-default btn-md" name="rotate_adm"
+                                                   value="Повернуть" disabled>
+                                        {% endif %}
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-xs-6">
+                                <form method="POST" action="">
+                                    <div class="control-group">
+                                        {% csrf_token %}
+                                        <label for="text_gate">Заслонка</label>
+
+                                        <div id="text_gate" class="btn-group" data-toggle="buttons">
+                                            <label class="btn btn-default" id="open"> <input id="open" name="gate_state"
+                                                                                             type="radio" value="open">Открыта</label>
+                                            <label class="btn btn-default" id="close"> <input id="close"
+                                                                                              name="gate_state"
+                                                                                              type="radio"
+                                                                                              value="close">Закрыта</label>
+                                        </div>
+
+                                        {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
+                                            <input type="submit"
+                                                   style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                                   class="btn btn-default btn-md" name="text_gate"
+                                                   value="Установить заслонку">
+                                        {% else %}
+                                            <input type="submit"
+                                                   style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                                   class="btn btn-default btn-md" name="text_gate_adm"
+                                                   value="Установить заслонку" disabled>
+                                        {% endif %}
+
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <form method="POST" action="">
+                                    <div class="control-group">
+                                        {% csrf_token %}
+                                        {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
+                                            <input type="submit"
+                                                   style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                                   class="btn btn-default btn-md" name="reset_submit"
+                                                   value="Принять текущий угол поворота за 0">
+                                        {% else %}
+                                            <input type="submit"
+                                                   style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                                   class="btn btn-default btn-md" name="reset_adm"
+                                                   value="Принять текущий угол поворота за 0" disabled>
+                                        {% endif %}
+                                    </div>
+                                </form>
+
+                            </div>
+                            <div class="col-xs-6">
+                                <form name="picture_exposure_form" method="POST" action="">
+                                    <div class="control-group">
+                                        {% csrf_token %}
+                                        <label for="picture_exposure">Экспозиция</label>
+
+                                        <div class="input-group">
+                                            <input type="number" min="0" step="0.01" name="picture_exposure" id=
+                                                    "picture_exposure" class="form-control ntSaveForms" required>
+
+                                            <div class="input-group-addon">мс</div>
+                                        </div>
+
+                                        {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
+                                            <input type="submit"
+                                                   style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                                   class="btn btn-default btn-md" name="picture_exposure_submit"
+                                                   id="picture_exposure_submit"
+                                                   value="Предпросмотр">
+                                        {% else %}
+                                            <input type="submit"
+                                                   style="white-space:normal; margin-top:7px; margin-bottom:7px"
+                                                   class="btn btn-default btn-md" name="picture_exposure_adm"
+                                                   value="Предпросмотр" disabled>
+                                        {% endif %}
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <!--<button type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default ntSaveFormsSubmit">Очистить поля</button>-->
+            <div class="col-xs-12 col-md-6 col-lg-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3>Предпросмотр  {% if preview %}
+                            <small>Экспозиция: {{ exposure }} мс</small>{% endif %}</h3>
+                    </div>
+                    <div class="panel-body">
+                        {% if preview %}
+                            <img class="img-responsive center-block" src="{{ preview_path }}">
+                        {% else %}
+                            {% load staticfiles %}
+                            <img class="img-responsive center-block" height="75%" width="75%"
+                                 src="{% static 'experiment/images/noimage.png' %}">
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
+        <!--<button type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default ntSaveFormsSubmit">Очистить поля</button>-->
     </div>
-    
+
     {% load staticfiles %}
     <!--<script type='text/javascript' src="{% static 'experiment/js/ntsaveforms.js' %}"></script>-->
 {% endblock content %}

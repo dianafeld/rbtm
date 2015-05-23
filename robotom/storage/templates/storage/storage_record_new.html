@@ -13,12 +13,11 @@
     {% if messages %}
         <div class="row">
             {% for message in messages %}
-            <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
-                <div class="alert alert-{% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
-                    <a class="close" data-dismiss="alert" href="{% url 'storage:index' %}">&times;</a>
-                    {{ message }}
+                <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+                    <div class="alert alert-{% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
+                        {{ message }}
+                    </div>
                 </div>
-            </div>
             {% endfor %}
         </div>
     {% endif %}
@@ -206,14 +205,14 @@
                 left_button.id = parseInt(clicked_id) - 1;
             }
             else
-                left_button.id = {{ frames_list|length }} - 1;
+                left_button.id = {{ frames_list|length }} -1;
             left_button = document.getElementsByClassName('prev')[1];
             if (parseInt(clicked_id) > 0)
                 left_button.id = parseInt(clicked_id) - 1;
             else
-                left_button.id = {{ frames_list|length }} - 1;
+                left_button.id = {{ frames_list|length }} -1;
             var right_button = document.getElementsByClassName('next')[0];
-            if (parseInt(clicked_id) < {{ frames_list|length }} - 1 )
+            if (parseInt(clicked_id) < {{ frames_list|length }} -1)
                 right_button.id = parseInt(clicked_id) + 1;
             else
                 right_button.id = 0;
@@ -234,14 +233,14 @@
                 method: 'GET',
                 dataType: 'text',
                 success: function (data, textStatus, jqXHR) {
-{#                    alert(data + " " + textStatus + " " + jqXHR);#}
+                    {#                    alert(data + " " + textStatus + " " + jqXHR);#}
                     var status = document.getElementById("LoadStatus");
                     status.innerText = "Статус загрузки изображений: загружено";
                     status.className = "alert alert-success"
 
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-{#                    alert(jqXHR.responseText);#}
+                    {#                    alert(jqXHR.responseText);#}
                     var status = document.getElementById("LoadStatus");
                     status.innerText = "Статус загрузки изображений: ошибка";
                     status.className = "alert alert-danger"

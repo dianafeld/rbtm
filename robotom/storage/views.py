@@ -327,7 +327,8 @@ def frames_downloading(request, storage_record_id):
             try:
                 frame_request = json.dumps({"id": frame.id, "exp_id": storage_record_id})
                 rest_logger.debug(
-                    u'Получение изображений: Запрос на получение изображения номер {}: {}'.format(frame.id, frame_request))
+                    u'Получение изображений: Запрос на получение изображения номер {}: {}'.format(frame.id,
+                                                                                                  frame_request))
                 frame_response = requests.post(STORAGE_FRAMES_PNG, frame_request, timeout=100, stream=True)
                 if frame_response.status_code == 200:
                     temp_file = tempfile.TemporaryFile()
@@ -343,12 +344,14 @@ def frames_downloading(request, storage_record_id):
                         u'Ошибкa {} при получении изображения'.format(frame_response.status_code),
                         content_type='text/plain')
             except Timeout as e:
-                rest_logger.error(u'Получение изображений: Не удается получить изображения. Ошибка: {}'.format(e.message))
+                rest_logger.error(
+                    u'Получение изображений: Не удается получить изображения. Ошибка: {}'.format(e.message))
                 return HttpResponseBadRequest(
                     u'Не удалось получить изображение номер {}. Истекло время ожидания ответа'.format(frame.num),
                     content_type='text/plain')
             except BaseException as e:
-                rest_logger.error(u'Получение изображений: Не удается получить изображения. Ошибка: {}'.format(e.message))
+                rest_logger.error(
+                    u'Получение изображений: Не удается получить изображения. Ошибка: {}'.format(e.message))
                 return HttpResponseBadRequest(
                     u'Не удалось получить изображение номер {}. Сервер хранилища не отвечает.'.format(frame.num),
                     content_type='text/plain')

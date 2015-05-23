@@ -1,83 +1,92 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
-    DIV.table {
-        display:table;
-        border-collapse:collapse;
-        margin:10px;
-        width:900px;
-    }
-    FORM.tr, DIV.tr {
-        display:table-row;
-    }
-    SPAN.td {
-        display:table-cell;
-        vertical-align:middle;
-        padding: 6px;
-        border: 1px solid grey;
-    }
-    SPAN.td-head {
-        display:table-cell;
-        vertical-align:middle;
-        padding: 6px;
-        font-weight: bold;
-        border: 1px solid grey;
+    <style>
+        DIV.table {
+            display: table;
+            border-collapse: collapse;
+            margin: 10px;
+            width: 900px;
         }
-    SPAN.td-comment {
-        display:table-cell;
-        vertical-align:middle;
-        width:40%;
-        border: 1px solid grey;
-    }
-    SPAN.td-button {
-        display:table-cell;
-        vertical-align:middle;
-        width:5px;
-        }
-</style>
 
-{% if messages %}
-<div class="row">
-    {% for message in messages %}
-    <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
-        <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
-            <a class="close" data-dismiss="alert" href="/">&times;</a>
-            {{ message }}
+        FORM.tr, DIV.tr {
+            display: table-row;
+        }
+
+        SPAN.td {
+            display: table-cell;
+            vertical-align: middle;
+            padding: 6px;
+            border: 1px solid grey;
+        }
+
+        SPAN.td-head {
+            display: table-cell;
+            vertical-align: middle;
+            padding: 6px;
+            font-weight: bold;
+            border: 1px solid grey;
+        }
+
+        SPAN.td-comment {
+            display: table-cell;
+            vertical-align: middle;
+            width: 40%;
+            border: 1px solid grey;
+        }
+
+        SPAN.td-button {
+            display: table-cell;
+            vertical-align: middle;
+            width: 5px;
+        }
+    </style>
+
+    {% if messages %}
+        <div class="row">
+            {% for message in messages %}
+                <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+                    <div class="alert alert-{% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
+                        <a class="close" data-dismiss="alert" href="{% url 'storage:index' %}">&times;</a>
+                        {{ message }}
+                    </div>
+                </div>
+            {% endfor %}
         </div>
-    </div>
-{% endfor %}
-</div>
-{% endif %}
+    {% endif %}
 
-<div align="center">
-{% if request_list %}
-    <div align="center" class="table">
-    <div class="tr">
-        <span class="td-head">Логин</span>
-        <span class="td-head">ФИО</span>
-        <span class="td-head">Текущая роль</span>
-        <span class="td-head">Запрос роли</span>
-        <span class="td-head">Дополнительная информация</span>
-        <span class="td-button"></span>
-        <span class="td-button"></span>
+    <div align="center">
+        {% if request_list %}
+            <div align="center" class="table">
+                <div class="tr">
+                    <span class="td-head">Логин</span>
+                    <span class="td-head">ФИО</span>
+                    <span class="td-head">Текущая роль</span>
+                    <span class="td-head">Запрос роли</span>
+                    <span class="td-head">Дополнительная информация</span>
+                    <span class="td-button"></span>
+                    <span class="td-button"></span>
+                </div>
+                {% for profile in request_list %}
+                    <form class="tr" method="post" action="" name="{{ profile.id }}_user_table">
+                        {% csrf_token %}
+                        <input type="hidden" name="profile_id" value="{{ profile.id }}"/>
+                        <span class="td">{{ profile.user.username }}</span>
+                        <span class="td">{{ profile.full_name }}</span>
+                        <span class="td">{{ profile.role }}</span>
+                        <span class="td">{{ profile.rolerequest.role }}</span>
+                        <span class="td-comment">{{ profile.rolerequest.comment }}</span>
+                        <span class="td-button"><button type="submit" class="btn btn-success" style="margin-left: 5px"
+                                                        name="accept">Принять
+                        </button></span>
+                        <span class="td-button"><button type="submit" class="btn btn-danger" style="margin-left: 5px"
+                                                        name="decline">Отклонить
+                        </button></span>
+                    </form>
+                {% endfor %}
+            </div>
+        {% else %}
+            Поздравляем! На данный момент нет пользователей, ожидающих смены статуса.
+        {% endif %}
     </div>
-    {% for profile in request_list %}
-        <form class="tr" method="post" action="" name="{{ profile.id }}_user_table">
-            {% csrf_token %}
-            <input type="hidden" name="profile_id" value="{{ profile.id }}" />
-            <span class="td">{{ profile.user.username }}</span>
-            <span class="td">{{ profile.full_name }}</span>
-            <span class="td">{{ profile.role }}</span>
-            <span class="td">{{ profile.rolerequest.role }}</span>
-            <span class="td-comment">{{ profile.rolerequest.comment }}</span>
-            <span class="td-button"><button type="submit" class="btn btn-success" style="margin-left: 5px" name="accept">Принять</button></span>
-            <span class="td-button"><button type="submit" class="btn btn-danger" style="margin-left: 5px" name="decline">Отклонить</button></span>
-        </form>
-    {% endfor %}
-    </div>
-{% else %}
-    Поздравляем! На данный момент нет пользователей, ожидающих смены статуса.
-{% endif %}
-</div>
 {% endblock content %}

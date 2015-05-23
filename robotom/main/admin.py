@@ -15,14 +15,16 @@ class UserProfileInline(admin.StackedInline):
 class MyUserAdmin(UserAdmin):
     def user_role(self, obj):
         return obj.userprofile.role
+
     user_role.short_description = 'Роль на сайте'
-    
+
     def full_name(self, obj):
         return obj.userprofile.full_name
+
     full_name.short_description = 'ФИО'
 
     inlines = (UserProfileInline,)
-    list_display = ['username', 'email', 'full_name', 'user_role', 'is_staff',]
+    list_display = ['username', 'email', 'full_name', 'user_role', 'is_staff', ]
 
 
 admin.site.unregister(User)
