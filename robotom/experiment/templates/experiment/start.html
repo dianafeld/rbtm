@@ -22,13 +22,11 @@
 
             <div class="panel-body">
                 <div class="row">
-                    <div class="col-xs-6">
+                    <div class="col-xs-12 col-md-6">
                         <h4> Изменить состояние томографа </h4>
-
                         <form method="POST" action="">
                             {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
                                 {% csrf_token %}
-
                                 <input type="submit" class="btn btn-default btn-md" name="on_exp"
                                        value="Включить источник" style="white-space:normal">
                                 <input type="submit" name="of_exp" class="btn btn-default btn-md"
@@ -43,9 +41,8 @@
                         </form>
                     </div>
 
-                    <div class="col-xs-6">
+                    <div class="col-xs-12 col-md-6">
                         <h4> Изменить параметры </h4>
-
                         <a class="btn btn-default btn-md" href="{% url 'experiment:index_adjustment' %}"
                            style="white-space:normal">Параметры томографа</a>
                         <a class="btn btn-default btn-md" href="{% url 'experiment:index_interface' %}"
