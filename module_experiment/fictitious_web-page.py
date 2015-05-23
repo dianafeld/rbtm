@@ -1,7 +1,7 @@
 import json
 import requests
 
-MODULE_EXPERIMENT_URI = "http://109.234.34.140:5002"
+MODULE_EXPERIMENT_URI = "http://109.234.34.140:5001"
 #MODULE_EXPERIMENT_URI = "http://109.234.34.140:5002"
 
 
@@ -55,7 +55,7 @@ advanced_experiment = json.dumps(
 new_voltage = json.dumps(40.0)
 new_current = json.dumps(20.0)
 exposure = json.dumps(1000.0)
-new_pos = json.dumps(0.0)
+new_pos = json.dumps(5.0)
 
 try:
 
@@ -73,8 +73,8 @@ try:
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/move-back")
 
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/detector/get-frame", data = exposure)
-    req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/start", data = simple_experiment)
-    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/stop")
+    #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/start", data = simple_experiment)
+    req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/stop")
 
 
     #req = requests.get("http://109.234.34.140:5005/get-image")

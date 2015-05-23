@@ -23,11 +23,11 @@ app = Flask(__name__)
 
 
 
-STORAGE_IS_FICTITIOUS = False
+STORAGE_IS_FICTITIOUS = True
 
 WEBPAGE_OF_ADJUSTMENT_IS_FICTITIOUS = True
 
-TOMOGRAPH_IS_FICTITIOUS = False
+TOMOGRAPH_IS_FICTITIOUS = True
 
 
 TIMEOUT_MILLIS = 200000
@@ -868,7 +868,7 @@ def loop_of_get_send_frames(tomo_num, exp_id, count, exposure, frame_num, gettin
 
         frame_dict['mode'] = mode
         frame_dict['number'] = frame_num
-        frame_num =+ 1
+        frame_num += 1
         frame_with_data = create_event('frame', exp_id, frame_dict)
         if send_messages_to_storage_webpage(frame_with_data) == False:
             return False, frame_num
