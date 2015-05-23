@@ -14,14 +14,7 @@ import logging
 import hashlib
 import datetime
 import random
-from serializers import UserSerializer
 import requests
-import urllib2
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer, StaticHTMLRenderer
-from rest_framework.response import Response
-from requests.exceptions import Timeout
 from django.forms import ValidationError
 
 logger = logging.getLogger('django.request')
@@ -159,11 +152,27 @@ def done_view(request):
 
 
 @login_required
-def profile_view(request):
-    if not request.user.is_active:
-        messages.info(request, u'Для доступа к профилю пользователя подтвердите свой email. Письмо с информацией для подтверждения было направлено Вам на указанный при регистрации ящик {}'.format(request.user.email))
-        
+def profile_view(request):        
     if request.method == 'POST':
+        if 'resend' in request.POST:
+            user = request.user
+            salt = hashlib.sha1(str(random.random())).hexdigest()[:5]
+            activation_key = hashlib.sha1(salt + user.email).hexdigest()
+            new_profile = user.userprofile
+            new_profile.activation_key = activation_key
+            activation_link = u'{}/accounts/confirm/{}'.format(request.get_host(), activation_key) 
+            email_subject = '[Томограф] Подтверждение регистрации'
+            email_body = u"Приветствуем Вас на сайте Robo-Tom, {}!\n Для активации аккаунта пройдите по следующей ссылке: {}".format(user.username, activation_link)
+
+            try:
+                send_mail(email_subject, email_body, 'robotomproject@gmail.com',
+                        [user.email], fail_silently=False)
+            except BaseException:
+                messages.warning(request, 'Произошла ошибка при отправке письма о подтверждении регистрации. Попробуйте зарегистрироваться повторно, указав корректный email')
+            else:
+                messages.success(request, 'На указанный Вами адрес было повторно отправлено письмо. Для завершения регистрации и подтверждения адреса перейдите по ссылке, указанной в письме')
+            new_profile.save()
+            return redirect(reverse('main:done'))
         if 'edit_profile' in request.POST:
             return render(request, 'main/profile.html', {
                 'caption': u'Профиль пользователя {}'.format(request.user.username),
@@ -182,12 +191,15 @@ def profile_view(request):
                 messages.success(request, 'Ваши данные были успешно сохранены!')
         elif 'cancel' in request.POST:
             messages.success(request, 'Изменений в профиль не было внесено')
+    else:
+        if not request.user.is_active:
+            messages.info(request, u'''Для доступа к функциям сайта подтвердите свой email.<br> Письмо с информацией для подтверждения было направлено Вам на указанный при регистрации ящик {}.<br><a href='#' onclick="document.myfrm.submit();">Послать письмо повторно?</а>'''.format(request.user.email))
         
-    return render(request, 'main/profile.html', {
-        'caption': u'Профиль пользователя {}'.format(request.user.username),
-        'profile_form': UserProfileFormDisabled(instance=request.user.userprofile),
-        'mode': 'view',
-    })
+        return render(request, 'main/profile.html', {
+            'caption': u'Профиль пользователя {}'.format(request.user.username),
+            'profile_form': UserProfileFormDisabled(instance=request.user.userprofile),
+            'mode': 'view',
+        })
 
 
 def is_superuser(user):
@@ -341,60 +353,3 @@ def role_request_view(request):
         'caption': 'Запрос на изменение роли',
     })
 
-
-def get_client_ip(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
-
-@api_view(['GET', 'POST'])
-def user_list(request):
-    """
-    Пока что тестовый view, отправляющий запросы
-    """
-    if request.method == 'GET':
-        users = UserProfile.objects.all()
-        serializer = UserSerializer(users, many=True)
-        content = JSONRenderer().render(serializer.data)
-        info = json.dumps({'select': 'all'})
- 
-        rest_logger.debug('Message here!') # an example of logging-to-file
-        #requests.post('http://mardanov@109.234.34.140:5006/storage/experiments', info)
-        # print "GET1"
-        # requests.post('http://93.175.2.145:8009/test_rest/', info)
-        # print get_client_ip(request)
-        requests.post("http://" + str(get_client_ip(request)) + ":8000", info)
-
-        # print "GET2"
-        return render(request, 'main/rest_test.html', {'content': content, 'serializer': serializer.data})
-
-    elif request.method == 'POST':
-        users = UserProfile.objects.all()
-        serializer = UserSerializer(users, many=True)
-        content = JSONRenderer().render(serializer.data)
-        info = json.dumps({'select': 'all'})
-        #requests.post('http://mardanov@109.234.34.140:5006/storage/experiments', info)
-        # print "POST1"
-        #requests.get('http://93.175.2.145:8009/test_rest/')
-        # print "POST2"
-        return render(request, 'main/rest_test.html', {'content': content, 'serializer': serializer.data})
-#
-# @api_view(['GET', 'POST'])
-# def user_list(request):
-#     """git
-#     Пока что тестовый view, отправляющий запросы
-#     """
-#     if request.method == 'GET':
-#         users = UserProfile.objects.all()
-#         serializer = UserSerializer(users, many=True)
-#         content = JSONRenderer().render(serializer.data)
-#         return render(request, 'main/rest_test.html', {'content': content, 'serializer': serializer.data})
-#
-#     elif request.method == 'POST':
-#         if 'accept' in request.POST:
-#             return render(request, 'main/rest_test.html', {'content': request.POST, 'serializer': 'accept'})
-#         elif 'decline' in request.POST:
-#             return render(request, 'main/rest_test.html', {'content': request.POST, 'serializer': 'decline'})
