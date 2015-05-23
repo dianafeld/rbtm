@@ -29,7 +29,6 @@
                             <thead>
                             <tr>
                                 <th rowspan="2" style="vertical-align: middle">Образец</th>
-                                <th rowspan="2" style="vertical-align: middle">Закончен</th>
                                 <th rowspan="2" style="vertical-align: middle">Продвинутый</th>
                                 <th colspan="4" style="text-align: center">DATA</th>
                                 <th colspan="2" style="text-align: center">EMPTY</th>
@@ -49,7 +48,6 @@
                             <tbody>
                             <tr>
                                 <td>{{ info.specimen }}</td>
-                                <td>{{ info.finished }}</td>
                                 <td>{{ info.advanced }}</td>
                                 <td>{{ info.data_angle_step }}&deg;</td>
                                 <td>{{ info.data_count_per_step }}</td>
@@ -131,7 +129,7 @@
                     </div>
                     <!-- Основной текст сообщения -->
                     <div class="modal-body" id="modal-body">
-                        <button type="button" class="btn btn-default pull-left prev" id="1"
+                        <button type="button" class="btn btn-default pull-left prev" id="0"
                                 onClick="nav_click(this.id)">
                             <i class="glyphicon glyphicon-chevron-left"></i>
                             Previous
@@ -168,7 +166,7 @@
                     </div>
                     <!-- Нижняя часть модального окна -->
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default pull-left prev" id="1"
+                        <button type="button" class="btn btn-default pull-left prev" id="0"
                                 onClick="nav_click(this.id)">
                             <i class="glyphicon glyphicon-chevron-left"></i>
                             Previous
@@ -213,23 +211,23 @@
             document.getElementById('Voltage').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[1].textContent;
 
             var left_button = document.getElementsByClassName('prev')[0];
-            if (left_button.id > 0) {
+            if (parseInt(clicked_id) > 0) {
                 left_button.id = parseInt(clicked_id) - 1;
             }
             else
-                left_button.id = {{ frames_list|length }} -1;
+                left_button.id = {{ frames_list|length }} - 1;
             left_button = document.getElementsByClassName('prev')[1];
-            if (left_button.id > 0)
+            if (parseInt(clicked_id) > 0)
                 left_button.id = parseInt(clicked_id) - 1;
             else
-                left_button.id = {{ frames_list|length }} -1;
+                left_button.id = {{ frames_list|length }} - 1;
             var right_button = document.getElementsByClassName('next')[0];
-            if (right_button.id < {{ frames_list|length }} -1)
+            if (parseInt(clicked_id) < {{ frames_list|length }} - 1 )
                 right_button.id = parseInt(clicked_id) + 1;
             else
                 right_button.id = 0;
             right_button = document.getElementsByClassName('next')[1];
-            if (right_button.id < {{ frames_list|length }} -1)
+            if (parseInt(clicked_id) < {{ frames_list|length }} -1)
                 right_button.id = parseInt(clicked_id) + 1;
             else
                 right_button.id = 0;
