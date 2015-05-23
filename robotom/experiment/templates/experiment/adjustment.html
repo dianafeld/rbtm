@@ -43,7 +43,7 @@
                                    id="voltage" name="voltage" placeholder="2-60">
                             <div class="input-group-addon">кВ</div>
                             </div>
-                            {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+                            {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
                                 <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="experiment_on_voltage"
                                        value="Отправить" >
                             {% else %}
@@ -61,7 +61,7 @@
                         <input type="number" step="0.01" min="2" max="80" class="form-control ntSaveForms" required id="current" name="current" placeholder="2-80">
                         <div class="input-group-addon">мА</div>
                         </div>
-                        {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+                        {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
                             <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="experiment_on_current"
                                    value="Отправить" >
                         {% else %}
@@ -79,7 +79,7 @@
                                 {% csrf_token %}
                                 <label for="move_hor">Подвинуть по горизонтали</label>
                                 <input type="number" step="0.01" min="0" class="form-control ntSaveForms" required id="move_hor" name="move_hor" placeholder="">
-                                {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+                                {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
                                     <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="move_hor_submit"
                                            value="Подвинуть образец" >
                                 {% else %}
@@ -96,7 +96,7 @@
                                 <label for="move_ver">Подвинуть по вертикали</label>
                                 <input type="number" step="0.01" min="0" class="form-control ntSaveForms" required disabled
                                        id="move_hor" name="move_ver" placeholder="">
-                                {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+                                {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
                                 <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" disabled  name="move_ver_submit" value="Подвинуть образец">
                                 {% else %}
                                     <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="move_ver_adm"
@@ -116,7 +116,7 @@
                                 <input type="number" step="0.01" min="0" class="form-control ntSaveForms" required id="rotate" name="rotate" placeholder="">
                                 <div class="input-group-addon">&deg;</div>
                                 </div>
-                                {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+                                {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
                                     <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="rotate_submit" value="Повернуть">
                                 {% else %}
                                     <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="rotate_adm"
@@ -135,7 +135,7 @@
                     <label class="btn btn-default" id="close"> <input id="close" name="gate_state" type="radio" value="close">Закрыта</label>
                     </div>
                     
-                    {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+                    {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
                     <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="text_gate"
                     value="Установить заслонку">                               
                     {% else %}
@@ -152,7 +152,7 @@
                     <form method="POST" action="">
                     <div class="control-group">
                     {% csrf_token %}
-                    {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+                    {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
                     <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="reset_submit" value="Принять текущий угол поворота за 0">
                     {% else %}
                     <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="reset_adm" value="Принять текущий угол поворота за 0" disabled >
@@ -172,7 +172,7 @@
                                 <div class="input-group-addon">мс</div>
                                 </div>
                                 
-                                {% if user.is_authenticated and user.userprofile.role == 'EXP' %}
+                                {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0  %}
                                 <input type="submit" style="white-space:normal; margin-top:7px; margin-bottom:7px" class="btn btn-default btn-md" name="picture_exposure_submit" id="picture_exposure_submit"
                                 value="Предпросмотр">  
                                 {% else %}

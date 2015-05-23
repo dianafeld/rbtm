@@ -31,8 +31,9 @@ def has_experiment_access(user):
     return user.userprofile.role in ['ADM', 'EXP']
 
 def info_once_only(request, msg):
-    if msg not in [m.message for m in get_messages(request)]:
-        messages.info(request, msg)
+	storage = get_messages(request)
+	if msg not in [m.message for m in storage]:
+		messages.info(request, msg)
 
 def migrations():
 	if len(Tomograph.objects.all()) == 0:
@@ -72,6 +73,7 @@ def experiment_view(request):
    				return redirect(reverse('experiment:index'))
    			if answer_check['success'] == True:
    				messages.success(request, u'Томограф включен')
+   				info_once_only(request, u'Текущее состояние томографа: ожидание')
    				tomo.state='waiting'
    				tomo.save()
    			else:
@@ -94,6 +96,7 @@ def experiment_view(request):
    				return redirect(reverse('experiment:index'))
    			if answer_check['success'] == True:
    				messages.success(request, u'Томограф выключен')
+   				info_once_only(request, u'Текущее состояние томографа: выключен')
    				print tomo.state
    				tomo.state='off'
    				tomo.save()
@@ -143,7 +146,8 @@ def experiment_adjustment(request):
                         messages.warning(request, 'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
                         return redirect(reverse('experiment:index_adjustment'))
                     if answer_check['success'] == True:
-                        messages.success(request, u'Горизонтальное положение образца изменено.')
+                    	messages.success(request, u'Горизонтальное положение образца изменено.')
+                    	info_once_only(request, u'Текущее состояние томографа: юстировка')
                         tomo.state='adjustment'
                         tomo.save()
                         print tomo.state
@@ -169,6 +173,7 @@ def experiment_adjustment(request):
                         return redirect(reverse('experiment:index_adjustment'))
                     if answer_check['success'] == True:
                         messages.success(request, u'Вертикальное положение образца изменено.')
+                        info_once_only(request, u'Текущее состояние томографа: юстировка')
                         tomo.state ='adjustment'
                         tomo.save()
                     else:
@@ -193,6 +198,7 @@ def experiment_adjustment(request):
                         return redirect(reverse('experiment:index_adjustment'))
                     if answer_check['success'] == True:
                         messages.success(request, u'Образец повернут.')
+                        info_once_only(request, u'Текущее состояние томографа: юстировка')
                         tomo.state ='adjustment'
                         tomo.save()
                     else:
@@ -216,6 +222,7 @@ def experiment_adjustment(request):
                         return redirect(reverse('experiment:index_adjustment'))
                     if answer_check['success'] == True:
                         messages.success(request, u'Текущее положение установлено за 0.')
+                        info_once_only(request, u'Текущее состояние томографа: юстировка')
                         tomo.state ='adjustment'
                         tomo.save()
                     else:
@@ -240,6 +247,7 @@ def experiment_adjustment(request):
                         return redirect(reverse('experiment:index_adjustment'))
                     if answer_check['success'] == True:
                         messages.success(request, u'Заслонка открыта')
+                        info_once_only(request, u'Текущее состояние томографа: юстировка')
                         tomo.state ='adjustment'
                         tomo.save()
                     else:
@@ -263,6 +271,7 @@ def experiment_adjustment(request):
                         return redirect(reverse('experiment:index_adjustment'))
                 	if answer_check['success'] == True:
                 		messages.success(request, u'Заслонка закрыта')
+                		info_once_only(request, u'Текущее состояние томографа: юстировка')
                 		tomo.state='adjustment'
                 		tomo.save()
                 	else:
@@ -289,9 +298,10 @@ def experiment_adjustment(request):
                                      'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
                     return redirect(reverse('experiment:index_adjustment'))
                 if answer_check['success'] == True:
-                    messages.success(request, u'Напряжение установлено')
-                    tomo.state ='adjustment'
-                    tomo.save()
+                	messages.success(request, u'Напряжение установлено')
+                	info_once_only(request, u'Текущее состояние томографа: юстировка')
+                	tomo.state ='adjustment'
+                	tomo.save()
                 else:
                     logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
                     messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
@@ -317,9 +327,10 @@ def experiment_adjustment(request):
                     return redirect(reverse('experiment:index_adjustment'))
                 print(answer_check)
                 if answer_check['success'] == True:
-                    messages.success(request, u'Сила тока установлена')
-                    tomo.state ='adjustment'
-                    tomo.save()
+                	messages.success(request, u'Сила тока установлена')
+                	info_once_only(request, u'Текущее состояние томографа: юстировка')
+                	tomo.state ='adjustment'
+                	tomo.save()
                 else:
                     logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
                     messages.warning(request,u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
@@ -423,6 +434,7 @@ def experiment_interface(request):
 		        		return redirect(reverse('experiment:index_interface'))
 		        if answer_check['success'] == True:
 		        		messages.success(request, u'Эксперимент успешно начался')
+		        		info_once_only(request, u'Текущее состояние томографа: эксперимент')
 		        		tomo.state='experiment'
 		        		tomo.save()
 		        else:
@@ -446,6 +458,7 @@ def experiment_interface(request):
 		                return redirect(reverse('experiment:index_interface'))
 		            if answer_check['success'] == True:
 		                messages.success(request, u'Эксперимент окончен')
+		                info_once_only(request, u'Текущее состояние томографа: ожидание')
 		                tomo.state ='waiting'
 		                tomo.save()
 		            else:
