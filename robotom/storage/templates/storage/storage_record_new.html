@@ -23,7 +23,7 @@
     {% endif %}
     {% if to_show %}
         <div class="container-fluid">
-            <div class="panel panel-primary">
+            <div class="panel panel-default">
                 <div class="panel-body">
                     <div class="table-responsive">
                         <table class="table table-hover table-bordered">
@@ -112,7 +112,7 @@
         </div>
 
         <div id="myModalBox" class="modal fade">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <!-- Заголовок модального окна -->
                     <div class="modal-header">
@@ -122,7 +122,7 @@
                         <h4 class="modal-title" id="ImageTitle">Изображение</h4>
                     </div>
                     <!-- Основной текст сообщения -->
-                    <div class="modal-body" id="modal-body">
+                    <div class="modal-body">
                         <button type="button" class="btn btn-default pull-left prev" id="0"
                                 onClick="nav_click(this.id)">
                             <i class="glyphicon glyphicon-chevron-left"></i>
@@ -131,31 +131,38 @@
                                 onClick="nav_click(this.id)">
                             <i class="glyphicon glyphicon-chevron-right"></i>
                         </button>
-                        <div class=" table-responsive">
-                            <table class="table">
-                                <thead>
-                                <tr>
-                                    <th style="vertical-align: middle">Режим</th>
-                                    <th style="vertical-align: middle">Время</th>
-                                    <th style="vertical-align: middle">Экспозиция</th>
-                                    <th style="vertical-align: middle">Заслонка</th>
-                                    <th style="vertical-align: middle">Угол поворота</th>
-                                    <th style="vertical-align: middle">Ток</th>
-                                    <th style="vertical-align: middle">Напряжение</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr>
-                                    <td id="Mode"></td>
-                                    <td id="DateTime"></td>
-                                    <td id="Exposure"></td>
-                                    <td id="Shutter"></td>
-                                    <td id="Angle"></td>
-                                    <td id="Current"></td>
-                                    <td id="Voltage"></td>
-                                </tr>
-                                </tbody>
-                            </table>
+                        <div class="row">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th style="vertical-align: middle">Режим</th>
+                                        <th style="vertical-align: middle">Время</th>
+                                        <th style="vertical-align: middle">Экспозиция</th>
+                                        <th style="vertical-align: middle">Заслонка</th>
+                                        <th style="vertical-align: middle">Угол поворота</th>
+                                        <th style="vertical-align: middle">Ток</th>
+                                        <th style="vertical-align: middle">Напряжение</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td id="Mode"></td>
+                                        <td id="DateTime"></td>
+                                        <td id="Exposure"></td>
+                                        <td id="Shutter"></td>
+                                        <td id="Angle"></td>
+                                        <td id="Current"></td>
+                                        <td id="Voltage"></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12" id="modal-body" align="center">
+
+                            </div>
                         </div>
                     </div>
                     <!-- Нижняя часть модального окна -->

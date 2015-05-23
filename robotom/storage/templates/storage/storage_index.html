@@ -2,7 +2,7 @@
 
 {% block content %}
     <div class="container-fluid">
-        <div class="panel panel-primary">
+        <div class="panel panel-default">
             <div class="panel-body">
                 <form method="post" action="" class="form">
                     <div class="control-group">
@@ -190,9 +190,7 @@
         <div class="row">
             {% for message in messages %}
                 <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
-                    <div class="alert alert-
-                            {% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
-                        <a class="close" data-dismiss="alert" href="{% url 'storage:index' %}">&times;</a>
+                    <div class="alert alert-{% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
                         {{ message }}
                     </div>
                 </div>
@@ -228,7 +226,7 @@
                             <tbody>
                             {% for record in record_range %}
                                 <tr class="paginated-content">
-                                    <td>{{ record.specimen }}</td>
+                                    <td><a href='{% url 'storage:storage_record' record.experiment_id %}'>{{ record.specimen }}</a></td>
                                     <td>{{ record.data_angle_step }}&deg;</td>
                                     <td>{{ record.data_count_per_step }}</td>
                                     <td>{{ record.data_step_count }}</td>
@@ -237,9 +235,7 @@
                                     <td>{{ record.empty_exposure }} мс</td>
                                     <td>{{ record.dark_count }}</td>
                                     <td>{{ record.dark_exposure }} мс</td>
-                                    <td>
-                                        <a href='{% url 'storage:storage_record' record.experiment_id %}'>{{ record.experiment_id }}</a>
-                                    </td>
+                                    <td>{{ record.experiment_id }}</td>
                                 </tr>
                             {% endfor %}
                             </tbody>
