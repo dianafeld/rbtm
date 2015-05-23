@@ -1,15 +1,20 @@
 # coding=utf-8
 from unittest import skip
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.test import Client
+from main.models import UserProfile
+
 
 class RequestTest(TestCase):
     def test_login(self):
         response = self.client.get("/experiment/")
         self.assertEqual(response.status_code, 200)
+
     def test_on(self):
         response = self.client.post('/experiment/')
         self.assertEqual(response.status_code, 200)
+
 
 class LoginTest(TestCase):
     def setUp(self):
@@ -20,9 +25,9 @@ class LoginTest(TestCase):
         self.up_exp = UserProfile.objects.create(user=self.u_exp, role='EXP')
 
     def test_login_page(self):
-        response = self.c.post('/accounts/login/', {'username': 'admin', 'password': 'admin'})
+        response = self.client.post('/accounts/login/', {'username': 'admin', 'password': 'admin'})
         self.assertEqual(response.status_code, 200)
-		response = self.c.post('/accounts/login/', {'username': 'exprm', 'password': 'exprm'})
+        response = self.client.post('/accounts/login/', {'username': 'exprm', 'password': 'exprm'})
 
     def tearDown(self):
         self.up_adm.delete()
