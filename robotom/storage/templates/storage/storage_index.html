@@ -14,7 +14,7 @@
                                        placeholder="Название образца">
                             </div>
                         </div>
-                        <div class="row" style="margin-top: 5px">
+                        <div class="row" style="margin-top: 5px" hidden>
                             <div class="col-xs-6 col-md-2">
                                 <label for="Finished">Завершен</label>
                                 <select class="form-control" id="Finished" name="Finished">
@@ -55,8 +55,8 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-xs-3"><h5><b>Exposure</b></h5></div>
-                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Angle Step</b></h5></div>
+                                <div class="col-xs-3"><h5><b>Экспозиция</b></h5></div>
+                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Шаг угла</b></h5></div>
                             </div>
                             <div class="row">
                                 <div class="col-xs-3">
@@ -80,8 +80,8 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-xs-3"><h5><b>Count per step</b></h5></div>
-                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Step count</b></h5></div>
+                                <div class="col-xs-3"><h5><b>Изображений на шаг</b></h5></div>
+                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Количество шагов</b></h5></div>
                             </div>
                             <div class="row">
                                 <div class="col-xs-3">
@@ -110,8 +110,8 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-xs-3"><h5><b>Count</b></h5></div>
-                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Exposure</b></h5></div>
+                                <div class="col-xs-3"><h5><b>Количество</b></h5></div>
+                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Экспозиция</b></h5></div>
                             </div>
                             <div class="row">
                                 <div class="col-xs-3">
@@ -141,8 +141,8 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-xs-3"><h5><b>Count</b></h5></div>
-                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Exposure</b></h5></div>
+                                <div class="col-xs-3"><h5><b>Количество</b></h5></div>
+                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Экспозиция</b></h5></div>
                             </div>
                             <div class="row">
                                 <div class="col-xs-3">
@@ -204,8 +204,6 @@
                             <thead>
                             <tr>
                                 <th rowspan="2" style="vertical-align: middle">Образец</th>
-                                <th rowspan="2" style="vertical-align: middle">Закончен</th>
-                                <th rowspan="2" style="vertical-align: middle">Продвинутый</th>
                                 <th colspan="4" style="text-align: center">DATA</th>
                                 <th colspan="2" style="text-align: center">EMPTY</th>
                                 <th colspan="2" style="text-align: center">DARK</th>
@@ -225,9 +223,7 @@
                             <tbody>
                             {% for record in record_range %}
                                 <tr class="paginated-content">
-                                    <td >{{ record.specimen }}</td>
-                                    <td>{{ record.finished }}</td>
-                                    <td>{{ record.advanced }}</td>
+                                    <td>{{ record.specimen }}</td>
                                     <td>{{ record.data_angle_step }}</td>
                                     <td>{{ record.data_count_per_step }}</td>
                                     <td>{{ record.data_step_count }}</td>
