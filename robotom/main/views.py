@@ -214,11 +214,11 @@ def profile_view(request):
                           u'''Для доступа к функциям сайта подтвердите свой email.<br> Письмо с информацией для подтверждения было направлено Вам на указанный при регистрации ящик {}.<br><a href='#' onclick="document.myfrm.submit();">Послать письмо повторно?</а>'''.format(
                               request.user.email))
 
-        return render(request, 'main/profile.html', {
-            'caption': u'Профиль пользователя {}'.format(request.user.username),
-            'profile_form': UserProfileFormDisabled(instance=request.user.userprofile),
-            'mode': 'view',
-        })
+    return render(request, 'main/profile.html', {
+        'caption': u'Профиль пользователя {}'.format(request.user.username),
+        'profile_form': UserProfileFormDisabled(instance=request.user.userprofile),
+        'mode': 'view',
+    })
 
 
 def is_superuser(user):
