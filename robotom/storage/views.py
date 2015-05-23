@@ -80,7 +80,7 @@ def make_info(post_args):
         request['experiment parameters.EMPTY.exposure']['$lte'] = float(post_args['EmptyToExposure'])
 
     if post_args['Specimen'] != '':
-        request['specimen'] = post_args['Specimen']
+        request['specimen'] = post_args['Specimen'].strip()
 
     if post_args['Finished'] == u'Завершен':
         request['finished'] = True
@@ -182,6 +182,9 @@ class FrameRecord:
         self.angle_position = ""
         self.current = ""
         self.voltage = ""
+        self.horizontal_position = ""
+        self.present = ""
+        self.mode = ""
 
         if "_id" in frame:
             if "$oid" in frame['_id']:
@@ -192,6 +195,8 @@ class FrameRecord:
         if "type" in frame:
             self.type = frame["type"]
         if "frame" in frame:
+            if "mode" in frame["frame"]:
+                self.mode = frame["frame"]["mode"]
             if "number" in frame['frame']:
                 self.num = frame["frame"]["number"]
             if "image_data" in frame["frame"]:
@@ -208,6 +213,13 @@ class FrameRecord:
             if "object" in frame["frame"]:
                 if "angle position" in frame["frame"]["object"]:
                     self.angle_position = frame["frame"]["object"]["angle position"]
+                if "horizontal position" in frame["frame"]["object"]:
+                    self.horizontal_position = frame["frame"]["object"]["horizontal position"]
+                if "present" in frame["frame"]["object"]:
+                    if frame["frame"]["object"]["present"]:
+                        self.present = u"Да"
+                    else:
+                        self.present = u"Нет"
             if "X-ray source" in frame["frame"]:
                 if "current" in frame["frame"]["X-ray source"]:
                     self.current = frame["frame"]["X-ray source"]["current"]
