@@ -130,37 +130,38 @@ def storage_view(request):
     num_pages = 0
     to_show = False
 
+    info = ""
     if request.method == "GET":
-        pass
+        info = json.dumps({})
     elif request.method == "POST":
         info = make_info(request.POST)
-        try:
-            answer = requests.post(STORAGE_EXPERIMENTS_HOST, info, timeout=5)
-            if answer.status_code == 200:
-                experiments = json.loads(answer.content)
-                rest_logger.debug(u'Найденные эксперименты: {}'.format(experiments))
-                records = [ExperimentRecord(result) for result in experiments]
-                if len(records) == 0:
-                    messages.error(request, u'Не найдено ни одной записи')
-                else:
-                    to_show = True
-                num_pages = len(records) / 8
+    try:
+        answer = requests.post(STORAGE_EXPERIMENTS_HOST, info, timeout=5)
+        if answer.status_code == 200:
+            experiments = json.loads(answer.content)
+            rest_logger.debug(u'Найденные эксперименты: {}'.format(experiments))
+            records = [ExperimentRecord(result) for result in experiments]
+            if len(records) == 0:
+                messages.error(request, u'Не найдено ни одной записи')
             else:
-                rest_logger.error(u'Не удается найти эксперименты. Код ошибки: {}'.format(answer.status_code))
-                messages.error(request, u'Не удается найти эксперименты. Код ошибки: {}'.format(answer.status_code))
-        except Timeout as e:
-            rest_logger.error(u'Не удается найти эксперименты. Ошибка: {}'.format(e.message))
-            messages.error(request, u'Не удается найти эксперименты. Сервер хранилища не отвечает. Попробуйте позже.')
-        except BaseException as e:
-            try:
-                rest_logger.error(u'Не удается найти эксперименты1. Ошибка: {}'.format(e.message))
-                rest_logger.error(u'Не удается найти эксперименты1. Ошибка: {}'.format(e.message))
-                messages.error(request,
-                               u'Не удается найти эксперименты. Сервер хранилища не отвечает. Попробуйте позже.')
-            except BaseException as e2:
-                rest_logger.error(u'Не удается найти эксперименты2. Ошибка: {}'.format(e2.message))
-                messages.error(request,
-                               u'Не удается найти эксперименты. Сервер хранилища не отвечает. Попробуйте позже.')
+                to_show = True
+            num_pages = len(records) / 8
+        else:
+            rest_logger.error(u'Не удается найти эксперименты. Код ошибки: {}'.format(answer.status_code))
+            messages.error(request, u'Не удается найти эксперименты. Код ошибки: {}'.format(answer.status_code))
+    except Timeout as e:
+        rest_logger.error(u'Не удается найти эксперименты. Ошибка: {}'.format(e.message))
+        messages.error(request, u'Не удается найти эксперименты. Сервер хранилища не отвечает. Попробуйте позже.')
+    except BaseException as e:
+        try:
+            rest_logger.error(u'Не удается найти эксперименты1. Ошибка: {}'.format(e.message))
+            rest_logger.error(u'Не удается найти эксперименты1. Ошибка: {}'.format(e.message))
+            messages.error(request,
+                           u'Не удается найти эксперименты. Сервер хранилища не отвечает. Попробуйте позже.')
+        except BaseException as e2:
+            rest_logger.error(u'Не удается найти эксперименты2. Ошибка: {}'.format(e2.message))
+            messages.error(request,
+                           u'Не удается найти эксперименты. Сервер хранилища не отвечает. Попробуйте позже.')
 
     return render(request, 'storage/storage_index.html', {
         'caption': 'Хранилище',

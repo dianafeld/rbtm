@@ -6,7 +6,9 @@
 {% block content %}
 
     <div class="page-header" style="margin-left: 10px">
-        <h1>Запись хранилища {{ record_id }}</h1>
+        <div class="container-fluid">
+            <h1>Запись хранилища {{ record_id }}</h1>
+        </div>
     </div>
     {% if messages %}
         <div class="row">
@@ -21,8 +23,8 @@
         </div>
     {% endif %}
     {% if to_show %}
-        <div class="container">
-            <div class="panel panel-default">
+        <div class="container-fluid">
+            <div class="panel panel-primary">
                 <div class="panel-body">
                     <div class="table-responsive">
                         <table class="table table-hover table-bordered">
@@ -63,10 +65,10 @@
             </div>
         </div>
 
-        <div class="container">
+        <div class="container-fluid">
             <div class="alert alert-info" id="LoadStatus">Статус загрузки изображений: загружается</div>
         </div>
-        <div class="container">
+        <div class="container-fluid">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h4>Список изображений эксперимента</h4>
