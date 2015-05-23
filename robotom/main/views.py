@@ -198,8 +198,7 @@ def profile_view(request):
             userprofile_form = UserProfileFormEnabled(request.POST, instance=request.user.userprofile)
             if userprofile_form.is_valid():
                 profile = userprofile_form.save(commit=False)
-                user_info = json.dumps({'username': profile.user.username, 'password': profile.user.password,
-                                        'role': profile.rolerequest.role})
+                user_info = json.dumps({'username': profile.user.username, 'password': profile.user.password, 'role': profile.role})
                 attempt = try_user_sending(request, u'Невозможно сохранить изменения профиля',
                                            settings.STORAGE_ALT_USER_HOST, user_info=user_info)
                 if attempt:  # if something went wrong
@@ -214,11 +213,11 @@ def profile_view(request):
                           u'''Для доступа к функциям сайта подтвердите свой email.<br> Письмо с информацией для подтверждения было направлено Вам на указанный при регистрации ящик {}.<br><a href='#' onclick="document.myfrm.submit();">Послать письмо повторно?</а>'''.format(
                               request.user.email))
 
-        return render(request, 'main/profile.html', {
-            'caption': u'Профиль пользователя {}'.format(request.user.username),
-            'profile_form': UserProfileFormDisabled(instance=request.user.userprofile),
-            'mode': 'view',
-        })
+    return render(request, 'main/profile.html', {
+        'caption': u'Профиль пользователя {}'.format(request.user.username),
+        'profile_form': UserProfileFormDisabled(instance=request.user.userprofile),
+        'mode': 'view',
+    })
 
 
 def is_superuser(user):
