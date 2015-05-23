@@ -79,6 +79,9 @@ def make_info(post_args):
             request['experiment parameters.EMPTY.exposure'] = {}
         request['experiment parameters.EMPTY.exposure']['$lte'] = float(post_args['EmptyToExposure'])
 
+    if post_args['Specimen'] != '':
+        request['specimen'] = post_args['Specimen']
+
     if post_args['Finished'] == u'Завершен':
         request['finished'] = True
     if post_args['Finished'] == u'Не завершен':
