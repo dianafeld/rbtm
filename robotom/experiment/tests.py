@@ -8,3 +8,10 @@ class ExpPageTest(TestCase):
     c = Client()
     response = c.get('/experiment/')
     self.assertEquals(response.status_code, 200)
+    
+if __name__ == '__main__':
+    unittest.main(
+        testRunner=xmlrunner.XMLTestRunner(output='test-reports'),
+        failfast=False, buffer=False, catchbreak=False
+    )
+
