@@ -66,7 +66,7 @@
                                             {% if field.value %}
                                                 {% if field.name == 'gender' %}
                                                     {% if field.value == 'N' %}
-                                                        <p style='color:grey; padding:0px'><i>Нет данных</i></p>
+                                                        <span style='color:grey; padding:0px'><i>Нет данных</i></span>
                                                     {% else %}
                                                         {{ user.userprofile.get_gender_display }}
                                                     {% endif %}
@@ -74,7 +74,7 @@
                                                     {{ field.value }}
                                                 {% endif %}
                                             {% else %}
-                                                <p style='color:grey; padding:0px'><i>Нет данных</i></p>
+                                                <span style='color:grey; padding:0px'><i>Нет данных</i></span>
                                             {% endif %}
                                         </p>
                                     </div>
