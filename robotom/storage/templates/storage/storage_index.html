@@ -55,7 +55,7 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-xs-3"><h5><b>Экспозиция</b></h5></div>
+                                <div class="col-xs-3"><h5><b>Экспозиция, мс</b></h5></div>
                                 <div class="col-xs-3 col-xs-offset-3"><h5><b>Шаг угла</b></h5></div>
                             </div>
                             <div class="row">
@@ -111,7 +111,7 @@
                             </div>
                             <div class="row">
                                 <div class="col-xs-3"><h5><b>Количество</b></h5></div>
-                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Экспозиция</b></h5></div>
+                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Экспозиция, мс</b></h5></div>
                             </div>
                             <div class="row">
                                 <div class="col-xs-3">
@@ -142,7 +142,7 @@
                             </div>
                             <div class="row">
                                 <div class="col-xs-3"><h5><b>Количество</b></h5></div>
-                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Экспозиция</b></h5></div>
+                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Экспозиция, мс</b></h5></div>
                             </div>
                             <div class="row">
                                 <div class="col-xs-3">
@@ -213,25 +213,25 @@
                                 <th>Шаг угла</th>
                                 <th>Изображений на шаг</th>
                                 <th>Количество шагов</th>
-                                <th>Экспозиция</th>
-                                <th>Количество</th>
-                                <th>Экспозиция</th>
-                                <th>Количество</th>
-                                <th>Экспозиция</th>
+                                <th style="vertical-align: middle">Экспозиция</th>
+                                <th style="vertical-align: middle">Количество</th>
+                                <th style="vertical-align: middle">Экспозиция</th>
+                                <th style="vertical-align: middle">Количество</th>
+                                <th style="vertical-align: middle">Экспозиция</th>
                             </tr>
                             </thead>
                             <tbody>
                             {% for record in record_range %}
                                 <tr class="paginated-content">
                                     <td>{{ record.specimen }}</td>
-                                    <td>{{ record.data_angle_step }}</td>
+                                    <td>{{ record.data_angle_step }}&deg;</td>
                                     <td>{{ record.data_count_per_step }}</td>
                                     <td>{{ record.data_step_count }}</td>
-                                    <td>{{ record.data_exposure }}</td>
+                                    <td>{{ record.data_exposure }} мс</td>
                                     <td>{{ record.empty_count }}</td>
-                                    <td>{{ record.empty_exposure }}</td>
+                                    <td>{{ record.empty_exposure }} мс</td>
                                     <td>{{ record.dark_count }}</td>
-                                    <td>{{ record.dark_exposure }}</td>
+                                    <td>{{ record.dark_exposure }} мс</td>
                                     <td>
                                         <a href='{% url 'storage:storage_record' record.experiment_id %}'>{{ record.experiment_id }}</a>
                                     </td>

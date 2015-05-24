@@ -79,6 +79,9 @@ def make_info(post_args):
             request['experiment parameters.EMPTY.exposure'] = {}
         request['experiment parameters.EMPTY.exposure']['$lte'] = float(post_args['EmptyToExposure'])
 
+    if post_args['Specimen'] != '':
+        request['specimen'] = post_args['Specimen'].strip()
+
     if post_args['Finished'] == u'Завершен':
         request['finished'] = True
     if post_args['Finished'] == u'Не завершен':
@@ -179,6 +182,9 @@ class FrameRecord:
         self.angle_position = ""
         self.current = ""
         self.voltage = ""
+        self.horizontal_position = ""
+        self.present = ""
+        self.mode = ""
 
         if "_id" in frame:
             if "$oid" in frame['_id']:
@@ -189,6 +195,8 @@ class FrameRecord:
         if "type" in frame:
             self.type = frame["type"]
         if "frame" in frame:
+            if "mode" in frame["frame"]:
+                self.mode = frame["frame"]["mode"]
             if "number" in frame['frame']:
                 self.num = frame["frame"]["number"]
             if "image_data" in frame["frame"]:
@@ -205,6 +213,13 @@ class FrameRecord:
             if "object" in frame["frame"]:
                 if "angle position" in frame["frame"]["object"]:
                     self.angle_position = frame["frame"]["object"]["angle position"]
+                if "horizontal position" in frame["frame"]["object"]:
+                    self.horizontal_position = frame["frame"]["object"]["horizontal position"]
+                if "present" in frame["frame"]["object"]:
+                    if frame["frame"]["object"]["present"]:
+                        self.present = u"Да"
+                    else:
+                        self.present = u"Нет"
             if "X-ray source" in frame["frame"]:
                 if "current" in frame["frame"]["X-ray source"]:
                     self.current = frame["frame"]["X-ray source"]["current"]
@@ -267,7 +282,7 @@ def storage_record_view(request, storage_record_id):
 
     return render(request, 'storage/storage_record_new.html', {
         "record_id": storage_record_id,
-        'caption': 'Запись хранилища номер ' + str(storage_record_id),
+        'caption': 'Запись хранилища ' + str(storage_record_id),
         'to_show': to_show,
         'info': record,
         'frames_list': frames_list,

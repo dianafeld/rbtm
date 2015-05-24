@@ -29,26 +29,24 @@
                             <thead>
                             <tr>
                                 <th rowspan="2" style="vertical-align: middle">Образец</th>
-                                <th rowspan="2" style="vertical-align: middle">Продвинутый</th>
                                 <th colspan="4" style="text-align: center">DATA</th>
                                 <th colspan="2" style="text-align: center">EMPTY</th>
                                 <th colspan="2" style="text-align: center">DARK</th>
                             </tr>
                             <tr>
-                                <th>Шаг угла</th>
-                                <th>Изображений на шаг</th>
-                                <th>Количество шагов</th>
-                                <th>Экспозиция</th>
-                                <th>Количество</th>
-                                <th>Экспозиция</th>
-                                <th>Количество</th>
-                                <th>Экспозиция</th>
+                                <th style="vertical-align: middle">Шаг угла</th>
+                                <th style="vertical-align: middle">Изображений на шаг</th>
+                                <th style="vertical-align: middle">Количество шагов</th>
+                                <th style="vertical-align: middle">Экспозиция</th>
+                                <th style="vertical-align: middle">Количество</th>
+                                <th style="vertical-align: middle">Экспозиция</th>
+                                <th style="vertical-align: middle">Количество</th>
+                                <th style="vertical-align: middle">Экспозиция</th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr>
                                 <td>{{ info.specimen }}</td>
-                                <td>{{ info.advanced }}</td>
                                 <td>{{ info.data_angle_step }}&deg;</td>
                                 <td>{{ info.data_count_per_step }}</td>
                                 <td>{{ info.data_step_count }}</td>
@@ -78,15 +76,15 @@
                         <table class="table table-hover table-bordered">
                             <thead>
                             <tr>
-                                <th>#</th>
-                                <th>Тип</th>
-                                <th>Время</th>
-                                <th>Экспозиция</th>
-                                <th>Заслонка</th>
-                                <th>Угол поворота</th>
-                                <th>X-Ray ток</th>
-                                <th>X-Ray напряжение</th>
-                                <th>Модель детектора</th>
+                                <th style="vertical-align: middle">#</th>
+                                <th style="vertical-align: middle">Режим</th>
+                                <th style="vertical-align: middle">Время</th>
+                                <th style="vertical-align: middle">Экспозиция</th>
+                                <th style="vertical-align: middle">Заслонка</th>
+                                <th style="vertical-align: middle">Угол поворота</th>
+                                <th style="vertical-align: middle">Ток</th>
+                                <th style="vertical-align: middle">Напряжение</th>
+                                <th style="vertical-align: middle">Модель детектора</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -94,18 +92,13 @@
                                 <tr class="paginated-content">
                                     <td><a id="{{ frame.num }}" onClick="table_click(this.id)"
                                            href="#">{{ frame.num }}</a></td>
-                                    <td>{{ frame.type }}</td>
+                                    <td>{{ frame.mode }}</td>
                                     <td>{{ frame.date_time }}</td>
                                     <td>{{ frame.exposure }} мс</td>
-                                    <td>{% if frame.shutter_open %}
-                                        Открыта
-                                        {% else %}
-                                        Закрыта
-                                        {% endif %}
-                                     </td>
-                                     <td>{{ frame.angle_position|floatformat:2 }}&deg;</td>
-                                    <td>{{ frame.current }}</td>
-                                    <td>{{ frame.voltage }}</td>
+                                    <td>{% if frame.shutter_open %}Открыта{% else %}Закрыта{% endif %}</td>
+                                    <td>{{ frame.angle_position|floatformat:2 }}&deg;</td>
+                                    <td>{{ frame.current }} мА</td>
+                                    <td>{{ frame.voltage }} кВ</td>
                                     <td>{{ frame.detector_model }}</td>
                                     <td hidden>{{ frame.id }}</td>
                                 </tr>
@@ -142,18 +135,18 @@
                         <table class="table table-responsive">
                             <thead>
                             <tr>
-                                <th>Type</th>
-                                <th>Date Time</th>
-                                <th>Exposure</th>
-                                <th>Shutter open</th>
-                                <th>Angle position</th>
-                                <th>X-Ray current</th>
-                                <th>X-Ray voltage</th>
+                                <th style="vertical-align: middle">Режим</th>
+                                <th style="vertical-align: middle">Время</th>
+                                <th style="vertical-align: middle">Экспозиция</th>
+                                <th style="vertical-align: middle">Заслонка</th>
+                                <th style="vertical-align: middle">Угол поворота</th>
+                                <th style="vertical-align: middle">Ток</th>
+                                <th style="vertical-align: middle">Напряжение</th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr>
-                                <td id="Type"></td>
+                                <td id="Mode"></td>
                                 <td id="DateTime"></td>
                                 <td id="Exposure"></td>
                                 <td id="Shutter"></td>
@@ -202,13 +195,13 @@
             var mod_title = document.getElementById('ImageTitle');
             mod_title.innerText = 'Изображение ' + clicked_id;
 
-            document.getElementById('Type').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[1].textContent;
+            document.getElementById('Mode').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[3].textContent;
             document.getElementById('DateTime').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[5].textContent;
             document.getElementById('Exposure').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[7].textContent;
             document.getElementById('Shutter').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[9].textContent;
             document.getElementById('Angle').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[11].textContent;
             document.getElementById('Current').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[13].textContent;
-            document.getElementById('Voltage').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[1].textContent;
+            document.getElementById('Voltage').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[15].textContent;
 
             var left_button = document.getElementsByClassName('prev')[0];
             if (parseInt(clicked_id) > 0) {
