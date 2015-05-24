@@ -11,7 +11,7 @@ class ExpPageTest(TestCase):
         self.up_exp = UserProfile.objects.create(user=self.u_exp, role='EXP')
         self.c = Client()
         self.c.login(username='exprm', password='exprm')
-    
+
     def test_exp_available(self):
         response = self.c.get('/experiment/')
         self.assertEquals(response.status_code, 200)
@@ -47,10 +47,3 @@ class ExpPageTest(TestCase):
                                     })
         self.assertEqual(response.status_code, 200)
    '''
-if __name__ == '__main__':
-    unittest.main(
-        testRunner=xmlrunner.XMLTestRunner(output='test-reports'),
-        failfast=False, buffer=False, catchbreak=False
-    )
-
-
