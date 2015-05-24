@@ -8,5 +8,3 @@ class ExpPageTest(TestCase):
     c = Client()
     response = c.get('/experiment/')
     self.assertEquals(response.status_code, 200)
-
-
