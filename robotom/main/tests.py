@@ -8,25 +8,25 @@ from bootstrap3.exceptions import BootstrapError
 
 class LoginTest(TestCase):
     def setUp(self):
-        self.u_adm = User.objects.create(username='admin', password='admin', email='mailadmin@mail.ru')
+        self.u_adm = User.objects.create_user(username='admin', password='admin', email='mailadmin@mail.ru')
         self.up_adm = UserProfile.objects.create(user=self.u_adm, role='ADM')
 
-        self.u_exp = User.objects.create(username='exprm', password='exprm')
+        self.u_exp = User.objects.create_user(username='exprm', password='exprm')
         self.up_exp = UserProfile.objects.create(user=self.u_exp, role='EXP')
 
-        self.u_res = User.objects.create(username='resch', password='resch')
+        self.u_res = User.objects.create_user(username='resch', password='resch')
         self.up_res = UserProfile.objects.create(user=self.u_res, role='RES')
 
-        self.u_gst = User.objects.create(username='guest', password='guest')
+        self.u_gst = User.objects.create_user(username='guest', password='guest')
         self.up_gst = UserProfile.objects.create(user=self.u_gst, role='GST')
 
         self.c = Client()
 
     def test_login_page(self):
         response = self.c.post('/accounts/login/', {'username': 'admin', 'password': 'admin'})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         response = self.c.post('/accounts/login/', {'username': 'guest', 'password': 'guest'})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         response = self.c.post('/accounts/login/', {'username': 'guest', 'password': 'wrongpass'})
         self.assertEqual(response.status_code, 200)
 
@@ -92,16 +92,16 @@ class LoginTest(TestCase):
 
 class ExperimentPermissionTest(TestCase):
     def setUp(self):
-        self.u_adm = User.objects.create(username='admin', password='admin')
+        self.u_adm = User.objects.create_user(username='admin', password='admin')
         self.up_adm = UserProfile.objects.create(user=self.u_adm, role='ADM')
 
-        self.u_exp = User.objects.create(username='exprm', password='exprm')
+        self.u_exp = User.objects.create_user(username='exprm', password='exprm')
         self.up_exp = UserProfile.objects.create(user=self.u_exp, role='EXP')
 
-        self.u_res = User.objects.create(username='resch', password='resch')
+        self.u_res = User.objects.create_user(username='resch', password='resch')
         self.up_res = UserProfile.objects.create(user=self.u_res, role='RES')
 
-        self.u_gst = User.objects.create(username='guest', password='guest')
+        self.u_gst = User.objects.create_user(username='guest', password='guest')
         self.up_gst = UserProfile.objects.create(user=self.u_gst, role='GST')
 
     def test_exp_perm(self):
@@ -113,13 +113,11 @@ class ExperimentPermissionTest(TestCase):
         # logged as admin
         c.login(username='admin', password='admin')
         response = c.get('/experiment/')
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['Location'], 'http://testserver/accounts/login/?next=/experiment/')
+        self.assertEqual(response.status_code, 200)
         # logged as experimentator
         c.login(username='exprm', password='exprm')
         response = c.get('/experiment/')
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['Location'], 'http://testserver/accounts/login/?next=/experiment/')
+        self.assertEqual(response.status_code, 200)
         # logged as admin
         c.login(username='resch', password='resch')
         response = c.get('/experiment/')

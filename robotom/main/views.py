@@ -278,7 +278,7 @@ def mail_role_request(request, role_request, site, manage_link):
 
     send_mail(subject, message, settings.EMAIL_HOST_USER, [admin[1] for admin in settings.ADMINS], fail_silently=False)
 
-
+@login_required
 @user_passes_test(is_superuser)
 def manage_requests_view(request):
     if request.method == 'POST':

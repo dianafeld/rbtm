@@ -14,9 +14,11 @@ from django.shortcuts import render
 from requests.exceptions import Timeout
 from robotom.settings import STORAGE_EXPERIMENTS_HOST, STORAGE_FRAMES_HOST, STORAGE_FRAMES_INFO_HOST, MEDIA_ROOT, \
     STORAGE_FRAMES_PNG
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 rest_logger = logging.getLogger('rest_logger')
-
+def is_active(user):
+    return user.is_active
 
 class ExperimentRecord:
     def __init__(self, record):
@@ -124,7 +126,8 @@ def make_info(post_args):
     rest_logger.debug(u'Текст запроса к базе {}'.format(json.dumps(request)))
     return json.dumps(request)
 
-
+@login_required
+@user_passes_test(is_active)
 def storage_view(request):
     records = []
     num_pages = 0
@@ -227,7 +230,8 @@ class FrameRecord:
                 if "voltage" in frame["frame"]["X-ray source"]:
                     self.voltage = frame["frame"]["X-ray source"]["voltage"]
 
-
+@login_required
+@user_passes_test(is_active)
 def storage_record_view(request, storage_record_id):
     record = {}
     to_show = True
