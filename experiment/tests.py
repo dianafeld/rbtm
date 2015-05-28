@@ -86,37 +86,30 @@ class ModuleExperimentTestCase2(unittest.TestCase):
         assert response_format_is_normal(json.loads(response.data))
 
 
-
-
     def test_SOURCE_SET_VOLTAGE_response_format_when_NORMAL_PARAM(self):
-        response = self.app.post('/tomograph/1/source/set-voltage', data= VOLTAGE_NORMAL)
+        response = self.app.post('/tomograph/1/source/set-voltage', data=VOLTAGE_NORMAL)
         assert response_format_is_normal(json.loads(response.data))
 
     def test_SOURCE_SET_VOLTAGE_response_format_when_LOW_PARAM(self):
-        response = self.app.post('/tomograph/1/source/set-voltage', data= VOLTAGE_LOW)
+        response = self.app.post('/tomograph/1/source/set-voltage', data=VOLTAGE_LOW)
         assert response_format_is_normal(json.loads(response.data))
 
     def test_SOURCE_SET_VOLTAGE_response_format_when_HIGH_PARAM(self):
-        response = self.app.post('/tomograph/1/source/set-voltage', data= VOLTAGE_HIGH)
+        response = self.app.post('/tomograph/1/source/set-voltage', data=VOLTAGE_HIGH)
         assert response_format_is_normal(json.loads(response.data))
-
 
 
     def test_SOURCE_SET_CURRENT_response_format_when_NORMAL_PARAM(self):
-        response = self.app.post('/tomograph/1/source/set-current', data= CURRENT_NORMAL)
+        response = self.app.post('/tomograph/1/source/set-current', data=CURRENT_NORMAL)
         assert response_format_is_normal(json.loads(response.data))
 
     def test_SOURCE_SET_CURRENT_response_format_when_LOW_PARAM(self):
-        response = self.app.post('/tomograph/1/source/set-current', data= CURRENT_LOW)
+        response = self.app.post('/tomograph/1/source/set-current', data=CURRENT_LOW)
         assert response_format_is_normal(json.loads(response.data))
 
     def test_SOURCE_SET_CURRENT_response_format_when_HIGH_PARAM(self):
-        response = self.app.post('/tomograph/1/source/set-current', data= CURRENT_HIGH)
+        response = self.app.post('/tomograph/1/source/set-current', data=CURRENT_HIGH)
         assert response_format_is_normal(json.loads(response.data))
-
-
-
-
 
 
     def test_SHUTTER_OPEN_response_format_when_POSITIVE_PARAM(self):
@@ -146,48 +139,43 @@ class ModuleExperimentTestCase2(unittest.TestCase):
 
 
     def test_DETECTOR_GET_FRAME_response_format_when_POSITIVE_PARAM(self):
-        response = self.app.post('/tomograph/1/detector/get-frame/1.0', data= EXPOSURE_NORMAL)
+        response = self.app.post('/tomograph/1/detector/get-frame/1.0', data=EXPOSURE_NORMAL)
         assert response_format_is_normal(json.loads(response.data))
 
     def test_DETECTOR_GET_FRAME_response_format_when_NEGATIVE_PARAM(self):
-        response = self.app.post('/tomograph/1/detector/get-frame/1.0', data= EXPOSURE_NEGATIVE)
+        response = self.app.post('/tomograph/1/detector/get-frame/1.0', data=EXPOSURE_NEGATIVE)
         assert response_format_is_normal(json.loads(response.data))
-
-
-
 
 
     def test_MOTOR_SET_X_response_format_when_NORMAL_PARAM(self):
-        response = self.app.post('/tomograph/1/motor/set-horizontal-position', data= X_NORMAL)
+        response = self.app.post('/tomograph/1/motor/set-horizontal-position', data=X_NORMAL)
         assert response_format_is_normal(json.loads(response.data))
 
     def test_MOTOR_SET_X_response_format_when_HIGH_PARAM(self):
-        response = self.app.post('/tomograph/1/motor/set-horizontal-position', data= X_HIGH)
+        response = self.app.post('/tomograph/1/motor/set-horizontal-position', data=X_HIGH)
         assert response_format_is_normal(json.loads(response.data))
 
     def test_MOTOR_SET_X_response_format_when_LOW_PARAM(self):
-        response = self.app.post('/tomograph/1/motor/set-horizontal-position', data= X_LOW)
+        response = self.app.post('/tomograph/1/motor/set-horizontal-position', data=X_LOW)
         assert response_format_is_normal(json.loads(response.data))
-
 
 
     def test_MOTOR_SET_Y_response_format_when_NORMAL_PARAM(self):
-        response = self.app.post('/tomograph/1/motor/set-vertical-position', data= Y_NORMAL)
+        response = self.app.post('/tomograph/1/motor/set-vertical-position', data=Y_NORMAL)
         assert response_format_is_normal(json.loads(response.data))
 
     def test_MOTOR_SET_Y_response_format_when_HIGH_PARAM(self):
-        response = self.app.post('/tomograph/1/motor/set-vertical-position', data= Y_HIGH)
+        response = self.app.post('/tomograph/1/motor/set-vertical-position', data=Y_HIGH)
         assert response_format_is_normal(json.loads(response.data))
 
     def test_MOTOR_SET_Y_response_format_when_LOW_PARAM(self):
-        response = self.app.post('/tomograph/1/motor/set-vertical-position', data= Y_LOW)
+        response = self.app.post('/tomograph/1/motor/set-vertical-position', data=Y_LOW)
         assert response_format_is_normal(json.loads(response.data))
 
 
     def test_MOTOR_SET_ANGLE_response_format(self):
-        response = self.app.post('/tomograph/1/motor/set-angle-position', data= ANGLE)
+        response = self.app.post('/tomograph/1/motor/set-angle-position', data=ANGLE)
         assert response_format_is_normal(json.loads(response.data))
-
 
     def test_MOTOR_RESET_ANGLE_response_format(self):
         response = self.app.get('/tomograph/1/motor/reset-angle-position')
@@ -202,15 +190,12 @@ class ModuleExperimentTestCase2(unittest.TestCase):
         assert response_format_is_normal(json.loads(response.data))
 
 
-
-
-
     def test_EXPERIMENT_START_response_format_when_SIMPLE_EXPERIMENT(self):
-        response = self.app.post('tomograph/1/experiment/start', data= SIMPLE_EXPERIMENT)
+        response = self.app.post('tomograph/1/experiment/start', data=SIMPLE_EXPERIMENT)
         assert response_format_is_normal(json.loads(response.data))
 
     def test_EXPERIMENT_START_response_format_when_ADVANCED_EXPERIMENT(self):
-        response = self.app.post('tomograph/1/experiment/start', data= ADVANCED_EXPERIMENT)
+        response = self.app.post('tomograph/1/experiment/start', data=ADVANCED_EXPERIMENT)
         assert response_format_is_normal(json.loads(response.data))
 
 

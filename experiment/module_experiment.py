@@ -319,21 +319,21 @@ def set_y(tomo_num, new_y, exp_id = ''):
         error = 'Incorrect type! Position type must be float, but it is ' + str(type(new_y))
         print (error)
         if exp_id:
-            handle_emergency_stop(exp_id= exp_id, tomo_num= tomo_num, exception_message= '', error= error)
+            handle_emergency_stop(exp_id=exp_id, tomo_num=tomo_num, exception_message='', error=error)
             return False
         else:
-            return create_response(success= False, error= error)
+            return create_response(success=False, error=error)
 
     # TO DELETE THIS LATER
     print('Setting value %.1f...' % (new_y))
     if new_y < -5000 or 2000 < new_y:
-        error = 'Position must have value from -30 to 30'
+        error = 'Position must have value from -5000 to 2000'
         print(error)
         if exp_id:
-            handle_emergency_stop(exp_id= exp_id, tomo_num= tomo_num, exception_message= '', error= error)
+            handle_emergency_stop(exp_id=exp_id, tomo_num=tomo_num, exception_message='', error=error)
             return False
         else:
-            return create_response(success= False, error= error)
+            return create_response(success=False, error=error)
 
     success, set_y, exception_message = try_thrice_change_attr(TOMOGRAPHS[tomo_num]['device'], "vertical_position", new_y)
     if success == False:
@@ -1104,7 +1104,7 @@ def internal_server_error(error):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port = 5001)
+    app.run(host='0.0.0.0', port=5001)
 
 
 
