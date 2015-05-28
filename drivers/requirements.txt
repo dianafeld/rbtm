@@ -1,0 +1,5 @@
+numpy
+Cython
+PyTango>=8.1.1
+pytest>=2.6.4
+pyserial>=2.6
