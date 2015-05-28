@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <form method="post" action="" class="form">
+                    <div class="control-group">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-xs-12 col-md-4">
+                                <label for="Specimen" style="font-size: x-large"><b>Образец</b></label>
+                                <input type="text" class="form-control" id="Specimen" name="Specimen"
+                                       placeholder="Название образца">
+                            </div>
+                        </div>
+                        <div class="row" style="margin-top: 5px" hidden>
+                            <div class="col-xs-6 col-md-2">
+                                <label for="Finished">Завершен</label>
+                                <select class="form-control" id="Finished" name="Finished">
+                                    <option></option>
+                                    <option>Завершен</option>
+                                    <option>Не завершен</option>
+                                </select>
+                            </div>
+                            <div class="col-xs-6 col-md-2">
+                                <label for="Advanced">Продвинутый</label>
+                                <select class="form-control" id="Advanced" name="Advanced">
+                                    <option></option>
+                                    <option>Да</option>
+                                    <option>Нет</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <button type="button" class="btn btn-default btn-lg" data-toggle="collapse"
+                                        data-target="#DATA" style="margin-top: 10px; margin-right: 5px">
+                                    <b>DATA</b>
+                                    <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                                </button>
+                                <button type="button" class="btn btn-default btn-lg" data-toggle="collapse"
+                                        data-target="#DARK" style="margin-top: 10px; margin-right: 5px">
+                                    <b>DARK</b>
+                                    <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                                </button>
+                                <button type="button" class="btn btn-default btn-lg" data-toggle="collapse"
+                                        data-target="#EMPTY" style="margin-top: 10px; margin-right: 5px">
+                                    <b>EMPTY</b>
+                                    <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="DATA" class="collapse">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <h3><b>DATA</b></h3>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-3"><h5><b>Экспозиция, мс</b></h5></div>
+                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Шаг угла</b></h5></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <input type="number" step="any" class="form-control" id="DataFromExposure"
+                                           name="DataFromExposure"
+                                           placeholder="От">
+                                </div>
+                                <div class="col-xs-3">
+                                    <input type="number" step="any" class="form-control" id="DataToExposure"
+                                           name="DataToExposure"
+                                           placeholder="До">
+                                </div>
+                                <div class="col-xs-3">
+                                    <input type="number" min="0" class="form-control" id="DataFromAngleStep"
+                                           name="DataFromAngleStep" placeholder="От">
+                                </div>
+                                <div class="col-xs-3">
+                                    <input type="number" min="0" class="form-control" id="DataToAngleStep"
+                                           name="DataToAngleStep"
+                                           placeholder="До">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-3"><h5><b>Изображений на шаг</b></h5></div>
+                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Количество шагов</b></h5></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <input type="number" min="0" class="form-control" id="DataFromCountPerStep"
+                                           name="DataFromCountPerStep" placeholder="От">
+                                </div>
+                                <div class="col-xs-3">
+                                    <input type="number" min="0" class="form-control" id="DataToCountPerStep"
+                                           name="DataToCountPerStep" placeholder="До">
+                                </div>
+                                <div class="col-xs-3">
+                                    <input type="number" min="0" class="form-control" id="DataFromStepCount"
+                                           name="DataFromStepCount" placeholder="От">
+                                </div>
+                                <div class="col-xs-3">
+                                    <input type="number" min="0" class="form-control" id="DataToStepCount"
+                                           name="DataToStepCount"
+                                           placeholder="До">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="DARK" class="collapse">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <h3><b>DARK</b></h3>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-3"><h5><b>Количество</b></h5></div>
+                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Экспозиция, мс</b></h5></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <input type="number" min="0" class="form-control" id="DarkFromCount"
+                                           name="DarkFromCount"
+                                           placeholder="От">
+                                </div>
+                                <div class="col-xs-3">
+                                    <input type="number" min="0" class="form-control" id="DarkToCount"
+                                           name="DarkToCount"
+                                           placeholder="До">
+                                </div>
+                                <div class="col-xs-3">
+                                    <input type="number" min="0" class="form-control" id="DarkFromExposure"
+                                           name="DarkFromExposure"
+                                           placeholder="От">
+                                </div>
+                                <div class="col-xs-3">
+                                    <input type="number" min="0" class="form-control" id="DarkToExposure"
+                                           name="DarkToExposure"
+                                           placeholder="До">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="EMPTY" class="collapse">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <h3><b>EMPTY</b></h3>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-3"><h5><b>Количество</b></h5></div>
+                                <div class="col-xs-3 col-xs-offset-3"><h5><b>Экспозиция, мс</b></h5></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <input type="number" min="0" class="form-control" id="EmptyFromCount"
+                                           name="EmptyFromCount"
+                                           placeholder="От">
+                                </div>
+                                <div class="col-xs-3">
+                                    <input type="number" min="0" class="form-control" id="EmptyToCount"
+                                           name="EmptyToCount"
+                                           placeholder="До">
+                                </div>
+                                <div class="col-xs-3">
+                                    <input type="number" min="0" class="form-control" id="EmptyFromExposure"
+                                           name="EmptyFromExposure"
+                                           placeholder="От">
+                                </div>
+                                <div class="col-xs-3">
+                                    <input type="number" min="0" class="form-control" id="EmptyToExposure"
+                                           name="EmptyToExposure"
+                                           placeholder="До">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-3" style="margin-top: 10px">
+                                <button type="submit" class="btn btn-default">
+                                    <span class="glyphicon glyphicon-search"></span>
+                                    Поиск
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+        <div class="row">
+            {% for message in messages %}
+                <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+                    <div class="alert alert-{% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
+                        {{ message }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if toShowResult and record_number != 0 %}
+        <div class="container-fluid">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered">
+                            <thead>
+                            <tr>
+                                <th rowspan="2" style="vertical-align: middle">Образец</th>
+                                <th colspan="4" style="text-align: center">DATA</th>
+                                <th colspan="2" style="text-align: center">EMPTY</th>
+                                <th colspan="2" style="text-align: center">DARK</th>
+                                <th rowspan="2" style="vertical-align: middle">ID эксперимента</th>
+                            </tr>
+                            <tr>
+                                <th>Шаг угла</th>
+                                <th>Изображений на шаг</th>
+                                <th>Количество шагов</th>
+                                <th style="vertical-align: middle">Экспозиция</th>
+                                <th style="vertical-align: middle">Количество</th>
+                                <th style="vertical-align: middle">Экспозиция</th>
+                                <th style="vertical-align: middle">Количество</th>
+                                <th style="vertical-align: middle">Экспозиция</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for record in record_range %}
+                                <tr class="paginated-content">
+                                    <td><a href='{% url 'storage:storage_record' record.experiment_id %}'>{{ record.specimen }}</a></td>
+                                    <td>{{ record.data_angle_step }}&deg;</td>
+                                    <td>{{ record.data_count_per_step }}</td>
+                                    <td>{{ record.data_step_count }}</td>
+                                    <td>{{ record.data_exposure }} мс</td>
+                                    <td>{{ record.empty_count }}</td>
+                                    <td>{{ record.empty_exposure }} мс</td>
+                                    <td>{{ record.dark_count }}</td>
+                                    <td>{{ record.dark_exposure }} мс</td>
+                                    <td>{{ record.experiment_id }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <ul class="pagination">
+                        {#                        {% if record_range.has_previous %}#}
+                        {#                            <li><a href="?page={{ record_range.previous_page_number }}#">#}
+                        {#                                <span class="glyphicon glyphicon-chevron-left"></span>#}
+                        {#                            </a></li>#}
+                        {#                        {% else %}#}
+                        <li class="disabled">
+                            <span class="glyphicon glyphicon-chevron-left"></span>
+                        </li>
+                        {#                        {% endif %}#}
+                        {% for page_id in pages %}
+                            <li {% if page_id == 1 %}class="active"{% endif %}><a href="#">{{ page_id }}</a></li>
+                        {% endfor %}
+                        {#                        {% if record_range.has_next %}#}
+                        {#                            <li><a href="?page={{ record_range.next_page_number }}#">#}
+                        {#                                <span class="glyphicon glyphicon-chevron-right"></span>#}
+                        {#                            </a></li>#}
+                        {#                        {% else %}#}
+                        <li class="disabled">
+                            <span class="glyphicon glyphicon-chevron-right"></span>
+                        </li>
+                        {#                        {% endif %}#}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <script type="text/javascript">
+        pageSize = 8;
+
+        showPage = function (page) {
+            var divs = $(".paginated-content");
+            divs.hide();
+            divs.each(function (n) {
+                if (n >= pageSize * (page - 1) && n < pageSize * page)
+                    $(this).show();
+            });
+        };
+
+        showPage(1);
+
+        $(".pagination").find("li").find("a").click(function () {
+            $(".pagination").find("li").removeClass("active");
+            $(this).parent().addClass("active");
+            showPage(parseInt($(this).text()))
+        });
+    </script>
+{% endblock content %}

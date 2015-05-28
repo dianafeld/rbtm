@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'index_styles.css' %}">
+    <style type="text/css">
+        .well {
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+
+    <div class="jumbotron">
+        <div class="container" style="font-size:4vw">
+            <div class="row">
+                <div class="col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2">
+                    <div class="well">
+                        <p>Приветствуем Вас на сайте дистанционного управления лабораторным томографом &laquo;ROBO-TOM&raquo;!</p>
+                    </div>
+                    <div class="well">
+                        <p>Для получения доступа к проведению экспериментов, расширенной информации об экспериментах или
+                            панели администратора Вам нужно запросить соответствующую роль у администраторов сайта. Это
+                            можно сделать сразу после активации профиля или позже, в личном кабинете.</p>
+                        <button type="button" class="btn btn-default btn-lg btn-block" data-toggle="collapse"
+                                data-target="#demo" style="white-space:normal"><span
+                                class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> Информация о ролях
+                            доступа
+                        </button>
+                        <div id="demo" class="collapse">
+                            <p></p>
+
+                            <p><strong>Гость</strong>: этот статус автоматически получают зарегистрировавшиеся и
+                                подтвердившие свой email пользователи. &laquo;Гости&raquo; имеют доступ к личному
+                                кабинету и хранилищу данных экспериментов. Эти базовые права имеет любой активный
+                                пользователь, независимо от роли.</p>
+
+                            <p><strong>Экспериментатор</strong>: после подтверждении роли дополнительно имеет доступ к
+                                странице &laquo;Эксперимент&raquo; и всему функционалу на этой странице.</p>
+
+                            <p><strong>Исследователь</strong>: после подтверждении роли имеет полнофункциональный доступ
+                                к странице &laquo;Хранилище&raquo;.</p>
+
+                            <p><strong>Админ</strong>: после подтверждении роли имеет доступ ко всем страницам
+                                (функциональные кнопки на страницах &laquo;Эксперимент&raquo; и &laquo;Хранилище&raquo;
+                                ему недоступны). Среди прочих имеет право подтверждать или отклонять запросы на
+                                присвоение ролей.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head lang="ru">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ caption }}</title>
+
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+
+    <!--magic links-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="{% static 'bootstrap/js/bootstrap.js' %}" type="text/javascript"></script>
+
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+
+</head>
+<body>
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="{% url 'main:index' %}">Главная</a>
+        </div>
+
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+
+            <!-- <ul class="nav navbar-nav">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Разработчики
+                        <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="{% url 'main:group_1' %}">Группа 1 (&laquo;drivers&raquo;)</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="{% url 'main:group_2' %}">Группа 2 (&laquo;storage/experiment&raquo;)</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="{% url 'main:group_3' %}">Группа 3 (&laquo;web&raquo;)</a></li>
+                    </ul>
+                </li>
+            </ul>    -->
+
+            <ul class="nav navbar-nav">
+                {% if user.is_authenticated %}
+                    {% if user.userprofile.role == "ADM" or user.userprofile.role == "EXP" %}
+                        <li><a href="{% url 'experiment:index' %}">Эксперимент</a></li>
+                    {% endif %}
+                {% endif %}
+                <li><a href="{% url 'storage:index' %}">Хранилище</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                {% if user.is_authenticated %}
+                    {% if user.is_superuser %}
+                        <li><a href="{% url 'main:manage_requests' %}">Запросы смены роли</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'main:profile' %}">Профиль [{{ user.username }}]</a></li>
+                    <li><a href="{% url 'logout' %}">Выход</a></li>
+                {% else %}
+                    <li><a href="{% url 'main:register' %}">Регистрация</a></li>
+                    <li><a href="{% url 'main:login' %}">Вход</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+<div style="margin-top:60px">
+    {% block content %}
+    {% endblock %}
+</div>
+
+</body>
+</html>

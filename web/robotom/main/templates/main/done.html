@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <div class="row">
+        {% for message in messages %}
+            <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+                <div class="alert alert-{% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
+                    <a class="close" data-dismiss="alert" href="{% url 'storage:index' %}">&times;</a>
+                    {{ message }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% load bootstrap3 %}
+    {% load staticfiles %}
+
+    {% if messages %}
+        <div class="row">
+            {% for message in messages %}
+                <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+                    <div class="alert alert-{% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
+                        <a class="close" data-dismiss="alert" href="{% url 'storage:index' %}">&times;</a>
+                        {{ message }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if user.is_active %}
+        <div class="row">
+            <div class="col-sm-10 col-sm-offset-1 col-md-8 col-md-offset-2 col-lg-6 col-lg-offset-3">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h1 class="panel-title"><strong>Запрос на изменение роли</strong></h1>
+                    </div>
+                    <div class="panel-body">
+                        <div>Вы можете сделать запрос на получение прав на дополнительные действия на сайте.
+                            Для этого выберите нужную роль из списка ниже.
+                        </div>
+                        <div>Если для принятия решения администратору требуется дополнительная информация о Вас,
+                            оставьте её в поле "комментарий".
+                        </div>
+                        <br>
+
+                        <form action="" method="post" class="form">
+                            {% csrf_token %}
+                            {% bootstrap_form role_form %}
+                            {% buttons %}
+                                <button type="submit" name="submit" class="btn btn-primary" style="margin-left: 15px">
+                                    Запросить изменение роли
+                                </button>
+                                <button type="submit" name="cancel" class="btn btn-default" style="margin-left: 15px">
+                                    Отмена
+                                </button>
+                            {% endbuttons %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

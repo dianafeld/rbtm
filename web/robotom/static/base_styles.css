@@ -1,0 +1,15 @@
+.panel > .panel-heading {
+    background-image: none;
+    background-color: #708090;
+    color: white;
+    border-color: #708090;
+} 
+
+.panel > .panel-body {
+    background-image: none;
+    background-color: white;
+}
+
+.panel {
+    border-color: #708090;
+}

@@ -1,0 +1,29 @@
+<html>
+	<head>
+		<title>admin_setting></title>
+	</head>
+	<body>
+		<h2 align = "center">Настройки</h2>
+		<form name = "form1">
+			<h3>Включить источник</h3>
+			<input type = "button" name = "on" value = "Включить">
+			<input type = "button" name = "dis_on" value = "Выключить" disabled>
+		</form>
+		<br>
+		<form name = "form2">
+			<h3>Выставить силу тока, напряжение, положение заслонки и угол</h3>
+			Выставить силу тока<br>
+			<input type = "text"><br>
+			Выставить напряжение<br>
+			<input type = "text"><br>
+			Открыть/закрыть заслонку<br>
+			<input type = "radio" name = "gate" value = "on" checked>открыть
+			<input type = "radio" name = "gate" value = "off">закрыть
+			<br>
+			Выставить угол<br>
+			<input type = "text"><br>
+			<br>
+			<input type = "submit" name = "send" value = "Отправить">
+		</form>
+	</body>
+</html>

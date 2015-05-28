@@ -1,0 +1,28 @@
+.jumbotron{
+    background: url("images/tomo_img.jpg") no-repeat center center fixed;
+    background-size: cover; 
+    min-height:100%;
+    min-height:100vh;
+	margin-top: -10px;
+	margin-bottom: -10px
+}
+
+body {  
+    min-height:100%;
+    min-height:100vh;
+    background-color:WhiteSmoke;
+}
+
+html {min-height:100%;}
+.special, .special .jumbotron {min-height:100%;}
+
+.jumbotron h1{
+	color: #FFFFFF;
+	text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+	text-align: left;
+}
+
+.jumbotron p{
+	color: #000000;
+	text-align: left;
+}

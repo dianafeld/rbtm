@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block content %}
+   {% if messages %}
+        <div class="row">
+            {% for message in messages %}
+                <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+                    <div class="alert alert-{% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
+                        {{ message }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="container-fluid">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3>Эксперимент</h3>
+
+            </div>
+            <div class="panel-body">
+
+                <form name="manual" method="POST">
+                    <div class="control-group">
+                        {% csrf_token %}
+                        <h3>Параметры образца</h3>
+
+                        <div class="row">
+                            <div class="col-xs-12 col-md-4">
+                                <label for="name">Название образца</label>
+
+                                <input type="text" class="form-control ntSaveForms"
+                                       id="name" name="name"
+                                       placeholder="Название образца">
+                            </div>
+                            <div class="col-xs-12 col-md-4">
+                                <label for="type">Теги</label>
+
+                                <input type="text" class="form-control ntSaveForms" id="type" name="tags"
+                                       placeholder="Теги">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <h3>Кадры DARK</h3>
+                            </div>
+                            <div class="col-xs-6">
+                                <h3>Кадры EMPTY</h3>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-3">
+                                <label for="dark_quantity">Количество</label>
+                            </div>
+                            <div class="col-xs-3">
+                                <label for="dark_exposure">Экспозиция, мс</label>
+                            </div>
+                            <div class="col-xs-3">
+                                <label for="empty_quantity">Количество</label>
+                            </div>
+                            <div class="col-xs-3">
+                                <label for="empty_exposure">Экспозиция, мс</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-3 col-md-3">
+                                <input type="number" step="1" min="0" id="dark_quantity"
+                                       class="form-control ntSaveForms" name="dark_quantity" placeholder="Количество">
+                            </div>
+                            <div class="col-xs-3 col-md-3">
+                                <input type="number" step="0.1" min="0.1" max="7000" class="form-control ntSaveForms"
+                                       id="dark_exposure" name="dark_exposure"
+                                       placeholder="Экспозиция">
+                            </div>
+                            <div class="col-xs-3 col-md-3">
+                                <input type="number" step="1" min="0" id="empty_quantity"
+                                       class="form-control ntSaveForms" name="empty_quantity" placeholder="Количество">
+                            </div>
+                            <div class="col-xs-3 col-md-3">
+                                <input type="number" step="0.1" min="0.1" max="16000" class="form-control ntSaveForms"
+                                       id="empty_exposure" name="empty_exposure"
+
+                                       placeholder="Экспозиция">
+                            </div>
+                        </div>
+
+
+                        <h3>Кадры DATA</h3>
+
+                        <div class="row">
+                            <div class="col-xs-3">
+                                <label for="data_shots_quantity">Количество</label>
+                            </div>
+                            <div class="col-xs-3">
+                                <label for="data_shots_exposure">Экспозиция, мс</label>
+                            </div>
+                            <div class="col-xs-3">
+                                <label for="data_angle">Угловой шаг, градусы</label>
+                            </div>
+                            <div class="col-xs-3">
+                                <label for="data_same">Кадров на угол поворота</label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-xs-3">
+
+                                <input type="number" step="1" min="0" id="data_shots_quantity"
+                                       class="form-control ntSaveForms" name="data_shots_quantity"
+                                       placeholder="Количество">
+                            </div>
+                            <div class="col-xs-3">
+                                <input type="number" step="0.1" min="0.1" class="form-control ntSaveForms"
+                                       id="data_shots_exposure" name="data_shots_exposure"
+                                       placeholder="Экспозиция">
+                            </div>
+
+                            <div class="col-xs-3">
+                                <input type="number" step="0.01" id="data_angle" class="form-control ntSaveForms"
+                                       name="data_angle" placeholder="Угловой шаг">
+                            </div>
+                            <div class="col-xs-3">
+                                <input type="number" step="1" min="0" class="form-control ntSaveForms" id="data_same"
+                                       name="data_same" placeholder="Количество кадров">
+                            </div>
+                        </div>
+
+                        <br>
+                        {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and exper == 0 %}
+                            <input type="submit" style="white-space:normal" class="btn btn-success btn-lg"
+                                   name="parameters" value="Начать эксперимент">
+                        {% else %}
+                            <input type="submit" style="white-space:normal" class="btn btn-default btn-lg"
+                                   name="parameters_adm" value="Начать эксперимент" disabled>
+                        {% endif %}
+
+                        {% if user.is_authenticated and user.userprofile.role == 'EXP' and off == 0 and waiting == 0 and adj == 0 %}
+                            <input type="submit" style="white-space:normal" class="btn btn-default btn-lg"
+                                   name="turn_down" value="Закончить эксперимент">
+                        {% else %}
+                            <input type="submit" style="white-space:normal" class="btn btn-default btn-lg"
+                                   name="turn_down_adm" value="Закончить эксперимент" disabled>
+                        {% endif %}
+
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% load staticfiles %}
+
+    <script type='text/javascript' src="{% static 'experiment/js/ntsaveforms.js' %}"></script>
+
+{% endblock content %}
