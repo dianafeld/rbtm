@@ -37,6 +37,13 @@
 #define INOUT
 #endif
 
+#ifndef WIN32
+// this typedef was removed from wintypedefs.h due to conflict with Obj-C
+#ifndef M3API_DLL
+typedef int BOOL;
+#endif
+#endif
+
 #include "m3ErrorCodes.h"
 
 #define	szMM40_Name		"SoftHard Technology MV4.0 Camera"
@@ -240,6 +247,7 @@ typedef struct {
 #define MM40_HWN2_EV76C570		0xE20       // E2V 2.0MPix
 #define	MM40_HWN2_MU9P031		0x931       // USB 5MPix Aptina
 #define MM40_HWN2_VITA1300      0x103       // Onsemi VITA 1.3Mpix
+#define MM40_HWN2_PYTHON1300    0x203       // Onsemi PYTHON 1.3Mpix
 #define MM40_HWN2_CMV300        0xC03       // CMOSIS 0.3Mpix
 #define MM40_HWN2_CMV2000       0xC20       // CMOSIS 2.0Mpix
 #define MM40_HWN2_CMV2000_LX16  0x620       // CMOSIS 2.0Mpix with XILINX xc6slx16 fpga
@@ -329,71 +337,12 @@ typedef enum {
 	// etc
 } MMMOSAIC;
 
-typedef enum{
-	IMAGE_DATA_FORMAT_BGRA8				=	0,
-	IMAGE_DATA_FORMAT_RGBA8				=	1,
-	IMAGE_DATA_FORMAT_BGR8				=	2,
-	IMAGE_DATA_FORMAT_RGB8				=	3,
-	IMAGE_DATA_FORMAT_BGR8_PLANAR		=	4,
-	IMAGE_DATA_FORMAT_RGB8_PLANAR		=	5,
-	IMAGE_DATA_FORMAT_MONO8				=	6, //packed
-	IMAGE_DATA_FORMAT_MONO8U			=	7, //unpacked
-	IMAGE_DATA_FORMAT_MONO10			=	8, //unpacked
-	IMAGE_DATA_FORMAT_MONO12			=	9, //unpacked
-	IMAGE_DATA_FORMAT_MONO14			=	10, //unpacked  
-	IMAGE_DATA_FORMAT_MONO16			=	11, //packed //NS(not supported)
-	IMAGE_DATA_FORMAT_BGRA10			=	12,//NS(not supported)
-	IMAGE_DATA_FORMAT_RGBA10			=	13,//NS(not supported)
-	IMAGE_DATA_FORMAT_BGR10				=	14,//NS(not supported)
-	IMAGE_DATA_FORMAT_RGB10				=	15,//NS(not supported)
-	IMAGE_DATA_FORMAT_BGR10_PLANAR		=	16,//NS(not supported)
-	IMAGE_DATA_FORMAT_RGB10_PLANAR		=	17,//NS(not supported)
-	IMAGE_DATA_FORMAT_BGRA12			=	18,//NS(not supported)
-	IMAGE_DATA_FORMAT_RGBA12			=	19,//NS(not supported)
-	IMAGE_DATA_FORMAT_BGR12				=	20,//NS(not supported)
-	IMAGE_DATA_FORMAT_RGB12				=	21,//NS(not supported)
-	IMAGE_DATA_FORMAT_BGR12_PLANAR		=	22,//NS(not supported)
-	IMAGE_DATA_FORMAT_RGB12_PLANAR		=	23,//NS(not supported)
-	IMAGE_DATA_FORMAT_BGRA14			=	24,//NS(not supported)
-	IMAGE_DATA_FORMAT_RGBA14			=	25,//NS(not supported)
-	IMAGE_DATA_FORMAT_BGR14				=	26,//NS(not supported)
-	IMAGE_DATA_FORMAT_RGB14				=	27,//NS(not supported)
-	IMAGE_DATA_FORMAT_BGR14_PLANAR		=	28,//NS(not supported)
-	IMAGE_DATA_FORMAT_RGB14_PLANAR		=	29,//NS(not supported)
-	IMAGE_DATA_FORMAT_BGRA16			=	30,//NS(not supported)
-	IMAGE_DATA_FORMAT_RGBA16			=	31,//NS(not supported)
-	IMAGE_DATA_FORMAT_BGR16				=	32,//NS(not supported)
-	IMAGE_DATA_FORMAT_RGB16				=	33,//NS(not supported)
-	IMAGE_DATA_FORMAT_BGR16_PLANAR		=	34,//NS(not supported)
-	IMAGE_DATA_FORMAT_RGB16_PLANAR		=	35,//NS(not supported)
-	IMAGE_DATA_FORMAT_BAYER_RG8			=	36, //packed
-	IMAGE_DATA_FORMAT_BAYER_RG10		=	37,
-	IMAGE_DATA_FORMAT_BAYER_RG12		=	38,
-	IMAGE_DATA_FORMAT_BAYER_RG14		=	39,
-	IMAGE_DATA_FORMAT_BAYER_RG16		=	40,//packed
-	IMAGE_DATA_FORMAT_BAYER_BG8			=	41,//packed
-	IMAGE_DATA_FORMAT_BAYER_BG10		=	42,
-	IMAGE_DATA_FORMAT_BAYER_BG12		=	43,
-	IMAGE_DATA_FORMAT_BAYER_BG14		=	44,
-	IMAGE_DATA_FORMAT_BAYER_BG16		=	45,//packed
-	IMAGE_DATA_FORMAT_BAYER_GR8			=	46,//packed
-	IMAGE_DATA_FORMAT_BAYER_GR10		=	47,
-	IMAGE_DATA_FORMAT_BAYER_GR12		=	48,
-	IMAGE_DATA_FORMAT_BAYER_GR14		=	49,
-	IMAGE_DATA_FORMAT_BAYER_GR16		=	50,
-	IMAGE_DATA_FORMAT_BAYER_GB8			=	51,//packed
-	IMAGE_DATA_FORMAT_BAYER_GB10		=	52,
-	IMAGE_DATA_FORMAT_BAYER_GB12		=	53,
-	IMAGE_DATA_FORMAT_BAYER_GB14		=	54,
-	IMAGE_DATA_FORMAT_BAYER_GB16		=	55,//packed
-}IMAGE_DATA_FORMAT_API;
-
 typedef struct{
 	unsigned int width; 
 	unsigned int height;
 	unsigned int padding_x;			//Number of extra bytes provided at the end of each line to facilitate image alignment in buffers.
 	void * pointer;					//Pointer to output image buffer
-	IMAGE_DATA_FORMAT_API format; //output image pixel format
+	DWORD format; //output image pixel format (see XI_GenTL_Image_Format_e)
 }OUTPUT_IMAGE_API, *LPOUTPUT_IMAGE_API;
 
 typedef struct{
@@ -419,7 +368,7 @@ typedef struct{
 	DWORD totalHeight;		//T+V+B	
 	DWORD AbsoluteOffsetX;	//Horizontal offset origin of sensor 0,0	
 	DWORD AbsoluteOffsetY;	//Vertical offset origin of sensor 0,0	
-	IMAGE_DATA_FORMAT_API format; //Input image format
+	DWORD format; //Input image format (see XI_GenTL_Image_Format_e)
 }INPUT_IMAGE_API, *LPINPUT_IMAGE_API;
 
 /**
@@ -433,9 +382,10 @@ typedef	struct {
 	WORD				wLenght;	//!< Length (size) of the structure
 	LPVOID				raw_bp; //raw data(MQ MD)
 	LPVOID				raw_bp_processed; //Processed raw data(depack....)
-#define JUST_RAW					0x00000001//If true do just raw processing and return it.
-#define CONVERT_DATA_TO_2D			0x00000002//If data processed of real raw data.
+#define DONT_PROCESS_RAW			0x00000001//If true do just raw processing(convert transport data to 2D, BPC...) and return it.
+#define CONVERTED_DATA_TO_2D		0x00000002//If data processed or real raw data.
 #define RAW_BPC_DONE				0x00000004//Bad pixels correction done on raw data
+#define GET_TRANSPORT_DATA			0x00000008//Return received transport data
 #define COLOR_INTERPOLATION_DONE	0x00000010//If color interpolation done on incoming data
 	DWORD				flags;
 	INPUT_IMAGE_API		input;	
@@ -829,6 +779,21 @@ typedef	struct {
 	WORD	wStop;			//!< Stop of LUT set, must be less than LUT_SIZE 
 	BOOL	bUseDefault;	//!< Set default LUT (linear ramp)
 } LUT, * LPLUT;
+
+/**
+ *\struct LUT2 
+ * \brief structure containing information about LUT (converts N bits data to N bits). Data asre stored in unsigned short format.
+ */
+typedef	struct {
+#define LUT2_STRUCT_VER	2
+	unsigned short	wVersion; //!< Version of the structure
+#define LUT2_STRUCT_LEN sizeof(LUT2)
+	unsigned short	wLenght;	//!< Length (size) of the structure	
+#define LUT2_SIZE 4096
+    unsigned short lut_size;
+	unsigned short cLut[LUT_SIZE];	//!< LUT (N bits source to N bits result)
+    BOOL    lut_changed;     //!< LUT values have changed need to reload table
+} LUT2, * LPLUT2;
 
 //*****************************************************************
 typedef enum{
@@ -2891,6 +2856,32 @@ MM40_API MM40_RETURN __cdecl mmGetFactoryInfo	(IN HANDLE hDevice, LPSTR pCygnal,
    @return MM40_OK on success, error value otherwise.
  */
 MM40_API MM40_RETURN __cdecl mmSetLUT	(IN HANDLE hDevice, LPLUT lut);
+
+/**
+   \brief Set point Lookup table (LUT)
+   
+   Allows to set hardware conversion table from sensor pixel values to received pixel values.
+   E.g. Mapping from N bit data from sensor to N bit using Gamma curve.
+
+   @param[in] hDevice			handle of the specified device
+   @param[in] index				position in LUT
+   @param[in] value				value on position index in LUT
+   @return MM40_OK on success, error value otherwise.
+ */
+MM40_API MM40_RETURN __cdecl mmSetLUTpoint	(IN HANDLE hDevice, unsigned short index, unsigned short value);
+
+
+/**
+   \brief Enable/Disable Lookup table (LUT)
+   
+   Allows to set hardware conversion table from sensor pixel values to received pixel values.
+   E.g. Mapping from N bit data from sensor to N bit using LUT based curve.
+
+   @param[in] hDevice			handle of the specified device
+   @param[in] enable			when 1 LUT is enabled, when 0 LUt is bypassed
+   @return MM40_OK on success, error value otherwise.
+ */
+MM40_API MM40_RETURN __cdecl mmSetLUTenable	(IN HANDLE hDevice, BOOL enable); 
 
 /**
    \brief Corrects bad pixels
