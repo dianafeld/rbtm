@@ -61,7 +61,6 @@ crashlytics-build.properties
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
 
 # Fortran module files
 *.mod
@@ -178,4 +177,16 @@ target/
 *.x86_64
 *.hex
 
+### rbtm-web specific
+
+web/**/manage.py
+
+web/**/local_settings.py
+
+web/robotom/static/rest_framework/
+
+web/robotom/robotom/test-reports/*
+
+web/**/media/*
+web/**/robotom/static/*
 
