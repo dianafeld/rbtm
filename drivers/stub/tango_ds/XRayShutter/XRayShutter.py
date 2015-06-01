@@ -50,7 +50,6 @@ import sys
 # Add additional import
 #----- PROTECTED REGION ID(XRayShutter.additionnal_import) ENABLED START -----#
 import threading
-from shutter import Shutter
 #----- PROTECTED REGION END -----#  //  XRayShutter.additionnal_import
 
 ## Device States Description

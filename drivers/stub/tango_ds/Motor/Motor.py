@@ -66,36 +66,6 @@ class Motor (PyTango.Device_4Impl):
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(Motor.global_variables) ENABLED START -----#
 
-    def _read_position(self, motor):
-        self.debug_stream("In _read_position()")
-
-        self.debug_stream("Reading position...")
-        try:
-            steps = motor.get_position()["Position"]
-        except PyTango.DevFailed as df:
-            self.error_stream(str(df))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
-        self.debug_stream("Position = {}".format(steps))
-        print steps
-        return steps
-
-    def _write_position(self, motor, steps):
-        self.debug_stream("In _write_position()")
-
-        try:
-            self.debug_stream("Setting position = {}".format(steps))
-            motor.move_to_position(steps, 0)
-            self.debug_stream("Position has been set")
-        except PyTango.DevFailed as df:
-            self.error_stream(str(df))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
-
     #----- PROTECTED REGION END -----#  //  Motor.global_variables
 
     def __init__(self,cl, name):

@@ -50,7 +50,7 @@ import PyTango
 import sys
 # Add additional import
 #----- PROTECTED REGION ID(XRaySource.additionnal_import) ENABLED START -----#
-from driver_source import Source
+
 #----- PROTECTED REGION END -----#  //  XRaySource.additionnal_import
 
 ## Device States Description
@@ -63,56 +63,6 @@ class XRaySource (PyTango.Device_4Impl):
 
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(XRaySource.global_variables) ENABLED START -----#
-
-    def _read_voltage(self):
-        try:
-            voltage = self.source_driver.get_actual_voltage()
-            self.debug_stream("Got voltage = {}".format(voltage))
-        except PyTango.DevFailed as df:
-            self.error_stream(str(df))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
-
-        return voltage
-
-    def _write_voltage(self, new_voltage):
-        try:
-            self.debug_stream("Setting voltage: {}".format(new_voltage))
-            self.source_driver.set_voltage(new_voltage)
-            self.debug_stream("Voltage has been set")
-        except PyTango.DevFailed as df:
-            self.error_stream(str(df))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
-
-    def _read_current(self):
-        try:
-            current = self.source_driver.get_actual_current()
-            self.debug_stream("Got current = {}".format(current))
-        except PyTango.DevFailed as df:
-            self.error_stream(str(df))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
-
-        return current
-
-    def _write_current(self, new_current):
-        try:
-            self.debug_stream("Setting current: {}".format(new_current))
-            self.source_driver.set_current(new_current)
-            self.debug_stream("Current has been set")
-        except PyTango.DevFailed as df:
-            self.error_stream(str(df))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
 
     #----- PROTECTED REGION END -----#  //  XRaySource.global_variables
 

@@ -80,36 +80,6 @@ class Detector (PyTango.Device_4Impl):
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(Detector.global_variables) ENABLED START -----#
 
-    def _read_exposure(self):
-        self.debug_stream("In _read_exposure()")
-
-        self.debug_stream("Reading exposure...")
-        try:
-            exposure = self.detector.get_exposure()
-        except PyTango.DevFailed as df:
-            self.error_stream(str(df))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
-        self.debug_stream("exposure = {}".format(exposure))
-
-        return exposure
-
-    def _write_exposure(self, new_exposure):
-        self.debug_stream("In _write_exposure()")
-
-        self.debug_stream("Setting exposure = {}".format(new_exposure))
-        try:
-            self.detector.set_exposure(new_exposure)
-        except PyTango.DevFailed as df:
-            self.error_stream(str(df))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
-        self.debug_stream("Exposure has been set")
-
     #----- PROTECTED REGION END -----#  //  Detector.global_variables
 
     def __init__(self,cl, name):
