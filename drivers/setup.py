@@ -9,16 +9,16 @@ from Cython.Build import cythonize
 import numpy
 
 
-ext_modules=[
-    # Extension("ximc",
-    #           sources=["tango_ds/Motor/ximc.pyx"],
-    #           libraries=["tango_ds/Motor/libximc"], # Unix-like specific
-    #           #build_lib=["tango_ds/Motor"]
-    # )
-    # ,
+ext_modules = [
+    Extension("ximc",
+              sources=["tango_ds/Motor/ximc.pyx"],
+              libraries=["ximc"], # Unix-like specific
+              #build_lib=["tango_ds/Motor"]
+    )
+    ,
     Extension("xiApi",
             sources=["tango_ds/Detector/xiApi.pyx"],
-            libraries=["tango_ds/Detector/m3apiX64"], # Unix-like specific
+            libraries=["m3api"], # Unix-like specific
             include_dirs=[numpy.get_include()],
             #build_lib=["tango_ds/Detector"]
     )
