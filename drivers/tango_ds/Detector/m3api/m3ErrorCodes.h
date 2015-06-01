@@ -62,7 +62,7 @@ typedef int MM40_RETURN;
 #define MM40_INVALID_OUTPUT_ICC_PROFILE   48 //!< Output ICC profile missed or corrupted
 #define MM40_DEVICE_NOT_READY             49 //!< Device not ready to operate
 #define MM40_SHADING_TOOCONTRAST          50 //!< Shading too contrast
-#define MM40_ALREADY_INITIALIZED          51 //!< Module already initialized
+#define MM40_ALREADY_INITIALIZED          51 //!< Modile already initialized
 #define MM40_NOT_ENOUGH_PRIVILEGES        52 //!< Application doesn't enough privileges(one or more app
 #define MM40_NOT_COMPATIBLE_DRIVER        53 //!< Installed driver not compatible with current software
 #define MM40_TM_INVALID_RESOURCE          54 //!< TM file was not loaded successfully from resources

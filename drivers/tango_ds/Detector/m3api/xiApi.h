@@ -5,13 +5,12 @@
 #ifndef __XIAPI_H
 #define __XIAPI_H
 
-#ifdef WIN32
+#ifdef _WIN64
 #include <windows.h>
 #else
 // linux
 #include "wintypedefs.h"
 #endif
-#include <stddef.h>
 #include "m3Identify.h"
 #ifdef XIAPI_EXPORTS
 #define XIAPI __declspec(dllexport)
@@ -28,7 +27,7 @@ extern "C" {
 //-------------------------------------------------------------------------------------------------------------------
 // xiApi parameters
 
-// Device info parameters
+// 
 #define  XI_PRM_DEVICE_NAME                     "device_name"             // Return device name 
 #define  XI_PRM_DEVICE_TYPE                     "device_type"             // Return device type 
 #define  XI_PRM_DEVICE_MODEL_ID                 "device_model_id"         // Return device model id 
@@ -36,9 +35,8 @@ extern "C" {
 #define  XI_PRM_DEVICE_SENS_SN                  "device_sens_sn"          // Return sensor serial number 
 #define  XI_PRM_DEVICE_INSTANCE_PATH            "device_inst_path"        // Return device system instance path. 
 #define  XI_PRM_DEVICE_USER_ID                  "device_user_id"          // Return custom ID of camera. 
-// Device acquisition settings
+// 
 #define  XI_PRM_EXPOSURE                        "exposure"                // Exposure time in microseconds 
-#define  XI_PRM_GAIN_SELECTOR                   "gain_selector"           // Gain selector for parameter Gain allows to select different type of gains. XI_GAIN_SELECTOR_TYPE
 #define  XI_PRM_GAIN                            "gain"                    // Gain in dB 
 #define  XI_PRM_DOWNSAMPLING                    "downsampling"            // Change image resolution by binning or skipping. 
 #define  XI_PRM_DOWNSAMPLING_TYPE               "downsampling_type"       // Change image downsampling type. XI_DOWNSAMPLING_TYPE
@@ -47,17 +45,12 @@ extern "C" {
 #define  XI_PRM_IMAGE_PAYLOAD_SIZE              "imgpayloadsize"          // Buffer size in bytes sufficient for output image returned by xiGetImage 
 #define  XI_PRM_TRANSPORT_PIXEL_FORMAT          "transport_pixel_format"  // Current format of pixels on transport layer. XI_GenTL_Image_Format_e
 #define  XI_PRM_SENSOR_TAPS                     "sensor_taps"             // Number of taps 
-#define  XI_PRM_SENSOR_CLOCK_FREQ_HZ            "sensor_clock_freq_hz"    // Sensor clock frequency in Hz. 
-#define  XI_PRM_SENSOR_CLOCK_FREQ_INDEX         "sensor_clock_freq_index" // Sensor clock frequency index. Sensor with selected frequencies have possibility to set the frequency only by this index. 
-#define  XI_PRM_SENSOR_OUTPUT_CHANNEL_COUNT     "sensor_output_channel_count"// Number of output channels from sensor used for data transfer. 
+#define  XI_PRM_SENSOR_PIXEL_CLOCK_FREQ_HZ      "sensor_pixel_clock_freq_hz"// Sensor pixel clock frequency in Hz. 
+#define  XI_PRM_SENSOR_PIXEL_CLOCK_FREQ_INDEX   "sensor_pixel_clock_freq_index"// Sensor pixel clock frequency. Selects frequency index for getter of XI_PRM_SENSOR_PIXEL_CLOCK_FREQ_HZ parameter. 
 #define  XI_PRM_SENSOR_DATA_BIT_DEPTH           "sensor_bit_depth"        // Sensor output data bit depth. 
 #define  XI_PRM_OUTPUT_DATA_BIT_DEPTH           "output_bit_depth"        // Device output data bit depth. 
-#define  XI_PRM_IMAGE_DATA_BIT_DEPTH            "image_data_bit_depth"    // bitdepth of data returned by function xiGetImage 
-#define  XI_PRM_OUTPUT_DATA_PACKING             "output_bit_packing"      // Device output data packing (or grouping) enabled. Packing could be enabled if output_data_bit_depth > 8 and packing capability is available. XI_SWITCH
-#define  XI_PRM_OUTPUT_DATA_PACKING_TYPE        "output_bit_packing_type" // . XI_OUTPUT_DATA_PACKING_TYPE
+#define  XI_PRM_OUTPUT_DATA_PACKING             "output_bit_packing"      // Device output data packing (or grouping) enabled. Packing could be enabled if output_data_bit_depth > 8 and packing is available. XI_SWITCH
 #define  XI_PRM_FRAMERATE                       "framerate"               // Define framerate in Hz 
-#define  XI_PRM_COUNTER_SELECTOR                "counter_selector"        // Select counter XI_COUNTER_SELECTOR
-#define  XI_PRM_COUNTER_VALUE                   "counter_value"           // Counter status 
 #define  XI_PRM_ACQ_TIMING_MODE                 "acq_timing_mode"         // Type of sensor frames timing. XI_ACQ_TIMING_MODE
 #define  XI_PRM_AVAILABLE_BANDWIDTH             "available_bandwidth"     // Calculate and return available interface bandwidth(int Megabits) 
 #define  XI_PRM_LIMIT_BANDWIDTH                 "limit_bandwidth"         // Set/get bandwidth(datarate)(in Megabits) 
@@ -83,14 +76,13 @@ extern "C" {
 #define  XI_PRM_TS_RST_MODE                     "ts_rst_mode"             // Defines how time stamp reset engine will be armed XI_TS_RST_MODE
 #define  XI_PRM_TS_RST_SOURCE                   "ts_rst_source"           // Defines which source will be used for timestamp reset. Writing this parameter will trigger settings of engine (arming) XI_TS_RST_SOURCE
 #define  XI_PRM_ACQ_FRAME_BURST_COUNT           "acq_frame_burst_count"   // Sets number of frames acquired by burst. This burst is used only if trigger is set to FrameBurstStart 
-// Extended Device parameters
+// 
 #define  XI_PRM_IS_DEVICE_EXIST                 "isexist"                 // Returns 1 if camera connected and works properly. XI_SWITCH
-#define  XI_PRM_ACQ_BUFFER_SIZE                 "acq_buffer_size"         // Acquisition buffer size in buffer_size_unit. Default bytes. 
-#define  XI_PRM_ACQ_BUFFER_SIZE_UNIT            "acq_buffer_size_unit"    // Acquisition buffer size unit in bytes. Default 1. E.g. Value 1024 means that buffer_size is in KiBytes 
+#define  XI_PRM_ACQ_BUFFER_SIZE                 "acq_buffer_size"         // Acquisition buffer size in bytes 
 #define  XI_PRM_ACQ_TRANSPORT_BUFFER_SIZE       "acq_transport_buffer_size"// Acquisition transport buffer size in bytes 
 #define  XI_PRM_BUFFERS_QUEUE_SIZE              "buffers_queue_size"      // Queue of field/frame buffers 
 #define  XI_PRM_RECENT_FRAME                    "recent_frame"            // GetImage returns most recent frame XI_SWITCH
-// Color management settings
+// 
 #define  XI_PRM_CMS                             "cms"                     // Mode of color management system. XI_CMS_MODE
 #define  XI_PRM_APPLY_CMS                       "apply_cms"               // Enable applying of CMS profiles to xiGetImage (see XI_PRM_INPUT_CMS_PROFILE, XI_PRM_OUTPUT_CMS_PROFILE). XI_SWITCH
 #define  XI_PRM_INPUT_CMS_PROFILE               "input_cms_profile"       // Filename for input cms profile (e.g. input.icc) 
@@ -100,7 +92,7 @@ extern "C" {
 #define  XI_PRM_WB_KR                           "wb_kr"                   // White balance red coefficient 
 #define  XI_PRM_WB_KG                           "wb_kg"                   // White balance green coefficient 
 #define  XI_PRM_WB_KB                           "wb_kb"                   // White balance blue coefficient 
-#define  XI_PRM_MANUAL_WB                       "manual_wb"               // Calculates White Balance(xiGetImage function must be called) XI_SWITCH
+#define  XI_PRM_MANUAL_WB                       "manual_wb"               // Calculates White Balance(xiGetImage function must be called) 
 #define  XI_PRM_AUTO_WB                         "auto_wb"                 // Automatic white balance XI_SWITCH
 #define  XI_PRM_GAMMAY                          "gammaY"                  // Luminosity gamma 
 #define  XI_PRM_GAMMAC                          "gammaC"                  // Chromaticity gamma 
@@ -122,7 +114,7 @@ extern "C" {
 #define  XI_PRM_CC_MATRIX_32                    "ccMTX32"                 // Color Correction Matrix element [3][2] 
 #define  XI_PRM_CC_MATRIX_33                    "ccMTX33"                 // Color Correction Matrix element [3][3] 
 #define  XI_PRM_DEFAULT_CC_MATRIX               "defccMTX"                // Set default Color Correction Matrix 
-// Automatic exposure/gain
+// 
 #define  XI_PRM_AEAG                            "aeag"                    // Automatic exposure/gain XI_SWITCH
 #define  XI_PRM_AEAG_ROI_OFFSET_X               "aeag_roi_offset_x"       // Automatic exposure/gain ROI offset X 
 #define  XI_PRM_AEAG_ROI_OFFSET_Y               "aeag_roi_offset_y"       // Automatic exposure/gain ROI offset Y 
@@ -132,20 +124,20 @@ extern "C" {
 #define  XI_PRM_AE_MAX_LIMIT                    "ae_max_limit"            // Maximum limit of exposure in AEAG procedure 
 #define  XI_PRM_AG_MAX_LIMIT                    "ag_max_limit"            // Maximum limit of gain in AEAG procedure 
 #define  XI_PRM_AEAG_LEVEL                      "aeag_level"              // Average intensity of output signal AEAG should achieve(in %) 
-// Bad Pixels Correction
+// 
 #define  XI_PRM_BPC                             "bpc"                     // Correction of bad pixels XI_SWITCH
-// Debounce
+// 
 #define  XI_PRM_DEBOUNCE_EN                     "dbnc_en"                 // Enable/Disable debounce to selected GPI XI_SWITCH
 #define  XI_PRM_DEBOUNCE_T0                     "dbnc_t0"                 // Debounce time (x * 10us) 
 #define  XI_PRM_DEBOUNCE_T1                     "dbnc_t1"                 // Debounce time (x * 10us) 
 #define  XI_PRM_DEBOUNCE_POL                    "dbnc_pol"                // Debounce polarity (pol = 1 t0 - falling edge, t1 - rising edge) 
-// Temperature control
+// 
 #define  XI_PRM_IS_COOLED                       "iscooled"                // Returns 1 for cameras that support cooling. 
 #define  XI_PRM_COOLING                         "cooling"                 // Start camera cooling. XI_SWITCH
 #define  XI_PRM_TARGET_TEMP                     "target_temp"             // Set sensor target temperature for cooling. 
 #define  XI_PRM_CHIP_TEMP                       "chip_temp"               // Camera sensor temperature 
 #define  XI_PRM_HOUS_TEMP                       "hous_temp"               // Camera housing tepmerature 
-// Sensor features
+// 
 #define  XI_PRM_SENSOR_MODE                     "sensor_mode"             // Current sensor mode. Allows to select sensor mode by one integer. Setting of this parameter affects: image dimensions and downsampling. 
 #define  XI_PRM_HDR                             "hdr"                     // Enable High Dynamic Range feature. XI_SWITCH
 #define  XI_PRM_HDR_KNEEPOINT_COUNT             "hdr_kneepoint_count"     // The number of kneepoints in the PWLR. 
@@ -154,37 +146,23 @@ extern "C" {
 #define  XI_PRM_KNEEPOINT1                      "hdr_kneepoint1"          // value of first kneepoint (% of sensor saturation) 
 #define  XI_PRM_KNEEPOINT2                      "hdr_kneepoint2"          // value of second kneepoint (% of sensor saturation) 
 #define  XI_PRM_IMAGE_BLACK_LEVEL               "image_black_level"       // Last image black level counts. Can be used for Offline processing to recall it. 
-// Version info
+// 
 #define  XI_PRM_API_VERSION                     "api_version"             // Returns version of API. 
 #define  XI_PRM_DRV_VERSION                     "drv_version"             // Returns version of current device driver. 
 #define  XI_PRM_MCU1_VERSION                    "version_mcu1"            // Returns version of MCU1 firmware. 
 #define  XI_PRM_MCU2_VERSION                    "version_mcu2"            // Returns version of MCU2 firmware. 
 #define  XI_PRM_FPGA1_VERSION                   "version_fpga1"           // Returns version of FPGA1 firmware. 
-// API features
+// 
 #define  XI_PRM_DEBUG_LEVEL                     "debug_level"             // Set debug level XI_DEBUG_LEVEL
 #define  XI_PRM_AUTO_BANDWIDTH_CALCULATION      "auto_bandwidth_calculation"// Automatic bandwidth calculation, XI_SWITCH
-// Camera FFS
+// 
 #define  XI_PRM_READ_FILE_FFS                   "read_file_ffs"           // Read file from camera flash filesystem. 
 #define  XI_PRM_WRITE_FILE_FFS                  "write_file_ffs"          // Write file to camera flash filesystem. 
 #define  XI_PRM_FFS_FILE_NAME                   "ffs_file_name"           // Set name of file to be written/read from camera FFS. 
 #define  XI_PRM_FREE_FFS_SIZE                   "free_ffs_size"           // Size of free camera FFS. 
 #define  XI_PRM_USED_FFS_SIZE                   "used_ffs_size"           // Size of used camera FFS. 
-#define  XI_PRM_FFS_ACCESS_KEY                  "ffs_access_key"          // Setting of key enables file operations on some cameras. 
-// APIContextControl
+// 
 #define  XI_PRM_API_CONTEXT_LIST                "xiapi_context_list"      // List of current parameters settings context - parameters with values. Used for offline processing. 
-// Lens Control
-#define  XI_PRM_LENS_MODE                       "lens_mode"               // Status of lens control interface. This shall be set to XI_ON before any Lens operations. XI_SWITCH
-#define  XI_PRM_LENS_APERTURE_VALUE             "lens_aperture_value"     // Current lens aperture value in stops. Examples: 2.8, 4, 5.6, 8, 11 
-#define  XI_PRM_LENS_FOCUS_MOVEMENT_VALUE       "lens_focus_movement_value"// Lens current focus movement value to be used by XI_PRM_LENS_FOCUS_MOVE in motor steps. 
-#define  XI_PRM_LENS_FOCUS_MOVE                 "lens_focus_move"         // Moves lens focus motor by steps set in XI_PRM_LENS_FOCUS_MOVEMENT_VALUE. 
-#define  XI_PRM_LENS_FOCUS_DISTANCE             "lens_focus_distance"     // Lens focus distance in cm. 
-#define  XI_PRM_LENS_FOCAL_LENGTH               "lens_focal_length"       // Lens focal distance in mm. 
-#define  XI_PRM_LENS_FEATURE_SELECTOR           "lens_feature_selector"   // Selects the current feature which is accessible by XI_PRM_LENS_FEATURE. XI_LENS_FEATURE
-#define  XI_PRM_LENS_FEATURE                    "lens_feature"            // Allows access to lens feature value currently selected by XI_PRM_LENS_FEATURE_SELECTOR. 
-// Sensor Control
-#define  XI_PRM_SENSOR_FEATURE_SELECTOR         "sensor_feature_selector" // Selects the current feature which is accessible by XI_PRM_SENSOR_FEATURE_VALUE. XI_SENSOR_FEATURE_SELECTOR
-#define  XI_PRM_SENSOR_FEATURE_VALUE            "sensor_feature_value"    // Allows access to sensor feature value currently selected by XI_PRM_SENSOR_FEATURE_SELECTOR. 
-// Extended Features
 
 //-------------------------------------------------------------------------------------------------------------------
 // Error codes xiApi
@@ -240,7 +218,7 @@ typedef enum
 	XI_INVALID_OUTPUT_ICC_PROFILE     =48, // Output ICC profile missed or corrupted
 	XI_DEVICE_NOT_READY               =49, // Device not ready to operate
 	XI_SHADING_TOOCONTRAST            =50, // Shading too contrast
-	XI_ALREADY_INITIALIZED            =51, // Module already initialized
+	XI_ALREADY_INITIALIZED            =51, // Modile already initialized
 	XI_NOT_ENOUGH_PRIVILEGES          =52, // Application doesn't enough privileges(one or more app
 	XI_NOT_COMPATIBLE_DRIVER          =53, // Installed driver not compatible with current software
 	XI_TM_INVALID_RESOURCE            =54, // TM file was not loaded successfully from resources
@@ -390,15 +368,6 @@ typedef enum
 	
 } XI_LED_MODE;
 
-// structure contains frames counter
-typedef enum
-{
-	XI_CNT_SEL_TRANSPORT_SKIPPED_FRAMES=0, // Number of skipped frames on transport layer (e.g. when image gets lost while transmission). Occur when capacity of transport channel does not allow to transfer all data.
-	XI_CNT_SEL_API_SKIPPED_FRAMES=1, // Number of skipped frames on API layer. Occur when application does not process the images as quick as they are received from the camera.
-	XI_CNT_SEL_TRANSPORT_TRANSFERRED_FRAMES=2, // Number of successfully transferred frames on transport layer.
-	
-} XI_COUNTER_SELECTOR;
-
 // structure containing information about time stamp reset arming
 typedef enum
 {
@@ -454,14 +423,6 @@ typedef enum
 	
 } XI_SWITCH;
 
-// Data packing(grouping) types.
-typedef enum
-{
-	XI_DATA_PACK_XI_GROUPING     =0, // Data grouping (10g160, 12g192, 14g224).
-	XI_DATA_PACK_PFNC_LSB_PACKING=1, // Data packing (10p, 12p)
-	
-} XI_OUTPUT_DATA_PACKING_TYPE;
-
 // Downsampling types
 typedef enum
 {
@@ -469,15 +430,6 @@ typedef enum
 	XI_SKIPPING                  =1, // Downsampling is using  skipping
 	
 } XI_DOWNSAMPLING_TYPE;
-
-// Gain selector
-typedef enum
-{
-	XI_GAIN_SELECTOR_ALL         =0, // Gain selector selects all channels. Implementation of gain type depends on camera.
-	XI_GAIN_SELECTOR_ANALOG_ALL  =1, // Gain selector selects all analog channels. This is available only on some cameras.
-	XI_GAIN_SELECTOR_DIGITAL_ALL =2, // Gain selector selects all digital channels. This is available only on some cameras.
-	
-} XI_GAIN_SELECTOR_TYPE;
 
 // Shutter mode types
 typedef enum
@@ -506,61 +458,8 @@ typedef enum
 	
 } XI_OPEN_BY;
 
-// Lens feature selector selects which feature will be accessed.
-typedef enum
-{
-	XI_LENS_FEATURE_MOTORIZED_FOCUS_SWITCH=1, // Status of lens motorized focus switch
-	XI_LENS_FEATURE_MOTORIZED_FOCUS_BOUNDED=2, // On read = 1 if motorized focus is on one of limits.
-	XI_LENS_FEATURE_MOTORIZED_FOCUS_CALIBRATION=3, // On read = 1 if motorized focus is calibrated. Write 1 to start calibration.
-	XI_LENS_FEATURE_IMAGE_STABILIZATION_ENABLED=4, // On read = 1 if image stabilization is enabled. Write 1 to enable image stabilization.
-	XI_LENS_FEATURE_IMAGE_STABILIZATION_SWITCH_STATUS=5, // On read = 1 if image stabilization switch is in position On.
-	XI_LENS_FEATURE_IMAGE_ZOOM_SUPPORTED=6, // On read = 1 if lens supports zoom = are not prime.
-	
-} XI_LENS_FEATURE;
-
-// Sensor feature selector selects which feature will be accessed.
-typedef enum
-{
-	XI_SENSOR_FEATURE_ZEROROT_ENABLE=1, // Zero ROT enable for ONSEMI PYTHON family
-	
-} XI_SENSOR_FEATURE_SELECTOR;
-
 //-------------------------------------------------------------------------------------------------------------------
 // xiAPI structures
-// structure containing description of image areas and format.
-typedef struct
-{
-	DWORD         Area0Left; // Pixels of Area0 of image left.
-	DWORD         Area1Left; // Pixels of Area1 of image left.
-	DWORD         Area2Left; // Pixels of Area2 of image left.
-	DWORD         Area3Left; // Pixels of Area3 of image left.
-	DWORD         Area4Left; // Pixels of Area4 of image left.
-	DWORD         Area5Left; // Pixels of Area5 of image left.
-	DWORD         ActiveAreaWidth;// Width of active area.
-	DWORD         Area5Right;// Pixels of Area5 of image right.
-	DWORD         Area4Right;// Pixels of Area4 of image right.
-	DWORD         Area3Right;// Pixels of Area3 of image right.
-	DWORD         Area2Right;// Pixels of Area2 of image right.
-	DWORD         Area1Right;// Pixels of Area1 of image right.
-	DWORD         Area0Right;// Pixels of Area0 of image right.
-	DWORD         Area0Top;  // Pixels of Area0 of image top.
-	DWORD         Area1Top;  // Pixels of Area1 of image top.
-	DWORD         Area2Top;  // Pixels of Area2 of image top.
-	DWORD         Area3Top;  // Pixels of Area3 of image top.
-	DWORD         Area4Top;  // Pixels of Area4 of image top.
-	DWORD         Area5Top;  // Pixels of Area5 of image top.
-	DWORD         ActiveAreaHeight;// Height of active area.
-	DWORD         Area5Bottom;// Pixels of Area5 of image bottom.
-	DWORD         Area4Bottom;// Pixels of Area4 of image bottom.
-	DWORD         Area3Bottom;// Pixels of Area3 of image bottom.
-	DWORD         Area2Bottom;// Pixels of Area2 of image bottom.
-	DWORD         Area1Bottom;// Pixels of Area1 of image bottom.
-	DWORD         Area0Bottom;// Pixels of Area0 of image bottom.
-	DWORD         format;    // Current format of pixels. XI_GenTL_Image_Format_e.
-	DWORD         flags;     // description of areas and image.
-	
-}XI_IMG_DESC, *LPXI_IMG_DESC;
-
 // structure containing information about incoming image.
 typedef struct
 {
@@ -578,21 +477,17 @@ typedef struct
 	DWORD         padding_x; // Number of extra bytes provided at the end of each line to facilitate image alignment in buffers.
 	DWORD         AbsoluteOffsetX;// Horizontal offset of origin of sensor and buffer image first pixel.
 	DWORD         AbsoluteOffsetY;// Vertical offset of origin of sensor and buffer image first pixel.
-	DWORD         transport_frm;// Current format of pixels on transport layer. XI_GenTL_Image_Format_e.
-	XI_IMG_DESC   img_desc;  // description of image areas and format.
 	
 }XI_IMG, *LPXI_IMG;
 
 //-------------------------------------------------------------------------------------------------------------------
 // Global definitions
 
-#define SIZE_XI_IMG_V1               offsetof(XI_IMG, tsSec)// structure size default
-#define SIZE_XI_IMG_V2               offsetof(XI_IMG, black_level)// structure size with timestamp and GPI level information
-#define SIZE_XI_IMG_V3               offsetof(XI_IMG, padding_x)// structure size with black level information
-#define SIZE_XI_IMG_V4               offsetof(XI_IMG, AbsoluteOffsetX)// structure size with horizontal buffer padding information padding_x
-#define SIZE_XI_IMG_V5               offsetof(XI_IMG, transport_frm)// structure size with AbsoluteOffsetX, AbsoluteOffsetY
-#define SIZE_XI_IMG_V6               offsetof(XI_IMG, img_desc)// structure size with transport_frm
-#define SIZE_XI_IMG_V7               sizeof(XI_IMG)       // structure size with XI_IMG
+#define SIZE_XI_IMG_V1               28                   // structure size default
+#define SIZE_XI_IMG_V2               40                   // structure size with timestamp and GPI level information
+#define SIZE_XI_IMG_V3               44                   // structure size with black level information
+#define SIZE_XI_IMG_V4               48                   // structure size with horizontal buffer padding information padding_x
+#define SIZE_XI_IMG_V5               56                   // structure size with AbsoluteOffsetX, AbsoluteOffsetY
 #define XI_PRM_INFO_MIN              ":min"               // Parameter minimum
 #define XI_PRM_INFO_MAX              ":max"               // Parameter maximum
 #define XI_PRM_INFO_INCREMENT        ":inc"               // Parameter increment

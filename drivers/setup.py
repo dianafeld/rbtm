@@ -18,7 +18,7 @@ ext_modules=[
     # ,
     Extension("xiApi",
             sources=["tango_ds/Detector/xiApi.pyx"],
-            libraries=["m3api"], # Unix-like specific
+            libraries=["tango_ds/Detector/m3apiX64"], # Unix-like specific
             include_dirs=[numpy.get_include()],
             #build_lib=["tango_ds/Detector"]
     )
