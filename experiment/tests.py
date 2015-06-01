@@ -1,11 +1,9 @@
 #!/usr/bin/python
-import os
 import unittest
 import json
-import module_experiment
-import tempfile
-import xmlrunner
 
+from experiment import module_experiment
+import xmlrunner
 
 
 SIMPLE_EXPERIMENT = json.dumps(
