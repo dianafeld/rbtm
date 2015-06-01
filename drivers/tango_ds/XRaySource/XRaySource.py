@@ -50,6 +50,7 @@ import PyTango
 import sys
 # Add additional import
 #----- PROTECTED REGION ID(XRaySource.additionnal_import) ENABLED START -----#
+import ConfigParser
 from driver_source import Source
 #----- PROTECTED REGION END -----#  //  XRaySource.additionnal_import
 
@@ -63,6 +64,14 @@ class XRaySource (PyTango.Device_4Impl):
 
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(XRaySource.global_variables) ENABLED START -----#
+
+    CONFIG_PATH = 'tango_ds.cfg'
+
+    def get_port_from_config(self):
+        config = ConfigParser.RawConfigParser()
+        config.read(XRaySource.CONFIG_PATH)
+        source_port = config.get("x-ray source", "port")
+        return source_port
 
     def _read_voltage(self):
         try:
@@ -135,8 +144,11 @@ class XRaySource (PyTango.Device_4Impl):
         self.attr_voltage_read = 0.0
         self.attr_current_read = 0.0
         #----- PROTECTED REGION ID(XRaySource.init_device) ENABLED START -----#
+
+        source_port = self.get_port_from_config()
+
         try:
-            self.source_driver = Source("COM8")
+            self.source_driver = Source(source_port)
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
             raise

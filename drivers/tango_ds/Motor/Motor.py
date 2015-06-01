@@ -53,8 +53,11 @@ import PyTango
 import sys
 # Add additional import
 # ----- PROTECTED REGION ID(Motor.additionnal_import) ENABLED START -----#
+import sys
+sys.path.insert(0, 'lib')
 import ximc
 import time
+import ConfigParser
 #----- PROTECTED REGION END -----#  //  Motor.additionnal_import
 
 ## Device States Description
@@ -66,6 +69,15 @@ class Motor (PyTango.Device_4Impl):
 
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(Motor.global_variables) ENABLED START -----#
+
+    CONFIG_PATH = 'tango_ds.cfg'
+
+    def get_port_from_config(self):
+        config = ConfigParser.RawConfigParser()
+        config.read(Motor.CONFIG_PATH)
+        angle_motor_port = config.get("angle motor", "port")
+        horizontal_motor_port = config.get("horizontal motor", "port")
+        return angle_motor_port, horizontal_motor_port
 
     def _read_position(self, motor):
         self.debug_stream("In _read_position()")
@@ -129,10 +141,12 @@ class Motor (PyTango.Device_4Impl):
 
         self.set_state(PyTango.DevState.OFF)
 
+        angle_motor_port, horizontal_motor_port = self.get_port_from_config()
+
         try:
             self.debug_stream("Creating link to motor drivers...")
-            self.angle_motor = ximc.Motor("COM5")
-            self.horizontal_motor = ximc.Motor("COM3")
+            self.angle_motor = ximc.Motor(angle_motor_port)
+            self.horizontal_motor = ximc.Motor(horizontal_motor_port)
             self.debug_stream("Links were created")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))

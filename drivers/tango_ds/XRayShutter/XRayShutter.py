@@ -50,6 +50,7 @@ import PyTango
 import sys
 # Add additional import
 #----- PROTECTED REGION ID(XRayShutter.additionnal_import) ENABLED START -----#
+import ConfigParser
 import threading
 from shutter import Shutter
 #----- PROTECTED REGION END -----#  //  XRayShutter.additionnal_import
@@ -63,6 +64,16 @@ class XRayShutter (PyTango.Device_4Impl):
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(XRayShutter.global_variables) ENABLED START -----#
     EPS = 1e-5
+
+    CONFIG_PATH = 'tango_ds.cfg'
+
+    def get_port_from_config(self):
+        config = ConfigParser.RawConfigParser()
+        config.read(XRayShutter.CONFIG_PATH)
+        shutter_port = config.get("shutter", "port")
+        relay_number = int(config.get("shutter", "relay"))
+        return shutter_port, relay_number
+
     #----- PROTECTED REGION END -----#  //  XRayShutter.global_variables
 
     def __init__(self,cl, name):
@@ -82,7 +93,9 @@ class XRayShutter (PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         #----- PROTECTED REGION ID(XRayShutter.init_device) ENABLED START -----#
-        self.shutter = Shutter('COM7', 4)
+        shutter_port, relay_number = self.get_port_from_config()
+
+        self.shutter = Shutter(shutter_port, relay_number)
         if self.shutter.is_open():
             self.set_state(PyTango.DevState.OPEN)
         else:
