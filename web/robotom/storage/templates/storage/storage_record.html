@@ -6,22 +6,23 @@
 {% block content %}
 
     <div class="page-header" style="margin-left: 10px">
-        <h1>Запись хранилища номер {{ record_id }}</h1>
+        <div class="container-fluid">
+            <h1>Запись хранилища {{ record_id }}</h1>
+        </div>
     </div>
     {% if messages %}
         <div class="row">
             {% for message in messages %}
-            <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
-                <div class="alert alert-{% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
-                    <a class="close" data-dismiss="alert" href="{% url 'storage:index' %}">&times;</a>
-                    {{ message }}
+                <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">
+                    <div class="alert alert-{% if message.tags %}{% if message.tags == "error" %}danger{% else %}{{ message.tags }}{% endif %}{% else %}info{% endif %}">
+                        {{ message }}
+                    </div>
                 </div>
-            </div>
             {% endfor %}
         </div>
     {% endif %}
     {% if to_show %}
-        <div class="container">
+        <div class="container-fluid">
             <div class="panel panel-default">
                 <div class="panel-body">
                     <div class="table-responsive">
@@ -29,36 +30,32 @@
                             <thead>
                             <tr>
                                 <th rowspan="2" style="vertical-align: middle">Образец</th>
-                                <th rowspan="2" style="vertical-align: middle">Закончен</th>
-                                <th rowspan="2" style="vertical-align: middle">Advanced</th>
                                 <th colspan="4" style="text-align: center">DATA</th>
                                 <th colspan="2" style="text-align: center">EMPTY</th>
                                 <th colspan="2" style="text-align: center">DARK</th>
                             </tr>
                             <tr>
-                                <th>Angle Step</th>
-                                <th>Count per step</th>
-                                <th>Step Count</th>
-                                <th>Exposure</th>
-                                <th>Сount</th>
-                                <th>Exposure</th>
-                                <th>Count</th>
-                                <th>Exposure</th>
+                                <th style="vertical-align: middle">Шаг угла</th>
+                                <th style="vertical-align: middle">Изображений на шаг</th>
+                                <th style="vertical-align: middle">Количество шагов</th>
+                                <th style="vertical-align: middle">Экспозиция</th>
+                                <th style="vertical-align: middle">Количество</th>
+                                <th style="vertical-align: middle">Экспозиция</th>
+                                <th style="vertical-align: middle">Количество</th>
+                                <th style="vertical-align: middle">Экспозиция</th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr>
                                 <td>{{ info.specimen }}</td>
-                                <td>{{ info.finished }}</td>
-                                <td>{{ info.advanced }}</td>
-                                <td>{{ info.data_angle_step }}</td>
+                                <td>{{ info.data_angle_step }}&deg;</td>
                                 <td>{{ info.data_count_per_step }}</td>
                                 <td>{{ info.data_step_count }}</td>
-                                <td>{{ info.data_exposure }}</td>
+                                <td>{{ info.data_exposure|floatformat }} мс</td>
                                 <td>{{ info.empty_count }}</td>
-                                <td>{{ info.empty_exposure }}</td>
+                                <td>{{ info.empty_exposure|floatformat }} мс</td>
                                 <td>{{ info.dark_count }}</td>
-                                <td>{{ info.dark_exposure }}</td>
+                                <td>{{ info.dark_exposure|floatformat }} мс</td>
                             </tr>
                             </tbody>
                         </table>
@@ -67,8 +64,11 @@
             </div>
         </div>
 
+        <div class="container-fluid">
+            <div class="alert alert-info" id="LoadStatus">Статус загрузки изображений: загружается</div>
+        </div>
 
-        <div class="container">
+        <div class="container-fluid">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h4>Список изображений эксперимента</h4>
@@ -78,29 +78,31 @@
                         <table class="table table-hover table-bordered">
                             <thead>
                             <tr>
-                                <th>Num</th>
-                                <th>Type</th>
-                                <th>DateTime</th>
-                                <th>Exposure</th>
-                                <th>Shutter open</th>
-                                <th>Angle position</th>
-                                <th>X-Ray current</th>
-                                <th>X-Ray voltage</th>
-                                <th>Detector model</th>
+                                <th style="vertical-align: middle">#</th>
+                                <th style="vertical-align: middle">Режим</th>
+                                <th style="vertical-align: middle">Время</th>
+                                <th style="vertical-align: middle">Экспозиция</th>
+                                <th style="vertical-align: middle">Заслонка</th>
+                                <th style="vertical-align: middle">Угол поворота</th>
+                                <th style="vertical-align: middle">Ток</th>
+                                <th style="vertical-align: middle">Напряжение</th>
+                                <th style="vertical-align: middle">Модель детектора</th>
                             </tr>
                             </thead>
                             <tbody>
                             {% for frame in frames_list %}
                                 <tr class="paginated-content">
-                                    <td><a id="{{ frame.num }}" onClick="table_click(this.id)" href="#">{{ frame.num }}</a></td>
-                                    <td>{{ frame.type }}</td>
+                                    <td><a id="{{ frame.num }}" onClick="table_click(this.id)"
+                                           href="#">{{ frame.num }}</a></td>
+                                    <td>{{ frame.mode }}</td>
                                     <td>{{ frame.date_time }}</td>
-                                    <td>{{ frame.exposure }}</td>
-                                    <td>{{ frame.shutter_open }}</td>
-                                    <td>{{ frame.angle_position }}</td>
-                                    <td>{{ frame.current }}</td>
-                                    <td>{{ frame.voltage }}</td>
+                                    <td>{{ frame.exposure }} мс</td>
+                                    <td>{% if frame.shutter_open %}Открыта{% else %}Закрыта{% endif %}</td>
+                                    <td>{{ frame.angle_position|floatformat:2 }}&deg;</td>
+                                    <td>{{ frame.current }} мА</td>
+                                    <td>{{ frame.voltage }} кВ</td>
                                     <td>{{ frame.detector_model }}</td>
+                                    <td hidden>{{ frame.id }}</td>
                                 </tr>
                             {% endfor %}
                             </tbody>
@@ -111,7 +113,7 @@
         </div>
 
         <div id="myModalBox" class="modal fade">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <!-- Заголовок модального окна -->
                     <div class="modal-header">
@@ -121,16 +123,56 @@
                         <h4 class="modal-title" id="ImageTitle">Изображение</h4>
                     </div>
                     <!-- Основной текст сообщения -->
-                    <div class="modal-body" id="modal-body">
+                    <div class="modal-body">
+                        <button type="button" class="btn btn-default pull-left prev" id="0"
+                                onClick="nav_click(this.id)">
+                            <i class="glyphicon glyphicon-chevron-left"></i>
+                        </button>
+                        <button type="button" class="btn btn-default pull-right next" id="1"
+                                onClick="nav_click(this.id)">
+                            <i class="glyphicon glyphicon-chevron-right"></i>
+                        </button>
+                        <div class="row">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th style="vertical-align: middle">Режим</th>
+                                        <th style="vertical-align: middle">Время</th>
+                                        <th style="vertical-align: middle">Экспозиция</th>
+                                        <th style="vertical-align: middle">Заслонка</th>
+                                        <th style="vertical-align: middle">Угол поворота</th>
+                                        <th style="vertical-align: middle">Ток</th>
+                                        <th style="vertical-align: middle">Напряжение</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td id="Mode"></td>
+                                        <td id="DateTime"></td>
+                                        <td id="Exposure"></td>
+                                        <td id="Shutter"></td>
+                                        <td id="Angle"></td>
+                                        <td id="Current"></td>
+                                        <td id="Voltage"></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12" id="modal-body" align="center">
+
+                            </div>
+                        </div>
                     </div>
                     <!-- Нижняя часть модального окна -->
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default pull-left prev" id="0" onClick="nav_click(this.id)">
+                        <button type="button" class="btn btn-default pull-left prev" id="0"
+                                onClick="nav_click(this.id)">
                             <i class="glyphicon glyphicon-chevron-left"></i>
-                            Previous
                         </button>
                         <button type="button" class="btn btn-default next" id="1" onClick="nav_click(this.id)">
-                            Next
                             <i class="glyphicon glyphicon-chevron-right"></i>
                         </button>
                     </div>
@@ -141,28 +183,51 @@
     {% endif %}
 
     <script type="text/javascript">
+        function get_id_by_number(number) {
+            return document.getElementById(number).parentNode.parentNode.childNodes[19].textContent;
+        }
+
         function remove_image() {
             var mod = document.getElementById('modal-body');
-            mod.removeChild(mod.firstElementChild);
+            mod.removeChild(mod.lastElementChild);
         }
 
         function set_image(clicked_id) {
             var img = document.createElement('img');
             img.className = "img-responsive";
-            img.setAttribute('src', "/media/" + clicked_id + ".png");
+            img.setAttribute('src', "/media/" + get_id_by_number(clicked_id) + ".png");
             var mod_body = document.getElementById('modal-body');
             mod_body.appendChild(img);
 
             var mod_title = document.getElementById('ImageTitle');
             mod_title.innerText = 'Изображение ' + clicked_id;
 
+            document.getElementById('Mode').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[3].textContent;
+            document.getElementById('DateTime').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[5].textContent;
+            document.getElementById('Exposure').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[7].textContent;
+            document.getElementById('Shutter').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[9].textContent;
+            document.getElementById('Angle').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[11].textContent;
+            document.getElementById('Current').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[13].textContent;
+            document.getElementById('Voltage').innerText = document.getElementById(clicked_id).parentNode.parentNode.childNodes[15].textContent;
+
             var left_button = document.getElementsByClassName('prev')[0];
-            if (left_button.id > 0)
+            if (parseInt(clicked_id) > 0) {
+                left_button.id = parseInt(clicked_id) - 1;
+            }
+            else
+                left_button.id = {{ frames_list|length }} -1;
+            left_button = document.getElementsByClassName('prev')[1];
+            if (parseInt(clicked_id) > 0)
                 left_button.id = parseInt(clicked_id) - 1;
             else
-                left_button.id = {{ frames_list|length }} - 1;
+                left_button.id = {{ frames_list|length }} -1;
             var right_button = document.getElementsByClassName('next')[0];
-            if (right_button.id < {{ frames_list|length }} - 1)
+            if (parseInt(clicked_id) < {{ frames_list|length }} -1)
+                right_button.id = parseInt(clicked_id) + 1;
+            else
+                right_button.id = 0;
+            right_button = document.getElementsByClassName('next')[1];
+            if (parseInt(clicked_id) < {{ frames_list|length }} -1)
                 right_button.id = parseInt(clicked_id) + 1;
             else
                 right_button.id = 0;
@@ -171,6 +236,25 @@
         $(document).ready(function () {
             $("#myModalBox").on('hidden.bs.modal', function () {
                 remove_image();
+            });
+
+            $.ajax({
+                url: '{% url 'storage:frames_downloading' record_id %}',
+                method: 'GET',
+                dataType: 'text',
+                success: function (data, textStatus, jqXHR) {
+                    {#                    alert(data + " " + textStatus + " " + jqXHR);#}
+                    var status = document.getElementById("LoadStatus");
+                    status.innerText = "Статус загрузки изображений: загружено";
+                    status.className = "alert alert-success"
+
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    {#                    alert(jqXHR.responseText);#}
+                    var status = document.getElementById("LoadStatus");
+                    status.innerText = "Статус загрузки изображений: ошибка";
+                    status.className = "alert alert-danger"
+                }
             });
         });
 

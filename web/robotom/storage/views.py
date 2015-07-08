@@ -285,7 +285,7 @@ def storage_record_view(request, storage_record_id):
                        u'Не удается получить список изображений. Сервер хранилища не отвечает. Попробуйте позже.')
         to_show = False
 
-    return render(request, 'storage/storage_record_new.html', {
+    return render(request, 'storage/storage_record.html', {
         "record_id": storage_record_id,
         'caption': 'Запись хранилища ' + str(storage_record_id),
         'to_show': to_show,
