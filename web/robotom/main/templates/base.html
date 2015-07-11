@@ -33,17 +33,20 @@
 
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 
-            <!-- <ul class="nav navbar-nav">
+            <ul class="nav navbar-nav">
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Разработчики
                         <span class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu">
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="{% url 'main:group_1' %}">Группа 1 (&laquo;drivers&raquo;)</a></li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="{% url 'main:group_2' %}">Группа 2 (&laquo;storage/experiment&raquo;)</a></li>
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="{% url 'main:group_3' %}">Группа 3 (&laquo;web&raquo;)</a></li>
+                        <li role="presentation"><a role="menuitem" tabindex="-1" href="{% url 'main:group_1' %}">Группа
+                            1 (&laquo;drivers&raquo;)</a></li>
+                        <li role="presentation"><a role="menuitem" tabindex="-1" href="{% url 'main:group_2' %}">Группа
+                            2 (&laquo;storage/experiment&raquo;)</a></li>
+                        <li role="presentation"><a role="menuitem" tabindex="-1" href="{% url 'main:group_3' %}">Группа
+                            3 (&laquo;web&raquo;)</a></li>
                     </ul>
                 </li>
-            </ul>    -->
+            </ul>
 
             <ul class="nav navbar-nav">
                 {% if user.is_authenticated %}
