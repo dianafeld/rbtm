@@ -1,21 +1,20 @@
 #!/usr/bin/python
+from flask import Flask, jsonify, make_response, request, abort, Response, send_file
+from bson.json_util import dumps
+import pymongo as pm
+import pyframes
+import pyfileSystem as fs
 import json
 import logging
 import os
 import numpy as np
+import csv
 from StringIO import StringIO
-
-from flask import Flask, jsonify, make_response, request, abort, Response, send_file
-from bson.json_util import dumps
-import pymongo as pm
-
-from storage import pyfileSystem as fs, pyframes
-
 
 app = Flask(__name__)
 
 logs_path = os.path.join('logs', 'storage_log.log')
-logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
+logging.basicConfig(format = u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
                     level=logging.DEBUG,
                     filename=logs_path)
 
@@ -368,8 +367,14 @@ def get_png():
         logging.debug('1')
         frame = pyframes.extract_frame(frame_id, experiment_id)
         print(type(frame))
-        pyframes.make_png(frame, frame_id)
-        return send_file(str(frame_id) + '.png', mimetype='image/png')
+        pyframes.make_png(frame, 'data/png/' + str(frame_id) + '.png')
+
+	png_path = str(frame_id) + '.png'
+	redirect_path = '/png/local/' + png_path 
+	response = make_response("")
+    	response.headers["X-Accel-Redirect"] = redirect_path
+    	return response
+        #return send_file(str(frame_id) + '.png', mimetype='image/png')
 
     except StandardError, e:
         logging.error(e)

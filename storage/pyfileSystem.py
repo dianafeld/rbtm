@@ -4,7 +4,7 @@ import h5py
 import logging
 
 logs_path = os.path.join('logs', 'storage_log.log')
-logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
+logging.basicConfig(format = u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
                     level=logging.DEBUG,
                     filename=logs_path)
 
@@ -34,6 +34,7 @@ def create_new_experiment(experiment_id):
             return False
     except BaseException, e:
         logging.error(e)
+
 
 
 def delete_experiment(experiment_id):

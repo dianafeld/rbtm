@@ -190,3 +190,10 @@ web/robotom/robotom/test-reports/*
 web/**/media/*
 web/**/robotom/static/*
 
+
+### rbtm-storage specific
+
+storage/logs
+storage/data
+storage/storage_env
+
