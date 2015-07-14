@@ -4,13 +4,13 @@ import h5py
 import logging
 
 logs_path = os.path.join('logs', 'storage_log.log')
-logging.basicConfig(format = u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
+logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
                     level=logging.DEBUG,
                     filename=logs_path)
 
 
 def create_new_experiment(experiment_id):
-    experiment_path = os.path.join('storage', 'experiments', str(experiment_id))
+    experiment_path = os.path.join('data', 'experiments', str(experiment_id))
         
     try:
         if not os.path.exists(experiment_path):
@@ -36,9 +36,8 @@ def create_new_experiment(experiment_id):
         logging.error(e)
 
 
-
 def delete_experiment(experiment_id):
-    experiment_path = os.path.join('storage', 'experiments', str(experiment_id))
+    experiment_path = os.path.join('data', 'experiments', str(experiment_id))
     if os.path.exists(experiment_path):
         try:
             shutil.rmtree(experiment_path)
