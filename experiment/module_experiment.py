@@ -1,4 +1,3 @@
-
 #!/usr/bin/python
 
 from flask import Flask
@@ -26,7 +25,7 @@ STORAGE_IS_FICTITIOUS = True
 
 WEBPAGE_OF_ADJUSTMENT_IS_FICTITIOUS = True
 
-TOMOGRAPH_IS_FICTITIOUS = False
+TOMOGRAPH_IS_FICTITIOUS = True
 
 
 TIMEOUT_MILLIS = 200000
@@ -51,8 +50,8 @@ else:
 if TOMOGRAPH_IS_FICTITIOUS:
     TOMO_ADDR = '188.166.73.250:10000'
 else:
-    #TOMO_ADDR = 'localhost:10000'
-    TOMO_ADDR = '109.234.34.140:10000'
+    TOMO_ADDR = 'localhost:10000'
+
 
 
 
@@ -67,7 +66,7 @@ TOMOGRAPHS = (
 TOMOGRAPHS[0]['device'].set_timeout_millis(TIMEOUT_MILLIS)
 TOMOGRAPHS[0]['detector'].set_timeout_millis(TIMEOUT_MILLIS)
 
-logging.deb
+
 
 #is being used in     check_and_prepare_advanced_experiment_command(command)
 ADVANCED_EXPERIMENT_COMMANDS = ('open shutter', 'close shutter', 'reset current position', 'go to position', 'get frame')
