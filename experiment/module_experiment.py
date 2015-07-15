@@ -66,7 +66,7 @@ TOMOGRAPHS = (
 TOMOGRAPHS[0]['device'].set_timeout_millis(TIMEOUT_MILLIS)
 TOMOGRAPHS[0]['detector'].set_timeout_millis(TIMEOUT_MILLIS)
 
-logging.deb
+
 
 #is being used in     check_and_prepare_advanced_experiment_command(command)
 ADVANCED_EXPERIMENT_COMMANDS = ('open shutter', 'close shutter', 'reset current position', 'go to position', 'get frame')
