@@ -58,13 +58,13 @@ import sys
 sys.path.insert(0, 'lib')
 
 import xiApi
-from multiprocessing import Process, Value
+# from multiprocessing import Process, Value
 
-def func(is_run):
-    a = 0
-
-    while is_run.value:
-        a += 1
+# def func(is_run):
+#     a = 0
+#
+#     while is_run.value:
+#         a += 1
 
 
 # ----- PROTECTED REGION END -----# //  Detector.additionnal_import
@@ -218,10 +218,9 @@ class Detector (PyTango.Device_4Impl):
         prev_state = self.get_state()
         self.set_state(PyTango.DevState.RUNNING)
 
-        is_run = Value("i", 1)
-        p = Process(target=func, args=(is_run, ))
-        p.start()
-        
+        # is_run = Value("i", 1)
+        # p = Process(target=func, args=(is_run, ))
+        # p.start()
 
         self.debug_stream("Starting acquisition...")
         try:
@@ -236,8 +235,8 @@ class Detector (PyTango.Device_4Impl):
             raise
         self.debug_stream("Image returned")
 
-        is_run.value = 0
-        p.join()
+        # is_run.value = 0
+        # p.join()
 
         self.set_state(prev_state)
 
