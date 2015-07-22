@@ -13,11 +13,6 @@ from StringIO import StringIO
 
 app = Flask(__name__)
 
-logs_path = os.path.join('logs', 'storage_log.log')
-logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
-                    level=logging.DEBUG,
-                    filename=logs_path)
-
 
 # TODO login and pass not secure
 MONGODB_URI = 'mongodb://admin:33zxcdsa@ds049219.mongolab.com:49219/robotom'
@@ -84,13 +79,13 @@ def create_experiment():
         logging.debug(insert_query)
         experiment_id = insert_query[u'experiment id']
 
-        if (fs.create_new_experiment(experiment_id)==True):
+        if fs.create_new_experiment(experiment_id):
             insert_query[u'finished'] = False
             experiments.insert(insert_query)
             
             return jsonify({u'result': u'success'})
         else:
-            return jsonify({u'result': u'experiment '+str(experiment_id)+u' already exists in file system'})
+            return jsonify({u'result': u'experiment ' + str(experiment_id) + u' already exists in file system'})
 
     except BaseException, e:
         logging.error(e)
@@ -113,28 +108,31 @@ def new_frame():
             else:
                 logging.WARNING(json_frame[u'exception message'] + json_frame[u'error'])
         elif json_frame[u'type'] == u'frame':
-            frame = json_frame[u'frame'][u'image_data'][u'image']
+            image = json_frame[u'frame'][u'image_data'][u'image']
             json_frame[u'frame'][u'image_data'].pop(u'image')
             frame_id = db[u'frames'].insert(json_frame)
             print(1)
-            #a = frame.split('\n')
+            # a = frame.split('\n')
             print(2)
-            #reader = csv.reader(frame, delimiter=' ')
-            #arr = []
-            #for lst in a:
-            #    arr.append(lst.split( ))
-            #print(3)
-            #image_list = list(reader)
-            #print(4)
-            #del arr[-1]
-            #array = np.asarray(arr, dtype=np.int16)
+            # reader = csv.reader(frame, delimiter=' ')
+            # arr = []
+            # for lst in a:
+            #     arr.append(lst.split( ))
+            # print(3)
+            # image_list = list(reader)
+            # print(4)
+            # del arr[-1]
+            # array = np.asarray(arr, dtype=np.int16)
             
-            s = StringIO(frame)
+            s = StringIO.StringIO(image)
+            #np.savez_compressed(s, frame_data=image)
+            #s.seek(0)
+            #array = np.load(s)
             array = np.loadtxt(s, dtype=np.int16)
 
-            print(5)
+            # print(5)
 
-            #print (array)
+            # print (array)
 
             logging.info(u'experiment id: ' + str(experiment_id) + u'frame id: ' + str(frame_id))
 
@@ -250,8 +248,8 @@ def delete_experiment():
         return jsonify({'deleted': cursor.count()})
 
     except BaseException, e:
-            logging.error(e)
-            abort(500)
+        logging.error(e)
+        abort(500)
 
 
 @app.route('/storage/png/get', methods=['POST'])
@@ -270,6 +268,10 @@ def get_png():
 
         png_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
                                      str(frame_id) + '.png')
+
+        if not os.path.exists(os.path.dirname(png_file_path)):
+            os.makedirs(os.path.dirname(png_file_path))
+
         pyframes.make_png(frame, png_file_path)
 
         #png_path = str(frame_id) + '.png'
@@ -277,11 +279,18 @@ def get_png():
         #response = make_response("")
         #response.headers["X-Accel-Redirect"] = redirect_path
         #return response
-        return send_file(str(frame_id) + '.png', mimetype='image/png')
+        return send_file(png_file_path, mimetype='image/png')
 
     except StandardError, e:
         logging.error(e)
         abort(500)
 
 if __name__ == '__main__':
+    logs_path = os.path.join('logs', 'storage.log')
+    if not os.path.exists(os.path.dirname(logs_path)):
+        os.makedirs(os.path.dirname(logs_path))
+
+    logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
+                        level=logging.DEBUG,
+                        filename=logs_path)
     app.run(host='0.0.0.0', port=5006)

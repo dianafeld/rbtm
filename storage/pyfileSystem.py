@@ -3,10 +3,10 @@ import shutil
 import h5py
 import logging
 
-logs_path = os.path.join('logs', 'storage_log.log')
-logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
-                    level=logging.DEBUG,
-                    filename=logs_path)
+#logs_path = os.path.join('logs', 'storage.log')
+#logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
+#                    level=logging.DEBUG,
+#                    filename=logs_path)
 
 
 def create_new_experiment(experiment_id):
