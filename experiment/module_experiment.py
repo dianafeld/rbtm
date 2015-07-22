@@ -16,7 +16,7 @@ import zlib
 
 import logging
 from StringIO import StringIO
-logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = u'experiment.log')
+# logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = u'experiment.log')
 app = Flask(__name__)
 
 
@@ -1102,6 +1102,7 @@ def internal_server_error(error):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = u'experiment.log')
     app.run(host='0.0.0.0', port=5001)
 
 
