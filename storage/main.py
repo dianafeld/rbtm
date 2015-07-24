@@ -269,10 +269,10 @@ def get_png():
         png_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
                                      str(frame_id) + '.png')
 
-        if not os.path.exists(os.path.dirname(png_file_path)):
-            os.makedirs(os.path.dirname(png_file_path))
+        if not os.path.exists(png_file_path):
+            abort(404)
 
-        pyframes.make_png(frame, png_file_path)
+        # pyframes.make_png(frame, png_file_path)
 
         #png_path = str(frame_id) + '.png'
         #redirect_path = '/png/local/' + png_path
