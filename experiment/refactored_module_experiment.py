@@ -23,7 +23,8 @@ import zlib
 from class_tomograph import Tomograph
 from class_tomograph import create_event
 from class_tomograph import create_response
-from class_tomograph import send_messages_to_storage_webpage
+from class_tomograph import send_json_to_storage
+from class_tomograph import send_event_to_storage_webpage
 
 from conf import STORAGE_EXPERIMENT_URI
 from conf import TOMO_ADDR
@@ -38,7 +39,7 @@ app = Flask(__name__)
 
 
 TOMOGRAPHS = (
-        Tomograph(TOMO_ADDR + '/tomo/tomograph/1', TOMO_ADDR + '/tomo/detector/1'),
+        Tomograph(TOMO_ADDR),
 )
 
 
@@ -136,12 +137,11 @@ def source_power_off(tomo_num):
     return create_response(True)
 
 
-#---------------------------------------------------------
+#---------------------------------------------------------#
 #    Functions for adjustment of tomograph
-#---------------------------------------------------------
+#---------------------------------------------------------#
 
 
-# NEED TO TEST(AFTER REFACTORING)
 @app.route('/tomograph/<int:tomo_num>/source/set-voltage', methods=['POST'])
 def source_set_voltage(tomo_num):
     print('\n\nREQUEST: SOURCE/SET VOLTAGE')
@@ -178,7 +178,6 @@ def source_set_voltage(tomo_num):
     print('Success!')
     return create_response(success= True)
 
-# NEED TO TEST(AFTER REFACTORING)
 @app.route('/tomograph/<int:tomo_num>/source/set-current', methods=['POST'])
 def source_set_current(tomo_num):
     print('\n\nREQUEST: SOURCE/SET CURRENT')
@@ -214,6 +213,52 @@ def source_set_current(tomo_num):
 
     print('Success!')
     return create_response(success= True)
+
+
+
+@app.route('/tomograph/<int:tomo_num>/source/get-voltage', methods=['GET'])
+def source_get_voltage(tomo_num):
+    print('\n\nREQUEST: SOURCE/GET VOLTAGE')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+
+    if tomograph.experiment_is_running:
+        error = 'On this tomograph experiment is running'
+        print(error)
+        return create_response(success= False, error= error)
+
+
+    print('Going to get voltage...')
+    success, voltage_attr, exception_message = tomograph.try_thrice_read_attr("xraysource_voltage")
+    if success == False:
+        print(exception_message)
+        return create_response(success, exception_message, error= 'Could not get voltage')
+
+    voltage = voltage_attr.value
+    print("Voltage is %.2f" % voltage)
+    return create_response(success= True, result= voltage)
+
+@app.route('/tomograph/<int:tomo_num>/source/get-current', methods=['GET'])
+def source_get_current(tomo_num):
+    print('\n\nREQUEST: SOURCE/GET CURRENT')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+
+    if tomograph.experiment_is_running:
+        error = 'On this tomograph experiment is running'
+        print(error)
+        return create_response(success= False, error= error)
+
+
+    print('Going to get current...')
+    success, current_attr, exception_message = tomograph.try_thrice_read_attr("xraysource_current")
+    if success == False:
+        print(exception_message)
+        return create_response(success, exception_message, error= 'Could not get current')
+
+    current = current_attr.value
+    print("Current is %.2f" % current)
+    return create_response(success= True, result= current)
 
 
 
@@ -270,6 +315,34 @@ def motor_set_angle_position(tomo_num):
 
     return tomograph.set_angle(new_pos)
 
+
+
+@app.route('/tomograph/<int:tomo_num>/motor/get-horizontal-position', methods=['GET'])
+def motor_get_horizontal_position(tomo_num):
+    print('\n\nREQUEST: MOTOR/GET HORIZONTAL POSITION')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+
+    return tomograph.get_x()
+
+@app.route('/tomograph/<int:tomo_num>/motor/get-vertical-position', methods=['GET'])
+def motor_get_vertical_position(tomo_num):
+    print('\n\nREQUEST: MOTOR/GET VERTICAL POSITION')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+
+    return tomograph.get_y()
+
+@app.route('/tomograph/<int:tomo_num>/motor/get-angle-position', methods=['GET'])
+def motor_get_angle_position(tomo_num):
+    print('\n\nREQUEST: MOTOR/GET ANGLE POSITION')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+
+    return tomograph.get_angle()
+
+
+
 @app.route('/tomograph/<int:tomo_num>/motor/move-away', methods=['GET'])
 def motor_move_away(tomo_num):
     print('\n\nREQUEST: MOTOR/MOVE AWAY')
@@ -285,6 +358,7 @@ def motor_move_back(tomo_num):
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
     return tomograph.move_back()
+
 
 
 @app.route('/tomograph/<int:tomo_num>/motor/reset-angle-position', methods=['GET'])
@@ -311,14 +385,14 @@ def detector_get_frame(tomo_num):
 
 
 
-#---------------------------------------------------------
+#---------------------------------------------------------#
 #    Functions for running experiment
-#---------------------------------------------------------
+#---------------------------------------------------------#
 
 
 def stop_experiment_because_someone(exp_id):
     exp_stop_event = create_event('message', exp_id, 'Experiment was stopped by someone')
-    if send_messages_to_storage_webpage(exp_stop_event) == False:
+    if send_event_to_storage_webpage(exp_stop_event) == False:
         return
     print('\nEXPERIMENT IS STOPPED BY SOMEONE!!!\n')
     return
@@ -422,15 +496,13 @@ def loop_of_get_send_frames(tomograph, exp_id, count, exposure, frame_num, getti
         frame_dict['number'] = frame_num
         frame_num += 1
         frame_with_data = create_event('frame', exp_id, frame_dict)
-        if send_messages_to_storage_webpage(frame_with_data) == False:
+        if send_event_to_storage_webpage(frame_with_data) == False:
             return False, frame_num
     return True, frame_num
 
 
 
-# NEED TO TEST(AFTER REFACTORING)
-def carry_out_simple_experiment(tomo_num, exp_param):
-    tomograph = TOMOGRAPHS[tomo_num]
+def carry_out_simple_experiment(tomograph, exp_param):
     exp_id = exp_param['experiment id']
     # Closing shutter to get DARK images
     if tomograph.close_shutter(0, exp_id) == False:
@@ -458,13 +530,19 @@ def carry_out_simple_experiment(tomo_num, exp_param):
 
     if tomograph.move_back(exp_id) == False:
         return
+
+    success, initial_angle = tomograph.get_angle(exp_id)
+    if not success:
+        return
+    print('Initial angle is %.2f' % initial_angle)
+
     if tomograph.reset_angle(exp_id) == False:
         return
 
     print('Going to get DATA images, step count is %d!\n' % (exp_param['DATA']['step count']))
     angle_step = exp_param['DATA']['angle step']
     for i in range(0, exp_param['DATA']['step count']):
-        current_angle = (round( (i*angle_step) ,  2)) % 360
+        current_angle = (round( (i*angle_step) + initial_angle,  2)) % 360
         print('Getting DATA images: angle is %.2f' % current_angle)
 
         success, frame_num = loop_of_get_send_frames(tomograph, exp_id, exp_param['DATA']['count per step'], exp_param['DATA']['exposure'],
@@ -472,19 +550,19 @@ def carry_out_simple_experiment(tomo_num, exp_param):
         if not success:
             return
         # Rounding angles here, not in  check_and_prepare_exp_parameters(), cause it will be more accurately this way
-        new_angle = (round( (i + 1)*angle_step ,  2)) % 360
+        new_angle = (round( (i + 1)*angle_step + initial_angle ,  2)) % 360
         print('Finished with this angle, turning to new angle %.2f...' % (new_angle))
         if tomograph.set_angle(new_angle, exp_id) == False:
             return
     print('Finished with DATA images!\n')
 
     exp_finish_message = create_event('message', exp_id, 'Experiment was finished successfully')
-    if send_messages_to_storage_webpage(exp_finish_message) == False:
+    if send_event_to_storage_webpage(exp_finish_message) == False:
         return
     tomograph.experiment_is_running = False
     print('Experiment is done successfully!')
     return
-# NEED TO EDIT(NOT REFACTORED AND GENERALLY)
+# NEED TO EDIT(GENERALLY)
 def carry_out_advanced_experiment(tomo_num, exp_param):
     tomograph = TOMOGRAPHS[tomo_num]
     exp_id = exp_param['experiment id']
@@ -550,12 +628,12 @@ def carry_out_advanced_experiment(tomo_num, exp_param):
             print('  Got!\nSending frame to storage and web page of adjustment...')
             frame_dict = json.loads(frame_json)
             frame_with_data = create_event('frame', exp_id, frame_dict)
-            if send_messages_to_storage_webpage(frame_with_data) == False:
+            if send_event_to_storage_webpage(frame_with_data) == False:
                 return
             print('Success!')
 
     exp_finish_message = create_event('message', exp_id, 'Experiment was finished successfully')
-    if send_messages_to_storage_webpage(exp_finish_message) == False:
+    if send_event_to_storage_webpage(exp_finish_message) == False:
         return
     tomograph.experiment_is_running = False
     print('Experiment is done successfully!')
@@ -564,7 +642,6 @@ def carry_out_advanced_experiment(tomo_num, exp_param):
 
 
 
-# NEED TO TEST(AFTER REFACTORING)
 @app.route('/tomograph/<int:tomo_num>/experiment/start', methods=['POST'])
 def experiment_start(tomo_num):
     print('\n\nREQUEST: EXPERIMENT/START')
@@ -608,36 +685,16 @@ def experiment_start(tomo_num):
 
     print('Success!')
     print('Sending to storage leading to prepare...')
-    try:
-        storage_resp = requests.post(STORAGE_EXPERIMENT_URI, data = request.data)
-    except requests.ConnectionError as e:
-        print(e.message)
-        #IF UNCOMMENT   exception_message= '' '''e.message''',    OCCURS PROBLEMS WITH JSON.DUMPS(...)
-        return create_response(success= False, exception_message= '' '''e.message,''',
-                               error= 'Could not send to storage signal of experiment start')
-
-
-    print('Sent!')
-    print(type(storage_resp.content))
-    print(storage_resp.content)
-    storage_resp_dict = json.loads(storage_resp.content)
-
-    if not ('result' in storage_resp_dict.keys()):
-        print('Storage\'s response has incorrect format!')
-        return create_response(success= False, error= 'Storage is not ready: storage\'s response has incorrect format')
-
-    print('Storage\'s response:')
-    print (storage_resp_dict['result'])
-    if storage_resp_dict['result'] != 'success':
-        print('Storage is NOT ready!')
-        return create_response(success= False, error= 'Storage is not ready: ' + storage_resp_dict['result'])
+    success, exception_message = send_json_to_storage(request.data)
+    if not success:
+        return create_response(success= False, exception_message= exception_message, error= 'Problems with storage')
 
     print('Experiment begins!')
     tomograph.experiment_is_running = True
     if exp_param['advanced']:
-        thr = threading.Thread(target = carry_out_advanced_experiment, args = (tomo_num, exp_param))
+        thr = threading.Thread(target = carry_out_advanced_experiment, args = (tomograph, exp_param))
     else:
-        thr = threading.Thread(target = carry_out_simple_experiment, args = (tomo_num, exp_param))
+        thr = threading.Thread(target = carry_out_simple_experiment, args = (tomograph, exp_param))
     thr.start()
 
     return create_response(True)
@@ -676,6 +733,7 @@ def internal_server_error(error):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port = 5001)
+
 
 
 
