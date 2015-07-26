@@ -92,7 +92,7 @@ def create_experiment():
 
 @app.route('/storage/frames/post', methods=['POST'])
 def new_frame():
-    if not request.data:
+    if not request.data or not request.files:
         logging.error('Incorrect format')
         abort(400)
 
@@ -106,18 +106,21 @@ def new_frame():
             else:
                 logging.warning(json_frame['exception message'] + json_frame['error'])
         elif json_frame['type'] == 'frame':
-            image = json_frame['frame']['image_data']['image']
-            json_frame['frame']['image_data'].pop('image')
+            # image = json_frame['frame']['image_data']['image']
+            # json_frame['frame']['image_data'].pop('image')
+
+            frame = request.files['frame']
+            image_array = np.load(frame)
+
             frame_id = db['frames'].insert(json_frame)
 
-            
-            s = StringIO.StringIO(image)
+            # strIO = StringIO.StringIO(image)
             # np.savez_compressed(s, image)
             # s.seek(0)
             # array = np.load(s)
-            array = np.loadtxt(s, dtype=np.int16)
+            # array = np.loadtxt(strIO, dtype=np.int16)
 
-            pyframes.add_frame(array, frame_id, experiment_id)
+            pyframes.add_frame(image_array, frame_id, experiment_id)
 
             logging.info('experiment id: {} frame id: {}'.format(str(experiment_id), str(frame_id)))
 
@@ -210,7 +213,7 @@ def delete_experiment():
         abort(400)
 
     try:
-        logging.debug(json.loads(request.data))
+        logging.debug(json.loads(request.data.decode()))
         experiments = db['experiments']
         frames = db['frames']
 
