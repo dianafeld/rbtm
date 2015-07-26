@@ -21,7 +21,7 @@ app = Flask(__name__)
 
 
 
-STORAGE_IS_FICTITIOUS = True
+STORAGE_IS_FICTITIOUS = False
 
 WEBPAGE_OF_ADJUSTMENT_IS_FICTITIOUS = True
 
@@ -29,8 +29,6 @@ TOMOGRAPH_IS_FICTITIOUS = False
 
 
 TIMEOUT_MILLIS = 200000
-
-
 
 
 if STORAGE_IS_FICTITIOUS:
@@ -656,10 +654,10 @@ def shutter_open(tomo_num, time):
 @app.route('/tomograph/<int:tomo_num>/shutter/close/<int:time>', methods=['GET'])
 def shutter_close(tomo_num, time):
     logging.debug('\n\nREQUEST: SHUTTER/CLOSE')
-    tomo_num -= 1          #because in TOMOGRAPHS list numeration begins from 0
+    tomo_num -= 1          # because in TOMOGRAPHS list numeration begins from 0
     if TOMOGRAPHS[tomo_num]['experiment is running']:
         logging.debug('On this tomograph experiment is running')
-        return create_response(success= False, error= 'On this tomograph experiment is running')
+        return create_response(success=False, error='On this tomograph experiment is running')
 
     return close_shutter(tomo_num, time)
 
