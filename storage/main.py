@@ -98,8 +98,8 @@ def new_frame():
 
     try:
         logging.debug(request.form)
-        logging.debug(request.form.decode()['data'])
-        json_frame = json.loads(request.form.decode()['data'])
+        logging.debug(request.form['data'])
+        json_frame = json.loads(request.form['data'])
         experiment_id = json_frame['exp_id']
 
         if json_frame['type'] == 'message':
