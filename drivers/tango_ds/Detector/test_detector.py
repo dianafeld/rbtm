@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, "lib")
+
 from xiApi import Detector
 
 import pylab as plt

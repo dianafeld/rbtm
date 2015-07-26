@@ -16,7 +16,7 @@ import zlib
 
 import logging
 from StringIO import StringIO
-logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = u'experiment.log')
+# logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = u'experiment.log')
 app = Flask(__name__)
 
 
@@ -25,7 +25,7 @@ STORAGE_IS_FICTITIOUS = True
 
 WEBPAGE_OF_ADJUSTMENT_IS_FICTITIOUS = True
 
-TOMOGRAPH_IS_FICTITIOUS = True
+TOMOGRAPH_IS_FICTITIOUS = False
 
 
 TIMEOUT_MILLIS = 200000
@@ -1102,6 +1102,7 @@ def internal_server_error(error):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = u'experiment.log')
     app.run(host='0.0.0.0', port=5001)
 
 

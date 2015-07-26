@@ -89,6 +89,7 @@ class Tomograph (PyTango.Device_4Impl):
         self.attr_angle_position_read = 0.0
         self.attr_horizontal_position_read = 0
         self.attr_vertical_position_read = 0
+        self.attr_image_read = ''
         #----- PROTECTED REGION ID(Tomograph.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
@@ -208,6 +209,14 @@ class Tomograph (PyTango.Device_4Impl):
         self.motor.vertical_position = data
 
         #----- PROTECTED REGION END -----#  //  Tomograph.vertical_position_write
+        
+    def read_image(self, attr):
+        self.debug_stream("In read_image()")
+        #----- PROTECTED REGION ID(Tomograph.image_read) ENABLED START -----#
+
+        return self.detector.image
+
+        #----- PROTECTED REGION END -----#	//	Tomograph.image_read
         
     
     
@@ -585,6 +594,10 @@ class TomographClass(PyTango.DeviceClass):
             [[PyTango.DevLong,
             PyTango.SCALAR,
             PyTango.READ_WRITE]],
+        'image':
+            [[PyTango.DevEncoded,
+            PyTango.SCALAR,
+            PyTango.READ]],
         }
 
 
