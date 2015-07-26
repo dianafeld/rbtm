@@ -92,7 +92,7 @@ def create_experiment():
 
 @app.route('/storage/frames/post', methods=['POST'])
 def new_frame():
-    if not (request.files and request.form) or not request.data:
+    if not (request.files and request.form) and not request.data:
         logging.error('Incorrect format')
         abort(400)
 
