@@ -92,7 +92,7 @@ def create_experiment():
 
 @app.route('/storage/frames/post', methods=['POST'])
 def new_frame():
-    if not request.form or not request.files:
+    if not (request.files and request.form) or not request.data:
         logging.error('Incorrect format')
         abort(400)
 
@@ -113,9 +113,10 @@ def new_frame():
 
             frame = request.files['file']
             logging.info('Going to np.load...')
-            image_array = np.load(frame)
+            image_array = np.load(frame)['arr_0']
             logging.info('Image array has been loaded!')
-            logging.debug(image_array[1, :10])
+            # logging.debug(image_array[1, 1])
+            logging.debug(type(image_array))
 
             frame_id = db['frames'].insert(json_frame)
 
