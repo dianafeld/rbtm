@@ -1,15 +1,13 @@
-#!/usr/bin/python
 from flask import Flask, jsonify, make_response, request, abort, Response, send_file
 from bson.json_util import dumps
 import pymongo as pm
 import pyframes
-import pyfileSystem as fs
+import filesystem as fs
 import json
 import logging
 import os
 import numpy as np
-import csv
-from StringIO import StringIO
+from io import StringIO
 
 app = Flask(__name__)
 
@@ -40,16 +38,16 @@ def incorrect_format(error):
 @app.route('/storage/experiments/get', methods=['POST'])
 def get_experiments():
     if not request.data:
-        logging.error(u'Incorrect format')
+        logging.error('Incorrect format')
         abort(400)
 
     try:
-        find_query = json.loads(request.data)
+        find_query = json.loads(request.data.decode())
         logging.debug(find_query)
 
-        experiments = db[u'experiments']
+        experiments = db['experiments']
 
-        if u'select' in find_query and find_query[u'select'] == u'all':
+        if 'select' in find_query and find_query['select'] == 'all':
             cursor = experiments.find()
         else:
             cursor = experiments.find(find_query)
@@ -60,7 +58,7 @@ def get_experiments():
 
         return resp
 
-    except BaseException, e:
+    except BaseException as e:
         logging.error(e)
         abort(500)
 
@@ -69,25 +67,25 @@ def get_experiments():
 @app.route('/storage/experiments/post', methods=['POST'])
 def create_experiment():
     if not request.data:
-        logging.error(u'Incorrect format')
+        logging.error('Incorrect format')
         abort(400)
 
     try:
-        experiments = db[u'experiments']
+        experiments = db['experiments']
 
-        insert_query = json.loads(request.data)
+        insert_query = json.loads(request.data.decode())
         logging.debug(insert_query)
-        experiment_id = insert_query[u'experiment id']
+        experiment_id = insert_query['experiment id']
 
         if fs.create_new_experiment(experiment_id):
-            insert_query[u'finished'] = False
+            insert_query['finished'] = False
             experiments.insert(insert_query)
             
-            return jsonify({u'result': u'success'})
+            return jsonify({'result': 'success'})
         else:
-            return jsonify({u'result': u'experiment ' + str(experiment_id) + u' already exists in file system'})
+            return jsonify({'result': 'experiment {} already exists in file system'.format(experiment_id)})
 
-    except BaseException, e:
+    except BaseException as e:
         logging.error(e)
         abort(500)
 
@@ -95,50 +93,35 @@ def create_experiment():
 @app.route('/storage/frames/post', methods=['POST'])
 def new_frame():
     if not request.data:
-        logging.error(u'Incorrect format')
+        logging.error('Incorrect format')
         abort(400)
 
     try:
-        json_frame = json.loads(request.data)
-        experiment_id = json_frame[u'exp_id']
+        json_frame = json.loads(request.data.decode())
+        experiment_id = json_frame['exp_id']
 
-        if json_frame[u'type'] == u'message':
-            if json_frame[u'message'] == u'Experiment was finished successfully':
-                db.experiments.update({u'_id': experiment_id}, {u'finished': True})
+        if json_frame['type'] == 'message':
+            if json_frame['message'] == 'Experiment was finished successfully':
+                db.experiments.update({'_id': pm.ObjectID(experiment_id)}, {'finished': True})
             else:
-                logging.WARNING(json_frame[u'exception message'] + json_frame[u'error'])
-        elif json_frame[u'type'] == u'frame':
-            image = json_frame[u'frame'][u'image_data'][u'image']
-            json_frame[u'frame'][u'image_data'].pop(u'image')
-            frame_id = db[u'frames'].insert(json_frame)
-            print(1)
-            # a = frame.split('\n')
-            print(2)
-            # reader = csv.reader(frame, delimiter=' ')
-            # arr = []
-            # for lst in a:
-            #     arr.append(lst.split( ))
-            # print(3)
-            # image_list = list(reader)
-            # print(4)
-            # del arr[-1]
-            # array = np.asarray(arr, dtype=np.int16)
+                logging.warning(json_frame['exception message'] + json_frame['error'])
+        elif json_frame['type'] == 'frame':
+            image = json_frame['frame']['image_data']['image']
+            json_frame['frame']['image_data'].pop('image')
+            frame_id = db['frames'].insert(json_frame)
+
             
             s = StringIO.StringIO(image)
-            #np.savez_compressed(s, frame_data=image)
-            #s.seek(0)
-            #array = np.load(s)
+            # np.savez_compressed(s, image)
+            # s.seek(0)
+            # array = np.load(s)
             array = np.loadtxt(s, dtype=np.int16)
-
-            # print(5)
-
-            # print (array)
-
-            logging.info(u'experiment id: ' + str(experiment_id) + u'frame id: ' + str(frame_id))
 
             pyframes.add_frame(array, frame_id, experiment_id)
 
-    except BaseException, e:
+            logging.info('experiment id: {} frame id: {}'.format(str(experiment_id), str(frame_id)))
+
+    except BaseException as e:
         logging.error(e)
         abort(500)
 
@@ -148,27 +131,25 @@ def new_frame():
 @app.route('/storage/frames/get', methods=['POST'])
 def get_frame():
     if not request.data:
-        logging.error(u'Incorrect format')
+        logging.error('Incorrect format')
         abort(400)
 
     try:
-        frames = db[u'frames']
-        find_query = json.loads(request.data)
+        frames = db['frames']
+        find_query = json.loads(request.data.decode())
         cursor = frames.find(find_query)
         frames_list = list(cursor)
         for frame in frames_list:
-            if frame[u'type'] == u'frame':
-                frame_id = frame[u'_id']
-                experiment_id = frame[u'exp_id']
+            if frame['type'] == 'frame':
+                frame_id = frame['_id']
+                experiment_id = frame['exp_id']
 
-                image_numpy = pyframes.extract_frame(frame_id, experiment_id)
+                image_numpy = frames.extract_frame(frame_id, experiment_id)
 
-                tmp_list_of_strs = []
-                for lst in image_numpy.tolist():
-                    tmp_list_of_strs.append(' '.join(map(str, lst)))
-                image_str = '\n'.join(tmp_list_of_strs)
+                s = StringIO.StringIO()
+                np.savetxt(s, image_numpy, fmt="%d")
 
-                frame[u'frame'][u'image_data'][u'image'] = image_str
+                frame['frame']['image_data']['image'] = s.getvalue()
         logging.info('done')
         resp = Response(response=dumps(frames_list),
                         status=200,
@@ -176,7 +157,7 @@ def get_frame():
 
         return resp
 
-    except BaseException, e:
+    except BaseException as e:
         logging.error(e)
         abort(500)
 
@@ -184,12 +165,12 @@ def get_frame():
 @app.route('/storage/frames_info/get', methods=['POST'])
 def get_frame_info():
     if not request.data:
-        logging.error(u'Incorrect format')
+        logging.error('Incorrect format')
         abort(400)
 
     try:
-        frames = db[u'frames']
-        find_query = json.loads(request.data)
+        frames = db['frames']
+        find_query = json.loads(request.data.decode())
         cursor = frames.find(find_query)
 
         resp = Response(response=dumps(cursor),
@@ -198,7 +179,7 @@ def get_frame_info():
 
         return resp
 
-    except BaseException, e:
+    except BaseException as e:
         logging.error(e)
         abort(500)
 
@@ -207,15 +188,15 @@ def get_frame_info():
 @app.route('/storage/experiments/put', methods=['POST'])
 def update_experiment():
     if not request.data:
-        logging.error(u'Incorrect format')
+        logging.error('Incorrect format')
         abort(400)
 
     try:
-        experiments = db[u'experiments']
-        query = json.loads(request.data)
-        experiment_id = experiments[u'_id']
-        experiments.update({u'_id': experiment_id}, query)
-    except BaseException, e:
+        experiments = db['experiments']
+        query = json.loads(request.data.decode())
+        experiment_id = experiments['_id']
+        experiments.update({'_id': experiment_id}, query)
+    except BaseException as e:
         logging.error(e)
         abort(500)
     return jsonify({'result': 'success'})
@@ -225,29 +206,29 @@ def update_experiment():
 @app.route('/storage/experiments/delete', methods=['POST'])
 def delete_experiment():
     if not request.json:
-        logging.error(u'Incorrect format')
+        logging.error('Incorrect format')
         abort(400)
 
     try:
         logging.debug(json.loads(request.data))
-        experiments = db[u'experiments']
-        frames = db[u'frames']
+        experiments = db['experiments']
+        frames = db['frames']
 
-        cursor = experiments.find(json.loads(request.data))
+        cursor = experiments.find(json.loads(request.data.decode()))
 
-        experiments.remove(json.loads(request.data))
+        experiments.remove(json.loads(request.data.decode()))
 
         experiments_list = list(cursor)
         for experiment in experiments_list:
-            experiment_id = experiment[u'_id']
-            frames.remove({u'experiment id': experiment_id})
+            experiment_id = experiment['_id']
+            frames.remove({'experiment id': experiment_id})
             fs.delete_experiment(experiment_id)
 
         # db['reconstructions'].remove(request.get_json())
 
         return jsonify({'deleted': cursor.count()})
 
-    except BaseException, e:
+    except BaseException as e:
         logging.error(e)
         abort(500)
 
@@ -255,16 +236,13 @@ def delete_experiment():
 @app.route('/storage/png/get', methods=['POST'])
 def get_png():
     if not request.data:
-        logging.error(u'Incorrect format')
+        logging.error('Incorrect format')
         abort(400)
 
     try:
-        find_query = json.loads(request.data)
-        frame_id = find_query[u'id']
-        experiment_id = find_query[u'exp_id']
-        logging.debug('1')
-        frame = pyframes.extract_frame(frame_id, experiment_id)
-        print(type(frame))
+        find_query = json.loads(request.data.decode())
+        frame_id = find_query['id']
+        experiment_id = find_query['exp_id']
 
         png_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
                                      str(frame_id) + '.png')
@@ -272,16 +250,9 @@ def get_png():
         if not os.path.exists(png_file_path):
             abort(404)
 
-        # pyframes.make_png(frame, png_file_path)
-
-        #png_path = str(frame_id) + '.png'
-        #redirect_path = '/png/local/' + png_path
-        #response = make_response("")
-        #response.headers["X-Accel-Redirect"] = redirect_path
-        #return response
         return send_file(png_file_path, mimetype='image/png')
 
-    except StandardError, e:
+    except Exception as e:
         logging.error(e)
         abort(500)
 
@@ -290,7 +261,7 @@ if __name__ == '__main__':
     if not os.path.exists(os.path.dirname(logs_path)):
         os.makedirs(os.path.dirname(logs_path))
 
-    logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
+    logging.basicConfig(format='%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
                         level=logging.DEBUG,
                         filename=logs_path)
     app.run(host='0.0.0.0', port=5006)

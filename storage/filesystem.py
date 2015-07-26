@@ -18,6 +18,9 @@ def create_new_experiment(experiment_id):
             before_processing_path = os.path.join(experiment_path, 'before_processing')
             os.makedirs(before_processing_path)
 
+            png_before_processing_path = os.path.join(before_processing_path, "png")
+            os.makedirs(png_before_processing_path)
+
             after_processing_path = os.path.join(experiment_path, 'after_processing')
             os.makedirs(after_processing_path)
 
@@ -25,14 +28,15 @@ def create_new_experiment(experiment_id):
             os.makedirs(reconstructions_path)
 
             frames_file_path = os.path.join(before_processing_path, 'frames.h5')
-            h5py.File(frames_file_path, 'w')
+            with h5py.File(frames_file_path, 'w'):
+                pass
 
-            logging.info(u'file system: create experiment '+str(experiment_id)+u' successfully')
+            logging.info('file system: create experiment {} successfully'.format(experiment_id))
             return True
         else:
-            logging.warning(u'file system: experiment '+str(experiment_id)+u' already exists')
+            logging.warning('file system: experiment {} already exists'.format(experiment_id))
             return False
-    except BaseException, e:
+    except BaseException as e:
         logging.error(e)
 
 
@@ -41,11 +45,11 @@ def delete_experiment(experiment_id):
     if os.path.exists(experiment_path):
         try:
             shutil.rmtree(experiment_path)
-            logging.INFO(u'file system: delete experiment '+str(experiment_id)+u' successfully')
+            logging.info('file system: delete experiment {} successfully'.format(experiment_id))
             return True
-        except BaseException, e:
+        except BaseException as e:
             logging.error(e)
             return False
     else:
-        logging.warning(u'file system: cant find experiment '+str(experiment_id)+u'for deleting')
+        logging.warning('file system: cant find experiment {} for deleting'.format(experiment_id))
         return False
