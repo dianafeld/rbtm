@@ -112,9 +112,10 @@ def new_frame():
             # json_frame['frame']['image_data'].pop('image')
 
             frame = request.files['file']
-            logging.debug('Going to np.load...')
+            logging.info('Going to np.load...')
             image_array = np.load(frame)
-            logging.debug(image_array[:10][:10])
+            logging.info('Image array has been loaded!')
+            logging.debug(image_array[1, :10])
 
             frame_id = db['frames'].insert(json_frame)
 
