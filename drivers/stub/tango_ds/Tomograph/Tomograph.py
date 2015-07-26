@@ -214,9 +214,11 @@ class Tomograph (PyTango.Device_4Impl):
     def read_image(self, attr):
         self.debug_stream("In read_image()")
         #----- PROTECTED REGION ID(Tomograph.image_read) ENABLED START -----#
-
-        self.attr_image_read.encode_gray16(self.detector.image)
-        attr.set_value(self.attr_image_read)
+        # image_enc = self.detector.read_attribute("image", extract_as=PyTango.ExtractAs.Nothing)
+        image_enc = self.detector.image
+        # self.attr_image_read.encode_gray16(self.detector.image)
+        print image_enc[0]
+        attr.set_value(*image_enc)
 
         # attr.set_value(self.detector.image)
         
