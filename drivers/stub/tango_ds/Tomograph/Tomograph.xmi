@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ASCII"?>
 <pogoDsl:PogoSystem xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:pogoDsl="http://www.esrf.fr/tango/pogo/PogoDsl">
-  <classes name="Tomograph" pogoRevision="8.1">
+  <classes name="Tomograph" pogoRevision="8.4">
     <description description="Wrapper class for Source, Shutter, Motor, Detector classes" title="Tomograph" sourcePath="/home/itsnotme/rbtm/drivers/stub/tango_ds/Tomograph" language="Python" filestogenerate="XMI   file,Code files" license="GPL" hasMandatoryProperty="false" hasConcreteProperty="false" hasAbstractCommand="false" hasAbstractAttribute="false">
       <inheritances classname="Device_Impl" sourcePath=""/>
       <identification contact="at phystech.edu - diana.ichalova" author="diana.ichalova" emailDomain="phystech.edu" classFamily="Miscellaneous" siteSpecific="" platform="All Platforms" bus="Not Applicable" manufacturer="none" reference=""/>
@@ -189,8 +189,8 @@
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
       <properties description="" label="" unit="" standardUnit="" displayUnit="" format="" maxValue="" minValue="" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
     </attributes>
-    <attributes name="image" attType="Scalar" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="" maxY="" allocReadMember="true" isDynamic="false">
-      <dataType xsi:type="pogoDsl:EncodedType"/>
+    <attributes name="image" attType="Image" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="5000" maxY="5000" allocReadMember="true" isDynamic="false">
+      <dataType xsi:type="pogoDsl:ShortType"/>
       <changeEvent fire="false" libCheckCriteria="false"/>
       <archiveEvent fire="false" libCheckCriteria="false"/>
       <dataReadyEvent fire="false" libCheckCriteria="true"/>

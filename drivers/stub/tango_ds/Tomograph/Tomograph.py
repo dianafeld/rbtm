@@ -89,7 +89,7 @@ class Tomograph (PyTango.Device_4Impl):
         self.attr_angle_position_read = 0.0
         self.attr_horizontal_position_read = 0
         self.attr_vertical_position_read = 0
-        self.attr_image_read = ''
+        self.attr_image_read = [[0]]
         #----- PROTECTED REGION ID(Tomograph.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
@@ -474,6 +474,10 @@ class Tomograph (PyTango.Device_4Impl):
         #----- PROTECTED REGION END -----#  //  Tomograph.MoveBack
         
 
+    #----- PROTECTED REGION ID(Tomograph.programmer_methods) ENABLED START -----#
+    
+    #----- PROTECTED REGION END -----#	//	Tomograph.programmer_methods
+
 class TomographClass(PyTango.DeviceClass):
     #--------- Add you global class variables here --------------------------
     #----- PROTECTED REGION ID(Tomograph.global_class_variables) ENABLED START -----#
@@ -585,9 +589,9 @@ class TomographClass(PyTango.DeviceClass):
             PyTango.SCALAR,
             PyTango.READ_WRITE]],
         'image':
-            [[PyTango.DevEncoded,
-            PyTango.SCALAR,
-            PyTango.READ]],
+            [[PyTango.DevShort,
+            PyTango.IMAGE,
+            PyTango.READ, 5000, 5000]],
         }
 
 
@@ -595,6 +599,9 @@ def main():
     try:
         py = PyTango.Util(sys.argv)
         py.add_class(TomographClass,Tomograph,'Tomograph')
+        #----- PROTECTED REGION ID(Tomograph.add_classes) ENABLED START -----#
+        
+        #----- PROTECTED REGION END -----#	//	Tomograph.add_classes
 
         U = PyTango.Util.instance()
         U.server_init()
