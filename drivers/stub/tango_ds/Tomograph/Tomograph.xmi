@@ -203,6 +203,6 @@
     <states name="OFF" description="">
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </states>
-    <preferences docHome="./doc_html" makefileHome="/usr/local/share/pogo/preferences"/>
+    <preferences docHome="./doc_html" makefileHome="/home/taurel/tmp/tango_install/share/pogo/preferences"/>
   </classes>
 </pogoDsl:PogoSystem>

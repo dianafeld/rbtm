@@ -208,7 +208,7 @@ class Tomograph (PyTango.Device_4Impl):
         self.motor.vertical_position = data
 
         #----- PROTECTED REGION END -----#  //  Tomograph.vertical_position_write
-        
+
     def read_image(self, attr):
         self.debug_stream("In read_image()")
         #----- PROTECTED REGION ID(Tomograph.image_read) ENABLED START -----#
@@ -216,13 +216,11 @@ class Tomograph (PyTango.Device_4Impl):
         attr.set_value(self.detector.image)
         
         #----- PROTECTED REGION END -----#	//	Tomograph.image_read
-        
-    
     
         #----- PROTECTED REGION ID(Tomograph.initialize_dynamic_attributes) ENABLED START -----#
 
         #----- PROTECTED REGION END -----#  //  Tomograph.initialize_dynamic_attributes
-            
+
     def read_attr_hardware(self, data):
         self.debug_stream("In read_attr_hardware()")
         #----- PROTECTED REGION ID(Tomograph.read_attr_hardware) ENABLED START -----#
