@@ -89,7 +89,7 @@ class Tomograph (PyTango.Device_4Impl):
         self.attr_angle_position_read = 0.0
         self.attr_horizontal_position_read = 0
         self.attr_vertical_position_read = 0
-        self.attr_image_read = [[0]]
+        self.attr_image_read = ''
         #----- PROTECTED REGION ID(Tomograph.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
@@ -110,6 +110,8 @@ class Tomograph (PyTango.Device_4Impl):
         self.attr_vertical_position_read = self.motor.vertical_position
 
         self.set_state(PyTango.DevState.ON)
+
+        self.attr_image_read = PyTango.EncodedAttribute()
 
         #----- PROTECTED REGION END -----#  //  Tomograph.init_device
 
@@ -208,19 +210,24 @@ class Tomograph (PyTango.Device_4Impl):
         self.motor.vertical_position = data
 
         #----- PROTECTED REGION END -----#  //  Tomograph.vertical_position_write
-
+        
     def read_image(self, attr):
         self.debug_stream("In read_image()")
         #----- PROTECTED REGION ID(Tomograph.image_read) ENABLED START -----#
 
-        attr.set_value(self.detector.image)
+        self.attr_image_read.encode_gray16(self.detector.image)
+        attr.set_value(self.attr_image_read)
+
+        # attr.set_value(self.detector.image)
         
         #----- PROTECTED REGION END -----#	//	Tomograph.image_read
+        
+    
     
         #----- PROTECTED REGION ID(Tomograph.initialize_dynamic_attributes) ENABLED START -----#
 
         #----- PROTECTED REGION END -----#  //  Tomograph.initialize_dynamic_attributes
-
+            
     def read_attr_hardware(self, data):
         self.debug_stream("In read_attr_hardware()")
         #----- PROTECTED REGION ID(Tomograph.read_attr_hardware) ENABLED START -----#
@@ -427,7 +434,7 @@ class Tomograph (PyTango.Device_4Impl):
         exposure = argin
 
         self.detector.exposure = exposure
-        image = self.detector.GetFrame()
+        self.detector.GetFrame()
         current_datetime = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
         detector_data = {'model': 'Ximea xiRAY'}
@@ -587,9 +594,9 @@ class TomographClass(PyTango.DeviceClass):
             PyTango.SCALAR,
             PyTango.READ_WRITE]],
         'image':
-            [[PyTango.DevShort,
-            PyTango.IMAGE,
-            PyTango.READ, 5000, 5000]],
+            [[PyTango.DevEncoded,
+            PyTango.SCALAR,
+            PyTango.READ]],
         }
 
 
