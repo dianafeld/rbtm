@@ -13,6 +13,7 @@ import pylab as plt
 from flask import send_file
 import copy
 from StringIO import StringIO
+import base64
 
 from conf import STORAGE_URI
 from conf import WEBPAGE_URI
@@ -137,6 +138,8 @@ def make_png(res, exp_id = ''):
     print("Success!")
     return True, None
 
+
+
 def send_event_to_webpage(event_dict):
     """ Sends "event" to web-page of adjustment;
         'event_dict' must be dictionary with format that is returned by  'create_event()'
@@ -168,6 +171,8 @@ def send_event_to_webpage(event_dict):
 
 
         try:
+            # DIANA
+            # PROBLEM IS HERE, ERROR THAT 'DATA' MUST NOT BE A STRING
             req_webpage = requests.post(WEBPAGE_URI, files=files, data= event_json)
         except requests.ConnectionError as e:
             print('Could not send to web-page of adjustment')
@@ -225,8 +230,7 @@ def send_json_to_storage(message_json):
 
         return True, ''
 
-
-
+# Here is converting to text
 def send_event_to_storage_webpage(event_dict, send_to_webpage = True):
     """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
         'event_dict' must be dictionary with format that is returned by  'create_event()'
@@ -238,20 +242,24 @@ def send_event_to_storage_webpage(event_dict, send_to_webpage = True):
     :return: success of sending, type is bool"""
 
     if event_dict['type'] == 'frame':
-        image_numpy = event_dict['image_data']['image']
-        del(event_dict['image_data']['image'])
+        image_numpy = event_dict['frame']['image_data']['image']
+        del(event_dict['frame']['image_data']['image'])
         event_dict_for_storage = copy.deepcopy(event_dict)
 
-        event_dict['image_data']['image'] = image_numpy
+        event_dict = event_dict
+        event_dict['frame']['image_data']['image'] = image_numpy
 
         s = StringIO()
-        np.savetxt(s, image_numpy, fmt="%d")
+
+        np.savez_compressed(s, image_numpy)
+        #np.savetxt(s, image_numpy, fmt="%d")
+
         print(s.getvalue()[:10])
-        event_dict_for_storage['image_data']['image'] = s.getvalue()
+        event_dict_for_storage['frame']['image_data']['image'] = base64.b64encode(s.getvalue())
 
     exp_id = event_dict['exp_id']
-    event_json = json.dumps(event_dict)
-    success, exception_message = send_json_to_storage(event_json)
+    event_json_for_storage = json.dumps(event_dict_for_storage)
+    success, exception_message = send_json_to_storage(event_json_for_storage)
     if not success:
         exp_emergency_event = create_event(type= 'message', exp_id= exp_id, MoF= 'Experiment was emergency stopped',
                                              exception_message= exception_message, error= 'Problems with storage')
@@ -277,7 +285,6 @@ class Tomograph:
     def __init__(self, tomograph_proxy_addr, timeout_millis = TIMEOUT_MILLIS):
         """
         :arg:  'tomograph_proxy_addr' - type is string
-               'detector_proxy_addr' - type is string
                'timeout_millis' - time that tomograph waits after command, type is int
         """
         self.tomograph_proxy = PyTango.DeviceProxy(tomograph_proxy_addr)
@@ -809,6 +816,7 @@ class Tomograph:
 
 
 
+    #  CHANGE FOR TEST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! (image_dict)
     def get_frame(self, exposure, exp_id = ''):
         """ Tries get frame with some exposure
 
@@ -880,8 +888,9 @@ class Tomograph:
             else:
                 return create_response(success = False, error= error)
 
-
-        success, image, exception_message = self.try_thrice_read_attr("image", extract_as=PyTango.ExtractAs.Nothing)
+        # DIANA
+        # COMMENTED BECAUSE COULD NOT READ ATTRIBUTE "IMAGE" FROM TOMOGRAPH DEVICE
+        """success, image, exception_message = self.try_thrice_read_attr("image", extract_as=PyTango.ExtractAs.Nothing)
         if success == False:
             error = 'Could not get image because of tomograph'
             print(exception_message)
@@ -890,18 +899,9 @@ class Tomograph:
                 return False, None
             else:
                 return create_response(success, exception_message, error= error)
-
-        try:
-            enc = PyTango.EncodedAttribute()
-            image_numpy = enc.decode_gray16(image)
-        except Exception as e:
-            error = 'Could convert image to numpy.array'
-            print(error)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= '' '''e.message''', error= error)
-                return False, None
-            else:
-                return create_response(success = False, error= error, exception_message = '' '''e.message''')
+        """
+        # FICTITIOUS IMAGE
+        image_numpy = np.array([[1, 2, 3],[4, 5, 6]])
 
         if exp_id:
             # Joining numpy array of image and frame metadata
