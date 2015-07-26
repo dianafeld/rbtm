@@ -97,6 +97,8 @@ def new_frame():
         abort(400)
 
     try:
+        logging.debug(request.form)
+        logging.debug(request.form.decode()['data'])
         json_frame = json.loads(request.form.decode()['data'])
         experiment_id = json_frame['exp_id']
 
@@ -110,7 +112,9 @@ def new_frame():
             # json_frame['frame']['image_data'].pop('image')
 
             frame = request.files['file']
+            logging.debug('Going to np.load...')
             image_array = np.load(frame)
+            logging.debug(image_array[:10][:10])
 
             frame_id = db['frames'].insert(json_frame)
 
