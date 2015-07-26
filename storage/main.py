@@ -92,12 +92,12 @@ def create_experiment():
 
 @app.route('/storage/frames/post', methods=['POST'])
 def new_frame():
-    if not request.data or not request.files:
+    if not request.form or not request.files:
         logging.error('Incorrect format')
         abort(400)
 
     try:
-        json_frame = json.loads(request.data.decode())
+        json_frame = json.loads(request.form.decode()['data'])
         experiment_id = json_frame['exp_id']
 
         if json_frame['type'] == 'message':
@@ -109,7 +109,7 @@ def new_frame():
             # image = json_frame['frame']['image_data']['image']
             # json_frame['frame']['image_data'].pop('image')
 
-            frame = request.files['frame']
+            frame = request.files['file']
             image_array = np.load(frame)
 
             frame_id = db['frames'].insert(json_frame)
