@@ -21,6 +21,7 @@ import numpy as np
 import pylab as plt
 import zlib
 from class_tomograph import Tomograph
+from class_tomograph import try_thrice_function
 from class_tomograph import create_event
 from class_tomograph import create_response
 from class_tomograph import send_json_to_storage
@@ -48,25 +49,20 @@ TOMOGRAPHS = (
 ADVANCED_EXPERIMENT_COMMANDS = ('open shutter', 'close shutter', 'reset current position', 'go to position', 'get frame')
 FRAME_PNG_FILENAME = 'image.png'
 
-def try_thrice_function(func, args = None):
-    success = True
-    exception_message = ''
-    for i in range(0, 3):
-        try:
-            answer = func(args)
-        except PyTango.DevFailed as e:
-            for stage in e:
-                print stage.desc
-            success = False
-            exception_message = e[-1].desc
-            answer = None
-        else:
-            break
-    return success, answer, exception_message
 
 
 
 def check_request(request_data):
+    """ Checks body part of request, if it is not empty and has JSON string try to load it to python object
+
+    :arg: 'request_data' - body part of request, type is undetermined in common case
+    :return: list of 3 elements,
+             1 - success of finding JSON string and loading it to python object, type is bool
+             2 - JSON-string loaded to python object, type is undetermined, if 'success' is True; None if False
+             3 - if 'success' is False, function returns prepared response for web-page of adjustment,
+                 type is json-string with format that is returned by  'create_response()';
+                 if 'success' is True, empty string
+    """
     print('Checking request...')
     if not request_data:
         print('Request is empty!')
@@ -104,12 +100,12 @@ def source_power_on(tomo_num):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
-    """
+
     print('Checking tomograph...')
-    success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].ping)
+    success, useless, exception_message = try_thrice_function(tomograph.tomograph_proxy.ping)
     if success == False:
         print(exception_message)
-        return create_response(success, exception_message, error= 'Could not reach tomograph')"""
+        return create_response(success, exception_message, error= 'Could not reach tomograph')
 
     print('Powering on source...')
     success, useless, exception_message = try_thrice_function(tomograph.tomograph_proxy.PowerOn)
