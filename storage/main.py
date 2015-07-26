@@ -97,9 +97,13 @@ def new_frame():
         abort(400)
 
     try:
-        logging.debug(request.form)
-        logging.debug(request.form['data'])
-        json_frame = json.loads(request.form['data'])
+        if request.data:
+            json_frame = json.loads(request.data.decode())
+        else:
+            logging.debug(request.form)
+            logging.debug(request.form['data'])
+            json_frame = json.loads(request.form['data'])
+
         experiment_id = json_frame['exp_id']
 
         if json_frame['type'] == 'message':
@@ -117,6 +121,7 @@ def new_frame():
             logging.info('Image array has been loaded!')
             # logging.debug(image_array[1, 1])
             logging.debug(type(image_array))
+            logging.debug(image_array[1])
 
             frame_id = db['frames'].insert(json_frame)
 
