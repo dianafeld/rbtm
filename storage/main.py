@@ -7,7 +7,7 @@ import json
 import logging
 import os
 import numpy as np
-from io import StringIO
+from io import StringIO, BytesIO
 
 app = Flask(__name__)
 
@@ -117,7 +117,8 @@ def new_frame():
 
             frame = request.files['file']
             logging.info('Going to np.load...')
-            image_array = np.load(frame)['frame_data']
+            strIO = BytesIO.BytesIO(frame)
+            image_array = np.load(strIO)['frame_data']
             logging.info('Image array has been loaded!')
             # logging.debug(image_array[1, 1])
             logging.debug(type(image_array))
