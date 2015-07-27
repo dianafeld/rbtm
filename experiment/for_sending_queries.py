@@ -33,10 +33,38 @@ simple_experiment = json.dumps(
             },
     }
 )
+experiment_one_image = json.dumps(
+    {
+        # SOMETHING FOR STORAGE (tags, username, description of experiment, number of tomograph)
+        # .........
+        'experiment id': '553e898c6c8dc562738e9272',
+        'experiment parameters':
+            {
+                'advanced': False,
+                'DARK':
+                    {
+                        'count': 0,
+                        'exposure': 1000.0,
+                        },
+                'EMPTY':
+                    {
+                        'count': 0,
+                        'exposure': 1000.0,
+                    },
+                'DATA':
+                    {
+                        'step count': 1,
+                        'exposure': 1000.0,
+                        'angle step': 40.5,
+                        'count per step': 1,
+                    }
+            },
+    }
+)
 
 advanced_experiment = json.dumps(
     {
-        'experiment id': '552aa5546c8dc50c93edacf0',
+        'experiment id': '552aa5546c8dc50c93edacf1',
         'experiment parameters':
             {
             'advanced': True,
@@ -61,19 +89,28 @@ try:
 
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/source/power-on")
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/source/power-off")
-    req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/source/set-voltage", data = new_voltage)
+    #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/source/set-voltage", data = new_voltage)
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/source/set-current", data = new_current)
+    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/source/get-voltage")
+    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/source/get-current")
 
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/shutter/open/0")
+    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/shutter/close/0")
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/set-horizontal-position", data = new_pos)
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/set-vertical-position", data = new_pos)
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/set-angle-position", data = new_pos)
+
+    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/get-horizontal-position")
+    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/get-vertical-position")
+    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/get-angle-position")
+
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/reset-angle-position", data = new_pos)
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/move-away")
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/move-back")
 
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/detector/get-frame", data = exposure)
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/start", data = simple_experiment)
+    req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/start", data = experiment_one_image)
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/stop")
 
 
@@ -84,3 +121,33 @@ else:
     print req.content
 
 
+future_advanced_experiment = json.dumps(
+    {
+        # something for storage #
+        #########################
+
+        'experiment id': '552aa5546c8dc50c93edacf0',
+        'experiment parameters':
+            {
+            'advanced': True,
+            'instruction':
+                [
+                    5,                # repeat times
+                    {'type': 'open shutter', 'args': 0},
+                    {'type': 'get frame', 'args': 3.5, 'repeat': 10},
+                    [
+                        3,
+                        {'type': 'get frame', 'args': 3.5, 'repeat': 10},
+                        {'type': 'set angle', 'args': 10.6},
+                        {'type': 'reset current position', 'args': None},
+                    ],
+                    [
+                        4,
+                        {'type': 'get frame', 'args': 3.5, 'repeat': 10},
+                        {'type': 'set angle', 'args': 20},
+                        {'type': 'reset current position', 'args': None},
+                    ],
+                ]
+            }
+        }
+)

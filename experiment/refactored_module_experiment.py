@@ -681,7 +681,7 @@ def experiment_start(tomo_num):
 
     print('Success!')
     print('Sending to storage leading to prepare...')
-    success, exception_message = send_json_to_storage(request.data)
+    success, exception_message = send_json_to_storage(request.data, storage_url= STORAGE_EXPERIMENT_URI)
     if not success:
         return create_response(success= False, exception_message= exception_message, error= 'Problems with storage')
 

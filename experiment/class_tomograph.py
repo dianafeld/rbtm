@@ -138,8 +138,6 @@ def make_png(res, exp_id = ''):
     print("Success!")
     return True, None
 
-
-
 def send_event_to_webpage(event_dict):
     """ Sends "event" to web-page of adjustment;
         'event_dict' must be dictionary with format that is returned by  'create_event()'
@@ -171,9 +169,9 @@ def send_event_to_webpage(event_dict):
 
 
         try:
-            # DIANA
-            # PROBLEM IS HERE, ERROR THAT 'DATA' MUST NOT BE A STRING
-            req_webpage = requests.post(WEBPAGE_URI, files=files, data= event_json)
+            req_webpage = requests.post(WEBPAGE_URI, files=files)
+            # WE DON'T SEND TO WEB-PAGE METADATA OF FRAME YET, IN FUTURE WE CAN ADD IT
+            #req_webpage = requests.post(WEBPAGE_URI, files=files, data= event_json)
         except requests.ConnectionError as e:
             print('Could not send to web-page of adjustment')
         else:
@@ -189,7 +187,7 @@ def send_event_to_webpage(event_dict):
         else:
             print(req_webpage.content)
 
-def send_json_to_storage(message_json):
+def send_to_storage(files, data):
     """ Sends json-string to storage
 
     :arg:  message, type is string
@@ -201,7 +199,7 @@ def send_json_to_storage(message_json):
 
     print('Sending to storage...')
     try:
-        storage_resp = requests.post(STORAGE_URI, data = message_json)
+        storage_resp = requests.post(STORAGE_URI, files= files, data = data)
     except requests.ConnectionError as e:
         exception_message = e.message
         print(exception_message)
@@ -212,8 +210,56 @@ def send_json_to_storage(message_json):
     else:
         try:
             storage_resp_dict = json.loads(storage_resp.content)
-        except TypeError:
+        except (ValueError, TypeError):
             exception_message = 'Storage\'s response is not JSON'
+            print exception_message
+            return False, exception_message
+
+        if not ('result' in storage_resp_dict.keys()):
+            exception_message = 'Storage\'s response has incorrect format'
+            print exception_message
+            print storage_resp_dict
+            return False, exception_message
+
+        print('Storage\'s response:')
+        print(storage_resp_dict['result'])
+        if storage_resp_dict['result'] != 'success':
+            return False, storage_resp_dict['result']
+
+
+        return True, ''
+
+# NEED TO EDIT
+def send_json_to_storage(message_json, storage_url= STORAGE_URI):
+    """ Sends json-string to storage
+
+    :arg:  message, type is string
+    :return: list of 2 elements;
+             1 element is success of sending, type is bool
+             2 element is information about problem, if success is false;
+                          empty string if success is true; type is string
+        """
+
+    print('Sending to storage...')
+    try:
+        storage_resp = requests.post(storage_url, data = message_json)
+    except requests.ConnectionError as e:
+        exception_message = e.message
+        print(exception_message)
+
+        #IF UNCOMMENT   #exception_message,    OCCURS PROBLEMS WITH JSON.DUMPS(...) LATER
+        return False, 'Could not send to storage' #exception_message
+
+    else:
+        try:
+            storage_resp_dict = json.loads(storage_resp.content)
+        except (ValueError, TypeError):
+            exception_message = 'Storage\'s response is not JSON'
+            print exception_message
+            return False, exception_message
+
+        if type(storage_resp_dict) is not dict:
+            exception_message = 'Storage\'s response has not dict'
             print exception_message
             return False, exception_message
 
@@ -240,7 +286,10 @@ def send_event_to_storage_webpage(event_dict, send_to_webpage = True):
            'send_to_webpage' - boolean; if False, it sends event to only storage;
                                if False it sends also to web-page of adjustment
     :return: success of sending, type is bool"""
-
+    success = False
+    exception_message = ''
+    exp_id = event_dict['exp_id']
+    event_dict_for_storage = event_dict
     if event_dict['type'] == 'frame':
         image_numpy = event_dict['frame']['image_data']['image']
         del(event_dict['frame']['image_data']['image'])
@@ -250,27 +299,44 @@ def send_event_to_storage_webpage(event_dict, send_to_webpage = True):
         event_dict['frame']['image_data']['image'] = image_numpy
 
         s = StringIO()
-
-        np.savez_compressed(s, image_numpy)
+        np.savez_compressed(s, frame_data=image_numpy)
         #np.savetxt(s, image_numpy, fmt="%d")
+        s.seek(0)
 
-        print(s.getvalue()[:10])
-        event_dict_for_storage['frame']['image_data']['image'] = base64.b64encode(s.getvalue())
+        after_load = np.load(s)['frame_data']
+        print type(after_load)
+        print after_load
 
-    exp_id = event_dict['exp_id']
-    event_json_for_storage = json.dumps(event_dict_for_storage)
-    success, exception_message = send_json_to_storage(event_json_for_storage)
+        print (s.getvalue())[:10]
+        data = {'data': json.dumps(event_dict_for_storage)}
+        files = {'file': s}
+        success, exception_message = send_to_storage(files, data)
+
+    else:
+        event_json_for_storage = json.dumps(event_dict_for_storage)
+        success, exception_message = send_json_to_storage(event_json_for_storage)
     if not success:
         exp_emergency_event = create_event(type= 'message', exp_id= exp_id, MoF= 'Experiment was emergency stopped',
                                              exception_message= exception_message, error= 'Problems with storage')
-        exp_emergency_event_json = json.dumps(exp_emergency_event)
 
         print('\nEXPERIMENT IS EMERGENCY STOPPED!!!\n')
-        print('Sending to web page that we could send to storage...')
-        send_event_to_webpage(exp_emergency_event_json)
+        print('Sending to web page about problems with storage storage...')
+        send_event_to_webpage(exp_emergency_event)
     else:
         if send_to_webpage == True:
             send_event_to_webpage(event_dict)
+
+    """success, exception_message = send_json_to_storage(event_json_for_storage)
+    if not success:
+        exp_emergency_event = create_event(type= 'message', exp_id= exp_id, MoF= 'Experiment was emergency stopped',
+                                             exception_message= exception_message, error= 'Problems with storage')
+
+
+        print('\nEXPERIMENT IS EMERGENCY STOPPED!!!\n')
+        print('Sending to web page about problems with storage storage...')
+        send_event_to_webpage(exp_emergency_event)
+    else:"""
+
 
 
     return success
@@ -888,9 +954,10 @@ class Tomograph:
             else:
                 return create_response(success = False, error= error)
 
-        # DIANA
-        # COMMENTED BECAUSE COULD NOT READ ATTRIBUTE "IMAGE" FROM TOMOGRAPH DEVICE
-        """success, image, exception_message = self.try_thrice_read_attr("image", extract_as=PyTango.ExtractAs.Nothing)
+
+        success, image, exception_message = self.try_thrice_read_attr("image", extract_as=PyTango.ExtractAs.Nothing)
+        print 'Type of image before decoding:\n', type(image)
+        print 'Image before decoding:\n', image
         if success == False:
             error = 'Could not get image because of tomograph'
             print(exception_message)
@@ -899,9 +966,21 @@ class Tomograph:
                 return False, None
             else:
                 return create_response(success, exception_message, error= error)
-        """
-        # FICTITIOUS IMAGE
-        image_numpy = np.array([[1, 2, 3],[4, 5, 6]])
+
+        try:
+            enc = PyTango.EncodedAttribute()
+            image_numpy = enc.decode_gray16(image)
+            print 'Type of image after decoding:\n', type(image_numpy)
+            print 'Image after decoding:\n', image_numpy
+        except Exception as e:
+            error = 'Could convert image to numpy.array'
+            print(error)
+            if exp_id:
+                self.handle_emergency_stop(exp_id= exp_id, exception_message= '' '''e.message''', error= error)
+                return False, None
+            else:
+                return create_response(success = False, error= error, exception_message = '' '''e.message''')
+        #image_numpy = np.array([[1, 2, 3],[4, 5, 6]])
 
         if exp_id:
             # Joining numpy array of image and frame metadata
