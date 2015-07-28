@@ -276,85 +276,28 @@ def send_json_to_storage(message_json, storage_url= STORAGE_URI):
 
         return True, ''
 
-# Here is converting to text
-def send_event_to_storage_webpage(event_dict, send_to_webpage = True):
-    """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
-        'event_dict' must be dictionary with format that is returned by  'create_event()'
 
-    :arg:  'event_dict' - event (message (for storage and web-page of adjustment) or frame with some data),
-                          must be dictionary with format that is returned by  'create_event()'
-           'send_to_webpage' - boolean; if False, it sends event to only storage;
-                               if False it sends also to web-page of adjustment
-    :return: success of sending, type is bool"""
-    success = False
-    exception_message = ''
-    exp_id = event_dict['exp_id']
-    event_dict_for_storage = event_dict
-    if event_dict['type'] == 'frame':
-        image_numpy = event_dict['frame']['image_data']['image']
-        del(event_dict['frame']['image_data']['image'])
-        event_dict_for_storage = copy.deepcopy(event_dict)
-
-        event_dict = event_dict
-        event_dict['frame']['image_data']['image'] = image_numpy
-
-        s = StringIO()
-        np.savez_compressed(s, frame_data=image_numpy)
-        #np.savetxt(s, image_numpy, fmt="%d")
-        s.seek(0)
-
-        after_load = np.load(s)['frame_data']
-        print type(after_load)
-        print after_load
-
-        print (s.getvalue())[:10]
-        data = {'data': json.dumps(event_dict_for_storage)}
-        files = {'file': s}
-        success, exception_message = send_to_storage(files, data)
-
-    else:
-        event_json_for_storage = json.dumps(event_dict_for_storage)
-        success, exception_message = send_json_to_storage(event_json_for_storage)
-    if not success:
-        exp_emergency_event = create_event(type= 'message', exp_id= exp_id, MoF= 'Experiment was emergency stopped',
-                                             exception_message= exception_message, error= 'Problems with storage')
-
-        print('\nEXPERIMENT IS EMERGENCY STOPPED!!!\n')
-        print('Sending to web page about problems with storage storage...')
-        send_event_to_webpage(exp_emergency_event)
-    else:
-        if send_to_webpage == True:
-            send_event_to_webpage(event_dict)
-
-    """success, exception_message = send_json_to_storage(event_json_for_storage)
-    if not success:
-        exp_emergency_event = create_event(type= 'message', exp_id= exp_id, MoF= 'Experiment was emergency stopped',
-                                             exception_message= exception_message, error= 'Problems with storage')
-
-
-        print('\nEXPERIMENT IS EMERGENCY STOPPED!!!\n')
-        print('Sending to web page about problems with storage storage...')
-        send_event_to_webpage(exp_emergency_event)
-    else:"""
-
-
-
-    return success
 
 
 class Tomograph:
     """ Wrapper of interaction with Tango tomograph server"""
-
     tomograph_proxy = None
+    detector_proxy = None
     experiment_is_running = False
 
-    def __init__(self, tomograph_proxy_addr, timeout_millis = TIMEOUT_MILLIS):
+    def __init__(self, tomograph_proxy_addr, detector_proxy_addr, timeout_millis = TIMEOUT_MILLIS):
         """
         :arg:  'tomograph_proxy_addr' - type is string
+               'detector_proxy_addr' - type is string
                'timeout_millis' - time that tomograph waits after command, type is int
         """
         self.tomograph_proxy = PyTango.DeviceProxy(tomograph_proxy_addr)
         self.tomograph_proxy.set_timeout_millis(timeout_millis)
+
+        self.detector_proxy = PyTango.DeviceProxy(detector_proxy_addr)
+        self.detector_proxy.set_timeout_millis(timeout_millis)
+
+
 
     def try_thrice_read_attr(self, attr_name, extract_as = ExtractAs.Numpy):
         """ Try to change some attribute of Tango device three times
@@ -405,6 +348,77 @@ class Tomograph:
                 break
         return success, set_value, exception_message
 
+    # NEED TO EDIT (ADD MAKING FIELD 'experiment_is_running' FALSE, IF EXPERIMENT IS STOPPED)
+    # Here is converting to text
+    def send_event_to_storage_webpage(self, event_dict, send_to_webpage = True):
+        """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
+            'event_dict' must be dictionary with format that is returned by  'create_event()'
+
+        :arg:  'event_dict' - event (message (for storage and web-page of adjustment) or frame with some data),
+                              must be dictionary with format that is returned by  'create_event()'
+               'send_to_webpage' - boolean; if False, it sends event to only storage;
+                                   if False it sends also to web-page of adjustment
+        :return: success of sending, type is bool"""
+        success = False
+        exception_message = ''
+        exp_id = event_dict['exp_id']
+        event_dict_for_storage = event_dict
+        if event_dict['type'] == 'frame':
+            image_numpy = event_dict['frame']['image_data']['image']
+            del(event_dict['frame']['image_data']['image'])
+            event_dict_for_storage = copy.deepcopy(event_dict)
+
+            event_dict = event_dict
+            event_dict['frame']['image_data']['image'] = image_numpy
+
+            s = StringIO()
+            np.savez_compressed(s, frame_data=image_numpy)
+            #np.save(s, image_numpy)
+            #np.savetxt(s, image_numpy, fmt="%d")
+            s.seek(0)
+
+            #after_load = np.load(s)['frame_data']
+            #print type(after_load)
+            #print after_load
+
+            #print (s.getvalue())[:10]
+            data = {'data': json.dumps(event_dict_for_storage)}
+            files = {'file': s}
+            success, exception_message = send_to_storage(files, data)
+
+        else:
+            event_json_for_storage = json.dumps(event_dict_for_storage)
+            success, exception_message = send_json_to_storage(event_json_for_storage)
+        if not success:
+            exp_emergency_event = create_event(type= 'message', exp_id= exp_id, MoF= 'Experiment was emergency stopped',
+                                                 exception_message= exception_message, error= 'Problems with storage')
+
+            print('\nEXPERIMENT IS EMERGENCY STOPPED!!!\n')
+            self.experiment_is_running = False
+            print('Sending to web page about problems with storage storage...')
+            send_event_to_webpage(exp_emergency_event)
+        # commented 27.07.15 for tests with real storage, because converting to png file takes a lot of time
+        """
+        else:
+            if send_to_webpage == True:
+                send_event_to_webpage(event_dict)
+        """
+
+        # commented 26.07.15 because we try to send image to storage as a file, not as string
+        """success, exception_message = send_json_to_storage(event_json_for_storage)
+        if not success:
+            exp_emergency_event = create_event(type= 'message', exp_id= exp_id, MoF= 'Experiment was emergency stopped',
+                                                 exception_message= exception_message, error= 'Problems with storage')
+
+
+            print('\nEXPERIMENT IS EMERGENCY STOPPED!!!\n')
+            print('Sending to web page about problems with storage storage...')
+            send_event_to_webpage(exp_emergency_event)
+        else:"""
+
+
+
+        return success
 
     def handle_emergency_stop(self, **stop_event):
         """ Warns storage and webpage of adjustment about emergency stop of experiment (also changes value of field
@@ -417,9 +431,16 @@ class Tomograph:
         stop_event['type'] = 'message'
         stop_event['message'] = 'Experiment was emergency stopped'
         self.experiment_is_running = False
-        if send_event_to_storage_webpage(stop_event) == False:
+        if self.send_event_to_storage_webpage(stop_event) == False:
             return
         print('\nEXPERIMENT IS EMERGENCY STOPPED!!!\n')
+
+    def stop_experiment_because_someone(self, exp_id):
+        exp_stop_event = create_event('message', exp_id, 'Experiment was stopped by someone')
+        if self.send_event_to_storage_webpage(exp_stop_event) == False:
+            return
+        print('\nEXPERIMENT IS STOPPED BY SOMEONE!!!\n')
+        return
 
 # --------------------------------METHODS FOR INTERACTION WITH TOMOGRAPH----------------------------------------#
 # methods below (open_shutter, close_shutter, set_x, set_y, set_angle, reset_angle, move_away, move_back and
@@ -955,6 +976,14 @@ class Tomograph:
                 return create_response(success = False, error= error)
 
 
+        det = self.detector_proxy
+        try:
+            image = det.read_attribute("image", extract_as=PyTango.ExtractAs.Nothing)
+        except PyTango.DevFailed as e:
+            for stage in e:
+                print stage.desc
+
+        """
         success, image, exception_message = self.try_thrice_read_attr("image", extract_as=PyTango.ExtractAs.Nothing)
         print 'Type of image before decoding:\n', type(image)
         print 'Image before decoding:\n', image
@@ -966,6 +995,7 @@ class Tomograph:
                 return False, None
             else:
                 return create_response(success, exception_message, error= error)
+        """
 
         try:
             enc = PyTango.EncodedAttribute()

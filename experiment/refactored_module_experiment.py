@@ -25,7 +25,6 @@ from class_tomograph import try_thrice_function
 from class_tomograph import create_event
 from class_tomograph import create_response
 from class_tomograph import send_json_to_storage
-from class_tomograph import send_event_to_storage_webpage
 
 from conf import STORAGE_EXPERIMENT_URI
 from conf import TOMO_ADDR
@@ -40,7 +39,7 @@ app = Flask(__name__)
 
 
 TOMOGRAPHS = (
-        Tomograph(TOMO_ADDR),
+        Tomograph(TOMO_ADDR + "/tomo/tomograph/1", TOMO_ADDR + "/tomo/detector/1"),
 )
 
 
@@ -386,13 +385,6 @@ def detector_get_frame(tomo_num):
 #---------------------------------------------------------#
 
 
-def stop_experiment_because_someone(exp_id):
-    exp_stop_event = create_event('message', exp_id, 'Experiment was stopped by someone')
-    if send_event_to_storage_webpage(exp_stop_event) == False:
-        return
-    print('\nEXPERIMENT IS STOPPED BY SOMEONE!!!\n')
-    return
-
 
 
 def check_and_prepare_advanced_experiment_command(command):
@@ -480,7 +472,7 @@ def check_and_prepare_exp_parameters(exp_param):
 def loop_of_get_send_frames(tomograph, exp_id, count, exposure, frame_num, getting_frame_message, mode):
     for i in range(0, count):
         if tomograph.experiment_is_running == False:
-            stop_experiment_because_someone(exp_id)
+            tomograph.stop_experiment_because_someone(exp_id)
             return False, frame_num
 
         print(getting_frame_message % (i))
@@ -492,7 +484,7 @@ def loop_of_get_send_frames(tomograph, exp_id, count, exposure, frame_num, getti
         frame_dict['number'] = frame_num
         frame_num += 1
         frame_with_data = create_event('frame', exp_id, frame_dict)
-        if send_event_to_storage_webpage(frame_with_data) == False:
+        if tomograph.send_event_to_storage_webpage(frame_with_data) == False:
             return False, frame_num
     return True, frame_num
 
@@ -553,7 +545,7 @@ def carry_out_simple_experiment(tomograph, exp_param):
     print('Finished with DATA images!\n')
 
     exp_finish_message = create_event('message', exp_id, 'Experiment was finished successfully')
-    if send_event_to_storage_webpage(exp_finish_message) == False:
+    if tomograph.send_event_to_storage_webpage(exp_finish_message) == False:
         return
     tomograph.experiment_is_running = False
     print('Experiment is done successfully!')
@@ -565,7 +557,7 @@ def carry_out_advanced_experiment(tomo_num, exp_param):
     cmd_num = 0
     for command in exp_param['instruction']:
         if tomograph.experiment_is_running == False:
-            return stop_experiment_because_someone(exp_id)
+            return tomograph.stop_experiment_because_someone(exp_id)
         cmd_num += 1
         print('Executing command %d:' % cmd_num)
 
@@ -624,12 +616,12 @@ def carry_out_advanced_experiment(tomo_num, exp_param):
             print('  Got!\nSending frame to storage and web page of adjustment...')
             frame_dict = json.loads(frame_json)
             frame_with_data = create_event('frame', exp_id, frame_dict)
-            if send_event_to_storage_webpage(frame_with_data) == False:
+            if tomograph.send_event_to_storage_webpage(frame_with_data) == False:
                 return
             print('Success!')
 
     exp_finish_message = create_event('message', exp_id, 'Experiment was finished successfully')
-    if send_event_to_storage_webpage(exp_finish_message) == False:
+    if tomograph.send_event_to_storage_webpage(exp_finish_message) == False:
         return
     tomograph.experiment_is_running = False
     print('Experiment is done successfully!')
