@@ -108,7 +108,7 @@ def new_frame():
 
         if json_frame['type'] == 'message':
             if json_frame['message'] == 'Experiment was finished successfully':
-                db.experiments.update({'_id': pm.ObjectID(experiment_id)}, {'finished': True})
+                db.experiments.update({'_id': pm.objectid.ObjectID(experiment_id)}, {'finished': True})
             else:
                 logging.warning(json_frame['exception message'] + json_frame['error'])
         elif json_frame['type'] == 'frame':
@@ -116,9 +116,13 @@ def new_frame():
             # json_frame['frame']['image_data'].pop('image')
 
             frame = request.files['file']
+            # print(frame.read() + b'x')
+
             logging.info('Going to np.load...')
-            strIO = BytesIO.BytesIO(frame)
-            image_array = np.load(strIO)['frame_data']
+            #strIO = BytesIO()
+            #frame.save(strIO)
+            #print(strIO.getvalue())
+            image_array = np.load(frame.stream)['frame_data']
             logging.info('Image array has been loaded!')
             # logging.debug(image_array[1, 1])
             logging.debug(type(image_array))
