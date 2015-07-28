@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, make_response, request, abort, Response, send_file
 from bson.json_util import dumps
+from bson.objectid import ObjectId
 import pymongo as pm
 import pyframes
 import filesystem as fs
@@ -108,33 +109,20 @@ def new_frame():
 
         if json_frame['type'] == 'message':
             if json_frame['message'] == 'Experiment was finished successfully':
-                db.experiments.update({'_id': pm.objectid.ObjectID(experiment_id)}, {'finished': True})
+                db.experiments.update({'_id': ObjectId(experiment_id)}, {'finished': True})
             else:
                 logging.warning(json_frame['exception message'] + json_frame['error'])
         elif json_frame['type'] == 'frame':
-            # image = json_frame['frame']['image_data']['image']
-            # json_frame['frame']['image_data'].pop('image')
 
             frame = request.files['file']
-            # print(frame.read() + b'x')
 
             logging.info('Going to np.load...')
-            #strIO = BytesIO()
-            #frame.save(strIO)
-            #print(strIO.getvalue())
             image_array = np.load(frame.stream)['frame_data']
             logging.info('Image array has been loaded!')
-            # logging.debug(image_array[1, 1])
             logging.debug(type(image_array))
             logging.debug(image_array[1])
 
             frame_id = db['frames'].insert(json_frame)
-
-            # strIO = StringIO.StringIO(image)
-            # np.savez_compressed(s, image)
-            # s.seek(0)
-            # array = np.load(s)
-            # array = np.loadtxt(strIO, dtype=np.int16)
 
             pyframes.add_frame(image_array, frame_id, experiment_id)
 
