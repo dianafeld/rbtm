@@ -109,7 +109,8 @@ def new_frame():
 
         if json_frame['type'] == 'message':
             if json_frame['message'] == 'Experiment was finished successfully':
-                db.experiments.update({'experiment id': experiment_id}, {'finished': True})
+                db.experiments.update({'experiment id': experiment_id},
+                                      {'$set': {'finished': True}})
             else:
                 logging.warning(json_frame['exception message'] + json_frame['error'])
         elif json_frame['type'] == 'frame':
