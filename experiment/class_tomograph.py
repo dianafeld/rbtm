@@ -2,11 +2,11 @@
 
 """ Contains supporting functions and class "Tomograph" with methods for comfortable interaction with tomograph """
 
+import os
 import json
 import PyTango
 from PyTango import ExtractAs
 import requests
-import threading
 import csv
 import numpy as np
 import pylab as plt
@@ -15,7 +15,7 @@ import copy
 from StringIO import StringIO
 import base64
 
-from conf import STORAGE_URI
+from conf import STORAGE_EXP_FINISH_URI
 from conf import WEBPAGE_URI
 from conf import TIMEOUT_MILLIS
 from conf import FRAME_PNG_FILENAME
@@ -84,7 +84,7 @@ def create_event(type, exp_id, MoF, exception_message = '', error = ''):
             'type': type,
             'exp_id': exp_id,
             'message': MoF,
-            'exception_message': exception_message,
+            'exception message': exception_message,
             'error': error,
         }
         return event_with_message_dict
@@ -186,20 +186,20 @@ def send_event_to_webpage(event_dict):
             print('Could not send to web-page of adjustment')
         else:
             print(req_webpage.content)
-
-def send_to_storage(files, data):
-    """ Sends json-string to storage
+# NEED TO EDIT DOCSTRING
+def send_to_storage(storage_uri, data, files = None):
+    """ Sends  to storage
 
     :arg:  message, type is string
     :return: list of 2 elements;
              1 element is success of sending, type is bool
              2 element is information about problem, if success is false;
                           empty string if success is true; type is string
-        """
+    """
 
     print('Sending to storage...')
     try:
-        storage_resp = requests.post(STORAGE_URI, files= files, data = data)
+        storage_resp = requests.post(storage_uri, files= files, data = data)
     except requests.ConnectionError as e:
         exception_message = e.message
         print(exception_message)
@@ -228,55 +228,6 @@ def send_to_storage(files, data):
 
 
         return True, ''
-
-# NEED TO EDIT
-def send_json_to_storage(message_json, storage_url= STORAGE_URI):
-    """ Sends json-string to storage
-
-    :arg:  message, type is string
-    :return: list of 2 elements;
-             1 element is success of sending, type is bool
-             2 element is information about problem, if success is false;
-                          empty string if success is true; type is string
-        """
-
-    print('Sending to storage...')
-    try:
-        storage_resp = requests.post(storage_url, data = message_json)
-    except requests.ConnectionError as e:
-        exception_message = e.message
-        print(exception_message)
-
-        #IF UNCOMMENT   #exception_message,    OCCURS PROBLEMS WITH JSON.DUMPS(...) LATER
-        return False, 'Could not send to storage' #exception_message
-
-    else:
-        try:
-            storage_resp_dict = json.loads(storage_resp.content)
-        except (ValueError, TypeError):
-            exception_message = 'Storage\'s response is not JSON'
-            print exception_message
-            return False, exception_message
-
-        if type(storage_resp_dict) is not dict:
-            exception_message = 'Storage\'s response has not dict'
-            print exception_message
-            return False, exception_message
-
-        if not ('result' in storage_resp_dict.keys()):
-            exception_message = 'Storage\'s response has incorrect format'
-            print exception_message
-            return False, exception_message
-
-        print('Storage\'s response:')
-        print(storage_resp_dict['result'])
-        if storage_resp_dict['result'] != 'success':
-            return False, storage_resp_dict['result']
-
-
-        return True, ''
-
-
 
 
 class Tomograph:
@@ -350,7 +301,7 @@ class Tomograph:
 
     # NEED TO EDIT (ADD MAKING FIELD 'experiment_is_running' FALSE, IF EXPERIMENT IS STOPPED)
     # Here is converting to text
-    def send_event_to_storage_webpage(self, event_dict, send_to_webpage = True):
+    def send_event_to_storage_webpage(self, storage_uri, event_dict, send_to_webpage = True):
         """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
             'event_dict' must be dictionary with format that is returned by  'create_event()'
 
@@ -372,23 +323,17 @@ class Tomograph:
             event_dict['frame']['image_data']['image'] = image_numpy
 
             s = StringIO()
+
+
             np.savez_compressed(s, frame_data=image_numpy)
-            #np.save(s, image_numpy)
-            #np.savetxt(s, image_numpy, fmt="%d")
             s.seek(0)
-
-            #after_load = np.load(s)['frame_data']
-            #print type(after_load)
-            #print after_load
-
-            #print (s.getvalue())[:10]
             data = {'data': json.dumps(event_dict_for_storage)}
             files = {'file': s}
-            success, exception_message = send_to_storage(files, data)
+            success, exception_message = send_to_storage(storage_uri, data, files)
 
         else:
             event_json_for_storage = json.dumps(event_dict_for_storage)
-            success, exception_message = send_json_to_storage(event_json_for_storage)
+            success, exception_message = send_to_storage(storage_uri, data=event_json_for_storage)
         if not success:
             exp_emergency_event = create_event(type= 'message', exp_id= exp_id, MoF= 'Experiment was emergency stopped',
                                                  exception_message= exception_message, error= 'Problems with storage')
@@ -397,26 +342,13 @@ class Tomograph:
             self.experiment_is_running = False
             print('Sending to web page about problems with storage storage...')
             send_event_to_webpage(exp_emergency_event)
-        # commented 27.07.15 for tests with real storage, because converting to png file takes a lot of time
+        # commented 27.07.15 for tests with real storage, because converting to png file in
+        # function 'send_event_to_webpage()' takes a lot of time
         """
         else:
             if send_to_webpage == True:
                 send_event_to_webpage(event_dict)
         """
-
-        # commented 26.07.15 because we try to send image to storage as a file, not as string
-        """success, exception_message = send_json_to_storage(event_json_for_storage)
-        if not success:
-            exp_emergency_event = create_event(type= 'message', exp_id= exp_id, MoF= 'Experiment was emergency stopped',
-                                                 exception_message= exception_message, error= 'Problems with storage')
-
-
-            print('\nEXPERIMENT IS EMERGENCY STOPPED!!!\n')
-            print('Sending to web page about problems with storage storage...')
-            send_event_to_webpage(exp_emergency_event)
-        else:"""
-
-
 
         return success
 
@@ -431,13 +363,13 @@ class Tomograph:
         stop_event['type'] = 'message'
         stop_event['message'] = 'Experiment was emergency stopped'
         self.experiment_is_running = False
-        if self.send_event_to_storage_webpage(stop_event) == False:
+        if self.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, stop_event) == False:
             return
         print('\nEXPERIMENT IS EMERGENCY STOPPED!!!\n')
 
     def stop_experiment_because_someone(self, exp_id):
         exp_stop_event = create_event('message', exp_id, 'Experiment was stopped by someone')
-        if self.send_event_to_storage_webpage(exp_stop_event) == False:
+        if self.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, exp_stop_event) == False:
             return
         print('\nEXPERIMENT IS STOPPED BY SOMEONE!!!\n')
         return
@@ -1000,8 +932,8 @@ class Tomograph:
         try:
             enc = PyTango.EncodedAttribute()
             image_numpy = enc.decode_gray16(image)
-            print 'Type of image after decoding:\n', type(image_numpy)
-            print 'Image after decoding:\n', image_numpy
+            #print 'Type of image after decoding:\n', type(image_numpy)
+            #print 'Image after decoding:\n', image_numpy
         except Exception as e:
             error = 'Could convert image to numpy.array'
             print(error)
@@ -1010,7 +942,7 @@ class Tomograph:
                 return False, None
             else:
                 return create_response(success = False, error= error, exception_message = '' '''e.message''')
-        #image_numpy = np.array([[1, 2, 3],[4, 5, 6]])
+        #image_numpy = np.array([[1, 2, 3],[4, 5, 6]])s2
 
         if exp_id:
             # Joining numpy array of image and frame metadata

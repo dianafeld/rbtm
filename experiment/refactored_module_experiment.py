@@ -16,6 +16,7 @@ import json
 import PyTango
 import requests
 import threading
+import time
 import csv
 import numpy as np
 import pylab as plt
@@ -24,9 +25,11 @@ from class_tomograph import Tomograph
 from class_tomograph import try_thrice_function
 from class_tomograph import create_event
 from class_tomograph import create_response
-from class_tomograph import send_json_to_storage
+from class_tomograph import send_to_storage
 
-from conf import STORAGE_EXPERIMENT_URI
+from conf import STORAGE_FRAMES_URI
+from conf import STORAGE_EXP_START_URI
+from conf import STORAGE_EXP_FINISH_URI
 from conf import TOMO_ADDR
 
 import logging
@@ -414,9 +417,9 @@ def check_and_prepare_advanced_experiment_command(command):
     return True, ''
 # NEED TO EDIT
 def check_and_prepare_exp_parameters(exp_param):
-    if not (('experiment id' in exp_param.keys()) and ('advanced' in exp_param.keys())):
+    if not (('exp_id' in exp_param.keys()) and ('advanced' in exp_param.keys())):
         return False, 'Incorrect format of keywords'
-    if not ((type(exp_param['experiment id']) is unicode) and (type(exp_param['advanced']) is bool)):
+    if not ((type(exp_param['exp_id']) is unicode) and (type(exp_param['advanced']) is bool)):
         return False, 'Incorrect format: incorrect types'
     if exp_param['advanced']:
         if not ('instruction' in exp_param.keys()):
@@ -484,14 +487,16 @@ def loop_of_get_send_frames(tomograph, exp_id, count, exposure, frame_num, getti
         frame_dict['number'] = frame_num
         frame_num += 1
         frame_with_data = create_event('frame', exp_id, frame_dict)
-        if tomograph.send_event_to_storage_webpage(frame_with_data) == False:
+        if tomograph.send_event_to_storage_webpage(STORAGE_FRAMES_URI, frame_with_data) == False:
             return False, frame_num
     return True, frame_num
 
 
 
 def carry_out_simple_experiment(tomograph, exp_param):
-    exp_id = exp_param['experiment id']
+
+    time_of_experiment_start = time.time()
+    exp_id = exp_param['exp_id']
     # Closing shutter to get DARK images
     if tomograph.close_shutter(0, exp_id) == False:
         return
@@ -545,15 +550,17 @@ def carry_out_simple_experiment(tomograph, exp_param):
     print('Finished with DATA images!\n')
 
     exp_finish_message = create_event('message', exp_id, 'Experiment was finished successfully')
-    if tomograph.send_event_to_storage_webpage(exp_finish_message) == False:
+    if tomograph.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, exp_finish_message) == False:
         return
     tomograph.experiment_is_running = False
     print('Experiment is done successfully!')
+    experiment_time = time.time() - time_of_experiment_start
+    print("Experiment took %.4f seconds" % experiment_time)
     return
 # NEED TO EDIT(GENERALLY)
 def carry_out_advanced_experiment(tomo_num, exp_param):
     tomograph = TOMOGRAPHS[tomo_num]
-    exp_id = exp_param['experiment id']
+    exp_id = exp_param['exp_id']
     cmd_num = 0
     for command in exp_param['instruction']:
         if tomograph.experiment_is_running == False:
@@ -616,12 +623,12 @@ def carry_out_advanced_experiment(tomo_num, exp_param):
             print('  Got!\nSending frame to storage and web page of adjustment...')
             frame_dict = json.loads(frame_json)
             frame_with_data = create_event('frame', exp_id, frame_dict)
-            if tomograph.send_event_to_storage_webpage(frame_with_data) == False:
+            if tomograph.send_event_to_storage_webpage(STORAGE_FRAMES_URI, frame_with_data) == False:
                 return
             print('Success!')
 
     exp_finish_message = create_event('message', exp_id, 'Experiment was finished successfully')
-    if tomograph.send_event_to_storage_webpage(exp_finish_message) == False:
+    if tomograph.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, exp_finish_message) == False:
         return
     tomograph.experiment_is_running = False
     print('Experiment is done successfully!')
@@ -646,18 +653,18 @@ def experiment_start(tomo_num):
         return response_if_fail
 
     print('Checking generous format...')
-    if not (('experiment parameters' in data.keys()) and ('experiment id' in data.keys())):
+    if not (('experiment parameters' in data.keys()) and ('exp_id' in data.keys())):
         print('Incorrect format of keywords!')
         return create_response(success= False, error= 'Incorrect format of keywords')
 
-    if not ((type(data['experiment parameters']) is dict) and (type(data['experiment id']) is unicode)):
+    if not ((type(data['experiment parameters']) is dict) and (type(data['exp_id']) is unicode)):
         print('Incorrect format of types!')
         return create_response(success= False, error= 'Incorrect format: incorrect types')
 
     print('Generous format is normal!')
     exp_param = data['experiment parameters']
-    exp_id = data['experiment id']
-    exp_param['experiment id'] = exp_id
+    exp_id = data['exp_id']
+    exp_param['exp_id'] = exp_id
 
     print('Checking parameters...')
     success, error = check_and_prepare_exp_parameters(exp_param)
@@ -673,7 +680,7 @@ def experiment_start(tomo_num):
 
     print('Success!')
     print('Sending to storage leading to prepare...')
-    success, exception_message = send_json_to_storage(request.data, storage_url= STORAGE_EXPERIMENT_URI)
+    success, exception_message = send_to_storage(STORAGE_EXP_START_URI, data=request.data)
     if not success:
         return create_response(success= False, exception_message= exception_message, error= 'Problems with storage')
 
