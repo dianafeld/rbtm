@@ -89,7 +89,7 @@ class Tomograph (PyTango.Device_4Impl):
         self.attr_angle_position_read = 0.0
         self.attr_horizontal_position_read = 0
         self.attr_vertical_position_read = 0
-        self.attr_image_read = [[0]]
+        self.attr_image_read = ''
         #----- PROTECTED REGION ID(Tomograph.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
@@ -110,6 +110,8 @@ class Tomograph (PyTango.Device_4Impl):
         self.attr_vertical_position_read = self.motor.vertical_position
 
         self.set_state(PyTango.DevState.ON)
+
+        self.attr_image_read = PyTango.EncodedAttribute()
 
         #----- PROTECTED REGION END -----#  //  Tomograph.init_device
 
@@ -213,8 +215,9 @@ class Tomograph (PyTango.Device_4Impl):
         self.debug_stream("In read_image()")
         #----- PROTECTED REGION ID(Tomograph.image_read) ENABLED START -----#
 
-        attr.set_value(self.detector.image)
-        
+        image_enc = self.detector.image
+        attr.set_value(*image_enc)
+
         #----- PROTECTED REGION END -----#	//	Tomograph.image_read
         
     
@@ -429,7 +432,7 @@ class Tomograph (PyTango.Device_4Impl):
         exposure = argin
 
         self.detector.exposure = exposure
-        image = self.detector.GetFrame()
+        self.detector.GetFrame()
         current_datetime = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
         detector_data = {'model': 'Ximea xiRAY'}
@@ -589,9 +592,9 @@ class TomographClass(PyTango.DeviceClass):
             PyTango.SCALAR,
             PyTango.READ_WRITE]],
         'image':
-            [[PyTango.DevShort,
-            PyTango.IMAGE,
-            PyTango.READ, 5000, 5000]],
+            [[PyTango.DevEncoded,
+            PyTango.SCALAR,
+            PyTango.READ]],
         }
 
 

@@ -100,7 +100,7 @@ class Detector (PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         self.attr_exposure_read = 0
-        self.attr_image_read = [[0]]
+        self.attr_image_read = ''
         #----- PROTECTED REGION ID(Detector.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
@@ -185,9 +185,9 @@ class Detector (PyTango.Device_4Impl):
         prev_state = self.get_state()
         self.set_state(PyTango.DevState.RUNNING)
 
-        is_run = Value("i", 1)
-        p = Process(target=func, args=(is_run, ))
-        p.start()
+        # is_run = Value("i", 1)
+        # p = Process(target=func, args=(is_run, ))
+        # p.start()
 
         self.debug_stream("Starting acquisition...")
         try:
@@ -196,7 +196,8 @@ class Detector (PyTango.Device_4Impl):
                 # reader = csv.reader(f, delimiter='\t')
                 # your_list = list(reader)
                 # image = np.asarray(your_list, dtype=np.int16)
-                self.attr_image_read = np.loadtxt(f, dtype=np.int16)
+                # self.attr_image_read = np.loadtxt(f, dtype=np.int16)
+                image = np.loadtxt(f, dtype=np.int16)
         except PyTango.DevFailed as df:
             self.set_state(PyTango.DevState.FAULT)
             self.error_stream(str(df))
@@ -207,8 +208,8 @@ class Detector (PyTango.Device_4Impl):
             raise
         self.debug_stream("Image returned")
 
-        is_run.value = 0
-        p.join()
+        # is_run.value = 0
+        # p.join()
 
         self.set_state(prev_state)
 
@@ -216,7 +217,7 @@ class Detector (PyTango.Device_4Impl):
         #image = zlib.compress(image, 6)
         #print(len(image))
 
-        # self.attr_image_read.encode_gray16(image)
+        self.attr_image_read.encode_gray16(image)
 
         #return ('image', image)
 
@@ -289,9 +290,9 @@ class DetectorClass(PyTango.DeviceClass):
                 'description': "exposure time",
             } ],
         'image':
-            [[PyTango.DevShort,
-            PyTango.IMAGE,
-            PyTango.READ, 5000, 5000]],
+            [[PyTango.DevEncoded,
+            PyTango.SCALAR,
+            PyTango.READ]],
         }
 
 

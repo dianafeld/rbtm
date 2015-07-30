@@ -40,8 +40,8 @@
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
       <properties description="exposure time" label="exposure time" unit="0,1 ms" standardUnit="10E-4" displayUnit="" format="" maxValue="160000" minValue="1" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
     </attributes>
-    <attributes name="image" attType="Image" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="5000" maxY="5000" allocReadMember="true" isDynamic="false">
-      <dataType xsi:type="pogoDsl:ShortType"/>
+    <attributes name="image" attType="Scalar" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="5000" maxY="5000" allocReadMember="true" isDynamic="false">
+      <dataType xsi:type="pogoDsl:EncodedType"/>
       <changeEvent fire="false" libCheckCriteria="false"/>
       <archiveEvent fire="false" libCheckCriteria="false"/>
       <dataReadyEvent fire="false" libCheckCriteria="true"/>
