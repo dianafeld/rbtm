@@ -1,14 +1,14 @@
 from flask import Flask, jsonify, make_response, request, abort, Response, send_file
 from bson.json_util import dumps
-from bson.objectid import ObjectId
 import pymongo as pm
-import pyframes
-import filesystem as fs
 import json
 import logging
 import os
 import numpy as np
-from io import StringIO, BytesIO
+from io import StringIO
+
+import pyframes
+import filesystem as fs
 
 app = Flask(__name__)
 
@@ -77,11 +77,13 @@ def create_experiment():
         insert_query = json.loads(request.data.decode())
         logging.debug(insert_query)
         experiment_id = insert_query['experiment id']
+        insert_query.pop('experiment id', None)
+        insert_query['_id'] = experiment_id
 
         if fs.create_new_experiment(experiment_id):
             insert_query['finished'] = False
             experiments.insert(insert_query)
-            
+
             return jsonify({'result': 'success'})
         else:
             return jsonify({'result': 'experiment {} already exists in file system'.format(experiment_id)})
