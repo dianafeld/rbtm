@@ -56,3 +56,4 @@ def make_png(res, frame_path):
     plt.imshow(res, cmap=plt.cm.gray)
     plt.colorbar()
     plt.savefig(frame_path, bbox_inches='tight')
+    plt.close()
