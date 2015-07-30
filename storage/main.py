@@ -73,8 +73,8 @@ def create_experiment():
 
         insert_query = json.loads(request.data.decode())
         logging.debug(insert_query)
-        experiment_id = insert_query['experiment id']
-        insert_query.pop('experiment id', None)
+        experiment_id = insert_query['exp_id']
+        insert_query.pop('exp_id', None)
         insert_query['_id'] = experiment_id
 
         if fs.create_new_experiment(experiment_id):
