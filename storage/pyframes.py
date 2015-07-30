@@ -5,6 +5,8 @@ import logging
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+plt.ioff()
+fig = plt.figure()
 
 # logs_path = os.path.join('logs', 'storage.log')
 # logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
@@ -51,9 +53,7 @@ def delete_frame(frame_id, experiment_id):
 
 
 def make_png(res, frame_path):
-    plt.ioff()
-    plt.figure()
-    plt.imshow(res, cmap=plt.cm.gray)
-    plt.colorbar()
-    plt.savefig(frame_path, bbox_inches='tight')
-    plt.close()
+    fig.figimage(res, cmap=plt.cm.gray)
+    fig.colorbar()
+    fig.savefig(frame_path, bbox_inches='tight')
+    fig.clf()
