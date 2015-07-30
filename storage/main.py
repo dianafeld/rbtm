@@ -92,17 +92,28 @@ def create_experiment():
 
 @app.route('/storage/experiments/finish', methods=['POST'])
 def finish_experiment():
-    json_msg = json.loads(request.data.decode())
-    logging.info(json_msg)
+    if not request.data:
+        logging.error('Incorrect format')
+        abort(400)
 
-    experiment_id = json_msg['exp_id']
+    try:
+        json_msg = json.loads(request.data.decode())
+        logging.info(json_msg)
 
-    if json_msg['type'] == 'message':
-        if json_msg['message'] == 'Experiment was finished successfully':
-            db.experiments.update({'_id': experiment_id},
-                                  {'$set': {'finished': True}})
-        else:
-            logging.warning(json_msg['exception message'] + json_msg['error'])
+        experiment_id = json_msg['exp_id']
+
+        if json_msg['type'] == 'message':
+            if json_msg['message'] == 'Experiment was finished successfully':
+                db.experiments.update({'_id': experiment_id},
+                                      {'$set': {'finished': True}})
+            else:
+                logging.warning(json_msg['exception message'] + json_msg['error'])
+
+    except BaseException as e:
+        logging.error(e)
+        abort(500)
+
+    return jsonify({'result': 'success'})
 
 
 @app.route('/storage/frames/post', methods=['POST'])
