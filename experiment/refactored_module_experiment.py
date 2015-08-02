@@ -81,19 +81,30 @@ def check_request(request_data):
         return True, request_data_dict, ''
 
 
-"""
-def send_frame_storage(frame_dict):
-    frame_json = json.dumps(frame_dict)
-    files = {'file': ('report.csv', 'some,data,to,send\nanother,row,to,send\n')}
-
-    r = requests.post(STORAGE_URI, files=files)
-    r.text
-"""
-
 
 
 
 # in almost every function below we have argument 'tomo_num' - number of tomograph in TOMOGRAPHS list
+
+@app.route('/tomograph/<int:tomo_num>/check-state', methods=['GET'])
+def check_state(tomo_num):
+    print('\n\nREQUEST: CHECK STATE')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+
+
+    print('Checking tomograph...')
+    success, useless, exception_message = try_thrice_function(tomograph.tomograph_proxy.ping)
+    if not success:
+        print(exception_message)
+        return create_response(success, exception_message, error='Could not reach tomograph')
+
+    tmp_text = ""
+    if not tomograph.experiment_is_running:
+        tmp_text = " NOT"
+    print("On tomograph experiment is" + tmp_text + " running!")
+    return create_response(success=True, result=tomograph.experiment_is_running)
+
 
 # NEED TO EDIT(GENERALLY)
 @app.route('/tomograph/<int:tomo_num>/source/power-on', methods=['GET'])
@@ -101,13 +112,6 @@ def source_power_on(tomo_num):
     print('\n\nREQUEST: SOURCE/POWER ON')
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-
-    print('Checking tomograph...')
-    success, useless, exception_message = try_thrice_function(tomograph.tomograph_proxy.ping)
-    if success == False:
-        print(exception_message)
-        return create_response(success, exception_message, error= 'Could not reach tomograph')
 
     print('Powering on source...')
     success, useless, exception_message = try_thrice_function(tomograph.tomograph_proxy.PowerOn)

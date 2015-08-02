@@ -21,8 +21,8 @@ from conf import TIMEOUT_MILLIS
 from conf import FRAME_PNG_FILENAME
 
 
-
-def try_thrice_function(func, args = None):
+# MAYBE NEED TO EDIT (COMMENT IN FUNCTION)
+def try_thrice_function(func, *args):
     """ Tries to call some TANGO function three times
 
     :arg: 'func' - called function
@@ -36,12 +36,18 @@ def try_thrice_function(func, args = None):
     exception_message = ''
     for i in range(0, 3):
         try:
-            answer = func(args)
+            answer = func(*args)
         except PyTango.DevFailed as e:
             for stage in e:
                 print stage.desc
             success = False
             exception_message = e[-1].desc
+            answer = None
+        except Exception as e:
+            print e.message
+            success = False
+            # Can be problems with converting to JSON e.message
+            exception_message = e.message
             answer = None
         else:
             break
