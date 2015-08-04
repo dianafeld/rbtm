@@ -11,41 +11,29 @@ logger = app.logger
 
 
 def extract_frame(frame_id, experiment_id):
-    try:
-        frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'frames.h5')
-        with h5py.File(frames_file_path, 'r') as frames_file:
-            frame = frames_file[str(frame_id)]
-        return frame
-    except Exception as e:
-        logger.error(e)
-        return
+    frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'frames.h5')
+    with h5py.File(frames_file_path, 'r') as frames_file:
+        frame = frames_file[str(frame_id)]
+    return frame
 
 
 def add_frame(frame, frame_id, experiment_id):
-    try:
-        frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'frames.h5')
-        with h5py.File(frames_file_path, 'r+') as frames_file:
-            frames_file.create_dataset(str(frame_id), data=frame)
-        logger.info('hdf5 file: add frame {} to experiment {} successfully'.format(frame_id, experiment_id))
+    frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'frames.h5')
+    with h5py.File(frames_file_path, 'r+') as frames_file:
+        frames_file.create_dataset(str(frame_id), data=frame)
+    logger.info('hdf5 file: add frame {} to experiment {} successfully'.format(frame_id, experiment_id))
 
-        png_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
-                                     str(frame_id) + '.png')
-        make_png(frame, png_file_path)
-        logger.info('png: png was made from frame {} of experiment {}'.format(frame_id, experiment_id))
-    except BaseException as e:
-        logger.error(e)
-    return
+    png_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
+                                 str(frame_id) + '.png')
+    make_png(frame, png_file_path)
+    logger.info('png: png was made from frame {} of experiment {}'.format(frame_id, experiment_id))
 
 
 def delete_frame(frame_id, experiment_id):
-    try:
-        frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'frames.h5')
-        with h5py.File(frames_file_path, 'r+') as frames_file:
-            del frames_file[str(frame_id)]
-        logger.info('hdf5 file: delete frame {} from experiment {} successfully'.format(str(frame_id), str(experiment_id)))
-    except BaseException as e:
-        logger.error(e)
-    return
+    frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'frames.h5')
+    with h5py.File(frames_file_path, 'r+') as frames_file:
+        del frames_file[str(frame_id)]
+    logger.info('hdf5 file: frame {} was deleted from experiment {} successfully'.format(str(frame_id), str(experiment_id)))
 
 
 def make_png(res, frame_path):

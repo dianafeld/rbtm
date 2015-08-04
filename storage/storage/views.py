@@ -165,7 +165,7 @@ def get_png():
     if not os.path.exists(png_file_path):
         abort(404)
 
-    return send_file(png_file_path, mimetype='image/png')
+    return send_file(os.path.join('storage', png_file_path), mimetype='image/png')
 
 
 # Needs rewriting
