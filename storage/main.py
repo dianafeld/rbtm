@@ -19,6 +19,7 @@ logging.basicConfig(format='%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(as
                     level=logging.DEBUG,
                     filename=logs_path)
 
+logger = logging.getLogger(__name__)
 
 # TODO login and pass not secure
 MONGODB_URI = 'mongodb://admin:33zxcdsa@ds049219.mongolab.com:49219/robotom'
@@ -46,12 +47,12 @@ def incorrect_format(error):
 @app.route('/storage/experiments/get', methods=['POST'])
 def get_experiments():
     if not request.data:
-        logging.error('Incorrect format')
+        logger.error('Incorrect format')
         abort(400)
 
     try:
         find_query = json.loads(request.data.decode())
-        logging.info(find_query)
+        logger.info(find_query)
 
         experiments = db['experiments']
 
@@ -64,7 +65,7 @@ def get_experiments():
         return resp
 
     except BaseException as e:
-        logging.error(e)
+        logger.error(e)
         abort(500)
 
 
@@ -72,14 +73,14 @@ def get_experiments():
 @app.route('/storage/experiments/create', methods=['POST'])
 def create_experiment():
     if not request.data:
-        logging.error('Incorrect format')
+        logger.error('Incorrect format')
         abort(400)
 
     try:
         experiments = db['experiments']
 
         insert_query = json.loads(request.data.decode())
-        logging.debug(insert_query)
+        logger.debug(insert_query)
         experiment_id = insert_query['exp_id']
         insert_query.pop('exp_id', None)
         insert_query['_id'] = experiment_id
@@ -93,19 +94,19 @@ def create_experiment():
             return jsonify({'result': 'experiment {} already exists in file system'.format(experiment_id)})
 
     except BaseException as e:
-        logging.error(e)
+        logger.error(e)
         abort(500)
 
 
 @app.route('/storage/experiments/finish', methods=['POST'])
 def finish_experiment():
     if not request.data:
-        logging.error('Incorrect format')
+        logger.error('Incorrect format')
         abort(400)
 
     try:
         json_msg = json.loads(request.data.decode())
-        logging.info(json_msg)
+        logger.info(json_msg)
 
         experiment_id = json_msg['exp_id']
 
@@ -114,10 +115,10 @@ def finish_experiment():
                 db.experiments.update({'_id': experiment_id},
                                       {'$set': {'finished': True}})
             else:
-                logging.warning(json_msg['exception message'] + json_msg['error'])
+                logger.warning(json_msg['exception message'] + json_msg['error'])
 
     except BaseException as e:
-        logging.error(e)
+        logger.error(e)
         abort(500)
 
     return jsonify({'result': 'success'})
@@ -126,30 +127,30 @@ def finish_experiment():
 @app.route('/storage/frames/post', methods=['POST'])
 def new_frame():
     if not (request.files and request.form):
-        logging.error('Incorrect format')
+        logger.error('Incorrect format')
         abort(400)
 
     try:
-        logging.debug(request.form)
+        logger.debug(request.form)
         json_frame = json.loads(request.form['data'])
         experiment_id = json_frame['exp_id']
 
         frame = request.files['file']
 
-        logging.info('Going to np.load...')
+        logger.info('Going to np.load...')
         image_array = np.load(frame.stream)['frame_data']
-        logging.info('Image array has been loaded!')
-        logging.debug(type(image_array))
-        logging.debug(image_array[1])
+        logger.info('Image array has been loaded!')
+        logger.debug(type(image_array))
+        logger.debug(image_array[1])
 
         frame_id = db['frames'].insert(json_frame)
 
         pyframes.add_frame(image_array, frame_id, experiment_id)
 
-        logging.info('experiment id: {} frame id: {}'.format(str(experiment_id), str(frame_id)))
+        logger.info('experiment id: {} frame id: {}'.format(str(experiment_id), str(frame_id)))
 
     except BaseException as e:
-        logging.error(e)
+        logger.error(e)
         abort(500)
 
     return jsonify({'result': 'success'})
@@ -158,11 +159,11 @@ def new_frame():
 @app.route('/storage/frames_info/get', methods=['POST'])
 def get_frame_info():
     if not request.data:
-        logging.error('Incorrect format')
+        logger.error('Incorrect format')
         abort(400)
 
     try:
-        logging.debug(request.data.decode())
+        logger.debug(request.data.decode())
         frames = db['frames']
         find_query = json.loads(request.data.decode())
         cursor = frames.find(find_query)
@@ -174,14 +175,14 @@ def get_frame_info():
         return resp
 
     except BaseException as e:
-        logging.error(e)
+        logger.error(e)
         abort(500)
 
 
 @app.route('/storage/png/get', methods=['POST'])
 def get_png():
     if not request.data:
-        logging.error('Incorrect format')
+        logger.error('Incorrect format')
         abort(400)
 
     try:
@@ -198,7 +199,7 @@ def get_png():
         return send_file(png_file_path, mimetype='image/png')
 
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
         abort(500)
 
 
@@ -206,7 +207,7 @@ def get_png():
 # @app.route('/storage/frames/get', methods=['POST'])
 # def get_frame():
 #     if not request.data:
-#         logging.error('Incorrect format')
+#         logger.error('Incorrect format')
 #         abort(400)
 #
 #     try:
@@ -225,7 +226,7 @@ def get_png():
 #                 np.savetxt(s, image_numpy, fmt="%d")
 #
 #                 frame['frame']['image_data']['image'] = s.getvalue()
-#         logging.info('done')
+#         logger.info('done')
 #         resp = Response(response=dumps(frames_list),
 #                         status=200,
 #                         mimetype="application/json")
@@ -233,14 +234,14 @@ def get_png():
 #         return resp
 #
 #     except BaseException as e:
-#         logging.error(e)
+#         logger.error(e)
 #         abort(500)
 
 # # update data of the experiment, need json file as a request'
 # @app.route('/storage/experiments/update', methods=['POST'])
 # def update_experiment():
 #     if not request.data:
-#         logging.error('Incorrect format')
+#         logger.error('Incorrect format')
 #         abort(400)
 #
 #     try:
@@ -249,7 +250,7 @@ def get_png():
 #         experiment_id = experiments['_id']
 #         experiments.update({'_id': experiment_id}, query)
 #     except BaseException as e:
-#         logging.error(e)
+#         logger.error(e)
 #         abort(500)
 #     return jsonify({'result': 'success'})
 
@@ -258,11 +259,11 @@ def get_png():
 # @app.route('/storage/experiments/delete', methods=['POST'])
 # def delete_experiment():
 #     if not request.json:
-#         logging.error('Incorrect format')
+#         logger.error('Incorrect format')
 #         abort(400)
 #
 #     try:
-#         logging.debug(json.loads(request.data.decode()))
+#         logger.debug(json.loads(request.data.decode()))
 #         experiments = db['experiments']
 #         frames = db['frames']
 #
@@ -281,7 +282,7 @@ def get_png():
 #         return jsonify({'deleted': cursor.count()})
 #
 #     except BaseException as e:
-#         logging.error(e)
+#         logger.error(e)
 #         abort(500)
 
 

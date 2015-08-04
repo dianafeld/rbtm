@@ -8,6 +8,8 @@ import logging
 #                    level=logging.DEBUG,
 #                    filename=logs_path)
 
+logger = logging.getLogger(__name__)
+
 
 def create_new_experiment(experiment_id):
     experiment_path = os.path.join('data', 'experiments', str(experiment_id))
@@ -31,13 +33,13 @@ def create_new_experiment(experiment_id):
             with h5py.File(frames_file_path, 'w'):
                 pass
 
-            logging.info('file system: create experiment {} successfully'.format(experiment_id))
+            logger.info('file system: create experiment {} successfully'.format(experiment_id))
             return True
         else:
-            logging.warning('file system: experiment {} already exists'.format(experiment_id))
+            logger.warning('file system: experiment {} already exists'.format(experiment_id))
             return False
     except BaseException as e:
-        logging.error(e)
+        logger.error(e)
 
 
 def delete_experiment(experiment_id):
@@ -45,11 +47,11 @@ def delete_experiment(experiment_id):
     if os.path.exists(experiment_path):
         try:
             shutil.rmtree(experiment_path)
-            logging.info('file system: delete experiment {} successfully'.format(experiment_id))
+            logger.info('file system: delete experiment {} successfully'.format(experiment_id))
             return True
         except BaseException as e:
-            logging.error(e)
+            logger.error(e)
             return False
     else:
-        logging.warning('file system: cant find experiment {} for deleting'.format(experiment_id))
+        logger.warning('file system: cant find experiment {} for deleting'.format(experiment_id))
         return False

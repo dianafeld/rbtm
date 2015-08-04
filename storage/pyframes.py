@@ -12,6 +12,8 @@ from scipy.ndimage import zoom
 #                     level=logging.DEBUG,
 #                     filename=logs_path)
 
+logger = logging.getLogger(__name__)
+
 
 def extract_frame(frame_id, experiment_id):
     try:
@@ -20,7 +22,7 @@ def extract_frame(frame_id, experiment_id):
             frame = frames_file[str(frame_id)]
         return frame
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
         return
 
 
@@ -29,14 +31,14 @@ def add_frame(frame, frame_id, experiment_id):
         frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'frames.h5')
         with h5py.File(frames_file_path, 'r+') as frames_file:
             frames_file.create_dataset(str(frame_id), data=frame)
-        logging.info('hdf5 file: add frame {} to experiment {} successfully'.format(frame_id, experiment_id))
+        logger.info('hdf5 file: add frame {} to experiment {} successfully'.format(frame_id, experiment_id))
 
         png_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
                                      str(frame_id) + '.png')
         make_png(frame, png_file_path)
-        logging.info('png: png was made from frame {} of experiment {}'.format(frame_id, experiment_id))
+        logger.info('png: png was made from frame {} of experiment {}'.format(frame_id, experiment_id))
     except BaseException as e:
-        logging.error(e)
+        logger.error(e)
     return
 
 
@@ -45,9 +47,9 @@ def delete_frame(frame_id, experiment_id):
         frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'frames.h5')
         with h5py.File(frames_file_path, 'r+') as frames_file:
             del frames_file[str(frame_id)]
-        logging.info('hdf5 file: delete frame {} from experiment {} successfully'.format(str(frame_id), str(experiment_id)))
+        logger.info('hdf5 file: delete frame {} from experiment {} successfully'.format(str(frame_id), str(experiment_id)))
     except BaseException as e:
-        logging.error(e)
+        logger.error(e)
     return
 
 
