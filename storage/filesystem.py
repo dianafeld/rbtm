@@ -3,12 +3,8 @@ import shutil
 import h5py
 import logging
 
-#logs_path = os.path.join('logs', 'storage.log')
-#logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
-#                    level=logging.DEBUG,
-#                    filename=logs_path)
-
-logger = logging.getLogger(__name__)
+from main import app
+logger = app.logger
 
 
 def create_new_experiment(experiment_id):

@@ -80,7 +80,6 @@ def get_experiments():
     return resp
 
 
-
 # create new experiment, need json file as request return result:success json if success
 @app.route('/storage/experiments/create', methods=['POST'])
 def create_experiment():
@@ -116,22 +115,17 @@ def finish_experiment():
         logger.error('Incorrect format')
         abort(400)
 
-    try:
-        json_msg = json.loads(request.data.decode())
-        logger.info(json_msg)
+    json_msg = json.loads(request.data.decode())
+    logger.info(json_msg)
 
-        experiment_id = json_msg['exp_id']
+    experiment_id = json_msg['exp_id']
 
-        if json_msg['type'] == 'message':
-            if json_msg['message'] == 'Experiment was finished successfully':
-                db.experiments.update({'_id': experiment_id},
-                                      {'$set': {'finished': True}})
-            else:
-                logger.warning(json_msg['exception message'] + json_msg['error'])
-
-    except BaseException as e:
-        logger.error(e)
-        abort(500)
+    if json_msg['type'] == 'message':
+        if json_msg['message'] == 'Experiment was finished successfully':
+            db.experiments.update({'_id': experiment_id},
+                                  {'$set': {'finished': True}})
+        else:
+            logger.warning(json_msg['exception message'] + json_msg['error'])
 
     return jsonify({'result': 'success'})
 
@@ -142,28 +136,23 @@ def new_frame():
         logger.error('Incorrect format')
         abort(400)
 
-    try:
-        logger.debug(request.form)
-        json_frame = json.loads(request.form['data'])
-        experiment_id = json_frame['exp_id']
+    logger.debug(request.form)
+    json_frame = json.loads(request.form['data'])
+    experiment_id = json_frame['exp_id']
 
-        frame = request.files['file']
+    frame = request.files['file']
 
-        logger.info('Going to np.load...')
-        image_array = np.load(frame.stream)['frame_data']
-        logger.info('Image array has been loaded!')
-        logger.debug(type(image_array))
-        logger.debug(image_array[1])
+    logger.info('Going to np.load...')
+    image_array = np.load(frame.stream)['frame_data']
+    logger.info('Image array has been loaded!')
+    logger.debug(type(image_array))
+    logger.debug(image_array[1])
 
-        frame_id = db['frames'].insert(json_frame)
+    frame_id = db['frames'].insert(json_frame)
 
-        pyframes.add_frame(image_array, frame_id, experiment_id)
+    pyframes.add_frame(image_array, frame_id, experiment_id)
 
-        logger.info('experiment id: {} frame id: {}'.format(str(experiment_id), str(frame_id)))
-
-    except BaseException as e:
-        logger.error(e)
-        abort(500)
+    logger.info('experiment id: {} frame id: {}'.format(str(experiment_id), str(frame_id)))
 
     return jsonify({'result': 'success'})
 
@@ -174,21 +163,16 @@ def get_frame_info():
         logger.error('Incorrect format')
         abort(400)
 
-    try:
-        logger.info(request.data.decode())
-        frames = db['frames']
-        find_query = json.loads(request.data.decode())
-        cursor = frames.find(find_query)
+    logger.info(request.data.decode())
+    frames = db['frames']
+    find_query = json.loads(request.data.decode())
+    cursor = frames.find(find_query)
 
-        resp = Response(response=dumps(cursor),
-                        status=200,
-                        mimetype="application/json")
+    resp = Response(response=dumps(cursor),
+                    status=200,
+                    mimetype="application/json")
 
-        return resp
-
-    except BaseException as e:
-        logger.error(e)
-        abort(500)
+    return resp
 
 
 @app.route('/storage/png/get', methods=['POST'])
@@ -197,22 +181,17 @@ def get_png():
         logger.error('Incorrect format')
         abort(400)
 
-    try:
-        find_query = json.loads(request.data.decode())
-        frame_id = find_query['frame_id']
-        experiment_id = find_query['exp_id']
+    find_query = json.loads(request.data.decode())
+    frame_id = find_query['frame_id']
+    experiment_id = find_query['exp_id']
 
-        png_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
-                                     str(frame_id) + '.png')
+    png_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
+                                 str(frame_id) + '.png')
 
-        if not os.path.exists(png_file_path):
-            abort(404)
+    if not os.path.exists(png_file_path):
+        abort(404)
 
-        return send_file(png_file_path, mimetype='image/png')
-
-    except RuntimeError as e:
-        logger.error(e)
-        abort(500)
+    return send_file(png_file_path, mimetype='image/png')
 
 
 # Needs rewriting
