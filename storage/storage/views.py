@@ -66,26 +66,21 @@ def create_experiment():
         logger.error('Incorrect format')
         abort(400)
 
-    try:
-        experiments = db['experiments']
+    experiments = db['experiments']
 
-        insert_query = json.loads(request.data.decode())
-        logger.info(insert_query)
-        experiment_id = insert_query['exp_id']
-        insert_query.pop('exp_id', None)
-        insert_query['_id'] = experiment_id
+    insert_query = json.loads(request.data.decode())
+    logger.info(insert_query)
+    experiment_id = insert_query['exp_id']
+    insert_query.pop('exp_id', None)
+    insert_query['_id'] = experiment_id
 
-        if fs.create_new_experiment(experiment_id):
-            insert_query['finished'] = False
-            experiments.insert(insert_query)
+    if fs.create_new_experiment(experiment_id):
+        insert_query['finished'] = False
+        experiments.insert(insert_query)
 
-            return jsonify({'result': 'success'})
-        else:
-            return jsonify({'result': 'experiment {} already exists in file system'.format(experiment_id)})
-
-    except BaseException as e:
-        logger.error(e)
-        abort(500)
+        return jsonify({'result': 'success'})
+    else:
+        return jsonify({'result': 'experiment {} already exists in file system'.format(experiment_id)})
 
 
 @app.route('/storage/experiments/finish', methods=['POST'])
