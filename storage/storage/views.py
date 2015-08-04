@@ -159,7 +159,7 @@ def get_png():
     frame_id = find_query['frame_id']
     experiment_id = find_query['exp_id']
 
-    png_file_path = os.path.join('storage', 'data', 'experiments', str(experiment_id), 'before_processing', 'png',
+    png_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
                                  str(frame_id) + '.png')
 
     if not os.path.exists(png_file_path):
