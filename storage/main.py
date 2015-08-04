@@ -5,12 +5,19 @@ import json
 import logging
 import os
 import numpy as np
-from io import StringIO
 
 import pyframes
 import filesystem as fs
 
 app = Flask(__name__)
+
+logs_path = os.path.join('logs', 'storage.log')
+if not os.path.exists(os.path.dirname(logs_path)):
+    os.makedirs(os.path.dirname(logs_path))
+
+logging.basicConfig(format='%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
+                    level=logging.DEBUG,
+                    filename=logs_path)
 
 
 # TODO login and pass not secure
@@ -279,11 +286,4 @@ def get_png():
 
 
 if __name__ == '__main__':
-    logs_path = os.path.join('logs', 'storage.log')
-    if not os.path.exists(os.path.dirname(logs_path)):
-        os.makedirs(os.path.dirname(logs_path))
-
-    logging.basicConfig(format='%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
-                        level=logging.DEBUG,
-                        filename=logs_path)
     app.run(host='0.0.0.0', port=5006)
