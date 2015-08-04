@@ -5,8 +5,7 @@ import logging
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-plt.ioff()
-fig = plt.figure()
+from scipy.ndimage import zoom
 
 # logs_path = os.path.join('logs', 'storage.log')
 # logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
@@ -53,7 +52,5 @@ def delete_frame(frame_id, experiment_id):
 
 
 def make_png(res, frame_path):
-    fig.figimage(res, cmap=plt.cm.gray)
-    fig.colorbar()
-    fig.savefig(frame_path, bbox_inches='tight')
-    fig.clf()
+    small_res = zoom(res, zoom=0.25, order=2)
+    plt.imsave(frame_path, small_res, cmap=plt.cm.gray)
