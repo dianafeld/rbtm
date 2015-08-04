@@ -1,13 +1,12 @@
 import h5py
 import os
-import logging
 # import pylab as plt
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.ndimage import zoom
 
-from main import app
+from storage import app
 logger = app.logger
 
 

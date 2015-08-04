@@ -1,9 +1,8 @@
 import os
 import shutil
 import h5py
-import logging
 
-from main import app
+from storage import app
 logger = app.logger
 
 
