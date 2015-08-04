@@ -1,4 +1,4 @@
-from storage import app
+from storage import app as application
 
 if __name__ == "__main__":
-    app.run()
+    application.run()
