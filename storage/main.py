@@ -15,12 +15,19 @@ logs_path = os.path.join('logs', 'storage.log')
 if not os.path.exists(os.path.dirname(logs_path)):
     os.makedirs(os.path.dirname(logs_path))
 
-logging.basicConfig(format='%(filename)s %(name)s [LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
-                    level=logging.DEBUG,
-                    filename=logs_path)
+# logging.basicConfig(format='%(filename)s %(name)s [LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
+#                     level=logging.DEBUG,
+#                     filename=logs_path)
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+file_handler = logging.FileHandler(logs_path)
+file_handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s - %(name)s - [LINE:%(lineno)d]# - %(levelname)s - %(message)s")
+file_handler.setFormatter(formatter)
+app.logger.addHandler(file_handler)
+
+logger = app.logger
+
+
 # TODO login and pass not secure
 MONGODB_URI = 'mongodb://admin:33zxcdsa@ds049219.mongolab.com:49219/robotom'
 client = pm.MongoClient(MONGODB_URI)
@@ -29,17 +36,20 @@ db = client.get_default_database()
 
 # for returning error as json file
 @app.errorhandler(404)
-def not_found(error):
+def not_found(exception):
+    app.logger.exception(exception)
     return make_response(jsonify({'error': 'Not found'}), 404)
 
 
 @app.errorhandler(400)
-def incorrect_format(error):
+def incorrect_format(exception):
+    app.logger.exception(exception)
     return make_response(jsonify({'error': 'Incorrect format'}), 400)
 
 
 @app.errorhandler(500)
-def incorrect_format(error):
+def incorrect_format(exception):
+    app.logger.exception(exception)
     return make_response(jsonify({'error': 'Internal Server'}), 500)
 
 
@@ -50,23 +60,19 @@ def get_experiments():
         logger.error('Incorrect format')
         abort(400)
 
-    try:
-        find_query = json.loads(request.data.decode())
-        logger.info(find_query)
+    find_query = json.loads(request.data.decode())
+    logger.info(find_query)
 
-        experiments = db['experiments']
+    experiments = db['experiments']
 
-        cursor = experiments.find(find_query)
+    cursor = experiments.find(find_query)
 
-        resp = Response(response=dumps(cursor),
-                        status=200,
-                        mimetype="application/json")
+    resp = Response(response=dumps(cursor),
+                    status=200,
+                    mimetype="application/json")
 
-        return resp
+    return resp
 
-    except BaseException as e:
-        logger.error(e)
-        abort(500)
 
 
 # create new experiment, need json file as request return result:success json if success
