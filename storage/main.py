@@ -11,20 +11,26 @@ import filesystem as fs
 
 app = Flask(__name__)
 
-logs_path = os.path.join('logs', 'storage.log')
-if not os.path.exists(os.path.dirname(logs_path)):
-    os.makedirs(os.path.dirname(logs_path))
 
-# logging.basicConfig(format='%(filename)s %(name)s [LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
-#                     level=logging.DEBUG,
-#                     filename=logs_path)
+def logger_setup():
+    from logging.handlers import RotatingFileHandler
 
-file_handler = logging.FileHandler(logs_path)
-file_handler.setLevel(logging.DEBUG)
-formatter = logging.Formatter("%(asctime)s - %(name)s - [LINE:%(lineno)d]# - %(levelname)s - %(message)s")
-file_handler.setFormatter(formatter)
-app.logger.addHandler(file_handler)
+    logs_path = os.path.join('logs', 'storage.log')
+    if not os.path.exists(os.path.dirname(logs_path)):
+        os.makedirs(os.path.dirname(logs_path))
 
+    app.logger.setLevel(logging.DEBUG)
+    file_handler = RotatingFileHandler(logs_path, maxBytes=10000, backupCount=1)
+    file_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(asctime)s - %(name)s - [LINE:%(lineno)d]# - %(levelname)s - %(message)s")
+    file_handler.setFormatter(formatter)
+    app.logger.addHandler(file_handler)
+
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.DEBUG)
+    log.addHandler(file_handler)
+
+logger_setup()
 logger = app.logger
 
 
@@ -37,19 +43,19 @@ db = client.get_default_database()
 # for returning error as json file
 @app.errorhandler(404)
 def not_found(exception):
-    app.logger.exception(exception)
+    logger.exception(exception)
     return make_response(jsonify({'error': 'Not found'}), 404)
 
 
 @app.errorhandler(400)
 def incorrect_format(exception):
-    app.logger.exception(exception)
+    logger.exception(exception)
     return make_response(jsonify({'error': 'Incorrect format'}), 400)
 
 
 @app.errorhandler(500)
 def incorrect_format(exception):
-    app.logger.exception(exception)
+    logger.exception(exception)
     return make_response(jsonify({'error': 'Internal Server'}), 500)
 
 
@@ -86,7 +92,7 @@ def create_experiment():
         experiments = db['experiments']
 
         insert_query = json.loads(request.data.decode())
-        logger.debug(insert_query)
+        logger.info(insert_query)
         experiment_id = insert_query['exp_id']
         insert_query.pop('exp_id', None)
         insert_query['_id'] = experiment_id
@@ -169,7 +175,7 @@ def get_frame_info():
         abort(400)
 
     try:
-        logger.debug(request.data.decode())
+        logger.info(request.data.decode())
         frames = db['frames']
         find_query = json.loads(request.data.decode())
         cursor = frames.find(find_query)
