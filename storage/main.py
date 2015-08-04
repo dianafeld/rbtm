@@ -15,12 +15,12 @@ logs_path = os.path.join('logs', 'storage.log')
 if not os.path.exists(os.path.dirname(logs_path)):
     os.makedirs(os.path.dirname(logs_path))
 
-logging.basicConfig(format='%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
+logging.basicConfig(format='%(filename)s %(name)s [LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s',
                     level=logging.DEBUG,
                     filename=logs_path)
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.DEBUG)
 # TODO login and pass not secure
 MONGODB_URI = 'mongodb://admin:33zxcdsa@ds049219.mongolab.com:49219/robotom'
 client = pm.MongoClient(MONGODB_URI)
@@ -198,7 +198,7 @@ def get_png():
 
         return send_file(png_file_path, mimetype='image/png')
 
-    except Exception as e:
+    except RuntimeError as e:
         logger.error(e)
         abort(500)
 

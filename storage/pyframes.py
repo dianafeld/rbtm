@@ -13,7 +13,7 @@ from scipy.ndimage import zoom
 #                     filename=logs_path)
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.DEBUG)
 
 def extract_frame(frame_id, experiment_id):
     try:
@@ -54,5 +54,7 @@ def delete_frame(frame_id, experiment_id):
 
 
 def make_png(res, frame_path):
+    logging.info('Going to make png...')
     small_res = zoom(res, zoom=0.25, order=2)
     plt.imsave(frame_path, small_res, cmap=plt.cm.gray)
+    logging.info('png was made')
