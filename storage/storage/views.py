@@ -162,10 +162,10 @@ def get_png():
     png_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
                                  str(frame_id) + '.png')
 
-    if not os.path.exists(png_file_path):
+    if not os.path.exists(os.path.join('storage', png_file_path)):
         abort(404)
 
-    return send_file(os.path.join('storage', png_file_path), mimetype='image/png')
+    return send_file(png_file_path, mimetype='image/png')
 
 
 # Needs rewriting
