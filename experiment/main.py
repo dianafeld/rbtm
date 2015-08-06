@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-# CREATED 13.07.15 BY RUSTAM, FOR REFACTORING USING CLASS TOMOGRAPH
 """
 Contains the main part of module "Experiment"
 More exactly - some supporting functions and functions for receiving queries
@@ -369,7 +368,7 @@ def motor_reset_angle_position(tomo_num):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
-    return tomograph.reset_angle()
+    return tomograph.reset_to_zero_angle()
 
 
 
@@ -426,15 +425,15 @@ def check_and_prepare_exp_parameters(exp_param):
     if not ((type(exp_param['exp_id']) is unicode) and (type(exp_param['advanced']) is bool)):
         return False, 'Incorrect format: incorrect types'
     if exp_param['advanced']:
+
         if not ('instruction' in exp_param.keys()):
             return False, 'Incorrect format'
-        cmd_num = 0
-        for command in exp_param['instruction']:
-            cmd_num += 1
-            cmd_is_normal, error = check_and_prepare_advanced_experiment_command(command)
-            if not cmd_is_normal:
-                return False, error + str(cmd_num) + ' command'
-        return True, ''
+        if not (type(exp_param['instruction']) is unicode):
+            return False, 'Type of instruction must be unicode'
+        if exp_param['instruction'].find(".__") != -1:
+            return False, 'Unacceptable instruction, there must not be substring ".__"'
+        if exp_param['instruction'].find("t_0M_o_9_r_") != -1:
+            return False, 'Unacceptable instruction, there must not be substring "t_0M_o_9_r_"'
     else:
         if not (('DARK' in exp_param.keys()) and ('EMPTY' in exp_param.keys()) and ('DATA' in exp_param.keys())):
             return False, 'Incorrect format3'
@@ -471,19 +470,19 @@ def check_and_prepare_exp_parameters(exp_param):
             return False, 'Bad parameters in \'DATA\' parameters'
 
 
-        # we don't multiply and round  exp_param['DATA']['angle step'] here, we will do it during experiment,
-        # because it will be more accurate this way
-        return True, ''
+    # we don't multiply and round  exp_param['DATA']['angle step'] here, we will do it during experiment,
+    # because it will be more accurate this way
+    return True, ''
 
 
 def loop_of_get_send_frames(tomograph, exp_id, count, exposure, frame_num, getting_frame_message, mode):
     for i in range(0, count):
-        if tomograph.experiment_is_running == False:
+        if not tomograph.experiment_is_running:
             tomograph.stop_experiment_because_someone(exp_id)
             return False, frame_num
 
         print(getting_frame_message % (i))
-        success, frame_dict = tomograph.get_frame(exposure, exp_id)
+        success, frame_dict = tomograph.get_frame(exposure, send_to_webpage=True, exp_is_advanced=False)
         if not success:
             return False, frame_num
 
@@ -502,7 +501,7 @@ def carry_out_simple_experiment(tomograph, exp_param):
     time_of_experiment_start = time.time()
     exp_id = exp_param['exp_id']
     # Closing shutter to get DARK images
-    if tomograph.close_shutter(0, exp_id) == False:
+    if tomograph.close_shutter(0, exp_is_advanced=False) == False:
         return
 
     frame_num = 0
@@ -513,9 +512,9 @@ def carry_out_simple_experiment(tomograph, exp_param):
         return
     print('Finished with DARK images!\n')
 
-    if tomograph.open_shutter(0, exp_id) == False:
+    if tomograph.open_shutter(0, exp_is_advanced=False) == False:
         return
-    if tomograph.move_away(exp_id) == False:
+    if tomograph.move_away(exp_is_advanced=False) == False:
         return
 
     print('Going to get EMPTY images!\n')
@@ -525,16 +524,13 @@ def carry_out_simple_experiment(tomograph, exp_param):
         return
     print('Finished with EMPTY images!\n')
 
-    if tomograph.move_back(exp_id) == False:
+    if tomograph.move_back(exp_is_advanced=False) == False:
         return
 
-    success, initial_angle = tomograph.get_angle(exp_id)
+    success, initial_angle = tomograph.get_angle(exp_is_advanced=False)
     if not success:
         return
     print('Initial angle is %.2f' % initial_angle)
-
-    if tomograph.reset_angle(exp_id) == False:
-        return
 
     print('Going to get DATA images, step count is %d!\n' % (exp_param['DATA']['step count']))
     angle_step = exp_param['DATA']['angle step']
@@ -549,7 +545,7 @@ def carry_out_simple_experiment(tomograph, exp_param):
         # Rounding angles here, not in  check_and_prepare_exp_parameters(), cause it will be more accurately this way
         new_angle = (round( (i + 1)*angle_step + initial_angle ,  2)) % 360
         print('Finished with this angle, turning to new angle %.2f...' % (new_angle))
-        if tomograph.set_angle(new_angle, exp_id) == False:
+        if tomograph.set_angle(new_angle, exp_is_advanced=False) == False:
             return
     print('Finished with DATA images!\n')
 
@@ -557,85 +553,57 @@ def carry_out_simple_experiment(tomograph, exp_param):
     if tomograph.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, exp_finish_message) == False:
         return
     tomograph.experiment_is_running = False
+    tomograph.exp_id = ''
     print('Experiment is done successfully!')
     experiment_time = time.time() - time_of_experiment_start
     print("Experiment took %.4f seconds" % experiment_time)
     return
+
 # NEED TO EDIT(GENERALLY)
-def carry_out_advanced_experiment(tomo_num, exp_param):
-    tomograph = TOMOGRAPHS[tomo_num]
+def carry_out_advanced_experiment(tomograph, exp_param):
     exp_id = exp_param['exp_id']
-    cmd_num = 0
-    for command in exp_param['instruction']:
-        if tomograph.experiment_is_running == False:
-            return tomograph.stop_experiment_because_someone(exp_id)
-        cmd_num += 1
-        print('Executing command %d:' % cmd_num)
+    exp_code_string = exp_param['instruction']
+    # 't_0M_o_9_r_' - strange name of object, because using user of this "word" in instruction is unlikely
+    exp_code_string = exp_code_string.replace("open_shutter", "t_0M_o_9_r_.open_shutter")
+    exp_code_string = exp_code_string.replace("close_shutter", "t_0M_o_9_r_.close_shutter")
+    exp_code_string = exp_code_string.replace("set_x", "t_0M_o_9_r_.set_x")
+    exp_code_string = exp_code_string.replace("set_y", "t_0M_o_9_r_.set_y")
+    # rename method 'reset_angle' to 'reset_to_zero_angle' because 'set_angle' is substring of 'reset_angle'
+    exp_code_string = exp_code_string.replace("reset_angle", "t_0M_o_9_r_.reset_to_zero_angle")
+    exp_code_string = exp_code_string.replace("set_angle", "t_0M_o_9_r_.set_angle")
+    exp_code_string = exp_code_string.replace("get_x", "t_0M_o_9_r_.get_x")
+    exp_code_string = exp_code_string.replace("get_y", "t_0M_o_9_r_.get_y")
+    exp_code_string = exp_code_string.replace("get_angle", "t_0M_o_9_r_.get_angle")
+    exp_code_string = exp_code_string.replace("move_away", "t_0M_o_9_r_.move_away")
+    exp_code_string = exp_code_string.replace("move_back", "t_0M_o_9_r_.move_back")
+    exp_code_string = exp_code_string.replace("get_frame", "t_0M_o_9_r_.get_frame")
+    exp_code_string = exp_code_string.replace("send_frame", "t_0M_o_9_r_.se")
+    print exp_code_string
+    time_of_experiment_start = time.time()
+    try:
+        exec(exp_code_string, {'__builtins__': {}, 't_0M_o_9_r_': tomograph})
+    except tomograph.ExpStopException as e:
+        return
+    except SyntaxError as e:
+        print e.message
+        tomograph.handle_emergency_stop(exp_is_advanced=True, exp_id=exp_id, error="Syntax of experiment instruction is NOT correct",
+                                        exception_message=e.message)
+        return
 
-        if command['type'] == 'open shutter':
-            print('Opening shutter...')
+    except Exception as e:
+        print e.message
+        tomograph.handle_emergency_stop(exp_is_advanced=True, exp_id=exp_id, error="Exception during experiment", exception_message=e.message)
+        return
 
-            # NEED TO EDIT(USING TOMOGRAPH CLASS)
-            success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].OpenShutter, command['args'])
-            if success == False:
-                return tomograph.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message,
-                                             error = 'Error in command ' + str(cmd_num) + ': Could not open shutter')
-            print('Success!')
-
-        elif command['type'] == 'close shutter':
-            print('Closing shutter...')
-
-            # NEED TO EDIT(USING TOMOGRAPH CLASS)
-            success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].OpenShutter, command['args'])
-            if success == False:
-                return tomograph.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message,
-                                             error = 'Error in command ' + str(cmd_num) + ': Could not close shutter')
-            print('Success!')
-
-        elif command['type'] == 'reset current position':
-            print('Resetting current position...')
-
-            # NEED TO EDIT(USING TOMOGRAPH CLASS)
-            success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].ResetCurrentPosition, command['args'])
-            if success == False:
-                return tomograph.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message,
-                                             error = 'Error in command ' + str(cmd_num) + ': Could not reset current position')
-            print('Success!')
-
-        elif command['type'] == 'go to position':
-            x = str(command['args'][0])
-            y = str(command['args'][1])
-            angle = str(command['args'][2]/10)
-            print('Changing position to:  x = ' + x + ', y = ' + y + ', angle = ' + angle + '...')
-
-            # NEED TO EDIT(USING TOMOGRAPH CLASS)
-            success, useless, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].GotoPosition, command['args'])
-            if success == False:
-                return tomograph.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message,
-                                             error = 'Error in command ' + str(cmd_num) + ': Could not go to position: '
-                                                                     'x = ' + x + ', y = ' + y + ', angle = ' + angle)
-            print('Success!')
-
-        elif command['type'] == 'get frame':
-            print('Getting image...')
-
-            # NEED TO EDIT(USING TOMOGRAPH CLASS)
-            success, frame_json, exception_message = try_thrice_function(TOMOGRAPHS[tomo_num]['device'].GetFrame, command['args'])
-            if success == False:
-                return tomograph.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message,
-                                             error = 'Error in command ' + str(cmd_num) + ': Could not get frame')
-            print('  Got!\nSending frame to storage and web page of adjustment...')
-            frame_dict = json.loads(frame_json)
-            frame_with_data = create_event('frame', exp_id, frame_dict)
-            if tomograph.send_event_to_storage_webpage(STORAGE_FRAMES_URI, frame_with_data) == False:
-                return
-            print('Success!')
 
     exp_finish_message = create_event('message', exp_id, 'Experiment was finished successfully')
     if tomograph.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, exp_finish_message) == False:
         return
     tomograph.experiment_is_running = False
+    tomograph.exp_id = ''
     print('Experiment is done successfully!')
+    experiment_time = time.time() - time_of_experiment_start
+    print("Experiment took %.4f seconds" % experiment_time)
     return
 
 
@@ -690,10 +658,11 @@ def experiment_start(tomo_num):
 
     print('Experiment begins!')
     tomograph.experiment_is_running = True
+    tomograph.exp_id = exp_id
     if exp_param['advanced']:
-        thr = threading.Thread(target = carry_out_advanced_experiment, args = (tomograph, exp_param))
+        thr = threading.Thread(target=carry_out_advanced_experiment, args=(tomograph, exp_param))
     else:
-        thr = threading.Thread(target = carry_out_simple_experiment, args = (tomograph, exp_param))
+        thr = threading.Thread(target=carry_out_simple_experiment, args=(tomograph, exp_param))
     thr.start()
 
     return create_response(True)

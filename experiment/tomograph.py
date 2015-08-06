@@ -1,6 +1,12 @@
 #!/usr/bin/python
 
 """ Contains supporting functions and class "Tomograph" with methods for comfortable interaction with tomograph """
+# NEED TO EDIT DOCSTRINGS!
+# NEED TO EDIT DOCSTRINGS!
+# NEED TO EDIT DOCSTRINGS!
+# NEED TO EDIT DOCSTRINGS!
+# NEED TO EDIT DOCSTRINGS!
+# NEED TO EDIT DOCSTRINGS!
 
 import os
 import json
@@ -13,8 +19,8 @@ import pylab as plt
 from flask import send_file
 import copy
 from StringIO import StringIO
-import base64
 
+from conf import STORAGE_FRAMES_URI
 from conf import STORAGE_EXP_FINISH_URI
 from conf import WEBPAGE_URI
 from conf import TIMEOUT_MILLIS
@@ -241,6 +247,17 @@ class Tomograph:
     tomograph_proxy = None
     detector_proxy = None
     experiment_is_running = False
+    exp_id = ""
+
+    class ExpStopException(Exception):
+        exception_message = ''
+        def __init__(self, error='', exception_message=''):
+            self.message = error
+            self.error = error
+            self.exception_message = exception_message
+        def __str__(self):
+            return repr(self.message)
+
 
     def __init__(self, tomograph_proxy_addr, detector_proxy_addr, timeout_millis = TIMEOUT_MILLIS):
         """
@@ -346,6 +363,7 @@ class Tomograph:
 
             print('\nEXPERIMENT IS EMERGENCY STOPPED!!!\n')
             self.experiment_is_running = False
+            self.exp_id = ''
             print('Sending to web page about problems with storage storage...')
             send_event_to_webpage(exp_emergency_event)
         # commented 27.07.15 for tests with real storage, because converting to png file in
@@ -358,7 +376,7 @@ class Tomograph:
 
         return success
 
-    def handle_emergency_stop(self, **stop_event):
+    def handle_emergency_stop(self, exp_is_advanced, **stop_event):
         """ Warns storage and webpage of adjustment about emergency stop of experiment (also changes value of field
             experiment_is_running' to False)
 
@@ -369,31 +387,41 @@ class Tomograph:
         stop_event['type'] = 'message'
         stop_event['message'] = 'Experiment was emergency stopped'
         self.experiment_is_running = False
+        self.exp_id = ''
         if self.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, stop_event) == False:
-            return
+            if not exp_is_advanced:
+                return
+            else:
+                raise self.ExpStopException('Experiment was emergency stopped', 'Problems with storage')
         print('\nEXPERIMENT IS EMERGENCY STOPPED!!!\n')
+        if exp_is_advanced:
+            raise self.ExpStopException(stop_event['error'], stop_event['exception_message'])
 
-    def stop_experiment_because_someone(self, exp_id):
-        exp_stop_event = create_event('message', exp_id, 'Experiment was stopped by someone')
+    def stop_experiment_because_someone(self, exp_is_advanced):
+        exp_stop_event = create_event('message', self.exp_id, 'Experiment was stopped by someone')
         if self.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, exp_stop_event) == False:
-            return
+            if exp_is_advanced:
+                return
+            else:
+                raise self.ExpStopException('Experiment was emergency stopped', 'Problems with storage')
+        self.exp_id = ''
         print('\nEXPERIMENT IS STOPPED BY SOMEONE!!!\n')
-        return
+        if not exp_is_advanced:
+            return
+        else:
+            raise self.ExpStopException('Experiment was stopped by someone')
 
 # --------------------------------METHODS FOR INTERACTION WITH TOMOGRAPH----------------------------------------#
-# methods below (open_shutter, close_shutter, set_x, set_y, set_angle, reset_angle, move_away, move_back and
+# methods below (open_shutter, close_shutter, set_x, set_y, set_angle, reset_to_zero_angle, move_away, move_back and
 # get_frame) can be called during experiment or not. If not, then argument exp_id is empty and vice versa. In this cases
 # functions return answer in different format
 #---------------------------------------------------------------------------------------------------------------#
-    def open_shutter(self, time = 0, exp_id = ''):
+
+    def open_shutter(self, time = 0, exp_is_advanced = True):
         """ Tries to open shutter
 
         :arg: 'time' - time that shutter must be opened for, in seconds; if 'time' equals 0, then opens for
                        unlimited time; type is float
-              'exp_id' - ID of experiment, during that function is called.
-                         If 'exp_id' is empty string, that means that function is called during adjustment, not
-                         experiment, in this case function return answer in different format;
-                         Type is string
 
         :return: depends on "emptiness" of argument 'exp_id';
                  if 'exp_id' is NOT empty, function returns success of function, type is bool
@@ -401,36 +429,36 @@ class Tomograph:
                  type is json-string with format that is returned by  'create_response()'
         """
         print('Opening shutter...')
-        if not exp_id and self.experiment_is_running:
+        if not self.exp_id and self.experiment_is_running:
             error = 'On this tomograph experiment is running'
             print(error)
             return create_response(success= False, error= error)
+
+        if self.exp_id and not self.experiment_is_running:
+            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
 
         success, useless, exception_message = try_thrice_function(self.tomograph_proxy.OpenShutter, time)
         if success == False:
             error = 'Could not open shutter'
             print(exception_message)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id,
+                                           exception_message=exception_message, error=error)
                 return False
             else:
                 return create_response(success, exception_message, error= error)
 
         print('Success!')
-        if exp_id:
+        if self.exp_id:
             return True
         else:
             return create_response(True)
 
-    def close_shutter(self, time = 0, exp_id = ''):
+    def close_shutter(self, time = 0, exp_is_advanced = True):
         """ Tries to close shutter
 
         :arg: 'time' - time that shutter must be closed for, in seconds; if 'time' equals 0, then closes for
                        unlimited time; type is float
-              'exp_id' - ID of experiment, during that function is called.
-                         If 'exp_id' is empty string, that means that function is called during adjustment, not
-                         experiment, in this case function return answer in different format;
-                         Type is string
 
         :return: depends on "emptiness" of argument 'exp_id';
                  if 'exp_id' is NOT empty, function returns success of function, type is bool
@@ -438,34 +466,33 @@ class Tomograph:
                  type is json-string with format that is returned by  'create_response()'
         """
         print('Closing shutter...')
-        if not exp_id and self.experiment_is_running:
+        if not self.exp_id and self.experiment_is_running:
             error = 'On this tomograph experiment is running'
             print(error)
             return create_response(success= False, error= error)
+
+        if self.exp_id and not self.experiment_is_running:
+            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
 
         success, useless, exception_message = try_thrice_function(self.tomograph_proxy.CloseShutter, time)
         if success == False:
             error = 'Could not close shutter'
             print(exception_message)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= exception_message, error= error)
                 return False
             else:
                 return create_response(success, exception_message, error= error)
 
         print('Success!')
-        if exp_id: return True
+        if self.exp_id: return True
         else:      return create_response(True)
 
 
-    def set_x(self, new_x, exp_id = ''):
+    def set_x(self, new_x, exp_is_advanced = True):
         """ Tries to set new horizontal position of object
 
         :arg: 'new_x' - value of new horizontal position, in 'popugaychiki', type is int
-              'exp_id' - ID of experiment, during that function is called.
-                         If 'exp_id' is empty string, that means that function is called during adjustment, not
-                         experiment, in this case function return answer in different format;
-                         Type is string
 
             :return: depends on "emptiness" of argument 'exp_id';
                      if 'exp_id' is NOT empty, function returns success of function, type is bool
@@ -474,16 +501,19 @@ class Tomograph:
         """
         print('Going to set new horizontal position...')
 
-        if not exp_id and self.experiment_is_running:
+        if not self.exp_id and self.experiment_is_running:
             error = 'On this tomograph experiment is running'
             print(error)
             return create_response(success= False, error= error)
 
+        if self.exp_id and not self.experiment_is_running:
+            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+
         if type(new_x) is not float:
             error = 'Incorrect type! Position type must be float, but it is ' + str(type(new_x))
             print (error)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= '', error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= '', error= error)
                 return False
             else:
                 return create_response(success= False, error= error)
@@ -493,8 +523,8 @@ class Tomograph:
         if new_x < -5000 or 2000 < new_x:
             error = 'Position must have value from -30 to 30'
             print(error)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= '', error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= '', error= error)
                 return False
             else:
                 return create_response(success= False, error= error)
@@ -504,24 +534,20 @@ class Tomograph:
         if success == False:
             error = 'Could not set new position because of tomograph'
             print(exception_message)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= exception_message, error= error)
                 return False
             else:
                 return create_response(success, exception_message, error= error)
 
         print('Success!')
-        if exp_id: return True
+        if self.exp_id: return True
         else:      return create_response(True)
 
-    def set_y(self, new_y, exp_id = ''):
+    def set_y(self, new_y, exp_is_advanced = True):
         """ Tries to set new vertical position of object
 
         :arg: 'new_y' - value of new vertical position, in 'popugaychiki', type is int
-              'exp_id' - ID of experiment, during that function is called.
-                         If 'exp_id' is empty string, that means that function is called during adjustment, not
-                         experiment, in this case function return answer in different format;
-                         Type is string
 
         :return: depends on "emptiness" of argument 'exp_id';
                  if 'exp_id' is NOT empty, function returns success of function, type is bool
@@ -530,16 +556,19 @@ class Tomograph:
         """
         print('Going to set new vertical position...')
 
-        if not exp_id and self.experiment_is_running:
+        if not self.exp_id and self.experiment_is_running:
             error = 'On this tomograph experiment is running'
             print(error)
             return create_response(success= False, error= error)
 
+        if self.exp_id and not self.experiment_is_running:
+            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+
         if type(new_y) is not float:
             error = 'Incorrect type! Position type must be float, but it is ' + str(type(new_y))
             print (error)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= '', error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= '', error= error)
                 return False
             else:
                 return create_response(success= False, error= error)
@@ -549,8 +578,8 @@ class Tomograph:
         if new_y < -5000 or 2000 < new_y:
             error = 'Position must have value from -30 to 30'
             print(error)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= '', error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= '', error= error)
                 return False
             else:
                 return create_response(success= False, error= error)
@@ -559,24 +588,20 @@ class Tomograph:
         if success == False:
             error = 'Could not set new position because of tomograph'
             print(exception_message)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= exception_message, error= error)
                 return False
             else:
                 return False, create_response(success, exception_message, error= error)
 
         print('Success!')
-        if exp_id: return True
+        if self.exp_id: return True
         else:      return create_response(True)
 
-    def set_angle(self, new_angle, exp_id = ''):
+    def set_angle(self, new_angle, exp_is_advanced = True):
         """ Tries to set new angle position of object
 
         :arg: 'new_angle' - value of new angle position, in 'grades', type is float
-              'exp_id' - ID of experiment, during that function is called.
-                         If 'exp_id' is empty string, that means that function is called during adjustment, not
-                         experiment, in this case function return answer in different format;
-                         Type is string
 
         :return: depends on "emptiness" of argument 'exp_id';
                  if 'exp_id' is NOT empty, function returns success of function, type is bool
@@ -585,16 +610,19 @@ class Tomograph:
         """
         print('Going to set new angle position...')
 
-        if not exp_id and self.experiment_is_running:
+        if not self.exp_id and self.experiment_is_running:
             error = 'On this tomograph experiment is running'
             print(error)
             return create_response(success= False, error= error)
 
+        if self.exp_id and not self.experiment_is_running:
+            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+
         if type(new_angle) is not float:
             error = 'Incorrect type! Position type must be float, but it is ' + str(type(new_angle))
             print (error)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= '', error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= '', error= error)
                 return False
             else:
                 return create_response(success= False, error= error)
@@ -605,142 +633,139 @@ class Tomograph:
         if success == False:
             error = 'Could not set new position because of tomograph'
             print(exception_message)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id, exception_message= exception_message, error=error)
                 return False
             else:
                 return create_response(success, exception_message, error= error)
 
         print('Success!')
-        if exp_id: return True
+        if self.exp_id: return True
         else:      return create_response(True)
 
 
-    def get_x(self, exp_id = ''):
+    def get_x(self, exp_is_advanced = True):
         """ Tries to get horizontal position of object
 
-        :arg: 'exp_id' - ID of experiment, during that function is called.
-                         If 'exp_id' is empty string, that means that function is called during adjustment, not
-                         experiment, in this case function return answer in different format;
-                         Type is string
+        :arg:
 
-            :return: depends on "emptiness" of argument 'exp_id';
-                     if 'exp_id' is NOT empty, function returns list of 2 elements:
-                        1 - success of function, type is bool
-                        2 - value of horizontal position in "popugaychiki", if 'success' is True, type is int;
-                            None, if 'success' is False
-                     if 'exp_id' IS empty, function returns prepared response for web-page of adjustment,
-                     type is json-string with format that is returned by  'create_response()'
+        :return: depends on "emptiness" of argument 'exp_id';
+                if 'exp_id' is NOT empty, function returns list of 2 elements:
+                    1 - success of function, type is bool
+                    2 - value of horizontal position in "popugaychiki", if 'success' is True, type is int;
+                        None, if 'success' is False
+                if 'exp_id' IS empty, function returns prepared response for web-page of adjustment,
+                type is json-string with format that is returned by  'create_response()'
         """
         print('Going to get horizontal position...')
 
-        if not exp_id and self.experiment_is_running:
+        if not self.exp_id and self.experiment_is_running:
             error = 'On this tomograph experiment is running'
             print(error)
             return create_response(success= False, error= error)
+
+        if self.exp_id and not self.experiment_is_running:
+            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
 
 
         success, x_attr, exception_message = self.try_thrice_read_attr("horizontal_position")
         if success == False:
             error = 'Could not get position because of tomograph'
             print(exception_message)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id, exception_message=exception_message, error=error)
                 return False, None
             else:
                 return create_response(success, exception_message, error= error)
 
         x_value = x_attr.value
         print('Horizontal position is %d' % x_value)
-        if exp_id: return True, x_value
+        if self.exp_id: return True, x_value
         else:      return create_response(success= True, result= x_value)
 
-    def get_y(self, exp_id = ''):
+    def get_y(self, exp_is_advanced = True):
         """ Tries to get vertical position of object
 
-        :arg: 'exp_id' - ID of experiment, during that function is called.
-                         If 'exp_id' is empty string, that means that function is called during adjustment, not
-                         experiment, in this case function return answer in different format;
-                         Type is string
+        :arg:
 
-            :return: depends on "emptiness" of argument 'exp_id';
-                     if 'exp_id' is NOT empty, function returns list of 2 elements:
-                        1 - success of function, type is bool
-                        2 - value of vertical position in "popugaychiki", if 'success' is True, type is int;
-                            None, if 'success' is False
-                     if 'exp_id' IS empty, function returns prepared response for web-page of adjustment,
-                     type is json-string with format that is returned by  'create_response()'
+        :return: depends on "emptiness" of argument 'exp_id';
+                if 'exp_id' is NOT empty, function returns list of 2 elements:
+                    1 - success of function, type is bool
+                    2 - value of vertical position in "popugaychiki", if 'success' is True, type is int;
+                        None, if 'success' is False
+                if 'exp_id' IS empty, function returns prepared response for web-page of adjustment,
+                type is json-string with format that is returned by  'create_response()'
         """
         print('Going to get vertical position...')
 
-        if not exp_id and self.experiment_is_running:
+        if not self.exp_id and self.experiment_is_running:
             error = 'On this tomograph experiment is running'
             print(error)
             return create_response(success= False, error= error)
+
+        if self.exp_id and not self.experiment_is_running:
+            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
 
 
         success, y_attr, exception_message = self.try_thrice_read_attr("vertical_position")
         if success == False:
             error = 'Could not get position because of tomograph'
             print(exception_message)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= exception_message, error= error)
                 return False, None
             else:
                 return create_response(success, exception_message, error= error)
 
         y_value = y_attr.value
         print('Vertical position is %.2f' % y_value)
-        if exp_id: return True, y_value
+        if self.exp_id: return True, y_value
         else:      return create_response(success= True, result= y_value)
 
-    def get_angle(self, exp_id = ''):
+    def get_angle(self, exp_is_advanced = True):
         """ Tries to get angle position of object
 
-        :arg: 'exp_id' - ID of experiment, during that function is called.
-                         If 'exp_id' is empty string, that means that function is called during adjustment, not
-                         experiment, in this case function return answer in different format;
-                         Type is string
+        :arg:
 
-            :return: depends on "emptiness" of argument 'exp_id';
-                     if 'exp_id' is NOT empty, function returns list of 2 elements:
-                        1 - success of function, type is bool
-                        2 - value of angle position in grades, if 'success' is True, type is float;
-                            None, if 'success' is False
-                     if 'exp_id' IS empty, function returns prepared response for web-page of adjustment,
-                     type is json-string with format that is returned by  'create_response()'
+        :return: depends on "emptiness" of argument 'exp_id';
+                if 'exp_id' is NOT empty, function returns list of 2 elements:
+                    1 - success of function, type is bool
+                    2 - value of angle position in grades, if 'success' is True, type is float;
+                        None, if 'success' is False
+                if 'exp_id' IS empty, function returns prepared response for web-page of adjustment,
+                type is json-string with format that is returned by  'create_response()'
         """
         print('Going to get angle position...')
 
-        if not exp_id and self.experiment_is_running:
+        if not self.exp_id and self.experiment_is_running:
             error = 'On this tomograph experiment is running'
             print(error)
             return create_response(success= False, error= error)
+
+        if self.exp_id and not self.experiment_is_running:
+            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
 
 
         success, angle_attr, exception_message = self.try_thrice_read_attr("vertical_position")
         if success == False:
             error = 'Could not get position because of tomograph'
             print(exception_message)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= exception_message, error= error)
                 return False, None
             else:
                 return create_response(success, exception_message, error= error)
 
         angle_value = angle_attr.value
         print('Angle position is %.2f' % angle_value)
-        if exp_id: return True, angle_value
+        if self.exp_id: return True, angle_value
         else:      return create_response(success= True, result= angle_value)
 
 
-    def reset_angle(self, exp_id = ''):
+    def reset_to_zero_angle(self, exp_is_advanced = True):
         """ Tries to set current angle position as 0
 
-        :arg: 'exp_id' - ID of experiment, during that function is called.
-                         If 'exp_id' is empty string, that means that function is called during adjustment, not
-                         experiment, in this case function return answer in different format;
-                         Type is string
+        :arg:
 
         :return: depends on "emptiness" of argument 'exp_id';
                  if 'exp_id' is NOT empty, function returns success of function, type is bool
@@ -749,33 +774,33 @@ class Tomograph:
         """
         print('Resetting angle position...')
 
-        if not exp_id and self.experiment_is_running:
+        if not self.exp_id and self.experiment_is_running:
             error = 'On this tomograph experiment is running'
             print(error)
             return create_response(success= False, error= error)
+
+        if self.exp_id and not self.experiment_is_running:
+            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
 
         success, useless, exception_message = try_thrice_function(self.tomograph_proxy.ResetAnglePosition)
         if success == False:
             error = 'Could not reset angle position because of tomograph'
             print(exception_message)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.self.exp_id, exception_message= exception_message, error= error)
                 return False
             else:
                 return create_response(success, exception_message, error= error)
 
         print('Success!')
-        if exp_id: return True
+        if self.exp_id: return True
         else:      return create_response(True)
 
 
-    def move_away(self, exp_id = ''):
+    def move_away(self, exp_is_advanced = True):
         """ Tries to move object away from detector
 
-        :arg: 'exp_id' - ID of experiment, during that function is called.
-                         If 'exp_id' is empty string, that means that function is called during adjustment, not
-                         experiment, in this case function return answer in different format;
-                         Type is string
+        :arg:
 
         :return: depends on "emptiness" of argument 'exp_id';
                  if 'exp_id' is NOT empty, function returns success of function, type is bool
@@ -784,32 +809,32 @@ class Tomograph:
         """
         print('Moving object away...')
 
-        if not exp_id and self.experiment_is_running:
+        if not self.exp_id and self.experiment_is_running:
             error = 'On this tomograph experiment is running'
             print(error)
             return create_response(success= False, error= error)
+
+        if self.exp_id and not self.experiment_is_running:
+            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
 
         success, useless, exception_message = try_thrice_function(self.tomograph_proxy.MoveAway)
         if success == False:
             error = 'Could not move object away'
             print(exception_message)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= exception_message, error= error)
                 return False
             else:
                 return create_response(success, exception_message, error= error)
 
         print('Success!')
-        if exp_id: return True
+        if self.exp_id: return True
         else:      return create_response(True)
 
-    def move_back(self, exp_id = ''):
+    def move_back(self, exp_is_advanced = True):
         """ Tries to move object "back" to the detector, in front of detector
 
-        :arg: 'exp_id' - ID of experiment, during that function is called.
-                         If 'exp_id' is empty string, that means that function is called during adjustment, not
-                         experiment, in this case function return answer in different format;
-                         Type is string
+        :arg:
 
         :return: depends on "emptiness" of argument 'exp_id';
                  if 'exp_id' is NOT empty, function returns success of function, type is bool
@@ -818,38 +843,36 @@ class Tomograph:
         """
         print('Moving object back...')
 
-        if not exp_id and self.experiment_is_running:
+        if not self.exp_id and self.experiment_is_running:
             error = 'On this tomograph experiment is running'
             print(error)
             return create_response(success= False, error= error)
+
+        if self.exp_id and not self.experiment_is_running:
+            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
 
         success, useless, exception_message = try_thrice_function(self.tomograph_proxy.MoveBack)
         if success == False:
             error = 'Could not move object back'
             print(exception_message)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= exception_message, error= error)
                 return False
             else:
                 return create_response(success, exception_message, error= error)
 
         print('Success!')
-        if exp_id: return True
+        if self.exp_id: return True
         else:      return create_response(True)
 
 
 
 
 
-    #  CHANGE FOR TEST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! (image_dict)
-    def get_frame(self, exposure, exp_id = ''):
+    def get_frame(self, exposure, send_to_webpage=True, exp_is_advanced=True):
         """ Tries get frame with some exposure
 
         :arg: 'exposure' - exposure, which frame should get with
-              'exp_id' - ID of experiment, during that function is called.
-                         If 'exp_id' is empty string, that means that function is called during adjustment, not
-                         experiment, in this case function return answer in different format;
-                         Type is string
 
         :return: depends on "emptiness" of argument 'exp_id';
                  if 'exp_id' is NOT empty, function returns list of 2 elements:
@@ -863,16 +886,19 @@ class Tomograph:
         """
         print('Going to get image...')
 
-        if not exp_id and self.experiment_is_running:
+        if not self.exp_id and self.experiment_is_running:
             error = 'On this tomograph experiment is running'
             print(error)
             return create_response(success= False, error= error)
 
+        if self.exp_id and not self.experiment_is_running:
+            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+
         if type(exposure) is not float:
             error = 'Incorrect type! Exposure type must be float, but it is ' + str(type(exposure))
             print (error)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= '', error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= '', error= error)
                 return False, None
             else:
                 return create_response(success= False, error= error)
@@ -882,12 +908,11 @@ class Tomograph:
         if exposure < 0.1 or 16000 < exposure:
             error = 'Exposure must have value from 0.1 to 16000'
             print(error)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= '', error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= '', error= error)
                 return False, None
             else:
                 return create_response(success= False, error= error)
-
 
         # Tomograph takes exposure multiplied by 10 and rounded
         exposure = round(exposure * 10)
@@ -895,8 +920,8 @@ class Tomograph:
         if success == False:
             error = 'Could not get image because of tomograph'
             print(exception_message)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= exception_message, error= error)
                 return False, None
             else:
                 return create_response(success, exception_message, error= error)
@@ -907,8 +932,8 @@ class Tomograph:
         except TypeError:
             error = 'Could not convert frame\'s JSON into dict'
             print(error)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= '', error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id, exception_message= '', error= error)
                 return False, None
             else:
                 return create_response(success = False, error= error)
@@ -929,7 +954,7 @@ class Tomograph:
             error = 'Could not get image because of tomograph'
             print(exception_message)
             if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= exception_message, error= error)
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= exp_id, exception_message= exception_message, error= error)
                 return False, None
             else:
                 return create_response(success, exception_message, error= error)
@@ -943,23 +968,29 @@ class Tomograph:
         except Exception as e:
             error = 'Could convert image to numpy.array'
             print(error)
-            if exp_id:
-                self.handle_emergency_stop(exp_id= exp_id, exception_message= '' '''e.message''', error= error)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id,
+                                           exception_message= '' '''e.message''', error= error)
                 return False, None
             else:
                 return create_response(success = False, error= error, exception_message = '' '''e.message''')
-        #image_numpy = np.array([[1, 2, 3],[4, 5, 6]])s2
 
-        if exp_id:
+        if self.exp_id:
             # Joining numpy array of image and frame metadata
             frame_dict['image_data']['image'] = image_numpy
-            return True, frame_dict
+            # POKA KOSTYL
+            if exp_is_advanced:
+                frame_event = create_event('frame', self.exp_id, frame_dict)
+                self.send_event_to_storage_webpage(STORAGE_FRAMES_URI, frame_event, send_to_webpage)
+                return True, frame_dict
+            else:
+                return True, frame_dict
         else:
             success, response_if_fail = make_png(image_numpy)
             if not success:
                 return response_if_fail
             else:
-                return send_file(FRAME_PNG_FILENAME, mimetype= 'image/png')
+                return send_file(FRAME_PNG_FILENAME, mimetype='image/png')
 
 
 
