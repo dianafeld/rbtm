@@ -17,18 +17,22 @@ from robotom.settings import STORAGE_EXPERIMENTS_HOST, STORAGE_FRAMES_HOST, STOR
 from django.contrib.auth.decorators import login_required, user_passes_test
 
 rest_logger = logging.getLogger('rest_logger')
+
+
 def is_active(user):
     return user.is_active
 
+
 class ExperimentRecord:
     def __init__(self, record):
+        self.experiment_id = record['_id']
         if 'specimen' in record:
             self.specimen = record['specimen']
         else:
             self.specimen = ''
         self.dark_count = record['experiment parameters']['DARK']['count']
         self.dark_exposure = record['experiment parameters']['DARK']['exposure']
-        self.experiment_id = record['experiment id']
+
         if record['finished']:
             self.finished = u'Завершен'
         else:
@@ -143,7 +147,14 @@ def storage_view(request):
         if answer.status_code == 200:
             experiments = json.loads(answer.content)
             rest_logger.debug(u'Найденные эксперименты: {}'.format(experiments))
-            records = [ExperimentRecord(result) for result in experiments]
+            records = []
+            for result in experiments:
+                try:
+                    record = ExperimentRecord(result)
+                    records.append(record)
+                except KeyError as e:
+                    rest_logger.warning(u'Неверная запись об эксперименте {}'.format(result))
+
             if len(records) == 0:
                 messages.error(request, u'Не найдено ни одной записи')
             else:
@@ -236,7 +247,7 @@ def storage_record_view(request, storage_record_id):
     record = {}
     to_show = True
     try:
-        exp_info = json.dumps({"experiment id": storage_record_id})
+        exp_info = json.dumps({"_id": storage_record_id})
         experiment = requests.post(STORAGE_EXPERIMENTS_HOST, exp_info, timeout=1)
         if experiment.status_code == 200:
             experiment_info = json.loads(experiment.content)
@@ -329,11 +340,11 @@ def frames_downloading(request, storage_record_id):
         file_name = frame.id + '.png'
         if not os.path.exists(os.path.join(MEDIA_ROOT, file_name)):
             try:
-                frame_request = json.dumps({"id": frame.id, "exp_id": storage_record_id})
+                frame_request = json.dumps({"frame_id": frame.id, "exp_id": storage_record_id})
                 rest_logger.debug(
                     u'Получение изображений: Запрос на получение изображения номер {}: {}'.format(frame.id,
                                                                                                   frame_request))
-                frame_response = requests.post(STORAGE_FRAMES_PNG, frame_request, timeout=100, stream=True)
+                frame_response = requests.post(STORAGE_FRAMES_PNG, frame_request, timeout=10, stream=True)
                 if frame_response.status_code == 200:
                     temp_file = tempfile.TemporaryFile()
                     for block in frame_response.iter_content(1024 * 8):
