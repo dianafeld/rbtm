@@ -20,16 +20,17 @@ import csv
 import numpy as np
 import pylab as plt
 import zlib
-from class_tomograph import Tomograph
-from class_tomograph import try_thrice_function
-from class_tomograph import create_event
-from class_tomograph import create_response
-from class_tomograph import send_to_storage
+from tomograph import Tomograph
+from tomograph import try_thrice_function
+from tomograph import create_event
+from tomograph import create_response
+from tomograph import send_to_storage
 
 from conf import STORAGE_FRAMES_URI
 from conf import STORAGE_EXP_START_URI
 from conf import STORAGE_EXP_FINISH_URI
 from conf import TOMO_ADDR
+from conf import MAX_EXP_TIME
 
 import logging
 from StringIO import StringIO
@@ -95,14 +96,16 @@ def check_state(tomo_num):
     print('Checking tomograph...')
     success, useless, exception_message = try_thrice_function(tomograph.tomograph_proxy.ping)
     if not success:
+        print("Tomograph is unavailable")
         print(exception_message)
-        return create_response(success, exception_message, error='Could not reach tomograph')
+        return create_response(True, exception_message, result="unavailable")
 
-    tmp_text = ""
-    if not tomograph.experiment_is_running:
-        tmp_text = " NOT"
-    print("On tomograph experiment is" + tmp_text + " running!")
-    return create_response(success=True, result=tomograph.experiment_is_running)
+    if tomograph.experiment_is_running:
+        print("Tomograph is available; experiment IS running")
+        return create_response(success=True, result="experiment")
+    else:
+        print("Tomograph is available; experiment is NOT running")
+        return create_response(success=True, result="ready")
 
 
 # NEED TO EDIT(GENERALLY)
@@ -475,11 +478,8 @@ def check_and_prepare_exp_parameters(exp_param):
     return True, ''
 
 
-def loop_of_get_send_frames(tomograph, exp_id, count, exposure, frame_num, getting_frame_message, mode):
+def loop_of_get_send_frames(tomograph, count, exposure, frame_num, getting_frame_message, mode):
     for i in range(0, count):
-        if not tomograph.experiment_is_running:
-            tomograph.stop_experiment_because_someone(exp_id)
-            return False, frame_num
 
         print(getting_frame_message % (i))
         success, frame_dict = tomograph.get_frame(exposure, send_to_webpage=True, exp_is_advanced=False)
@@ -489,7 +489,7 @@ def loop_of_get_send_frames(tomograph, exp_id, count, exposure, frame_num, getti
         frame_dict['mode'] = mode
         frame_dict['number'] = frame_num
         frame_num += 1
-        frame_with_data = create_event('frame', exp_id, frame_dict)
+        frame_with_data = create_event('frame', tomograph.exp_id, frame_dict)
         if tomograph.send_event_to_storage_webpage(STORAGE_FRAMES_URI, frame_with_data) == False:
             return False, frame_num
     return True, frame_num
@@ -506,7 +506,7 @@ def carry_out_simple_experiment(tomograph, exp_param):
 
     frame_num = 0
     print('Going to get DARK images!\n')
-    success, frame_num = loop_of_get_send_frames(tomograph, exp_id, exp_param['DARK']['count'], exp_param['DARK']['exposure'],
+    success, frame_num = loop_of_get_send_frames(tomograph, exp_param['DARK']['count'], exp_param['DARK']['exposure'],
                                                  frame_num, getting_frame_message='Getting DARK image %d from tomograph...', mode="dark")
     if not success:
         return
@@ -518,7 +518,7 @@ def carry_out_simple_experiment(tomograph, exp_param):
         return
 
     print('Going to get EMPTY images!\n')
-    success, frame_num = loop_of_get_send_frames(tomograph, exp_id, exp_param['EMPTY']['count'], exp_param['EMPTY']['exposure'],
+    success, frame_num = loop_of_get_send_frames(tomograph, exp_param['EMPTY']['count'], exp_param['EMPTY']['exposure'],
                                                  frame_num, getting_frame_message= 'Getting EMPTY image %d from tomograph...', mode="empty")
     if not success:
         return
@@ -538,7 +538,7 @@ def carry_out_simple_experiment(tomograph, exp_param):
         current_angle = (round( (i*angle_step) + initial_angle,  2)) % 360
         print('Getting DATA images: angle is %.2f' % current_angle)
 
-        success, frame_num = loop_of_get_send_frames(tomograph, exp_id, exp_param['DATA']['count per step'], exp_param['DATA']['exposure'],
+        success, frame_num = loop_of_get_send_frames(tomograph, exp_param['DATA']['count per step'], exp_param['DATA']['exposure'],
                                                      frame_num, getting_frame_message= 'Getting DATA image %d from tomograph...', mode="data")
         if not success:
             return
@@ -559,7 +559,16 @@ def carry_out_simple_experiment(tomograph, exp_param):
     print("Experiment took %.4f seconds" % experiment_time)
     return
 
-# NEED TO EDIT(GENERALLY)
+
+def time_counter_of_experiment(tomograph, exp_id, exp_time=MAX_EXP_TIME):
+    time.sleep(exp_time)
+    if (tomograph.experiment_is_running and tomograph.exp_id == exp_id):
+        print("Experiment takes too long, going to stop it!")
+        tomograph.experiment_is_running = False
+        tomograph.exp_stop_reason = "#MODULE EXPERIMENT - EXPERIMENT TAKES TOO LONG#"
+    return
+
+
 def carry_out_advanced_experiment(tomograph, exp_param):
     exp_id = exp_param['exp_id']
     exp_code_string = exp_param['instruction']
@@ -580,6 +589,8 @@ def carry_out_advanced_experiment(tomograph, exp_param):
     exp_code_string = exp_code_string.replace("send_frame", "t_0M_o_9_r_.se")
     print exp_code_string
     time_of_experiment_start = time.time()
+    thr = threading.Thread(target=time_counter_of_experiment, args=(tomograph, exp_id))
+    thr.start()
     try:
         exec(exp_code_string, {'__builtins__': {}, 't_0M_o_9_r_': tomograph})
     except tomograph.ExpStopException as e:
@@ -668,12 +679,20 @@ def experiment_start(tomo_num):
     return create_response(True)
 
 
-@app.route('/tomograph/<int:tomo_num>/experiment/stop', methods=['GET'])
+@app.route('/tomograph/<int:tomo_num>/experiment/stop', methods=['POST'])
 def experiment_stop(tomo_num):
     print('\n\nREQUEST: EXPERIMENT/STOP')
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
+    success, exp_stop_reason_txt, response_if_fail = check_request(request.data)
+    if not success:
+        return response_if_fail
+
+    if not exp_stop_reason_txt:
+        exp_stop_reason_txt = "unknown"
+
+    tomograph.exp_stop_reason = exp_stop_reason_txt
     tomograph.experiment_is_running = False
     return create_response(True)
 

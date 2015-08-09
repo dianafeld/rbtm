@@ -248,6 +248,7 @@ class Tomograph:
     detector_proxy = None
     experiment_is_running = False
     exp_id = ""
+    exp_stop_reason = "unknown"
 
     class ExpStopException(Exception):
         exception_message = ''
@@ -398,18 +399,19 @@ class Tomograph:
             raise self.ExpStopException(stop_event['error'], stop_event['exception_message'])
 
     def stop_experiment_because_someone(self, exp_is_advanced):
-        exp_stop_event = create_event('message', self.exp_id, 'Experiment was stopped by someone')
+        exp_stop_event = create_event('message', self.exp_id, 'Experiment was stopped by someone', error= self.exp_stop_reason)
         if self.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, exp_stop_event) == False:
             if exp_is_advanced:
                 return
             else:
                 raise self.ExpStopException('Experiment was emergency stopped', 'Problems with storage')
+        print('\nEXPERIMENT IS STOPPED BY SOMEONE, REASON:\n' + self.exp_stop_reason + '\n')
         self.exp_id = ''
-        print('\nEXPERIMENT IS STOPPED BY SOMEONE!!!\n')
+        self.exp_stop_reason = 'unknown'
         if not exp_is_advanced:
             return
         else:
-            raise self.ExpStopException('Experiment was stopped by someone')
+            raise self.ExpStopException('Experiment was stopped by someone', self.exp_stop_reason)
 
 # --------------------------------METHODS FOR INTERACTION WITH TOMOGRAPH----------------------------------------#
 # methods below (open_shutter, close_shutter, set_x, set_y, set_angle, reset_to_zero_angle, move_away, move_back and
@@ -435,7 +437,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         success, useless, exception_message = try_thrice_function(self.tomograph_proxy.OpenShutter, time)
         if success == False:
@@ -472,7 +475,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         success, useless, exception_message = try_thrice_function(self.tomograph_proxy.CloseShutter, time)
         if success == False:
@@ -507,7 +511,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         if type(new_x) is not float:
             error = 'Incorrect type! Position type must be float, but it is ' + str(type(new_x))
@@ -562,7 +567,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         if type(new_y) is not float:
             error = 'Incorrect type! Position type must be float, but it is ' + str(type(new_y))
@@ -616,7 +622,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         if type(new_angle) is not float:
             error = 'Incorrect type! Position type must be float, but it is ' + str(type(new_angle))
@@ -665,7 +672,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
 
         success, x_attr, exception_message = self.try_thrice_read_attr("horizontal_position")
@@ -704,7 +712,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
 
         success, y_attr, exception_message = self.try_thrice_read_attr("vertical_position")
@@ -743,7 +752,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
 
         success, angle_attr, exception_message = self.try_thrice_read_attr("vertical_position")
@@ -780,7 +790,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         success, useless, exception_message = try_thrice_function(self.tomograph_proxy.ResetAnglePosition)
         if success == False:
@@ -815,7 +826,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         success, useless, exception_message = try_thrice_function(self.tomograph_proxy.MoveAway)
         if success == False:
@@ -849,7 +861,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         success, useless, exception_message = try_thrice_function(self.tomograph_proxy.MoveBack)
         if success == False:
@@ -892,7 +905,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False, None
 
         if type(exposure) is not float:
             error = 'Incorrect type! Exposure type must be float, but it is ' + str(type(exposure))

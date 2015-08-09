@@ -8,7 +8,7 @@ finally contains time that tomograph waits for commands
 """
 
 
-STORAGE_IS_FICTITIOUS = False
+STORAGE_IS_FICTITIOUS = True
 
 WEBPAGE_OF_ADJUSTMENT_IS_FICTITIOUS = True
 
@@ -20,6 +20,8 @@ TOMOGRAPH_IS_FICTITIOUS = True
 FRAME_PNG_FILENAME = 'image.png'
 
 TIMEOUT_MILLIS = 200000
+
+MAX_EXP_TIME = 100
 
 
 
