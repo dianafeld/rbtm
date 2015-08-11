@@ -248,6 +248,7 @@ class Tomograph:
     detector_proxy = None
     experiment_is_running = False
     exp_id = ""
+    exp_frame_num = 0
     exp_stop_reason = "unknown"
 
     class ExpStopException(Exception):
@@ -992,6 +993,8 @@ class Tomograph:
         if self.exp_id:
             # Joining numpy array of image and frame metadata
             frame_dict['image_data']['image'] = image_numpy
+            frame_dict['number'] = self.exp_frame_num
+            self.exp_frame_num += 1
             # POKA KOSTYL
             if exp_is_advanced:
                 frame_event = create_event('frame', self.exp_id, frame_dict)

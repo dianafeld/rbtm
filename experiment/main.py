@@ -30,7 +30,7 @@ from conf import STORAGE_FRAMES_URI
 from conf import STORAGE_EXP_START_URI
 from conf import STORAGE_EXP_FINISH_URI
 from conf import TOMO_ADDR
-from conf import MAX_EXP_TIME
+from conf import MAX_EXPERIMENT_TIME
 
 import logging
 from StringIO import StringIO
@@ -44,12 +44,6 @@ app = Flask(__name__)
 TOMOGRAPHS = (
         Tomograph(TOMO_ADDR + "/tomo/tomograph/1", TOMO_ADDR + "/tomo/detector/1"),
 )
-
-
-
-#is being used in     check_and_prepare_advanced_experiment_command(command)
-ADVANCED_EXPERIMENT_COMMANDS = ('open shutter', 'close shutter', 'reset current position', 'go to position', 'get frame')
-FRAME_PNG_FILENAME = 'image.png'
 
 
 
@@ -393,34 +387,6 @@ def detector_get_frame(tomo_num):
 #    Functions for running experiment
 #---------------------------------------------------------#
 
-
-
-
-def check_and_prepare_advanced_experiment_command(command):
-    # Checking parameters
-    if not (type(command) is dict):
-        return False, 'Incorrect format in '
-    if not (('type' in command.keys()) and ('args' in command.keys())):
-        return False, 'Incorrect format in '
-    if not (command['type'] in ADVANCED_EXPERIMENT_COMMANDS):
-        return False, 'Incorrect format in '
-    if (command['type'] == 'open shutter') or (command['type'] == 'close shutter'):
-        if command['args'] < 0:
-            return False, 'Bad parameters in '
-    if command['type'] == 'get frame':
-        if command['args'] <= 0:
-            return False, 'Bad parameters in '
-
-    # Preparing parameters for tomograph
-    # Tomograph takes values multiplied by 10 and rounded
-        command['args'] *= 10
-        command['args'] = round(command['args'])
-    elif command['type'] == 'go to position':
-        # Tomograph takes values multiplied by 10 and rounded
-        command['args'][2] *= 10
-        command['args'][2] = round(command['args'][2])
-        command['args'][2] %= 3600
-    return True, ''
 # NEED TO EDIT
 def check_and_prepare_exp_parameters(exp_param):
     if not (('exp_id' in exp_param.keys()) and ('advanced' in exp_param.keys())):
@@ -478,21 +444,19 @@ def check_and_prepare_exp_parameters(exp_param):
     return True, ''
 
 
-def loop_of_get_send_frames(tomograph, count, exposure, frame_num, getting_frame_message, mode):
+def loop_of_get_send_frames(tomograph, count, exposure,  getting_frame_message, mode):
     for i in range(0, count):
 
         print(getting_frame_message % (i))
         success, frame_dict = tomograph.get_frame(exposure, send_to_webpage=True, exp_is_advanced=False)
         if not success:
-            return False, frame_num
+            return False
 
         frame_dict['mode'] = mode
-        frame_dict['number'] = frame_num
-        frame_num += 1
         frame_with_data = create_event('frame', tomograph.exp_id, frame_dict)
         if tomograph.send_event_to_storage_webpage(STORAGE_FRAMES_URI, frame_with_data) == False:
-            return False, frame_num
-    return True, frame_num
+            return False
+    return True
 
 
 
@@ -504,11 +468,9 @@ def carry_out_simple_experiment(tomograph, exp_param):
     if tomograph.close_shutter(0, exp_is_advanced=False) == False:
         return
 
-    frame_num = 0
     print('Going to get DARK images!\n')
-    success, frame_num = loop_of_get_send_frames(tomograph, exp_param['DARK']['count'], exp_param['DARK']['exposure'],
-                                                 frame_num, getting_frame_message='Getting DARK image %d from tomograph...', mode="dark")
-    if not success:
+    if loop_of_get_send_frames(tomograph, exp_param['DARK']['count'], exp_param['DARK']['exposure'],
+                               getting_frame_message='Getting DARK image %d from tomograph...', mode="dark") == False:
         return
     print('Finished with DARK images!\n')
 
@@ -518,9 +480,8 @@ def carry_out_simple_experiment(tomograph, exp_param):
         return
 
     print('Going to get EMPTY images!\n')
-    success, frame_num = loop_of_get_send_frames(tomograph, exp_param['EMPTY']['count'], exp_param['EMPTY']['exposure'],
-                                                 frame_num, getting_frame_message= 'Getting EMPTY image %d from tomograph...', mode="empty")
-    if not success:
+    if loop_of_get_send_frames(tomograph, exp_param['EMPTY']['count'], exp_param['EMPTY']['exposure'],
+                               getting_frame_message='Getting EMPTY image %d from tomograph...', mode="empty") == False:
         return
     print('Finished with EMPTY images!\n')
 
@@ -538,9 +499,8 @@ def carry_out_simple_experiment(tomograph, exp_param):
         current_angle = (round( (i*angle_step) + initial_angle,  2)) % 360
         print('Getting DATA images: angle is %.2f' % current_angle)
 
-        success, frame_num = loop_of_get_send_frames(tomograph, exp_param['DATA']['count per step'], exp_param['DATA']['exposure'],
-                                                     frame_num, getting_frame_message= 'Getting DATA image %d from tomograph...', mode="data")
-        if not success:
+        if loop_of_get_send_frames(tomograph, exp_param['DATA']['count per step'], exp_param['DATA']['exposure'],
+                                   getting_frame_message='Getting DATA image %d from tomograph...', mode="data") == False:
             return
         # Rounding angles here, not in  check_and_prepare_exp_parameters(), cause it will be more accurately this way
         new_angle = (round( (i + 1)*angle_step + initial_angle ,  2)) % 360
@@ -560,12 +520,12 @@ def carry_out_simple_experiment(tomograph, exp_param):
     return
 
 
-def time_counter_of_experiment(tomograph, exp_id, exp_time=MAX_EXP_TIME):
+def time_counter_of_experiment(tomograph, exp_id, exp_time=MAX_EXPERIMENT_TIME):
     time.sleep(exp_time)
     if (tomograph.experiment_is_running and tomograph.exp_id == exp_id):
         print("Experiment takes too long, going to stop it!")
         tomograph.experiment_is_running = False
-        tomograph.exp_stop_reason = "#MODULE EXPERIMENT - EXPERIMENT TAKES TOO LONG#"
+        tomograph.exp_stop_reason = "# MODULE EXPERIMENT: EXPERIMENT TAKES TOO LONG #"
     return
 
 
