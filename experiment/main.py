@@ -115,7 +115,7 @@ def source_power_on(tomo_num):
         print(exception_message)
         return create_response(success, exception_message, error= 'Could not power on source')
 
-    print('Success!')
+    print('Source was powered ON!')
     return create_response(True)
 
 # NEED TO EDIT(GENERALLY)
@@ -131,7 +131,7 @@ def source_power_off(tomo_num):
         print(exception_message)
         return create_response(success, exception_message, error= 'Could not power off source')
 
-    print('Success!')
+    print('Source was powered OFF!')
     return create_response(True)
 
 
@@ -146,6 +146,7 @@ def source_set_voltage(tomo_num):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
+    print('Going to set voltage on source...')
     if tomograph.experiment_is_running:
         error = 'On this tomograph experiment is running'
         print(error)
@@ -173,7 +174,7 @@ def source_set_voltage(tomo_num):
         print(exception_message)
         return create_response(success, exception_message, error= 'Could not set voltage')
 
-    print('Success!')
+    print('New value of voltage was set!')
     return create_response(success= True)
 
 @app.route('/tomograph/<int:tomo_num>/source/set-current', methods=['POST'])
@@ -182,6 +183,7 @@ def source_set_current(tomo_num):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
+    print('Going to set current on source...')
     if tomograph.experiment_is_running:
         error = 'On this tomograph experiment is running'
         print(error)
@@ -209,7 +211,7 @@ def source_set_current(tomo_num):
         print(exception_message)
         return create_response(success, exception_message, error= 'Could not set current')
 
-    print('Success!')
+    print('New value of current was set!')
     return create_response(success= True)
 
 
@@ -220,13 +222,12 @@ def source_get_voltage(tomo_num):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
+    print('Going to get voltage...')
     if tomograph.experiment_is_running:
         error = 'On this tomograph experiment is running'
         print(error)
         return create_response(success= False, error= error)
 
-
-    print('Going to get voltage...')
     success, voltage_attr, exception_message = tomograph.try_thrice_read_attr("xraysource_voltage")
     if success == False:
         print(exception_message)
@@ -242,13 +243,12 @@ def source_get_current(tomo_num):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
+    print('Going to get current...')
     if tomograph.experiment_is_running:
         error = 'On this tomograph experiment is running'
         print(error)
         return create_response(success= False, error= error)
 
-
-    print('Going to get current...')
     success, current_attr, exception_message = tomograph.try_thrice_read_attr("xraysource_current")
     if success == False:
         print(exception_message)
@@ -509,21 +509,14 @@ def carry_out_simple_experiment(tomograph, exp_param):
             return
     print('Finished with DATA images!\n')
 
-    exp_finish_message = create_event('message', exp_id, 'Experiment was finished successfully')
-    if tomograph.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, exp_finish_message) == False:
-        return
-    tomograph.experiment_is_running = False
-    tomograph.exp_id = ''
-    print('Experiment is done successfully!')
-    experiment_time = time.time() - time_of_experiment_start
-    print("Experiment took %.4f seconds" % experiment_time)
+    tomograph.handle_successful_stop(time_of_experiment_start)
     return
 
 
 def time_counter_of_experiment(tomograph, exp_id, exp_time=MAX_EXPERIMENT_TIME):
     time.sleep(exp_time)
     if (tomograph.experiment_is_running and tomograph.exp_id == exp_id):
-        print("Experiment takes too long, going to stop it!")
+        print("\nEXPERIMENT TAKES TOO LONG, GOING TO STOP IT!\n")
         tomograph.experiment_is_running = False
         tomograph.exp_stop_reason = "# MODULE EXPERIMENT: EXPERIMENT TAKES TOO LONG #"
     return
@@ -556,30 +549,22 @@ def carry_out_advanced_experiment(tomograph, exp_param):
     except tomograph.ExpStopException as e:
         return
     except SyntaxError as e:
-        print e.message
-        tomograph.handle_emergency_stop(exp_is_advanced=True, exp_id=exp_id, error="Syntax of experiment instruction is NOT correct",
+        print repr(e)
+        tomograph.handle_emergency_stop(exp_is_advanced=False, exp_id=exp_id, error="Syntax of experiment instruction is NOT correct",
                                         exception_message=e.message)
         return
 
     except Exception as e:
-        print e.message
-        tomograph.handle_emergency_stop(exp_is_advanced=True, exp_id=exp_id, error="Exception during experiment", exception_message=e.message)
+        print repr(e)
+        tomograph.handle_emergency_stop(exp_is_advanced=False, exp_id=exp_id, error="Exception during experiment", exception_message=e.message)
         return
 
-
-    exp_finish_message = create_event('message', exp_id, 'Experiment was finished successfully')
-    if tomograph.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, exp_finish_message) == False:
-        return
-    tomograph.experiment_is_running = False
-    tomograph.exp_id = ''
-    print('Experiment is done successfully!')
-    experiment_time = time.time() - time_of_experiment_start
-    print("Experiment took %.4f seconds" % experiment_time)
+    tomograph.handle_successful_stop(time_of_experiment_start)
     return
 
 
 
-
+# NEED TO EDIT (COMMENT BEFORE POWERING ON SOURCE)
 @app.route('/tomograph/<int:tomo_num>/experiment/start', methods=['POST'])
 def experiment_start(tomo_num):
     print('\n\nREQUEST: EXPERIMENT/START')
@@ -621,7 +606,8 @@ def experiment_start(tomo_num):
     if success == False:
         return create_response(success= False, exception_message= exception_message, error= 'Could not power on source')
 
-    print('Success!')
+    # NEED TO CHANGE MAYBE, TO ADD CHECKING STATE
+    print('Was powered on!')
     print('Sending to storage leading to prepare...')
     success, exception_message = send_to_storage(STORAGE_EXP_START_URI, data=request.data)
     if not success:
