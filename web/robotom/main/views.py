@@ -66,7 +66,7 @@ def try_user_sending(request, err_text, address, user=None, user_info=None):
                 logger.error(
                     u'{}. Модуль "Хранилище" завершил работу с кодом ошибки {}'.format(err_text, answer.status_code))
                 return redirect(reverse('main:done'))
-        except Timeout as e:
+        except requests.exceptions.Timeout as e:
             messages.warning(request, 'Нет ответа от модуля "Хранилище". {}.'.format(err_text))
             logger.error(e)
             return redirect(reverse('main:done'))
@@ -80,7 +80,6 @@ def try_user_sending(request, err_text, address, user=None, user_info=None):
 
 def registration_view(request):
     if request.method == 'POST':
-        print(request.POST)
         user_form = UserRegistrationForm(request.POST)
         userprofile_form = UserProfileRegistrationForm(request.POST)
         if user_form.is_valid() and userprofile_form.is_valid():
@@ -221,7 +220,7 @@ def profile_view(request):
 
 
 def is_superuser(user):
-    return user.is_superuser
+    return user.userprofile.is_admin
 
 
 def is_active(user):
@@ -229,10 +228,8 @@ def is_active(user):
 
 
 # If user's request is not actual now, no information should be provided in database
-def flush_userprofile_request(userprofile):
-    userprofile.rolerequest.role = 'NONE'
-    userprofile.rolerequest.comment = ''
-    userprofile.rolerequest.save()
+def flush_userprofile_request(userprofile, request):
+    request.delete()
 
 
 ACCEPT = 1
@@ -282,14 +279,15 @@ def mail_role_request(request, role_request, site, manage_link):
 @user_passes_test(is_superuser)
 def manage_requests_view(request):
     if request.method == 'POST':
-        profile_id = request.POST['profile_id']
-        profile = get_object_or_404(UserProfile, pk=profile_id)
+        request_id = request.POST['request_id']
+        rolerequest = get_object_or_404(RoleRequest, pk=request_id)
         site = request.get_host()
-        role_long = profile.rolerequest.get_role_display()
-        request_list = [rolerequest.user for rolerequest in RoleRequest.objects.exclude(role='NONE')]
+        role_long = rolerequest.get_role_display()
+        request_list = RoleRequest.objects.exclude(role='NONE')
+        profile = rolerequest.user
         if 'accept' in request.POST:
             user_info = json.dumps({'username': profile.user.username, 'password': profile.user.password,
-                                    'role': profile.rolerequest.role})
+                                    'role': rolerequest.role})
 
             attempt = try_user_sending(request, u'Невозможно сохранить изменения', settings.STORAGE_ALT_USER_HOST,
                                        user_info=user_info)
@@ -298,21 +296,28 @@ def manage_requests_view(request):
 
             profile.user.is_superuser = False  # we must invalidate superuser and staff rights
             profile.user.is_staff = False  # if any error was made before
-            profile.role = profile.rolerequest.role
-            if profile.role == 'ADM':
+
+            profile.is_guest = False # if any role is accepted
+            if rolerequest.role == 'RES':
+                profile.is_researcher = True
+            elif rolerequest.role == 'EXP':
+                profile.is_experimentator = True
+            elif rolerequest.role == 'ADM':
+                profile.is_admin = True
                 profile.user.is_superuser = True
                 profile.user.is_staff = True
+
             profile.save()
             profile.user.save()
             messages.success(request, u'Запрос пользователя {} был успешно подтверждён'.format(profile.user.username))
             mail_verdict(request, profile.user, site, role_long, ACCEPT)
-            flush_userprofile_request(profile)
+            flush_userprofile_request(profile, rolerequest)
         elif 'decline' in request.POST:
             messages.success(request, u'Запрос пользователя {} был успешно отклонён'.format(profile.user.username))
             mail_verdict(request, profile.user, site, role_long, DECLINE)
-            flush_userprofile_request(profile)
+            flush_userprofile_request(profile, rolerequest)
 
-    request_list = [rolerequest.user for rolerequest in RoleRequest.objects.exclude(role='NONE')]
+    request_list = RoleRequest.objects.exclude(role='NONE')
     return render(request, 'main/manage_requests.html', {
         'request_list': request_list,
         'caption': 'Запросы смены роли'
@@ -327,22 +332,22 @@ def role_request_view(request):
                           request.user.email))
 
     if request.method == 'POST' and request.user.is_active:
-        if RoleRequest.objects.filter(user__user__pk=request.user.pk):
-            role_request = RoleRequest.objects.get(user__user__pk=request.user.pk)
+        print(request.POST)
+        if RoleRequest.objects.filter(user__user__pk=request.user.pk, role=request.POST[u'role']):
+            role_request = RoleRequest.objects.get(user__user__pk=request.user.pk, role=request.POST[u'role'])
             role_form = UserRoleRequestForm(request.POST, instance=role_request)
         else:
             role_form = UserRoleRequestForm(request.POST)
 
         if 'cancel' in request.POST:
-            new_request = RoleRequest()
-            new_request.user = request.user.userprofile
-            new_request.role = 'NONE'
+            pass
         elif 'submit' in request.POST:
             if role_form.is_valid():
                 new_request = role_form.save(commit=False)
-                new_request.user = request.user.userprofile
-                new_request.save()
-                role_form.save_m2m()
+                if not request.user.userprofile.has_role(new_request.role):
+                    new_request.user = request.user.userprofile
+                    new_request.save()
+                    role_form.save_m2m()
             else:
                 return render(request, 'main/role_request.html', {
                     'role_form': role_form,
@@ -354,29 +359,25 @@ def role_request_view(request):
                 'caption': 'Запрос на изменение роли',
             })
 
-        if new_request.role != 'NONE':
+        if new_request.role != 'NONE' and not request.user.userprofile.has_role(new_request.role):
             try:
                 mail_role_request(request, new_request, request.get_host(),
                                   request.build_absolute_uri(reverse('main:manage_requests')))
             except BaseException as e:
                 messages.warning(request,
-                                 'Произошла ошибка во время оповещения администратора о появлении новой заявки, из-за чего её рассмотрение может задержаться. Чтобы избежать этого, Вы можете связаться с администрацией сайта самостоятельно')
+                                 u'Произошла ошибка во время оповещения администратора о появлении новой заявки, из-за чего её рассмотрение может задержаться. Чтобы избежать этого, Вы можете связаться с администрацией сайта самостоятельно')
                 logger.error(e)
             finally:
                 messages.info(request,
-                              'Ваша заявка на получение статуса зарегистрирована. После её рассмотрения вам будет направлено электронное письмо на email, указанный при регистрации')
+                              u'Ваша заявка на получение статуса зарегистрирована. После её рассмотрения вам будет направлено электронное письмо на email, указанный при регистрации')
         else:
-            messages.info(request, u'Заявка не отправлена. Ваша роль "{}" не будет изменена'.format(
-                request.user.userprofile.get_role_display()))
+            messages.info(request, u'Вы не запросили новых ролей. Доступные Вам роли: {}'.format(
+                ', '.join(request.user.userprofile.get_roles())))
 
         return redirect(reverse('main:done'))
 
     # if method is not 'POST'
-    if RoleRequest.objects.filter(user__user__pk=request.user.pk):
-        role_request = RoleRequest.objects.get(user__user__pk=request.user.pk)
-        role_form = UserRoleRequestForm(instance=role_request)
-    else:
-        role_form = UserRoleRequestForm()
+    role_form = UserRoleRequestForm()
     return render(request, 'main/role_request.html', {
         'role_form': role_form,
         'caption': 'Запрос на изменение роли',

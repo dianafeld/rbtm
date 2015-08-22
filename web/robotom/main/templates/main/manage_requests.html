@@ -67,15 +67,15 @@
                     <span class="td-button"></span>
                     <span class="td-button"></span>
                 </div>
-                {% for profile in request_list %}
-                    <form class="tr" method="post" action="" name="{{ profile.id }}_user_table">
+                {% for request in request_list %}
+                    <form class="tr" method="post" action="" name="{{ request.id }}_user_table">
                         {% csrf_token %}
-                        <input type="hidden" name="profile_id" value="{{ profile.id }}"/>
-                        <span class="td">{{ profile.user.username }}</span>
-                        <span class="td">{{ profile.full_name }}</span>
-                        <span class="td">{{ profile.role }}</span>
-                        <span class="td">{{ profile.rolerequest.role }}</span>
-                        <span class="td-comment">{{ profile.rolerequest.comment }}</span>
+                        <input type="hidden" name="request_id" value="{{ request.id }}"/>
+                        <span class="td">{{ request.user.user.username }}</span>
+                        <span class="td">{{ request.user.full_name }}</span>
+                        <span class="td">{{ request.user.get_roles|join:", " }}</span>
+                        <span class="td">{{ request.get_role_display }}</span>
+                        <span class="td-comment">{{ request.comment }}</span>
                         <span class="td-button"><button type="submit" class="btn btn-success" style="margin-left: 5px"
                                                         name="accept">Принять
                         </button></span>

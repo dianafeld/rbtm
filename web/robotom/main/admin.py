@@ -14,9 +14,9 @@ class UserProfileInline(admin.StackedInline):
 
 class MyUserAdmin(UserAdmin):
     def user_role(self, obj):
-        return obj.userprofile.role
+        return ', '.join(obj.userprofile.get_roles())
 
-    user_role.short_description = 'Роль на сайте'
+    user_role.short_description = 'Роли на сайте'
 
     def full_name(self, obj):
         return obj.userprofile.full_name

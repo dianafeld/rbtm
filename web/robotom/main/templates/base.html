@@ -50,7 +50,7 @@
 
             <ul class="nav navbar-nav">
                 {% if user.is_authenticated %}
-                    {% if user.userprofile.role == "ADM" or user.userprofile.role == "EXP" %}
+                    {% if user.userprofile.is_admin or user.userprofile.is_experimentator %}
                         <li><a href="{% url 'experiment:index' %}">Эксперимент</a></li>
                     {% endif %}
                 {% endif %}
@@ -58,7 +58,7 @@
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if user.is_authenticated %}
-                    {% if user.is_superuser %}
+                    {% if user.userprofile.is_admin %}
                         <li><a href="{% url 'main:manage_requests' %}">Запросы смены роли</a></li>
                     {% endif %}
                     <li><a href="{% url 'main:profile' %}">Профиль [{{ user.username }}]</a></li>
