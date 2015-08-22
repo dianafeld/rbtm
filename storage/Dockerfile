@@ -14,7 +14,7 @@ COPY . /var/www/storage/
 RUN echo "MONGODB_URI = 'mongodb://db:27017'" > conf.py
 
 # setup nginx
-RUN echo "daemon off;" >> /etc/nginx/nginx.conf && rm /etc/nginx/sites-enabled/default && cp /var/www/storage/storage_nginx.conf /etc/nginx/sites-available/ && ln -s /etc/nginx/sites-available/storage_nginx.conf /etc/nginx/sites-enabled/
+RUN mkdir -p logs && echo "daemon off;" >> /etc/nginx/nginx.conf && rm /etc/nginx/sites-enabled/default && cp /var/www/storage/storage_nginx.conf /etc/nginx/sites-available/ && ln -s /etc/nginx/sites-available/storage_nginx.conf /etc/nginx/sites-enabled/
 
 # setup supervisord
 # RUN mkdir -p /var/log/supervisor
