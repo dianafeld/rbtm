@@ -10,13 +10,17 @@ import pymongo as pm
 from storage import pyframes
 from storage import filesystem as fs
 from storage import app
+from storage.conf import MONGODB_URI
+
 
 logger = app.logger
 
 # TODO login and pass not secure
-MONGODB_URI = 'mongodb://admin:33zxcdsa@ds049219.mongolab.com:49219/robotom'
+#MONGODB_URI = 'mongodb://admin:33zxcdsa@ds049219.mongolab.com:49219/robotom'
+#MONGODB_URI = 'mongodb://db:27017'
 client = pm.MongoClient(MONGODB_URI)
-db = client.get_default_database()
+#db = client.get_default_database()
+db = client["robotom"]
 
 
 # for returning error as json file

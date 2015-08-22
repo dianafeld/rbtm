@@ -1,0 +1,14 @@
+db:
+  image: mongo:latest
+  #volumes:
+  #   - ./data/db:/data/db
+
+server:
+  build: .
+  #command: supervisord -n
+  #volumes:
+  #  - .:/code
+  ports:
+    - "5006:5006"
+  links:
+    - db
