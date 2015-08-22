@@ -19,6 +19,8 @@ import pylab as plt
 from flask import send_file
 import copy
 from StringIO import StringIO
+import time
+from scipy.ndimage import zoom
 
 from conf import STORAGE_FRAMES_URI
 from conf import STORAGE_EXP_FINISH_URI
@@ -130,11 +132,8 @@ def make_png(res, exp_id = ''):
     """
     print("Converting image to png-file...")
     try:
-        plt.ioff()
-        plt.figure()
-        plt.imshow(res, cmap=plt.cm.gray)
-        plt.colorbar()
-        plt.savefig(FRAME_PNG_FILENAME, bbox_inches='tight')
+        small_res = zoom(res, zoom=0.25, order=2)
+        plt.imsave(FRAME_PNG_FILENAME, small_res, cmap=plt.cm.gray)
     except Exception as e:
         error = "Could not convert image to png-file"
         print(error)
@@ -147,7 +146,7 @@ def make_png(res, exp_id = ''):
             error_event_json = json.dumps(error_event_dict)
             return False, error_event_json
 
-    print("Success!")
+    print("Image was converted!")
     return True, None
 
 def send_event_to_webpage(event_dict):
@@ -198,7 +197,7 @@ def send_event_to_webpage(event_dict):
             print('Could not send to web-page of adjustment')
         else:
             print(req_webpage.content)
-# NEED TO EDIT DOCSTRING
+
 def send_to_storage(storage_uri, data, files = None):
     """ Sends  to storage
 
@@ -248,6 +247,8 @@ class Tomograph:
     detector_proxy = None
     experiment_is_running = False
     exp_id = ""
+    exp_frame_num = 0
+    exp_stop_reason = "unknown"
 
     class ExpStopException(Exception):
         exception_message = ''
@@ -384,10 +385,12 @@ class Tomograph:
                              dictionary with fields 'exp_id', 'exception_message', 'error'
         :return: None
         """
+        print("Handling emergency stop of experiment, going to alert storage...")
         stop_event['type'] = 'message'
         stop_event['message'] = 'Experiment was emergency stopped'
         self.experiment_is_running = False
         self.exp_id = ''
+        self.exp_frame_num = 0
         if self.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, stop_event) == False:
             if not exp_is_advanced:
                 return
@@ -398,24 +401,40 @@ class Tomograph:
             raise self.ExpStopException(stop_event['error'], stop_event['exception_message'])
 
     def stop_experiment_because_someone(self, exp_is_advanced):
-        exp_stop_event = create_event('message', self.exp_id, 'Experiment was stopped by someone')
+        print("Stopping experiment (someone wants to stop it), going to alert storage...")
+        exp_stop_event = create_event('message', self.exp_id, 'Experiment was stopped by someone', error= self.exp_stop_reason)
         if self.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, exp_stop_event) == False:
             if exp_is_advanced:
                 return
             else:
                 raise self.ExpStopException('Experiment was emergency stopped', 'Problems with storage')
+        print('\nEXPERIMENT IS STOPPED BY SOMEONE, REASON:\n' + self.exp_stop_reason + '\n')
         self.exp_id = ''
-        print('\nEXPERIMENT IS STOPPED BY SOMEONE!!!\n')
+        self.exp_stop_reason = 'unknown'
+        self.exp_frame_num = 0
         if not exp_is_advanced:
             return
         else:
-            raise self.ExpStopException('Experiment was stopped by someone')
+            raise self.ExpStopException('Experiment was stopped by someone', self.exp_stop_reason)
 
 # --------------------------------METHODS FOR INTERACTION WITH TOMOGRAPH----------------------------------------#
 # methods below (open_shutter, close_shutter, set_x, set_y, set_angle, reset_to_zero_angle, move_away, move_back and
 # get_frame) can be called during experiment or not. If not, then argument exp_id is empty and vice versa. In this cases
 # functions return answer in different format
 #---------------------------------------------------------------------------------------------------------------#
+
+    def handle_successful_stop(self, time_of_experiment_start):
+        print ("Going to alert storage about successful finish of experiment...")
+        exp_finish_message = create_event('message', self.exp_id, 'Experiment was finished successfully')
+        if self.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, exp_finish_message) == False:
+            return
+        self.experiment_is_running = False
+        self.exp_id = ''
+        self.exp_frame_num = 0
+        print('Experiment is done successfully!')
+        experiment_time = time.time() - time_of_experiment_start
+        print("Experiment took %.4f seconds" % experiment_time)
+        return
 
     def open_shutter(self, time = 0, exp_is_advanced = True):
         """ Tries to open shutter
@@ -435,7 +454,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         success, useless, exception_message = try_thrice_function(self.tomograph_proxy.OpenShutter, time)
         if success == False:
@@ -448,7 +468,7 @@ class Tomograph:
             else:
                 return create_response(success, exception_message, error= error)
 
-        print('Success!')
+        print('Shutter was opened!')
         if self.exp_id:
             return True
         else:
@@ -472,7 +492,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         success, useless, exception_message = try_thrice_function(self.tomograph_proxy.CloseShutter, time)
         if success == False:
@@ -484,7 +505,7 @@ class Tomograph:
             else:
                 return create_response(success, exception_message, error= error)
 
-        print('Success!')
+        print('Shutter was closed!')
         if self.exp_id: return True
         else:      return create_response(True)
 
@@ -507,7 +528,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         if type(new_x) is not float:
             error = 'Incorrect type! Position type must be float, but it is ' + str(type(new_x))
@@ -540,7 +562,7 @@ class Tomograph:
             else:
                 return create_response(success, exception_message, error= error)
 
-        print('Success!')
+        print('Position was set!')
         if self.exp_id: return True
         else:      return create_response(True)
 
@@ -562,7 +584,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         if type(new_y) is not float:
             error = 'Incorrect type! Position type must be float, but it is ' + str(type(new_y))
@@ -594,7 +617,7 @@ class Tomograph:
             else:
                 return False, create_response(success, exception_message, error= error)
 
-        print('Success!')
+        print('Position was set!')
         if self.exp_id: return True
         else:      return create_response(True)
 
@@ -616,7 +639,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         if type(new_angle) is not float:
             error = 'Incorrect type! Position type must be float, but it is ' + str(type(new_angle))
@@ -639,7 +663,7 @@ class Tomograph:
             else:
                 return create_response(success, exception_message, error= error)
 
-        print('Success!')
+        print('Position was set!')
         if self.exp_id: return True
         else:      return create_response(True)
 
@@ -665,7 +689,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
 
         success, x_attr, exception_message = self.try_thrice_read_attr("horizontal_position")
@@ -704,7 +729,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
 
         success, y_attr, exception_message = self.try_thrice_read_attr("vertical_position")
@@ -743,7 +769,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
 
         success, angle_attr, exception_message = self.try_thrice_read_attr("vertical_position")
@@ -780,7 +807,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         success, useless, exception_message = try_thrice_function(self.tomograph_proxy.ResetAnglePosition)
         if success == False:
@@ -792,7 +820,7 @@ class Tomograph:
             else:
                 return create_response(success, exception_message, error= error)
 
-        print('Success!')
+        print('Angle position was reset!')
         if self.exp_id: return True
         else:      return create_response(True)
 
@@ -815,7 +843,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         success, useless, exception_message = try_thrice_function(self.tomograph_proxy.MoveAway)
         if success == False:
@@ -827,7 +856,7 @@ class Tomograph:
             else:
                 return create_response(success, exception_message, error= error)
 
-        print('Success!')
+        print('Object was moved away!')
         if self.exp_id: return True
         else:      return create_response(True)
 
@@ -849,7 +878,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
 
         success, useless, exception_message = try_thrice_function(self.tomograph_proxy.MoveBack)
         if success == False:
@@ -861,7 +891,7 @@ class Tomograph:
             else:
                 return create_response(success, exception_message, error= error)
 
-        print('Success!')
+        print('Object was moved back!')
         if self.exp_id: return True
         else:      return create_response(True)
 
@@ -892,7 +922,8 @@ class Tomograph:
             return create_response(success= False, error= error)
 
         if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced, self.exp_id)
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False, None
 
         if type(exposure) is not float:
             error = 'Incorrect type! Exposure type must be float, but it is ' + str(type(exposure))
@@ -959,14 +990,12 @@ class Tomograph:
             else:
                 return create_response(success, exception_message, error= error)
         """
-
+        print("Image was get, preparing image to send to storage...")
         try:
             enc = PyTango.EncodedAttribute()
             image_numpy = enc.decode_gray16(image)
-            #print 'Type of image after decoding:\n', type(image_numpy)
-            #print 'Image after decoding:\n', image_numpy
         except Exception as e:
-            error = 'Could convert image to numpy.array'
+            error = 'Could not convert image to numpy.array'
             print(error)
             if self.exp_id:
                 self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= self.exp_id,
@@ -978,6 +1007,8 @@ class Tomograph:
         if self.exp_id:
             # Joining numpy array of image and frame metadata
             frame_dict['image_data']['image'] = image_numpy
+            frame_dict['number'] = self.exp_frame_num
+            self.exp_frame_num += 1
             # POKA KOSTYL
             if exp_is_advanced:
                 frame_event = create_event('frame', self.exp_id, frame_dict)

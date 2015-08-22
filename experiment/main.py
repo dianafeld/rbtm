@@ -20,16 +20,17 @@ import csv
 import numpy as np
 import pylab as plt
 import zlib
-from class_tomograph import Tomograph
-from class_tomograph import try_thrice_function
-from class_tomograph import create_event
-from class_tomograph import create_response
-from class_tomograph import send_to_storage
+from tomograph import Tomograph
+from tomograph import try_thrice_function
+from tomograph import create_event
+from tomograph import create_response
+from tomograph import send_to_storage
 
 from conf import STORAGE_FRAMES_URI
 from conf import STORAGE_EXP_START_URI
 from conf import STORAGE_EXP_FINISH_URI
 from conf import TOMO_ADDR
+from conf import MAX_EXPERIMENT_TIME
 
 import logging
 from StringIO import StringIO
@@ -43,12 +44,6 @@ app = Flask(__name__)
 TOMOGRAPHS = (
         Tomograph(TOMO_ADDR + "/tomo/tomograph/1", TOMO_ADDR + "/tomo/detector/1"),
 )
-
-
-
-#is being used in     check_and_prepare_advanced_experiment_command(command)
-ADVANCED_EXPERIMENT_COMMANDS = ('open shutter', 'close shutter', 'reset current position', 'go to position', 'get frame')
-FRAME_PNG_FILENAME = 'image.png'
 
 
 
@@ -95,14 +90,16 @@ def check_state(tomo_num):
     print('Checking tomograph...')
     success, useless, exception_message = try_thrice_function(tomograph.tomograph_proxy.ping)
     if not success:
+        print("Tomograph is unavailable")
         print(exception_message)
-        return create_response(success, exception_message, error='Could not reach tomograph')
+        return create_response(True, exception_message, result="unavailable")
 
-    tmp_text = ""
-    if not tomograph.experiment_is_running:
-        tmp_text = " NOT"
-    print("On tomograph experiment is" + tmp_text + " running!")
-    return create_response(success=True, result=tomograph.experiment_is_running)
+    if tomograph.experiment_is_running:
+        print("Tomograph is available; experiment IS running")
+        return create_response(success=True, result="experiment")
+    else:
+        print("Tomograph is available; experiment is NOT running")
+        return create_response(success=True, result="ready")
 
 
 # NEED TO EDIT(GENERALLY)
@@ -118,7 +115,7 @@ def source_power_on(tomo_num):
         print(exception_message)
         return create_response(success, exception_message, error= 'Could not power on source')
 
-    print('Success!')
+    print('Source was powered ON!')
     return create_response(True)
 
 # NEED TO EDIT(GENERALLY)
@@ -134,7 +131,7 @@ def source_power_off(tomo_num):
         print(exception_message)
         return create_response(success, exception_message, error= 'Could not power off source')
 
-    print('Success!')
+    print('Source was powered OFF!')
     return create_response(True)
 
 
@@ -149,6 +146,7 @@ def source_set_voltage(tomo_num):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
+    print('Going to set voltage on source...')
     if tomograph.experiment_is_running:
         error = 'On this tomograph experiment is running'
         print(error)
@@ -176,7 +174,7 @@ def source_set_voltage(tomo_num):
         print(exception_message)
         return create_response(success, exception_message, error= 'Could not set voltage')
 
-    print('Success!')
+    print('New value of voltage was set!')
     return create_response(success= True)
 
 @app.route('/tomograph/<int:tomo_num>/source/set-current', methods=['POST'])
@@ -185,6 +183,7 @@ def source_set_current(tomo_num):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
+    print('Going to set current on source...')
     if tomograph.experiment_is_running:
         error = 'On this tomograph experiment is running'
         print(error)
@@ -212,7 +211,7 @@ def source_set_current(tomo_num):
         print(exception_message)
         return create_response(success, exception_message, error= 'Could not set current')
 
-    print('Success!')
+    print('New value of current was set!')
     return create_response(success= True)
 
 
@@ -223,13 +222,12 @@ def source_get_voltage(tomo_num):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
+    print('Going to get voltage...')
     if tomograph.experiment_is_running:
         error = 'On this tomograph experiment is running'
         print(error)
         return create_response(success= False, error= error)
 
-
-    print('Going to get voltage...')
     success, voltage_attr, exception_message = tomograph.try_thrice_read_attr("xraysource_voltage")
     if success == False:
         print(exception_message)
@@ -245,13 +243,12 @@ def source_get_current(tomo_num):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
+    print('Going to get current...')
     if tomograph.experiment_is_running:
         error = 'On this tomograph experiment is running'
         print(error)
         return create_response(success= False, error= error)
 
-
-    print('Going to get current...')
     success, current_attr, exception_message = tomograph.try_thrice_read_attr("xraysource_current")
     if success == False:
         print(exception_message)
@@ -390,34 +387,6 @@ def detector_get_frame(tomo_num):
 #    Functions for running experiment
 #---------------------------------------------------------#
 
-
-
-
-def check_and_prepare_advanced_experiment_command(command):
-    # Checking parameters
-    if not (type(command) is dict):
-        return False, 'Incorrect format in '
-    if not (('type' in command.keys()) and ('args' in command.keys())):
-        return False, 'Incorrect format in '
-    if not (command['type'] in ADVANCED_EXPERIMENT_COMMANDS):
-        return False, 'Incorrect format in '
-    if (command['type'] == 'open shutter') or (command['type'] == 'close shutter'):
-        if command['args'] < 0:
-            return False, 'Bad parameters in '
-    if command['type'] == 'get frame':
-        if command['args'] <= 0:
-            return False, 'Bad parameters in '
-
-    # Preparing parameters for tomograph
-    # Tomograph takes values multiplied by 10 and rounded
-        command['args'] *= 10
-        command['args'] = round(command['args'])
-    elif command['type'] == 'go to position':
-        # Tomograph takes values multiplied by 10 and rounded
-        command['args'][2] *= 10
-        command['args'][2] = round(command['args'][2])
-        command['args'][2] %= 3600
-    return True, ''
 # NEED TO EDIT
 def check_and_prepare_exp_parameters(exp_param):
     if not (('exp_id' in exp_param.keys()) and ('advanced' in exp_param.keys())):
@@ -475,24 +444,19 @@ def check_and_prepare_exp_parameters(exp_param):
     return True, ''
 
 
-def loop_of_get_send_frames(tomograph, exp_id, count, exposure, frame_num, getting_frame_message, mode):
+def loop_of_get_send_frames(tomograph, count, exposure,  getting_frame_message, mode):
     for i in range(0, count):
-        if not tomograph.experiment_is_running:
-            tomograph.stop_experiment_because_someone(exp_id)
-            return False, frame_num
 
         print(getting_frame_message % (i))
         success, frame_dict = tomograph.get_frame(exposure, send_to_webpage=True, exp_is_advanced=False)
         if not success:
-            return False, frame_num
+            return False
 
         frame_dict['mode'] = mode
-        frame_dict['number'] = frame_num
-        frame_num += 1
-        frame_with_data = create_event('frame', exp_id, frame_dict)
+        frame_with_data = create_event('frame', tomograph.exp_id, frame_dict)
         if tomograph.send_event_to_storage_webpage(STORAGE_FRAMES_URI, frame_with_data) == False:
-            return False, frame_num
-    return True, frame_num
+            return False
+    return True
 
 
 
@@ -504,11 +468,9 @@ def carry_out_simple_experiment(tomograph, exp_param):
     if tomograph.close_shutter(0, exp_is_advanced=False) == False:
         return
 
-    frame_num = 0
     print('Going to get DARK images!\n')
-    success, frame_num = loop_of_get_send_frames(tomograph, exp_id, exp_param['DARK']['count'], exp_param['DARK']['exposure'],
-                                                 frame_num, getting_frame_message='Getting DARK image %d from tomograph...', mode="dark")
-    if not success:
+    if loop_of_get_send_frames(tomograph, exp_param['DARK']['count'], exp_param['DARK']['exposure'],
+                               getting_frame_message='Getting DARK image %d from tomograph...', mode="dark") == False:
         return
     print('Finished with DARK images!\n')
 
@@ -518,9 +480,8 @@ def carry_out_simple_experiment(tomograph, exp_param):
         return
 
     print('Going to get EMPTY images!\n')
-    success, frame_num = loop_of_get_send_frames(tomograph, exp_id, exp_param['EMPTY']['count'], exp_param['EMPTY']['exposure'],
-                                                 frame_num, getting_frame_message= 'Getting EMPTY image %d from tomograph...', mode="empty")
-    if not success:
+    if loop_of_get_send_frames(tomograph, exp_param['EMPTY']['count'], exp_param['EMPTY']['exposure'],
+                               getting_frame_message='Getting EMPTY image %d from tomograph...', mode="empty") == False:
         return
     print('Finished with EMPTY images!\n')
 
@@ -538,9 +499,8 @@ def carry_out_simple_experiment(tomograph, exp_param):
         current_angle = (round( (i*angle_step) + initial_angle,  2)) % 360
         print('Getting DATA images: angle is %.2f' % current_angle)
 
-        success, frame_num = loop_of_get_send_frames(tomograph, exp_id, exp_param['DATA']['count per step'], exp_param['DATA']['exposure'],
-                                                     frame_num, getting_frame_message= 'Getting DATA image %d from tomograph...', mode="data")
-        if not success:
+        if loop_of_get_send_frames(tomograph, exp_param['DATA']['count per step'], exp_param['DATA']['exposure'],
+                                   getting_frame_message='Getting DATA image %d from tomograph...', mode="data") == False:
             return
         # Rounding angles here, not in  check_and_prepare_exp_parameters(), cause it will be more accurately this way
         new_angle = (round( (i + 1)*angle_step + initial_angle ,  2)) % 360
@@ -549,17 +509,19 @@ def carry_out_simple_experiment(tomograph, exp_param):
             return
     print('Finished with DATA images!\n')
 
-    exp_finish_message = create_event('message', exp_id, 'Experiment was finished successfully')
-    if tomograph.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, exp_finish_message) == False:
-        return
-    tomograph.experiment_is_running = False
-    tomograph.exp_id = ''
-    print('Experiment is done successfully!')
-    experiment_time = time.time() - time_of_experiment_start
-    print("Experiment took %.4f seconds" % experiment_time)
+    tomograph.handle_successful_stop(time_of_experiment_start)
     return
 
-# NEED TO EDIT(GENERALLY)
+
+def time_counter_of_experiment(tomograph, exp_id, exp_time=MAX_EXPERIMENT_TIME):
+    time.sleep(exp_time)
+    if (tomograph.experiment_is_running and tomograph.exp_id == exp_id):
+        print("\nEXPERIMENT TAKES TOO LONG, GOING TO STOP IT!\n")
+        tomograph.experiment_is_running = False
+        tomograph.exp_stop_reason = "# MODULE EXPERIMENT: EXPERIMENT TAKES TOO LONG #"
+    return
+
+
 def carry_out_advanced_experiment(tomograph, exp_param):
     exp_id = exp_param['exp_id']
     exp_code_string = exp_param['instruction']
@@ -580,35 +542,29 @@ def carry_out_advanced_experiment(tomograph, exp_param):
     exp_code_string = exp_code_string.replace("send_frame", "t_0M_o_9_r_.se")
     print exp_code_string
     time_of_experiment_start = time.time()
+    thr = threading.Thread(target=time_counter_of_experiment, args=(tomograph, exp_id))
+    thr.start()
     try:
         exec(exp_code_string, {'__builtins__': {}, 't_0M_o_9_r_': tomograph})
     except tomograph.ExpStopException as e:
         return
     except SyntaxError as e:
-        print e.message
-        tomograph.handle_emergency_stop(exp_is_advanced=True, exp_id=exp_id, error="Syntax of experiment instruction is NOT correct",
+        print repr(e)
+        tomograph.handle_emergency_stop(exp_is_advanced=False, exp_id=exp_id, error="Syntax of experiment instruction is NOT correct",
                                         exception_message=e.message)
         return
 
     except Exception as e:
-        print e.message
-        tomograph.handle_emergency_stop(exp_is_advanced=True, exp_id=exp_id, error="Exception during experiment", exception_message=e.message)
+        print repr(e)
+        tomograph.handle_emergency_stop(exp_is_advanced=False, exp_id=exp_id, error="Exception during experiment", exception_message=e.message)
         return
 
-
-    exp_finish_message = create_event('message', exp_id, 'Experiment was finished successfully')
-    if tomograph.send_event_to_storage_webpage(STORAGE_EXP_FINISH_URI, exp_finish_message) == False:
-        return
-    tomograph.experiment_is_running = False
-    tomograph.exp_id = ''
-    print('Experiment is done successfully!')
-    experiment_time = time.time() - time_of_experiment_start
-    print("Experiment took %.4f seconds" % experiment_time)
+    tomograph.handle_successful_stop(time_of_experiment_start)
     return
 
 
 
-
+# NEED TO EDIT (COMMENT BEFORE POWERING ON SOURCE)
 @app.route('/tomograph/<int:tomo_num>/experiment/start', methods=['POST'])
 def experiment_start(tomo_num):
     print('\n\nREQUEST: EXPERIMENT/START')
@@ -650,7 +606,8 @@ def experiment_start(tomo_num):
     if success == False:
         return create_response(success= False, exception_message= exception_message, error= 'Could not power on source')
 
-    print('Success!')
+    # NEED TO CHANGE MAYBE, TO ADD CHECKING STATE
+    print('Was powered on!')
     print('Sending to storage leading to prepare...')
     success, exception_message = send_to_storage(STORAGE_EXP_START_URI, data=request.data)
     if not success:
@@ -668,12 +625,20 @@ def experiment_start(tomo_num):
     return create_response(True)
 
 
-@app.route('/tomograph/<int:tomo_num>/experiment/stop', methods=['GET'])
+@app.route('/tomograph/<int:tomo_num>/experiment/stop', methods=['POST'])
 def experiment_stop(tomo_num):
     print('\n\nREQUEST: EXPERIMENT/STOP')
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
+    success, exp_stop_reason_txt, response_if_fail = check_request(request.data)
+    if not success:
+        return response_if_fail
+
+    if not exp_stop_reason_txt:
+        exp_stop_reason_txt = "unknown"
+
+    tomograph.exp_stop_reason = exp_stop_reason_txt
     tomograph.experiment_is_running = False
     return create_response(True)
 
