@@ -29,7 +29,7 @@ logger = logging.getLogger('django.request')
 
 
 def has_experiment_access(user):
-    return user.userprofile.role in ['ADM', 'EXP']
+    return user.userprofile.is_admin or user.userprofile.is_experimentator
 
 
 def info_once_only(request, msg):
@@ -120,7 +120,7 @@ def experiment_view(request):
                                  u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже {}'.format(
                                      answer_check['error']))
     return render(request, 'experiment/start.html', {
-        'full_access': (request.user.userprofile.role == 'EXP'),
+        'full_access': (request.user.userprofile.is_experimentator),
         'caption': 'Эксперимент',
         'off': (tomo.state == 'off'),
         'waiting': (tomo.state == 'waiting'),
@@ -417,7 +417,7 @@ def experiment_adjustment(request):
 
                     path = default_storage.save(os.path.join(settings.MEDIA_ROOT, file_name), temp_file)
                     return render(request, 'experiment/adjustment.html', {
-                        'full_access': (request.user.userprofile.role == 'EXP'),
+                        'full_access': (request.user.userprofile.is_experimentator),
                         'caption': 'Эксперимент',
                         'preview_path': os.path.join(settings.MEDIA_URL, file_name),
                         'preview': True,
@@ -427,7 +427,7 @@ def experiment_adjustment(request):
                 messages.warning(request, u'Не удалось выполнить предпросмотр. Попробуйте повторно')
                 logger.error(e)
     return render(request, 'experiment/adjustment.html', {
-        'full_access': (request.user.userprofile.role == 'EXP'),
+        'full_access': (request.user.userprofile.is_experimentator),
         'caption': 'Эксперимент',
         'off': (tomo.state == 'off'),
         'waiting': (tomo.state == 'waiting'),
@@ -537,7 +537,7 @@ def experiment_interface(request):
                                  u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
                                      answer_check['error']))
     return render(request, 'experiment/interface.html', {
-        'full_access': (request.user.userprofile.role == 'EXP'),
+        'full_access': (request.user.userprofile.is_experimentator),
         'caption': 'Эксперимент',
         'off': (tomo.state == 'off'),
         'waiting': (tomo.state == 'waiting'),
