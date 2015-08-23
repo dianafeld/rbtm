@@ -14,6 +14,7 @@ def extract_frame(frame_id, experiment_id):
     frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'frames.h5')
     with h5py.File(frames_file_path, 'r') as frames_file:
         frame = frames_file[str(frame_id)]
+    logger.info('hdf5 file: extract frame {} of experiment {} successfully'.format(frame_id, experiment_id))
     return frame
 
 

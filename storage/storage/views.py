@@ -1,12 +1,8 @@
 import json
-import logging
 import os
 import numpy as np
 
-import configparser
-import itertools
-
-from flask import Flask, jsonify, make_response, request, abort, Response, send_file
+from flask import jsonify, make_response, request, abort, Response, send_file
 from bson.json_util import dumps
 import pymongo as pm
 
@@ -18,16 +14,7 @@ from conf import MONGODB_URI
 
 logger = app.logger
 
-
-# parser = configparser.ConfigParser()
-# with open("mongodb_uri.conf") as stream:
-#     lines = itertools.chain(("[top]",), stream)
-#     parser.read_file(lines)
-# MONGODB_URI = parser["top"]["MONGODB_URI"]
-
 # TODO login and pass not secure
-#MONGODB_URI = 'mongodb://admin:33zxcdsa@ds049219.mongolab.com:49219/robotom'
-#MONGODB_URI = 'mongodb://db:27017'
 client = pm.MongoClient(MONGODB_URI)
 #db = client.get_default_database()
 db = client["robotom"]
@@ -59,8 +46,9 @@ def get_experiments():
         logger.error('Incorrect format')
         abort(400)
 
+    logger.info('Request body: ' + request.data)
+
     find_query = json.loads(request.data.decode())
-    logger.info(find_query)
 
     experiments = db['experiments']
 
@@ -80,10 +68,12 @@ def create_experiment():
         logger.error('Incorrect format')
         abort(400)
 
-    experiments = db['experiments']
+    logger.info('Request body: ' + request.data)
 
     insert_query = json.loads(request.data.decode())
-    logger.info(insert_query)
+
+    experiments = db['experiments']
+
     experiment_id = insert_query['exp_id']
     insert_query.pop('exp_id', None)
     insert_query['_id'] = experiment_id
@@ -103,8 +93,9 @@ def finish_experiment():
         logger.error('Incorrect format')
         abort(400)
 
+    logger.info('Request body: ' + request.data)
+
     json_msg = json.loads(request.data.decode())
-    logger.info(json_msg)
 
     experiment_id = json_msg['exp_id']
 
@@ -124,7 +115,8 @@ def new_frame():
         logger.error('Incorrect format')
         abort(400)
 
-    logger.debug(request.form)
+    logger.info('Request body: ' + request.form)
+
     json_frame = json.loads(request.form['data'])
     experiment_id = json_frame['exp_id']
 
@@ -151,9 +143,12 @@ def get_frame_info():
         logger.error('Incorrect format')
         abort(400)
 
-    logger.info(request.data.decode())
-    frames = db['frames']
+    logger.info('Request body: ' + request.data)
+
     find_query = json.loads(request.data.decode())
+
+    frames = db['frames']
+
     cursor = frames.find(find_query)
 
     resp = Response(response=dumps(cursor),
@@ -169,6 +164,8 @@ def get_png():
         logger.error('Incorrect format')
         abort(400)
 
+    logger.info('Request body: ' + request.data)
+
     find_query = json.loads(request.data.decode())
     frame_id = find_query['frame_id']
     experiment_id = find_query['exp_id']
@@ -178,7 +175,7 @@ def get_png():
 
     if not os.path.exists(os.path.join('storage', png_file_path)):
     #if not os.path.exists(png_file_path):
-         abort(404)
+        abort(404)
 
     return send_file(png_file_path, mimetype='image/png')
 
