@@ -1,16 +1,15 @@
-db:
-  image: mongo:latest
+database:
+  image: mongo:3.0
   ports:
     - "27017:27017"
   volumes:
-     - ./data/db:/var/lib/mongodb
+     - ./data/db:/data/db
 
 server:
   build: .
-  #command: supervisord -n
   volumes:
-    - ./data:/var/www/storage/data
+    - ./data/experiments:/var/www/storage/data/experiments
   ports:
     - "5006:5006"
   links:
-    - db
+    - database
