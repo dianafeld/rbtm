@@ -197,7 +197,7 @@ def profile_view(request):
             userprofile_form = UserProfileFormEnabled(request.POST, instance=request.user.userprofile)
             if userprofile_form.is_valid():
                 profile = userprofile_form.save(commit=False)
-                user_info = json.dumps({'username': profile.user.username, 'password': profile.user.password, 'role': profile.role})
+                user_info = json.dumps({'username': profile.user.username, 'password': profile.user.password, 'role': ', '.join(profile.get_roles())})
                 attempt = try_user_sending(request, u'Невозможно сохранить изменения профиля',
                                            settings.STORAGE_ALT_USER_HOST, user_info=user_info)
                 if attempt:  # if something went wrong
@@ -293,9 +293,6 @@ def manage_requests_view(request):
                                        user_info=user_info)
             if attempt:  # if something went wrong
                 return attempt
-
-            profile.user.is_superuser = False  # we must invalidate superuser and staff rights
-            profile.user.is_staff = False  # if any error was made before
 
             profile.is_guest = False # if any role is accepted
             if rolerequest.role == 'RES':
