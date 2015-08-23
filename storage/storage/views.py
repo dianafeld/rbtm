@@ -46,7 +46,7 @@ def get_experiments():
         logger.error('Incorrect format')
         abort(400)
 
-    logger.info('Request body: ' + request.data)
+    logger.info(b'Request body: ' + request.data)
 
     find_query = json.loads(request.data.decode())
 
@@ -68,7 +68,7 @@ def create_experiment():
         logger.error('Incorrect format')
         abort(400)
 
-    logger.info('Request body: ' + request.data)
+    logger.info(b'Request body: ' + request.data)
 
     insert_query = json.loads(request.data.decode())
 
@@ -93,7 +93,7 @@ def finish_experiment():
         logger.error('Incorrect format')
         abort(400)
 
-    logger.info('Request body: ' + request.data)
+    logger.info(b'Request body: ' + request.data)
 
     json_msg = json.loads(request.data.decode())
 
@@ -115,7 +115,7 @@ def new_frame():
         logger.error('Incorrect format')
         abort(400)
 
-    logger.info('Request body: ' + request.form)
+    logger.info(b'Request body: ' + request.form)
 
     json_frame = json.loads(request.form['data'])
     experiment_id = json_frame['exp_id']
@@ -143,7 +143,7 @@ def get_frame_info():
         logger.error('Incorrect format')
         abort(400)
 
-    logger.info('Request body: ' + request.data)
+    logger.info(b'Request body: ' + request.data)
 
     find_query = json.loads(request.data.decode())
 
@@ -164,7 +164,7 @@ def get_png():
         logger.error('Incorrect format')
         abort(400)
 
-    logger.info('Request body: ' + request.data)
+    logger.info(b'Request body: ' + request.data)
 
     find_query = json.loads(request.data.decode())
     frame_id = find_query['frame_id']
