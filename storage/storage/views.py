@@ -3,6 +3,9 @@ import logging
 import os
 import numpy as np
 
+import configparser
+import itertools
+
 from flask import Flask, jsonify, make_response, request, abort, Response, send_file
 from bson.json_util import dumps
 import pymongo as pm
@@ -10,10 +13,15 @@ import pymongo as pm
 from storage import pyframes
 from storage import filesystem as fs
 from storage import app
-from storage.conf import MONGODB_URI
-
 
 logger = app.logger
+
+
+parser = configparser.ConfigParser()
+with open("mongodb_uri.conf") as stream:
+    lines = itertools.chain(("[top]",), stream)
+    parser.read_file(lines)
+MONGODB_URI = parser["top"]["MONGODB_URI"]
 
 # TODO login and pass not secure
 #MONGODB_URI = 'mongodb://admin:33zxcdsa@ds049219.mongolab.com:49219/robotom'
