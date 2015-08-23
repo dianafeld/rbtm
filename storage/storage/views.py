@@ -14,14 +14,16 @@ from storage import pyframes
 from storage import filesystem as fs
 from storage import app
 
+from conf import MONGODB_URI
+
 logger = app.logger
 
 
-parser = configparser.ConfigParser()
-with open("mongodb_uri.conf") as stream:
-    lines = itertools.chain(("[top]",), stream)
-    parser.read_file(lines)
-MONGODB_URI = parser["top"]["MONGODB_URI"]
+# parser = configparser.ConfigParser()
+# with open("mongodb_uri.conf") as stream:
+#     lines = itertools.chain(("[top]",), stream)
+#     parser.read_file(lines)
+# MONGODB_URI = parser["top"]["MONGODB_URI"]
 
 # TODO login and pass not secure
 #MONGODB_URI = 'mongodb://admin:33zxcdsa@ds049219.mongolab.com:49219/robotom'
