@@ -14,3 +14,4 @@ server:
     - "5006:5006"
   links:
     - database
+  restart: always
