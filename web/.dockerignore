@@ -1,0 +1,4 @@
+robotom/web_env/lib/python2.7/site-packages/django/db
+*.log
+**/web_env
+**/venv
