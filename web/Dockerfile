@@ -15,6 +15,8 @@ COPY . /var/www/web/
 
 RUN sed -i "41s/.*/        'HOST': 'database',/" robotom/robotom/settings.py
 
+RUN robotom/manage.py collectstatic --noinput
+
 # ENV APACHE_RUN_USER www-data
 # ENV APACHE_RUN_GROUP www-data
 # ENV APACHE_LOG_DIR /var/log/apache2
