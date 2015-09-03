@@ -5,6 +5,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.ndimage import zoom
+from threading import Thread
 
 from storage import app
 logger = app.logger
@@ -26,8 +27,9 @@ def add_frame(frame, frame_id, experiment_id):
 
     png_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
                                  str(frame_id) + '.png')
-    make_png(frame, png_file_path)
-    logger.info('png: png was made from frame {} of experiment {}'.format(frame_id, experiment_id))
+    # make_png(frame, png_file_path)
+    Thread(target=make_png, args=(frame, png_file_path)).start()
+    logger.info('png: start making png from frame {} of experiment {}'.format(frame_id, experiment_id))
 
 
 def delete_frame(frame_id, experiment_id):
