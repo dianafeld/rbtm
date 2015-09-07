@@ -4,12 +4,37 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 REQUEST_DEBUG = False
 
-STORAGE_FRAMES_PNG = 'http://109.234.34.140:5006/storage/png/get'
-STORAGE_FRAMES_INFO_HOST = 'http://109.234.34.140:5006/storage/frames_info/get'
-STORAGE_FRAMES_HOST = 'http://109.234.34.140:5006/storage/frames/get'
-STORAGE_EXPERIMENTS_HOST = 'http://109.234.34.140:5006/storage/experiments/get'
-STORAGE_CREATE_USER_HOST = 'http://109.234.34.140:5006/storage/users/get'
-STORAGE_ALT_USER_HOST = 'http://109.234.34.140:5006/storage/users/update'
+TIMEOUT_DEFAULT = 10 # timeout in ms
+
+
+from urlparse import urljoin
+
+STORAGE_HOST = 'http://109.234.34.140:5006/'
+
+STORAGE_FRAMES_PNG = urljoin(STORAGE_HOST, '/storage/png/get')
+STORAGE_FRAMES_INFO_HOST = urljoin(STORAGE_HOST, '/storage/frames_info/get')
+STORAGE_FRAMES_HOST = urljoin(STORAGE_HOST, '/storage/frames/get')
+STORAGE_EXPERIMENTS_HOST = urljoin(STORAGE_HOST, '/storage/experiments/get')
+STORAGE_CREATE_USER_HOST = urljoin(STORAGE_HOST, '/storage/users/get')
+STORAGE_ALT_USER_HOST = urljoin(STORAGE_HOST, '/storage/users/update')
+
+EXPERIMENT_HOST = 'http://109.234.34.140:5001/'
+# address templates, where {} is a placeholder for tomograph number
+EXPERIMENT_SOURCE_POWER_ON = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/power-on')
+EXPERIMENT_SOURCE_POWER_OFF = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/power-off')
+
+EXPERIMENT_MOTOR_SET_HORIZ = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/set-horizontal-position')
+EXPERIMENT_MOTOR_SET_VERT = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/set-vertical-position')
+EXPERIMENT_MOTOR_SET_ANGLE = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/set-angle-position')
+EXPERIMENT_MOTOR_RESET_ANGLE = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/reset-angle-position')
+EXPERIMENT_SHUTTER_OPEN = urljoin(EXPERIMENT_HOST, '/tomograph/{}/shutter/open/0')
+EXPERIMENT_SHUTTER_CLOSE = urljoin(EXPERIMENT_HOST, '/tomograph/{}/shutter/close/0')
+EXPERIMENT_SOURCE_SET_VOLT = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/set-voltage')
+EXPERIMENT_SOURCE_SET_CURR = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/set-current')
+EXPERIMENT_DETECTOR_GET_FRAME = urljoin(EXPERIMENT_HOST, '/tomograph/{}/detector/get-frame')
+
+EXPERIMENT_START = urljoin(EXPERIMENT_HOST, '/tomograph/{}/experiment/start')
+EXPERIMENT_STOP = urljoin(EXPERIMENT_HOST, '/tomograph/{}/experiment/stop')
 
 import os
 
