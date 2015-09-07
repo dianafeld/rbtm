@@ -39,10 +39,10 @@ def migrations():
         Tomo.save()
 
 
-def try_request_post(address, content, source_page, stream=False):
+def try_request_post(request, address, content, source_page, stream=False):
     result = {'answer_check': None, 'error': None}
     try:
-        answer = requests.post(address, content, timeout=TIMEOUT_DEFAULT, stream=stream) 
+        answer = requests.post(address, content, timeout=settings.TIMEOUT_DEFAULT, stream=stream) 
         result['answer_check'] = json.loads(answer.content)
         if answer.status_code != 200:
             messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
@@ -60,10 +60,10 @@ def try_request_post(address, content, source_page, stream=False):
     return result
 
 
-def try_request_get(address, source_page):
+def try_request_get(request, address, source_page):
     result = {'answer_check': None, 'error': None}
     try:
-        answer = requests.get(address, timeout=TIMEOUT_DEFAULT) 
+        answer = requests.get(address, timeout=settings.TIMEOUT_DEFAULT) 
         result['answer_check'] = json.loads(answer.content)
         if answer.status_code != 200:
             messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
@@ -109,7 +109,7 @@ def experiment_view(request):
         info_once_only(request, u'Текущее состояние томографа: эксперимент')
     if request.method == 'POST':
         if 'on_exp' in request.POST:  # включить томограф
-            result = try_request_get(settings.EXPERIMENT_SOURCE_POWER_ON.format(1), 'experiment:index')
+            result = try_request_get(request, settings.EXPERIMENT_SOURCE_POWER_ON.format(1), 'experiment:index')
             if result['error']:
                 return result['error']
 
@@ -118,7 +118,7 @@ def experiment_view(request):
                                                             state_ru=u'ожидание', state_en='waiting')
             
         if 'of_exp' in request.POST:  # выключение томографа
-            result = try_request_get(settings.EXPERIMENT_SOURCE_POWER_OFF.format(1), 'experiment:index')
+            result = try_request_get(request, settings.EXPERIMENT_SOURCE_POWER_OFF.format(1), 'experiment:index')
             if result['error']:
                 return result['error']
 
@@ -154,7 +154,7 @@ def experiment_adjustment(request):
         # if tomo.state == 'waiting' or tomo.state == 'adjustment' :
         if 'move_hor_submit' in request.POST:  # подвинуть по горизонтали
             info = json.dumps(float(request.POST['move_hor']))
-            result = try_request_post(settings.EXPERIMENT_MOTOR_SET_HORIZ.format(1), info, 'experiment:index_adjustment')
+            result = try_request_post(request, settings.EXPERIMENT_MOTOR_SET_HORIZ.format(1), info, 'experiment:index_adjustment')
             if result['error']:
                 return result['error']
 
@@ -164,7 +164,7 @@ def experiment_adjustment(request):
         
         if 'move_ver_submit' in request.POST:  # подвинуть по вертикали
             info = json.dumps(float(request.POST['move_ver']))
-            result = try_request_post(settings.EXPERIMENT_MOTOR_SET_VERT.format(1), info, 'experiment:index_adjustment')
+            result = try_request_post(request, settings.EXPERIMENT_MOTOR_SET_VERT.format(1), info, 'experiment:index_adjustment')
             if result['error']:
                 return result['error']
 
@@ -174,7 +174,7 @@ def experiment_adjustment(request):
     
         if 'rotate_submit' in request.POST:  # повернуть
             info = json.dumps(float(request.POST['rotate']))
-            result = try_request_post(settings.EXPERIMENT_MOTOR_SET_ANGLE.format(1), info, 'experiment:index_adjustment')
+            result = try_request_post(request, settings.EXPERIMENT_MOTOR_SET_ANGLE.format(1), info, 'experiment:index_adjustment')
             if result['error']:
                 return result['error']
 
@@ -183,7 +183,7 @@ def experiment_adjustment(request):
                                                             state_ru=u'юстировка', state_en='adjustment')
 
         if 'reset_submit' in request.POST:  # установить текущее положение за 0
-            result = try_request_get(settings.EXPERIMENT_MOTOR_RESET_ANGLE.format(1), 'experiment:index_adjustment')
+            result = try_request_get(request, settings.EXPERIMENT_MOTOR_RESET_ANGLE.format(1), 'experiment:index_adjustment')
             if result['error']:
                 return result['error']
 
@@ -193,7 +193,7 @@ def experiment_adjustment(request):
         
         if 'text_gate' in request.POST:
             if request.POST['gate_state'] == 'open':  # открыть заслонку
-                result = try_request_get(settings.EXPERIMENT_SHUTTER_OPEN.format(1), 'experiment:index_adjustment')
+                result = try_request_get(request, settings.EXPERIMENT_SHUTTER_OPEN.format(1), 'experiment:index_adjustment')
                 if result['error']:
                     return result['error']
 
@@ -202,7 +202,7 @@ def experiment_adjustment(request):
                                                             state_ru=u'юстировка', state_en='adjustment')
 
             elif request.POST['gate_state'] == 'close':  # закрыть заслонку
-                result = try_request_get(settings.EXPERIMENT_SHUTTER_CLOSE.format(1), 'experiment:index_adjustment')
+                result = try_request_get(request, settings.EXPERIMENT_SHUTTER_CLOSE.format(1), 'experiment:index_adjustment')
                 if result['error']:
                     return result['error']
 
@@ -212,7 +212,7 @@ def experiment_adjustment(request):
 
         if 'experiment_on_voltage' in request.POST:  # задать напряжение
             info = json.dumps(float(request.POST['voltage']))
-            result = try_request_post(settings.EXPERIMENT_SOURCE_SET_VOLT.format(1), info, 'experiment:index_adjustment')
+            result = try_request_post(request, settings.EXPERIMENT_SOURCE_SET_VOLT.format(1), info, 'experiment:index_adjustment')
             if result['error']:
                 return result['error']
 
@@ -222,7 +222,7 @@ def experiment_adjustment(request):
 
         if 'experiment_on_current' in request.POST:  # задать силу тока
             info = json.dumps(float(request.POST['current']))
-            result = try_request_post(settings.EXPERIMENT_SOURCE_SET_CURR.format(1), info, 'experiment:index_adjustment')
+            result = try_request_post(request, settings.EXPERIMENT_SOURCE_SET_CURR.format(1), info, 'experiment:index_adjustment')
             if result['error']:
                 return result['error']
 
@@ -311,7 +311,7 @@ def experiment_interface(request):
                     }
             })
 
-            result = try_request_post(settings.EXPERIMENT_START.format(1), simple_experiment, 'experiment:index_interface')
+            result = try_request_post(request, settings.EXPERIMENT_START.format(1), simple_experiment, 'experiment:index_interface')
             if result['error']:
                 return result['error']
 
@@ -320,7 +320,7 @@ def experiment_interface(request):
                                                             state_ru=u'эксперимент', state_en='experiment')
 
         if 'turn_down' in request.POST:
-            result = try_request_get(settings.EXPERIMENT_START.format(1), 'experiment:index_interface')
+            result = try_request_get(request, settings.EXPERIMENT_START.format(1), 'experiment:index_interface')
             if result['error']:
                 return result['error']
 
