@@ -1,7 +1,9 @@
+import sys
+sys.path.insert(0, 'lib')
 from ximc import Motor
 from pprint import pprint
 
-motor = Motor("COM5")
+motor = Motor("/dev/ttyACM1")
 motor.open()
 motor.set_zero()
 status = motor.get_status()

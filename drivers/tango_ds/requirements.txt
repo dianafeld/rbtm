@@ -1,0 +1,6 @@
+Cython==0.22.1
+PyTango==8.1.6
+argparse==1.2.1
+numpy==1.9.2
+pyserial==2.7
+wsgiref==0.1.2

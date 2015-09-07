@@ -58,13 +58,13 @@ import sys
 sys.path.insert(0, 'lib')
 
 import xiApi
-from multiprocessing import Process, Value
+# from multiprocessing import Process, Value
 
-def func(is_run):
-    a = 0
-
-    while is_run.value:
-        a += 1
+# def func(is_run):
+#     a = 0
+#
+#     while is_run.value:
+#         a += 1
 
 
 # ----- PROTECTED REGION END -----# //  Detector.additionnal_import
@@ -205,23 +205,21 @@ class Detector (PyTango.Device_4Impl):
     #-----------------------------------------------------------------------------
     
     def GetFrame(self):
-        """ Returns image from detector
+        """ Get image from detector and save in image attribute
         
         :param : 
         :type: PyTango.DevVoid
-        :return: image
-        :rtype: PyTango.DevString """
+        :return: 
+        :rtype: PyTango.DevVoid """
         self.debug_stream("In GetFrame()")
-        argout = ''
         #----- PROTECTED REGION ID(Detector.GetFrame) ENABLED START -----#
 
         prev_state = self.get_state()
         self.set_state(PyTango.DevState.RUNNING)
 
-        is_run = Value("i", 1)
-        p = Process(target=func, args=(is_run, ))
-        p.start()
-        
+        # is_run = Value("i", 1)
+        # p = Process(target=func, args=(is_run, ))
+        # p.start()
 
         self.debug_stream("Starting acquisition...")
         try:
@@ -236,8 +234,8 @@ class Detector (PyTango.Device_4Impl):
             raise
         self.debug_stream("Image returned")
 
-        is_run.value = 0
-        p.join()
+        # is_run.value = 0
+        # p.join()
 
         self.set_state(prev_state)
 
@@ -252,8 +250,11 @@ class Detector (PyTango.Device_4Impl):
         #print(argout)
 
         # ----- PROTECTED REGION END -----# //  Detector.GetFrame
-        return argout
         
+
+    #----- PROTECTED REGION ID(Detector.programmer_methods) ENABLED START -----#
+    
+    #----- PROTECTED REGION END -----#	//	Detector.programmer_methods
 
 class DetectorClass(PyTango.DeviceClass):
     #--------- Add you global class variables here --------------------------
@@ -294,7 +295,7 @@ class DetectorClass(PyTango.DeviceClass):
     cmd_list = {
         'GetFrame':
             [[PyTango.DevVoid, "none"],
-            [PyTango.DevString, "image"]],
+            [PyTango.DevVoid, "none"]],
         }
 
 
@@ -324,6 +325,9 @@ def main():
     try:
         py = PyTango.Util(sys.argv)
         py.add_class(DetectorClass,Detector,'Detector')
+        #----- PROTECTED REGION ID(Detector.add_classes) ENABLED START -----#
+        
+        #----- PROTECTED REGION END -----#	//	Detector.add_classes
 
         U = PyTango.Util.instance()
         U.server_init()

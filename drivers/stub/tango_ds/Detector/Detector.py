@@ -150,6 +150,7 @@ class Detector (PyTango.Device_4Impl):
     def read_image(self, attr):
         self.debug_stream("In read_image()")
         #----- PROTECTED REGION ID(Detector.image_read) ENABLED START -----#
+
         attr.set_value(self.attr_image_read)
         
         #----- PROTECTED REGION END -----#	//	Detector.image_read
@@ -177,25 +178,26 @@ class Detector (PyTango.Device_4Impl):
         :param : 
         :type: PyTango.DevVoid
         :return: 
-        :rtype: PyTango.DevString """
+        :rtype: PyTango.DevVoid """
         self.debug_stream("In GetFrame()")
-        argout = ''
         #----- PROTECTED REGION ID(Detector.GetFrame) ENABLED START -----#
 
         prev_state = self.get_state()
         self.set_state(PyTango.DevState.RUNNING)
 
-        is_run = Value("i", 1)
-        p = Process(target=func, args=(is_run, ))
-        p.start()
+        # is_run = Value("i", 1)
+        # p = Process(target=func, args=(is_run, ))
+        # p.start()
 
         self.debug_stream("Starting acquisition...")
         try:
             with open('Detector/data.txt') as f:
-                import csv
-                reader = csv.reader(f, delimiter='\t')
-                your_list = list(reader)
-                image = np.asarray(your_list, dtype=np.int16)
+                # import csv
+                # reader = csv.reader(f, delimiter='\t')
+                # your_list = list(reader)
+                # image = np.asarray(your_list, dtype=np.int16)
+                # self.attr_image_read = np.loadtxt(f, dtype=np.int16)
+                image = np.loadtxt(f, dtype=np.int16)
         except PyTango.DevFailed as df:
             self.set_state(PyTango.DevState.FAULT)
             self.error_stream(str(df))
@@ -206,8 +208,8 @@ class Detector (PyTango.Device_4Impl):
             raise
         self.debug_stream("Image returned")
 
-        is_run.value = 0
-        p.join()
+        # is_run.value = 0
+        # p.join()
 
         self.set_state(prev_state)
 
@@ -224,8 +226,11 @@ class Detector (PyTango.Device_4Impl):
         # print(argout)
 
         # ----- PROTECTED REGION END -----# //  Detector.GetFrame
-        return argout
         
+
+    #----- PROTECTED REGION ID(Detector.programmer_methods) ENABLED START -----#
+    
+    #----- PROTECTED REGION END -----#	//	Detector.programmer_methods
 
 class DetectorClass(PyTango.DeviceClass):
     #--------- Add you global class variables here --------------------------
@@ -266,7 +271,7 @@ class DetectorClass(PyTango.DeviceClass):
     cmd_list = {
         'GetFrame':
             [[PyTango.DevVoid, "none"],
-            [PyTango.DevString, "none"]],
+            [PyTango.DevVoid, "none"]],
         }
 
 
@@ -295,6 +300,9 @@ def main():
     try:
         py = PyTango.Util(sys.argv)
         py.add_class(DetectorClass,Detector,'Detector')
+        #----- PROTECTED REGION ID(Detector.add_classes) ENABLED START -----#
+        
+        #----- PROTECTED REGION END -----#	//	Detector.add_classes
 
         U = PyTango.Util.instance()
         U.server_init()
