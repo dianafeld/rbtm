@@ -36,6 +36,13 @@ EXPERIMENT_DETECTOR_GET_FRAME = urljoin(EXPERIMENT_HOST, '/tomograph/{}/detector
 EXPERIMENT_START = urljoin(EXPERIMENT_HOST, '/tomograph/{}/experiment/start')
 EXPERIMENT_STOP = urljoin(EXPERIMENT_HOST, '/tomograph/{}/experiment/stop')
 
+EXPERIMENT_MOTOR_GET_HORIZ = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/get-horizontal-position')
+EXPERIMENT_MOTOR_GET_VERT = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/get-vertical-position')
+EXPERIMENT_MOTOR_GET_ANGLE = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/get-angle-position')
+# EXPERIMENT_SHUTTER_GET_STATUS = urljoin(EXPERIMENT_HOST, '/tomograph/{}/shutter/')
+EXPERIMENT_SOURCE_GET_VOLT = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/get-voltage')
+EXPERIMENT_SOURCE_GET_CURR = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/get-current')
+
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -90,7 +97,7 @@ USE_I18N = True
 
 # If you set this to False, Django will not format dates, numbers and
 # calendars according to the current locale.
-USE_L10N = True
+USE_L10N = False
 
 # If you set this to False, Django will not use timezone-aware datetimes.
 USE_TZ = True

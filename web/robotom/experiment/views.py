@@ -92,21 +92,21 @@ def check_result(answer_check, request, tomo, success_msg='', state_ru='', state
                     answer_check['error']))
         messages.warning(request, 
             u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
-
+        return render(request, 'experiment/adjustment.html', {
+            'full_access': request.user.userprofile.is_experimentator,
+            'caption': 'Эксперимент',
+            'off': (tomo.state == 'off'),
+            'waiting': (tomo.state == 'waiting'),
+            'adj': (tomo.state == 'adjustment'),
+            'exper': (tomo.state == 'experiment'),
+            'tomograph': tomo,
+        })
 
 @login_required
 @user_passes_test(has_experiment_access)
 def experiment_view(request):
     migrations()
     tomo = get_object_or_404(Tomograph, pk=1)
-    if tomo.state == 'off':
-        info_once_only(request, u'Текущее состояние томографа: выключен')
-    elif tomo.state == 'waiting':
-        info_once_only(request, u'Текущее состояние томографа: ожидание')
-    elif tomo.state == 'adjustment':
-        info_once_only(request, u'Текущее состояние томографа: юстировка')
-    elif tomo.state == 'experiment':
-        info_once_only(request, u'Текущее состояние томографа: эксперимент')
     if request.method == 'POST':
         if 'on_exp' in request.POST:  # включить томограф
             result = try_request_get(request, settings.EXPERIMENT_SOURCE_POWER_ON.format(1), 'experiment:index')
@@ -124,8 +124,17 @@ def experiment_view(request):
 
             answer_check = result['answer_check']
             check_result(answer_check, request, tomo, success_msg=u'Томограф выключен', 
-                                                            state_ru=u'выключен', state_en='off')
-            
+                                                      state_ru=u'выключен', state_en='off')
+    else:
+        if tomo.state == 'off':
+            info_once_only(request, u'Текущее состояние томографа: выключен')
+        elif tomo.state == 'waiting':
+            info_once_only(request, u'Текущее состояние томографа: ожидание')
+        elif tomo.state == 'adjustment':
+            info_once_only(request, u'Текущее состояние томографа: юстировка')
+        elif tomo.state == 'experiment':
+            info_once_only(request, u'Текущее состояние томографа: эксперимент')
+
     return render(request, 'experiment/start.html', {
         'full_access': (request.user.userprofile.is_experimentator),
         'caption': 'Эксперимент',
@@ -141,7 +150,6 @@ def experiment_view(request):
 def experiment_adjustment(request):
     migrations()
     tomo = get_object_or_404(Tomograph, pk=1)
-    print tomo.state
     if tomo.state == 'off':
         info_once_only(request, u'Текущее состояние томографа: выключен')
     elif tomo.state == 'waiting':
@@ -151,24 +159,109 @@ def experiment_adjustment(request):
     elif tomo.state == 'experiment':
         info_once_only(request, u'Текущее состояние томографа: эксперимент')
     if request.method == 'POST':
+        if 'refresh' in request.POST:
+            try:
+                if request.POST['refresh'] == 'voltage':
+                    result = try_request_get(request, settings.EXPERIMENT_SOURCE_GET_VOLT.format(1), 'experiment:index_adjustment')
+                    if result['error']:
+                        return result['error']
+                    answer_check = result['answer_check']
+                    check_status = check_result(answer_check, request, tomo, success_msg=u'Текущее напряжение успешно получено', 
+                                                                            state_ru=u'юстировка', state_en=u'adjustment')
+                    if check_status:
+                        return check_status
+                    else:
+                        tomo.voltage = float(answer_check['result'])
+                        tomo.save()
+                elif request.POST['refresh'] == 'current':
+                    result = try_request_get(request, settings.EXPERIMENT_SOURCE_GET_CURR.format(1), 'experiment:index_adjustment')
+                    if result['error']:
+                        return result['error']
+
+                    answer_check = result['answer_check']
+                    check_status = check_result(answer_check, request, tomo, success_msg=u'Текущая сила тока успешно получена', 
+                                                                            state_ru=u'юстировка', state_en=u'adjustment')
+                    if check_status:
+                        return check_status
+                    else:
+                        tomo.current = float(answer_check['result'])
+                        tomo.save()
+                elif request.POST['refresh'] == 'angle':
+                    result = try_request_get(request, settings.EXPERIMENT_MOTOR_GET_ANGLE.format(1), 'experiment:index_adjustment')
+                    if result['error']:
+                        return result['error']
+
+                    answer_check = result['answer_check']
+                    check_status = check_result(answer_check, request, tomo, success_msg=u'Текущий угол поворота успешно получен', 
+                                                                            state_ru=u'юстировка', state_en=u'adjustment')
+                    if check_status:
+                        return check_status
+                    else:
+                        tomo.angle = float(answer_check['result'])
+                        tomo.save()
+                elif request.POST['refresh'] == 'vertical_shift':
+                    result = try_request_get(request, settings.EXPERIMENT_MOTOR_GET_VERT.format(1), 'experiment:index_adjustment')
+                    if result['error']:
+                        return result['error']
+
+                    answer_check = result['answer_check']
+                    check_status = check_result(answer_check, request, tomo, success_msg=u'Текущий вертикальный сдвиг успешно получен', 
+                                                                            state_ru=u'юстировка', state_en=u'adjustment')
+                    if check_status:
+                        return check_status
+                    else:
+                        tomo.vertical_shift = int(answer_check['result'])
+                        tomo.save()
+                elif request.POST['refresh'] == 'horizontal_shift':
+                    result = try_request_get(request, settings.EXPERIMENT_MOTOR_GET_HORIZ.format(1), 'experiment:index_adjustment')
+                    if result['error']:
+                        return result['error']
+
+                    answer_check = result['answer_check']
+                    check_status = check_result(answer_check, request, tomo, success_msg=u'Текущий вертикальный сдвиг успешно получен', 
+                                                                            state_ru=u'юстировка', state_en=u'adjustment')
+                    if check_status:
+                        return check_status
+                    else:
+                        tomo.horizontal_shift = int(answer_check['result'])
+                        tomo.save()
+                elif request.POST['refresh'] == 'shutter':
+                    result = try_request_get(request, settings.EXPERIMENT_SHUTTER_GET_STATUS.format(1), 'experiment:index_adjustment')
+                    if result['error']:
+                        return result['error']
+
+                    answer_check = result['answer_check']
+                    check_status = check_result(answer_check, request, tomo, success_msg=u'Текущее состояние заслонки успешно получено', 
+                                                                            state_ru=u'юстировка', state_en=u'adjustment')
+                    if check_status:
+                        return check_status
+                    else:
+                        tomo.shutter = answer_check['result']
+                        tomo.save()
+            except BaseException as e:
+                logger.error(e)
+                messages.warning(request, 'В процессе обновления информации произошла непредвиденная ошибка. Подробнее: {}'.format(e))
+
         # if tomo.state == 'waiting' or tomo.state == 'adjustment' :
         if 'move_hor_submit' in request.POST:  # подвинуть по горизонтали
-            info = json.dumps(float(request.POST['move_hor']))
+            info = json.dumps(int(request.POST['move_hor']))
             result = try_request_post(request, settings.EXPERIMENT_MOTOR_SET_HORIZ.format(1), info, 'experiment:index_adjustment')
             if result['error']:
                 return result['error']
 
             answer_check = result['answer_check']
+            tomo.horizontal_shift = int(request.POST['move_hor'])
             check_result(answer_check, request, tomo, success_msg=u'Горизонтальное положение образца изменено', 
                                                             state_ru=u'юстировка', state_en='adjustment')
         
         if 'move_ver_submit' in request.POST:  # подвинуть по вертикали
-            info = json.dumps(float(request.POST['move_ver']))
+            info = json.dumps(int(request.POST['move_ver']))
             result = try_request_post(request, settings.EXPERIMENT_MOTOR_SET_VERT.format(1), info, 'experiment:index_adjustment')
             if result['error']:
                 return result['error']
 
             answer_check = result['answer_check']
+            tomo.vertical_shift= int(request.POST['move_ver'])
             check_result(answer_check, request, tomo, success_msg=u'Вертикальное положение образца изменено', 
                                                             state_ru=u'юстировка', state_en='adjustment')
     
@@ -179,6 +272,7 @@ def experiment_adjustment(request):
                 return result['error']
 
             answer_check = result['answer_check']
+            tomo.angle = float(request.POST['rotate'])
             check_result(answer_check, request, tomo, success_msg=u'Образец повернут', 
                                                             state_ru=u'юстировка', state_en='adjustment')
 
@@ -188,6 +282,7 @@ def experiment_adjustment(request):
                 return result['error']
 
             answer_check = result['answer_check']
+            tomo.angle = 0
             check_result(answer_check, request, tomo, success_msg=u'Текущий угол поворота принят за 0', 
                                                             state_ru=u'юстировка', state_en='adjustment')
         
@@ -198,6 +293,7 @@ def experiment_adjustment(request):
                     return result['error']
 
                 answer_check = result['answer_check']
+                tomo.shutter = 'open'
                 check_result(answer_check, request, tomo, success_msg=u'Заслонка открыта', 
                                                             state_ru=u'юстировка', state_en='adjustment')
 
@@ -207,6 +303,7 @@ def experiment_adjustment(request):
                     return result['error']
 
                 answer_check = result['answer_check']
+                tomo.shutter = 'closed'
                 check_result(answer_check, request, tomo, success_msg=u'Заслонка закрыта', 
                                                             state_ru=u'юстировка', state_en='adjustment')
 
@@ -217,6 +314,7 @@ def experiment_adjustment(request):
                 return result['error']
 
             answer_check = result['answer_check']
+            tomo.voltage = float(request.POST['voltage'])
             check_result(answer_check, request, tomo, success_msg=u'Напряжение установлено', 
                                                             state_ru=u'юстировка', state_en='adjustment')
 
@@ -227,6 +325,7 @@ def experiment_adjustment(request):
                 return result['error']
 
             answer_check = result['answer_check']
+            tomo.current = float(request.POST['current'])
             check_result(answer_check, request, tomo, success_msg=u'Сила тока установлена', 
                                                             state_ru=u'юстировка', state_en='adjustment')
 
@@ -259,12 +358,13 @@ def experiment_adjustment(request):
                 messages.warning(request, u'Не удалось выполнить предпросмотр. Попробуйте повторно')
                 logger.error(e)
     return render(request, 'experiment/adjustment.html', {
-        'full_access': (request.user.userprofile.is_experimentator),
+        'full_access': request.user.userprofile.is_experimentator,
         'caption': 'Эксперимент',
         'off': (tomo.state == 'off'),
         'waiting': (tomo.state == 'waiting'),
         'adj': (tomo.state == 'adjustment'),
-        'exper': (tomo.state == 'experiment')
+        'exper': (tomo.state == 'experiment'),
+        'tomograph': tomo,
     })
 
 
@@ -336,3 +436,30 @@ def experiment_interface(request):
         'adj': (tomo.state == 'adjustment'),
         'exper': (tomo.state == 'experiment')
     })
+
+
+def set_voltage(request):
+    pass
+
+
+def set_current(request):
+    pass
+
+
+def set_angle(request):
+    pass
+
+
+def set_horiz_shift(request):
+    pass
+
+
+def set_vert_shift(request):
+    pass
+
+
+def set_shutter(request):
+    pass
+
+def set_voltage(request):
+    pass
