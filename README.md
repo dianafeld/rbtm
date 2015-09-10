@@ -15,7 +15,7 @@ docker exec -i -t storage_server_1 /bin/bash
 
 mongorestore --drop storage_mongodump_clean/
 
-# Delete all containers
+Delete all containers
 docker rm $(docker ps -a -q)
-# Delete all images
+Delete all images
 docker rmi $(docker images -q)
