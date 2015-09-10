@@ -115,7 +115,7 @@ def new_frame():
         logger.error('Incorrect format')
         abort(400)
 
-    logger.info(b'Request body: ' + request.form)
+    logger.info('Request body: ' + str(request.form))
 
     json_frame = json.loads(request.form['data'])
     experiment_id = json_frame['exp_id']
@@ -173,9 +173,9 @@ def get_png():
     png_file_path = os.path.join('..', 'data', 'experiments', str(experiment_id), 'before_processing', 'png',
                                  str(frame_id) + '.png')
 
-    if not os.path.exists(os.path.join('storage', png_file_path)):
+    #if not os.path.exists(os.path.join('storage', png_file_path)):
     #if not os.path.exists(png_file_path):
-        abort(404)
+    #    abort(404)
 
     return send_file(png_file_path, mimetype='image/png')
 
