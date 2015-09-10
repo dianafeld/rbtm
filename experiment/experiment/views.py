@@ -8,22 +8,11 @@ More exactly - some supporting functions and functions for receiving queries
 import json
 import threading
 import time
-import csv
-import zlib
-import logging
-import os
 
-from flask import Flask
 from flask import request
 from flask import Response
-from flask import abort
-from flask import send_file
 from flask import make_response
-import requests
-import numpy as np
-import pylab as plt
 
-import PyTango
 from tomograph import Tomograph
 from tomograph import try_thrice_function
 from tomograph import create_event
@@ -31,13 +20,13 @@ from tomograph import create_response
 from tomograph import send_to_storage
 from conf import STORAGE_FRAMES_URI
 from conf import STORAGE_EXP_START_URI
-from conf import STORAGE_EXP_FINISH_URI
 from conf import TOMO_ADDR
 from conf import MAX_EXPERIMENT_TIME
-from StringIO import StringIO
+
 
 # logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = u'experiment.log')
 from experiment import app
+
 logger = app.logger
 
 TOMOGRAPHS = (
@@ -131,7 +120,7 @@ def source_power_off(tomo_num):
 
 
 # ---------------------------------------------------------#
-#    Functions for adjustment of tomograph
+# Functions for adjustment of tomograph
 #---------------------------------------------------------#
 
 
@@ -423,7 +412,7 @@ def check_and_prepare_exp_parameters(exp_param):
             return False, 'Incorrect format in \'DATA\' parameters'
         if not (
                     (type(exp_param['DATA']['angle step']) is float) and (
-                    type(exp_param['DATA']['count per step']) is int)):
+                            type(exp_param['DATA']['count per step']) is int)):
             return False, 'Incorrect format in \'DATA\' parameters'
 
 
