@@ -11,7 +11,7 @@ TOMO_STATES = (
 )
 
 SHUTTER_STATES = (
-    ('open', 'open'),
+    ('opened', 'opened'),
     ('closed', 'closed'),
 )
 
@@ -21,6 +21,5 @@ class Tomograph(models.Model):
     current = models.FloatField(null=True, blank=True)
     shutter = models.CharField(max_length=6, default='closed', choices=SHUTTER_STATES, null=True, blank=True)
     angle = models.FloatField(null=True, blank=True)
-    exposure = models.FloatField(null=True, blank=True)
     horizontal_shift = models.IntegerField(null=True, blank=True)
     vertical_shift = models.IntegerField(null=True, blank=True)

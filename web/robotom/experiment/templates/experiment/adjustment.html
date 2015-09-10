@@ -232,7 +232,7 @@
                                        	{% if tomograph.shutter == None %}
                                        	неизвестно
                                        	{% else %}
-                                       		{% if tomograph.shutter == 'open' %}
+                                       		{% if tomograph.shutter == 'opened' %}
                                        		открыта
                                        		{% else %}
                                        		закрыта
@@ -241,7 +241,7 @@
                                        	</small></div>
 
                                         <div id="text_gate" class="btn-group" data-toggle="buttons">
-                                            <label class="btn btn-default {% if tomograph.shutter == 'open' %} active {% endif %}" id="open"> <input id="open" name="gate_state" type="radio" value="open" {% if tomograph.shutter == 'open' %} checked {% endif %}>Открыта</label>
+                                            <label class="btn btn-default {% if tomograph.shutter == 'opened' %} active {% endif %}" id="open"> <input id="open" name="gate_state" type="radio" value="open" {% if tomograph.shutter == 'opened' %} checked {% endif %}>Открыта</label>
                                             <label class="btn btn-default {% if tomograph.shutter == 'closed' %} active {% endif %}>" id="close"> <input id="close" name="gate_state" type="radio" value="close" {% if tomograph.shutter == 'closed' %} checked {% endif %}>Закрыта</label>
                                         </div>
 

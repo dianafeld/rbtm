@@ -19,6 +19,7 @@ import json
 from requests.exceptions import Timeout
 import uuid
 from django.core.files.storage import default_storage
+from django.http import HttpResponse, HttpResponseBadRequest
 
 logger = logging.getLogger('django.request')
 
@@ -166,78 +167,54 @@ def experiment_adjustment(request):
                     if result['error']:
                         return result['error']
                     answer_check = result['answer_check']
+                    tomo.voltage = float(answer_check['result'])
                     check_status = check_result(answer_check, request, tomo, success_msg=u'Текущее напряжение успешно получено', 
                                                                             state_ru=u'юстировка', state_en=u'adjustment')
-                    if check_status:
-                        return check_status
-                    else:
-                        tomo.voltage = float(answer_check['result'])
-                        tomo.save()
                 elif request.POST['refresh'] == 'current':
                     result = try_request_get(request, settings.EXPERIMENT_SOURCE_GET_CURR.format(1), 'experiment:index_adjustment')
                     if result['error']:
                         return result['error']
 
                     answer_check = result['answer_check']
+                    tomo.current = float(answer_check['result'])
                     check_status = check_result(answer_check, request, tomo, success_msg=u'Текущая сила тока успешно получена', 
                                                                             state_ru=u'юстировка', state_en=u'adjustment')
-                    if check_status:
-                        return check_status
-                    else:
-                        tomo.current = float(answer_check['result'])
-                        tomo.save()
                 elif request.POST['refresh'] == 'angle':
                     result = try_request_get(request, settings.EXPERIMENT_MOTOR_GET_ANGLE.format(1), 'experiment:index_adjustment')
                     if result['error']:
                         return result['error']
 
                     answer_check = result['answer_check']
+                    tomo.angle = float(answer_check['result'])
                     check_status = check_result(answer_check, request, tomo, success_msg=u'Текущий угол поворота успешно получен', 
                                                                             state_ru=u'юстировка', state_en=u'adjustment')
-                    if check_status:
-                        return check_status
-                    else:
-                        tomo.angle = float(answer_check['result'])
-                        tomo.save()
                 elif request.POST['refresh'] == 'vertical_shift':
                     result = try_request_get(request, settings.EXPERIMENT_MOTOR_GET_VERT.format(1), 'experiment:index_adjustment')
                     if result['error']:
                         return result['error']
 
                     answer_check = result['answer_check']
+                    tomo.vertical_shift = int(answer_check['result'])
                     check_status = check_result(answer_check, request, tomo, success_msg=u'Текущий вертикальный сдвиг успешно получен', 
                                                                             state_ru=u'юстировка', state_en=u'adjustment')
-                    if check_status:
-                        return check_status
-                    else:
-                        tomo.vertical_shift = int(answer_check['result'])
-                        tomo.save()
                 elif request.POST['refresh'] == 'horizontal_shift':
                     result = try_request_get(request, settings.EXPERIMENT_MOTOR_GET_HORIZ.format(1), 'experiment:index_adjustment')
                     if result['error']:
                         return result['error']
 
                     answer_check = result['answer_check']
+                    tomo.horizontal_shift = int(answer_check['result'])
                     check_status = check_result(answer_check, request, tomo, success_msg=u'Текущий вертикальный сдвиг успешно получен', 
                                                                             state_ru=u'юстировка', state_en=u'adjustment')
-                    if check_status:
-                        return check_status
-                    else:
-                        tomo.horizontal_shift = int(answer_check['result'])
-                        tomo.save()
                 elif request.POST['refresh'] == 'shutter':
                     result = try_request_get(request, settings.EXPERIMENT_SHUTTER_GET_STATUS.format(1), 'experiment:index_adjustment')
                     if result['error']:
                         return result['error']
 
                     answer_check = result['answer_check']
+                    tomo.shutter = answer_check['result']
                     check_status = check_result(answer_check, request, tomo, success_msg=u'Текущее состояние заслонки успешно получено', 
                                                                             state_ru=u'юстировка', state_en=u'adjustment')
-                    if check_status:
-                        return check_status
-                    else:
-                        tomo.shutter = answer_check['result']
-                        tomo.save()
             except BaseException as e:
                 logger.error(e)
                 messages.warning(request, 'В процессе обновления информации произошла непредвиденная ошибка. Подробнее: {}'.format(e))
@@ -293,7 +270,7 @@ def experiment_adjustment(request):
                     return result['error']
 
                 answer_check = result['answer_check']
-                tomo.shutter = 'open'
+                tomo.shutter = 'opened'
                 check_result(answer_check, request, tomo, success_msg=u'Заслонка открыта', 
                                                             state_ru=u'юстировка', state_en='adjustment')
 
@@ -438,28 +415,107 @@ def experiment_interface(request):
     })
 
 
-def set_voltage(request):
-    pass
+def set_voltage(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.voltage = float(request.POST["voltage"])
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
 
 
-def set_current(request):
-    pass
+def set_current(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.current = float(request.POST["current"])
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
 
 
 def set_angle(request):
-    pass
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.angle = float(request.POST["angle"])
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
 
 
 def set_horiz_shift(request):
-    pass
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.horizontal_shift = int(request.POST["horiz_shift"])
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
 
 
-def set_vert_shift(request):
-    pass
+def set_vert_shift(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.vertical_shift = int(request.POST["vert_shift"])
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
 
 
-def set_shutter(request):
-    pass
+def set_shutter(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.shutter = request.POST["shutter"]
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
 
-def set_voltage(request):
-    pass
+
+def power_on(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.state = 'waiting'
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
+
+
+def power_off(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.state = 'off'
+        tomo.angle = None
+        tomo.voltage = None
+        tomo.current = None
+        tomo.shutter = None
+        tomo.horizontal_shift = None
+        tomo.vertical_shift = None
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
+
+
+def experiment_start(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.state = 'experiment'
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
+
+
+def experiment_stop(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.state = 'waiting'
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
