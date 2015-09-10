@@ -951,7 +951,7 @@ class Tomograph:
                 return create_response(success= False, error= error)
 
         # Tomograph takes exposure multiplied by 10 and rounded
-        exposure = round(exposure * 10)
+        exposure = round(exposure)
         success, frame_metadata_json, exception_message = try_thrice_function(self.tomograph_proxy.GetFrame, exposure)
         if success == False:
             error = 'Could not get image because of tomograph'
