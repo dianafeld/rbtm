@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth import login as auth_login, authenticate
 from django.core.mail import send_mail
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -9,7 +8,6 @@ from django.contrib import messages
 from django.contrib.messages import get_messages
 import logging
 import hashlib
-import datetime
 import random
 import requests
 import tempfile
@@ -17,13 +15,11 @@ import os
 from models import Tomograph
 from django.shortcuts import get_object_or_404
 from django.core import files
-import urllib2
 import json
 from requests.exceptions import Timeout
-from django.forms import ValidationError
 import uuid
 from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
+from django.http import HttpResponse, HttpResponseBadRequest
 
 logger = logging.getLogger('django.request')
 
@@ -44,81 +40,102 @@ def migrations():
         Tomo.save()
 
 
+def try_request_post(request, address, content, source_page, stream=False):
+    result = {'answer_check': None, 'error': None}
+    try:
+        answer = requests.post(address, content, timeout=settings.TIMEOUT_DEFAULT, stream=stream) 
+        result['answer_check'] = json.loads(answer.content)
+        if answer.status_code != 200:
+            messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+            logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+            result['error'] = redirect(reverse(source_page))
+    except Timeout as e:
+        messages.warning(request, 'Нет ответа от модуля "Эксперимент".')
+        logger.error(e)
+        result['error'] = redirect(reverse(source_page))
+    except BaseException as e:
+        logger.error(e)
+        messages.warning(request, 
+            'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
+        result['error'] = redirect(reverse(source_page))
+    return result
+
+
+def try_request_get(request, address, source_page):
+    result = {'answer_check': None, 'error': None}
+    try:
+        answer = requests.get(address, timeout=settings.TIMEOUT_DEFAULT) 
+        result['answer_check'] = json.loads(answer.content)
+        if answer.status_code != 200:
+            messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+            logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+            result['error'] = redirect(reverse(source_page))
+    except Timeout as e:
+        messages.warning(request, 'Нет ответа от модуля "Эксперимент".')
+        logger.error(e)
+        result['error'] = redirect(reverse(source_page))
+    except BaseException as e:
+        logger.error(e)
+        messages.warning(request, 
+            'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
+        result['error'] = redirect(reverse(source_page))
+    return result
+
+
+def check_result(answer_check, request, tomo, success_msg='', state_ru='', state_en=''):
+    if answer_check['success']:
+        messages.success(request, success_msg)
+        info_once_only(request, u'Текущее состояние томографа: {}'.format(state_ru))
+        tomo.state = state_en
+        tomo.save()
+    else:
+        logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
+                    answer_check['error']))
+        messages.warning(request, 
+            u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(answer_check['error']))
+        return render(request, 'experiment/adjustment.html', {
+            'full_access': request.user.userprofile.is_experimentator,
+            'caption': 'Эксперимент',
+            'off': (tomo.state == 'off'),
+            'waiting': (tomo.state == 'waiting'),
+            'adj': (tomo.state == 'adjustment'),
+            'exper': (tomo.state == 'experiment'),
+            'tomograph': tomo,
+        })
+
 @login_required
 @user_passes_test(has_experiment_access)
 def experiment_view(request):
     migrations()
     tomo = get_object_or_404(Tomograph, pk=1)
-    if tomo.state == 'off':
-        info_once_only(request, u'Текущее состояние томографа: выключен')
-    elif tomo.state == 'waiting':
-        info_once_only(request, u'Текущее состояние томографа: ожидание')
-    elif tomo.state == 'adjustment':
-        info_once_only(request, u'Текущее состояние томографа: юстировка')
-    elif tomo.state == 'experiment':
-        info_once_only(request, u'Текущее состояние томографа: эксперимент')
     if request.method == 'POST':
         if 'on_exp' in request.POST:  # включить томограф
-            try:
-                answer = requests.get('http://109.234.34.140:5001/tomograph/1/source/power-on', timeout=100)
-                print answer.content
-                answer_check = json.loads(answer.content)
-                if answer.status_code != 200:
-                    messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(
-                        answer.status_code))
-                    logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                    return redirect(reverse('experiment:index'))
-            except Timeout as e:
-                messages.warning(request,
-                                 'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже.')
-                logger.error(e)
-                return redirect(reverse('experiment:index'))
-            except BaseException as e:
-                logger.error(e)
-                messages.warning(request,
-                                 'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                return redirect(reverse('experiment:index'))
-            if answer_check['success'] == True:
-                messages.success(request, u'Томограф включен')
-                info_once_only(request, u'Текущее состояние томографа: ожидание')
-                tomo.state = 'waiting'
-                tomo.save()
-            else:
-                logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                    answer_check['error']))
-                messages.warning(request,
-                                 u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                                     answer_check['error']))
+            result = try_request_get(request, settings.EXPERIMENT_SOURCE_POWER_ON.format(1), 'experiment:index')
+            if result['error']:
+                return result['error']
+
+            answer_check = result['answer_check']
+            check_result(answer_check, request, tomo, success_msg=u'Томограф включен', 
+                                                            state_ru=u'ожидание', state_en='waiting')
+            
         if 'of_exp' in request.POST:  # выключение томографа
-            try:
-                answer = requests.get('http://109.234.34.140:5001/tomograph/1/source/power-off', timeout=100)
-                answer_check = json.loads(answer.content)
-                if answer.status_code != 200:
-                    messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(
-                        answer.status_code))
-                    logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-            except Timeout as e:
-                messages.warning(request,
-                                 'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже.')
-                logger.error(e)
-                return redirect(reverse('experiment:index'))
-            except BaseException as e:
-                logger.error(e)
-                messages.warning(request,
-                                 'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                return redirect(reverse('experiment:index'))
-            if answer_check['success'] == True:
-                messages.success(request, u'Томограф выключен')
-                info_once_only(request, u'Текущее состояние томографа: выключен')
-                print tomo.state
-                tomo.state = 'off'
-                tomo.save()
-            else:
-                logger.error(u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже {}'.format(
-                    answer_check['error']))
-                messages.warning(request,
-                                 u'Модуль "Эксперимент" не работает корректно в данный момент. Попробуйте позже {}'.format(
-                                     answer_check['error']))
+            result = try_request_get(request, settings.EXPERIMENT_SOURCE_POWER_OFF.format(1), 'experiment:index')
+            if result['error']:
+                return result['error']
+
+            answer_check = result['answer_check']
+            check_result(answer_check, request, tomo, success_msg=u'Томограф выключен', 
+                                                      state_ru=u'выключен', state_en='off')
+    else:
+        if tomo.state == 'off':
+            info_once_only(request, u'Текущее состояние томографа: выключен')
+        elif tomo.state == 'waiting':
+            info_once_only(request, u'Текущее состояние томографа: ожидание')
+        elif tomo.state == 'adjustment':
+            info_once_only(request, u'Текущее состояние томографа: юстировка')
+        elif tomo.state == 'experiment':
+            info_once_only(request, u'Текущее состояние томографа: эксперимент')
+
     return render(request, 'experiment/start.html', {
         'full_access': (request.user.userprofile.is_experimentator),
         'caption': 'Эксперимент',
@@ -134,7 +151,6 @@ def experiment_view(request):
 def experiment_adjustment(request):
     migrations()
     tomo = get_object_or_404(Tomograph, pk=1)
-    print tomo.state
     if tomo.state == 'off':
         info_once_only(request, u'Текущее состояние томографа: выключен')
     elif tomo.state == 'waiting':
@@ -144,265 +160,157 @@ def experiment_adjustment(request):
     elif tomo.state == 'experiment':
         info_once_only(request, u'Текущее состояние томографа: эксперимент')
     if request.method == 'POST':
+        if 'refresh' in request.POST:
+            try:
+                if request.POST['refresh'] == 'voltage':
+                    result = try_request_get(request, settings.EXPERIMENT_SOURCE_GET_VOLT.format(1), 'experiment:index_adjustment')
+                    if result['error']:
+                        return result['error']
+                    answer_check = result['answer_check']
+                    tomo.voltage = float(answer_check['result'])
+                    check_status = check_result(answer_check, request, tomo, success_msg=u'Текущее напряжение успешно получено', 
+                                                                            state_ru=u'юстировка', state_en=u'adjustment')
+                elif request.POST['refresh'] == 'current':
+                    result = try_request_get(request, settings.EXPERIMENT_SOURCE_GET_CURR.format(1), 'experiment:index_adjustment')
+                    if result['error']:
+                        return result['error']
+
+                    answer_check = result['answer_check']
+                    tomo.current = float(answer_check['result'])
+                    check_status = check_result(answer_check, request, tomo, success_msg=u'Текущая сила тока успешно получена', 
+                                                                            state_ru=u'юстировка', state_en=u'adjustment')
+                elif request.POST['refresh'] == 'angle':
+                    result = try_request_get(request, settings.EXPERIMENT_MOTOR_GET_ANGLE.format(1), 'experiment:index_adjustment')
+                    if result['error']:
+                        return result['error']
+
+                    answer_check = result['answer_check']
+                    tomo.angle = float(answer_check['result'])
+                    check_status = check_result(answer_check, request, tomo, success_msg=u'Текущий угол поворота успешно получен', 
+                                                                            state_ru=u'юстировка', state_en=u'adjustment')
+                elif request.POST['refresh'] == 'vertical_shift':
+                    result = try_request_get(request, settings.EXPERIMENT_MOTOR_GET_VERT.format(1), 'experiment:index_adjustment')
+                    if result['error']:
+                        return result['error']
+
+                    answer_check = result['answer_check']
+                    tomo.vertical_shift = int(answer_check['result'])
+                    check_status = check_result(answer_check, request, tomo, success_msg=u'Текущий вертикальный сдвиг успешно получен', 
+                                                                            state_ru=u'юстировка', state_en=u'adjustment')
+                elif request.POST['refresh'] == 'horizontal_shift':
+                    result = try_request_get(request, settings.EXPERIMENT_MOTOR_GET_HORIZ.format(1), 'experiment:index_adjustment')
+                    if result['error']:
+                        return result['error']
+
+                    answer_check = result['answer_check']
+                    tomo.horizontal_shift = int(answer_check['result'])
+                    check_status = check_result(answer_check, request, tomo, success_msg=u'Текущий вертикальный сдвиг успешно получен', 
+                                                                            state_ru=u'юстировка', state_en=u'adjustment')
+                elif request.POST['refresh'] == 'shutter':
+                    result = try_request_get(request, settings.EXPERIMENT_SHUTTER_GET_STATUS.format(1), 'experiment:index_adjustment')
+                    if result['error']:
+                        return result['error']
+
+                    answer_check = result['answer_check']
+                    tomo.shutter = answer_check['result']
+                    check_status = check_result(answer_check, request, tomo, success_msg=u'Текущее состояние заслонки успешно получено', 
+                                                                            state_ru=u'юстировка', state_en=u'adjustment')
+            except BaseException as e:
+                logger.error(e)
+                messages.warning(request, 'В процессе обновления информации произошла непредвиденная ошибка. Подробнее: {}'.format(e))
+
         # if tomo.state == 'waiting' or tomo.state == 'adjustment' :
         if 'move_hor_submit' in request.POST:  # подвинуть по горизонтали
-            try:
-                info = json.dumps(float(request.POST['move_hor']))
-                answer = requests.post('http://109.234.34.140:5001/tomograph/1/motor/set-horizontal-position', info,
-                                       timeout=100)
-                answer_check = json.loads(answer.content)
-                if answer.status_code != 200:
-                    messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(
-                        answer.status_code))
-                    logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                    return redirect(reverse('experiment:index_adjustment'))
-            except Timeout as e:
-                messages.warning(request, 'Нет ответа от модуля "Эксперимент".')
-                logger.error(e)
-                return redirect(reverse('experiment:index_adjustment'))
-            except BaseException as e:
-                logger.error(e)
-                messages.warning(request,
-                                 'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                return redirect(reverse('experiment:index_adjustment'))
-            if answer_check['success'] == True:
-                messages.success(request, u'Горизонтальное положение образца изменено.')
-                info_once_only(request, u'Текущее состояние томографа: юстировка')
-                tomo.state = 'adjustment'
-                tomo.save()
-                print tomo.state
-            else:
-                logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                    answer_check['error']))
-                messages.warning(request,
-                                 u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                                     answer_check['error']))
+            info = json.dumps(int(request.POST['move_hor']))
+            result = try_request_post(request, settings.EXPERIMENT_MOTOR_SET_HORIZ.format(1), info, 'experiment:index_adjustment')
+            if result['error']:
+                return result['error']
+
+            answer_check = result['answer_check']
+            tomo.horizontal_shift = int(request.POST['move_hor'])
+            check_result(answer_check, request, tomo, success_msg=u'Горизонтальное положение образца изменено', 
+                                                            state_ru=u'юстировка', state_en='adjustment')
+        
         if 'move_ver_submit' in request.POST:  # подвинуть по вертикали
-            try:
-                info = json.dumps(float(request.POST['move_ver']))
-                answer = requests.post('http://109.234.34.140:5001/tomograph/1/motor/set-vertical-position', info,
-                                       timeout=100)
-                answer_check = json.loads(answer.content)
-                if answer.status_code != 200:
-                    messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(
-                        answer.status_code))
-                    logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                    return redirect(reverse('experiment:index_adjustment'))
-            except Timeout as e:
-                messages.warning(request, 'Нет ответа от модуля "Эксперимент".')
-                logger.error(e)
-                return redirect(reverse('experiment:index_adjustment'))
-            except BaseException as e:
-                logger.error(e)
-                messages.warning(request,
-                                 'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                return redirect(reverse('experiment:index_adjustment'))
-            if answer_check['success'] == True:
-                messages.success(request, u'Вертикальное положение образца изменено.')
-                info_once_only(request, u'Текущее состояние томографа: юстировка')
-                tomo.state = 'adjustment'
-                tomo.save()
-            else:
-                logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                    answer_check['error']))
-                messages.warning(request,
-                                 u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                                     answer_check['error']))
+            info = json.dumps(int(request.POST['move_ver']))
+            result = try_request_post(request, settings.EXPERIMENT_MOTOR_SET_VERT.format(1), info, 'experiment:index_adjustment')
+            if result['error']:
+                return result['error']
+
+            answer_check = result['answer_check']
+            tomo.vertical_shift= int(request.POST['move_ver'])
+            check_result(answer_check, request, tomo, success_msg=u'Вертикальное положение образца изменено', 
+                                                            state_ru=u'юстировка', state_en='adjustment')
+    
         if 'rotate_submit' in request.POST:  # повернуть
-            try:
-                info = json.dumps(float(request.POST['rotate']))
-                answer = requests.post('http://109.234.34.140:5001/tomograph/1/motor/set-angle-position', info,
-                                       timeout=100)
-                answer_check = json.loads(answer.content)
-                if answer.status_code != 200:
-                    messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(
-                        answer.status_code))
-                    logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                    return redirect(reverse('experiment:index_adjustment'))
-            except Timeout as e:
-                messages.warning(request, 'Нет ответа от модуля "Эксперимент".')
-                logger.error(e)
-                return redirect(reverse('experiment:index_adjustment'))
-            except BaseException as e:
-                logger.error(e)
-                messages.warning(request,
-                                 'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                return redirect(reverse('experiment:index_adjustment'))
-            if answer_check['success'] == True:
-                messages.success(request, u'Образец повернут.')
-                info_once_only(request, u'Текущее состояние томографа: юстировка')
-                tomo.state = 'adjustment'
-                tomo.save()
-            else:
-                logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                    answer_check['error']))
-                messages.warning(request,
-                                 u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                                     answer_check['error']))
+            info = json.dumps(float(request.POST['rotate']))
+            result = try_request_post(request, settings.EXPERIMENT_MOTOR_SET_ANGLE.format(1), info, 'experiment:index_adjustment')
+            if result['error']:
+                return result['error']
+
+            answer_check = result['answer_check']
+            tomo.angle = float(request.POST['rotate'])
+            check_result(answer_check, request, tomo, success_msg=u'Образец повернут', 
+                                                            state_ru=u'юстировка', state_en='adjustment')
+
         if 'reset_submit' in request.POST:  # установить текущее положение за 0
-            try:
-                answer = requests.get('http://109.234.34.140:5001/tomograph/1/motor/reset-angle-position', timeout=100)
-                answer_check = json.loads(answer.content)
-                if answer.status_code != 200:
-                    messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(
-                        answer.status_code))
-                    logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                    return redirect(reverse('experiment:index_adjustment'))
-            except Timeout as e:
-                messages.warning(request, 'Нет ответа от модуля "Эксперимент".')
-                logger.error(e)
-                return redirect(reverse('experiment:index_adjustment'))
-            except BaseException as e:
-                logger.error(e)
-                messages.warning(request,
-                                 'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                return redirect(reverse('experiment:index_adjustment'))
-            if answer_check['success'] == True:
-                messages.success(request, u'Текущее положение установлено за 0.')
-                info_once_only(request, u'Текущее состояние томографа: юстировка')
-                tomo.state = 'adjustment'
-                tomo.save()
-            else:
-                logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                    answer_check['error']))
-                messages.warning(request,
-                                 u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                                     answer_check['error']))
+            result = try_request_get(request, settings.EXPERIMENT_MOTOR_RESET_ANGLE.format(1), 'experiment:index_adjustment')
+            if result['error']:
+                return result['error']
+
+            answer_check = result['answer_check']
+            tomo.angle = 0
+            check_result(answer_check, request, tomo, success_msg=u'Текущий угол поворота принят за 0', 
+                                                            state_ru=u'юстировка', state_en='adjustment')
+        
         if 'text_gate' in request.POST:
             if request.POST['gate_state'] == 'open':  # открыть заслонку
-                try:
-                    answer = requests.get('http://109.234.34.140:5001/tomograph/1/shutter/open/0', timeout=100)
-                    answer_check = json.loads(answer.content)
-                    if answer.status_code != 200:
-                        messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(
-                            answer.status_code))
-                        logger.error(
-                            u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                        return redirect(reverse('experiment:index_adjustment'))
-                except Timeout as e:
-                    messages.warning(request, 'Нет ответа от модуля "Эксперимент".')
-                    logger.error(e)
-                    return redirect(reverse('experiment:index_adjustment'))
-                except BaseException as e:
-                    logger.error(e)
-                    messages.warning(request,
-                                     'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                    return redirect(reverse('experiment:index_adjustment'))
-                if answer_check['success'] == True:
-                    messages.success(request, u'Заслонка открыта')
-                    info_once_only(request, u'Текущее состояние томографа: юстировка')
-                    tomo.state = 'adjustment'
-                    tomo.save()
-                else:
-                    logger.error(
-                        u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                            answer_check['error']))
-                    messages.warning(request,
-                                     u'Модуль "Эксперимент" неработает корректно в данный момент. Попробуйте позже {}'.format(
-                                         answer_check['error']))
-            if request.POST['gate_state'] == 'close':  # закрыть заслонку
-                try:
-                    answer = requests.get('http://109.234.34.140:5001/tomograph/1/shutter/close/0', timeout=100)
-                    answer_check = json.loads(answer.content)
-                    if answer.status_code != 200:
-                        messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(
-                            answer.status_code))
-                        logger.error(
-                            u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                        return redirect(reverse('experiment:index_adjustment'))
-                except Timeout as e:
-                    messages.warning(request, 'Нет ответа от модуля "Эксперимент".')
-                    logger.error(e)
-                    return redirect(reverse('experiment:index_adjustment'))
-                except BaseException as e:
-                    logger.error(e)
-                    messages.warning(request,
-                                     'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                    return redirect(reverse('experiment:index_adjustment'))
-                    if answer_check['success'] == True:
-                        messages.success(request, u'Заслонка закрыта')
-                        info_once_only(request, u'Текущее состояние томографа: юстировка')
-                        tomo.state = 'adjustment'
-                        tomo.save()
-                    else:
-                        logger.error(
-                            u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                                answer_check['error']))
-                        messages.warning(request,
-                                         u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                                             answer_check['error']))
+                result = try_request_get(request, settings.EXPERIMENT_SHUTTER_OPEN.format(1), 'experiment:index_adjustment')
+                if result['error']:
+                    return result['error']
+
+                answer_check = result['answer_check']
+                tomo.shutter = 'opened'
+                check_result(answer_check, request, tomo, success_msg=u'Заслонка открыта', 
+                                                            state_ru=u'юстировка', state_en='adjustment')
+
+            elif request.POST['gate_state'] == 'close':  # закрыть заслонку
+                result = try_request_get(request, settings.EXPERIMENT_SHUTTER_CLOSE.format(1), 'experiment:index_adjustment')
+                if result['error']:
+                    return result['error']
+
+                answer_check = result['answer_check']
+                tomo.shutter = 'closed'
+                check_result(answer_check, request, tomo, success_msg=u'Заслонка закрыта', 
+                                                            state_ru=u'юстировка', state_en='adjustment')
+
         if 'experiment_on_voltage' in request.POST:  # задать напряжение
             info = json.dumps(float(request.POST['voltage']))
-            try:
-                answer = requests.post('http://109.234.34.140:5001/tomograph/1/source/set-voltage', info, timeout=100)
-                answer_check = json.loads(answer.content)
-                if answer.status_code != 200:
-                    messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(
-                        answer.status_code))
-                    logger.error(
-                        u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                    return redirect(reverse('experiment:index_adjustment'))
-            except Timeout as e:
-                messages.warning(request, 'Нет ответа от модуля "Эксперимент".')
-                logger.error(e)
-                return redirect(reverse('experiment:index_adjustment'))
-            except BaseException as e:
-                logger.error(e)
-                messages.warning(request,
-                                 'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                return redirect(reverse('experiment:index_adjustment'))
-            if answer_check['success'] == True:
-                messages.success(request, u'Напряжение установлено')
-                info_once_only(request, u'Текущее состояние томографа: юстировка')
-                tomo.state = 'adjustment'
-                tomo.save()
-            else:
-                logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                    answer_check['error']))
-                messages.warning(request,
-                                 u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                                     answer_check['error']))
+            result = try_request_post(request, settings.EXPERIMENT_SOURCE_SET_VOLT.format(1), info, 'experiment:index_adjustment')
+            if result['error']:
+                return result['error']
+
+            answer_check = result['answer_check']
+            tomo.voltage = float(request.POST['voltage'])
+            check_result(answer_check, request, tomo, success_msg=u'Напряжение установлено', 
+                                                            state_ru=u'юстировка', state_en='adjustment')
+
         if 'experiment_on_current' in request.POST:  # задать силу тока
             info = json.dumps(float(request.POST['current']))
-            try:
-                answer = requests.post('http://109.234.34.140:5001/tomograph/1/source/set-current', info, timeout=100)
-                answer_check = json.loads(answer.content)
-                if answer.status_code != 200:
-                    messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(
-                        answer.status_code))
-                    logger.error(
-                        u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                    return redirect(reverse('experiment:index_adjustment'))
-            except Timeout as e:
-                messages.warning(request, 'Нет ответа от модуля "Эксперимент".')
-                logger.error(e)
-                return redirect(reverse('experiment:index_adjustment'))
-            except BaseException as e:
-                logger.error(e)
-                messages.warning(request,
-                                 'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                return redirect(reverse('experiment:index_adjustment'))
-            print(answer_check)
-            if answer_check['success'] == True:
-                messages.success(request, u'Сила тока установлена')
-                info_once_only(request, u'Текущее состояние томографа: юстировка')
-                tomo.state = 'adjustment'
-                tomo.save()
-            else:
-                logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                    answer_check['error']))
-                messages.warning(request,
-                                 u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                                     answer_check['error']))
+            result = try_request_post(request, settings.EXPERIMENT_SOURCE_SET_CURR.format(1), info, 'experiment:index_adjustment')
+            if result['error']:
+                return result['error']
+
+            answer_check = result['answer_check']
+            tomo.current = float(request.POST['current'])
+            check_result(answer_check, request, tomo, success_msg=u'Сила тока установлена', 
+                                                            state_ru=u'юстировка', state_en='adjustment')
 
         if 'picture_exposure_submit' in request.POST:  # preview a picture
-
             try:
                 exposure = request.POST['picture_exposure']
-                print(exposure)
-                image_url = 'http://109.234.34.140:5001/tomograph/1/detector/get-frame'
                 data = json.dumps(float(exposure))
-                response = requests.post(image_url, data, stream=True)
+                response = requests.post(settings.EXPERIMENT_DETECTOR_GET_FRAME, data, stream=True)
                 if response.status_code != 200:
                     messages.warning(request, u'Не удалось получить картинку')
                     logger.error(u'Не удалось получить картинку, код ошибки: {}'.format(response.status_code))
@@ -427,12 +335,13 @@ def experiment_adjustment(request):
                 messages.warning(request, u'Не удалось выполнить предпросмотр. Попробуйте повторно')
                 logger.error(e)
     return render(request, 'experiment/adjustment.html', {
-        'full_access': (request.user.userprofile.is_experimentator),
+        'full_access': request.user.userprofile.is_experimentator,
         'caption': 'Эксперимент',
         'off': (tomo.state == 'off'),
         'waiting': (tomo.state == 'waiting'),
         'adj': (tomo.state == 'adjustment'),
-        'exper': (tomo.state == 'experiment')
+        'exper': (tomo.state == 'experiment'),
+        'tomograph': tomo,
     })
 
 
@@ -478,64 +387,24 @@ def experiment_interface(request):
                             }
                     }
             })
-            try:
-                answer = requests.post('http://109.234.34.140:5001/tomograph/1/experiment/start', simple_experiment,
-                                       timeout=100)
-                answer_check = json.loads(answer.content)
-                if answer.status_code != 200:
-                    messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(
-                        answer.status_code))
-                    logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                    return redirect(reverse('experiment:index_interface'))
-            except Timeout as e:
-                messages.warning(request, u'Нет ответа от модуля "Эксперимент"')
-                logger.error(e)
-                return redirect(reverse('experiment:index_interface'))
-            except BaseException as e:
-                logger.error(e)
-                messages.warning(request,
-                                 u'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                return redirect(reverse('experiment:index_interface'))
-            if answer_check['success'] == True:
-                messages.success(request, u'Эксперимент успешно начался')
-                info_once_only(request, u'Текущее состояние томографа: эксперимент')
-                tomo.state = 'experiment'
-                tomo.save()
-            else:
-                logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                    answer_check['error']))
-                messages.warning(request,
-                                 u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                                     answer_check['error']))
+
+            result = try_request_post(request, settings.EXPERIMENT_START.format(1), simple_experiment, 'experiment:index_interface')
+            if result['error']:
+                return result['error']
+
+            answer_check = result['answer_check']
+            check_result(answer_check, request, tomo, success_msg=u'Эксперимент успешно начался', 
+                                                            state_ru=u'эксперимент', state_en='experiment')
+
         if 'turn_down' in request.POST:
-            try:
-                answer = requests.get('http://109.234.34.140:5001/tomograph/1/experiment/stop', timeout=100)
-                answer_check = json.loads(answer.content)
-                if answer.status_code != 200:
-                    messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(
-                        answer.status_code))
-                    logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-                    return redirect(reverse('experiment:index_interface'))
-            except Timeout as e:
-                messages.warning(request, u'Нет ответа от модуля "Эксперимент"')
-                logger.error(e)
-                return redirect(reverse('experiment:index_interface'))
-            except BaseException as e:
-                logger.error(e)
-                messages.warning(request,
-                                 u'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
-                return redirect(reverse('experiment:index_interface'))
-            if answer_check['success'] == True:
-                messages.success(request, u'Эксперимент окончен')
-                info_once_only(request, u'Текущее состояние томографа: ожидание')
-                tomo.state = 'waiting'
-                tomo.save()
-            else:
-                logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                    answer_check['error']))
-                messages.warning(request,
-                                 u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
-                                     answer_check['error']))
+            result = try_request_get(request, settings.EXPERIMENT_START.format(1), 'experiment:index_interface')
+            if result['error']:
+                return result['error']
+
+            answer_check = result['answer_check']
+            check_result(answer_check, request, tomo, success_msg=u'Эксперимент окончен', 
+                                                            state_ru=u'ожидание', state_en='waiting')
+
     return render(request, 'experiment/interface.html', {
         'full_access': (request.user.userprofile.is_experimentator),
         'caption': 'Эксперимент',
@@ -544,3 +413,109 @@ def experiment_interface(request):
         'adj': (tomo.state == 'adjustment'),
         'exper': (tomo.state == 'experiment')
     })
+
+
+def set_voltage(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.voltage = float(request.POST["voltage"])
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
+
+
+def set_current(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.current = float(request.POST["current"])
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
+
+
+def set_angle(request):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.angle = float(request.POST["angle"])
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
+
+
+def set_horiz_shift(request):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.horizontal_shift = int(request.POST["horiz_shift"])
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
+
+
+def set_vert_shift(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.vertical_shift = int(request.POST["vert_shift"])
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
+
+
+def set_shutter(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.shutter = request.POST["shutter"]
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
+
+
+def power_on(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.state = 'waiting'
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
+
+
+def power_off(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.state = 'off'
+        tomo.angle = None
+        tomo.voltage = None
+        tomo.current = None
+        tomo.shutter = None
+        tomo.horizontal_shift = None
+        tomo.vertical_shift = None
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
+
+
+def experiment_start(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.state = 'experiment'
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')
+
+
+def experiment_stop(request, tomo_num):
+    try:
+        tomo = get_object_or_404(Tomograph, pk=tomo_num)
+        tomo.state = 'waiting'
+        tomo.save()
+    except BaseException as e:
+        return HttpResponseBadRequest(json.dumps({'error': '{}'.format(e)}))
+    return HttpResponse('')

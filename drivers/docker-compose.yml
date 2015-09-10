@@ -1,0 +1,11 @@
+server:
+  build: .
+  hostname: rbtm-tango
+  ports:
+    - "10000:10000"
+  restart: always
+  devices:
+    - "/dev/ttyACM2:/dev/ttyACM2"
+    - "/dev/ttyACM1:/dev/ttyACM1"
+    - "/dev/ttyACM0:/dev/ttyACM0"
+    - "/dev/ttyUSB0:/dev/ttyUSB0"

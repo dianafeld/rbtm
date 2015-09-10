@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ASCII"?>
 <pogoDsl:PogoSystem xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:pogoDsl="http://www.esrf.fr/tango/pogo/PogoDsl">
-  <classes name="Detector" pogoRevision="8.1">
-    <description description="Class for tomograph's detector.&#xA;It is used for getting an image of the object being observed&#xA;&#xA;It is written according to&#xA;http://sourceforge.net/p/tango-ds/code/HEAD/tree/DeviceClasses/Acquisition/2D/PSCamera/trunk/PSCamera.py" title="Detector" sourcePath="/home/itsnotme/rbtm-drivers/tango_ds/Detector" language="Python" filestogenerate="XMI   file,Code files" license="GPL" hasMandatoryProperty="false" hasConcreteProperty="false" hasAbstractCommand="false" hasAbstractAttribute="false">
+  <classes name="Detector" pogoRevision="8.4">
+    <description description="Class for tomograph's detector.&#xA;It is used for getting an image of the object being observed&#xA;&#xA;It is written according to&#xA;http://sourceforge.net/p/tango-ds/code/HEAD/tree/DeviceClasses/Acquisition/2D/PSCamera/trunk/PSCamera.py" title="Detector" sourcePath="/home/itsnotme/rbtm/drivers/stub/tango_ds/Detector" language="Python" filestogenerate="XMI   file,Code files" license="GPL" hasMandatoryProperty="false" hasConcreteProperty="false" hasAbstractCommand="false" hasAbstractAttribute="false">
       <inheritances classname="Device_Impl" sourcePath=""/>
       <identification contact="at phystech.edu - diana.ichalova" author="diana.ichalova" emailDomain="phystech.edu" classFamily="Acquisition" siteSpecific="" platform="All Platforms" bus="Not Applicable" manufacturer="none" reference=""/>
     </description>
@@ -28,7 +28,7 @@
         <type xsi:type="pogoDsl:VoidType"/>
       </argin>
       <argout description="">
-        <type xsi:type="pogoDsl:StringType"/>
+        <type xsi:type="pogoDsl:VoidType"/>
       </argout>
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
     </commands>
@@ -40,7 +40,7 @@
       <status abstract="false" inherited="false" concrete="true" concreteHere="true"/>
       <properties description="exposure time" label="exposure time" unit="0,1 ms" standardUnit="10E-4" displayUnit="" format="" maxValue="160000" minValue="1" maxAlarm="" minAlarm="" maxWarning="" minWarning="" deltaTime="" deltaValue=""/>
     </attributes>
-    <attributes name="image" attType="Scalar" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="100000000" maxY="" allocReadMember="true" isDynamic="false">
+    <attributes name="image" attType="Scalar" rwType="READ" displayLevel="OPERATOR" polledPeriod="0" maxX="5000" maxY="5000" allocReadMember="true" isDynamic="false">
       <dataType xsi:type="pogoDsl:EncodedType"/>
       <changeEvent fire="false" libCheckCriteria="false"/>
       <archiveEvent fire="false" libCheckCriteria="false"/>
