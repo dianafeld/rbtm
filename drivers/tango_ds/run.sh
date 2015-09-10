@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
-python Motor/Motor.py motor &
-python Detector/Detector.py detector &
-python XRayShutter/XRayShutter.py shutter &
-python XRaySource/XRaySource.py source &
+source tango_env/bin/activate
+
+python Motor/Motor.py motor -v4 &
+python Detector/Detector.py detector -v4 &
+python XRayShutter/XRayShutter.py shutter -v4 &
+python XRaySource/XRaySource.py source -v4 &
 sleep 4
-python Tomograph/Tomograph.py tomograph &
+python Tomograph/Tomograph.py tomograph -v4 &
