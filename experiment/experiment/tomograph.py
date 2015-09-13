@@ -267,7 +267,6 @@ class Tomograph:
         def __str__(self):
             return repr(self.message)
 
-
     def __init__(self, tomograph_proxy_addr, detector_proxy_addr, timeout_millis=TIMEOUT_MILLIS):
         """
         :arg:  'tomograph_proxy_addr' - type is string
@@ -279,7 +278,6 @@ class Tomograph:
 
         self.detector_proxy = PyTango.DeviceProxy(detector_proxy_addr)
         self.detector_proxy.set_timeout_millis(timeout_millis)
-
 
     def try_thrice_read_attr(self, attr_name, extract_as=ExtractAs.Numpy):
         """ Try to change some attribute of Tango device three times
@@ -519,7 +517,6 @@ class Tomograph:
         else:
             return create_response(True)
 
-
     def set_x(self, new_x, exp_is_advanced=True):
         """ Tries to set new horizontal position of object
 
@@ -541,8 +538,8 @@ class Tomograph:
             self.stop_experiment_because_someone(exp_is_advanced)
             return False
 
-        if type(new_x) is not float:
-            error = 'Incorrect type! Position type must be float, but it is ' + str(type(new_x))
+        if type(new_x) not in (int, float):
+            error = 'Incorrect type! Position type must be int, but it is ' + str(type(new_x))
             logger.info(error)
             if self.exp_id:
                 self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id, exception_message='',
@@ -854,7 +851,6 @@ class Tomograph:
         else:
             return create_response(True)
 
-
     def move_away(self, exp_is_advanced=True):
         """ Tries to move object away from detector
 
@@ -930,7 +926,6 @@ class Tomograph:
             return True
         else:
             return create_response(True)
-
 
     def get_frame(self, exposure, send_to_webpage=True, exp_is_advanced=True):
         """ Tries get frame with some exposure
