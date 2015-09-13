@@ -221,7 +221,7 @@ class FrameRecord:
                     if "model" in frame["frame"]["image_data"]["detector"]:
                         self.detector_model = frame["frame"]["image_data"]["detector"]["model"]
                 if "exposure" in frame["frame"]["image_data"]:
-                    self.exposure = frame["frame"]["image_data"]["exposure"] // 10
+                    self.exposure = frame["frame"]["image_data"]["exposure"]
             if "shutter" in frame["frame"]:
                 if "open" in frame["frame"]["shutter"]:
                     self.shutter_open = frame["frame"]["shutter"]["open"]

@@ -1,0 +1,7 @@
+server:
+  build: .
+  volumes:
+    - ./logs:/var/www/experiment/logs
+  ports:
+    - "5001:5001"
+  restart: always

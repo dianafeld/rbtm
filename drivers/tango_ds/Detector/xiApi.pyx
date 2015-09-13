@@ -142,13 +142,14 @@ cdef class Detector:
         e = xiStartAcquisition(self.handle)
         handle_error(e, "Detector.get_image().xiStartAcquisition()")
 
-        image.bp = NULL
-        image.bp_size = 0
-        e = xiGetImage(self.handle, Detector.TIMEOUT, &image)
-        handle_error(e, "Detector.get_image().xiGetImage()")
-
-        e = xiStopAcquisition(self.handle)
-        handle_error(e, "Detector.get_image().xiStopAcquisition()")
+        try:
+            image.bp = NULL
+            image.bp_size = 0
+            e = xiGetImage(self.handle, Detector.TIMEOUT, &image)
+            handle_error(e, "Detector.get_image().xiGetImage()")
+        finally:
+            e = xiStopAcquisition(self.handle)
+            handle_error(e, "Detector.get_image().xiStopAcquisition()")
 
         return self.make_image(image)
 

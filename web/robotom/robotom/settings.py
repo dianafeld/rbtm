@@ -4,12 +4,44 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 REQUEST_DEBUG = False
 
-STORAGE_FRAMES_PNG = 'http://109.234.34.140:5006/storage/png/get'
-STORAGE_FRAMES_INFO_HOST = 'http://109.234.34.140:5006/storage/frames_info/get'
-STORAGE_FRAMES_HOST = 'http://109.234.34.140:5006/storage/frames/get'
-STORAGE_EXPERIMENTS_HOST = 'http://109.234.34.140:5006/storage/experiments/get'
-STORAGE_CREATE_USER_HOST = 'http://109.234.34.140:5006/storage/users/get'
-STORAGE_ALT_USER_HOST = 'http://109.234.34.140:5006/storage/users/update'
+TIMEOUT_DEFAULT = 10 # timeout in ms
+
+
+from urlparse import urljoin
+
+STORAGE_HOST = 'http://109.234.34.140:5006/'
+
+STORAGE_FRAMES_PNG = urljoin(STORAGE_HOST, '/storage/png/get')
+STORAGE_FRAMES_INFO_HOST = urljoin(STORAGE_HOST, '/storage/frames_info/get')
+STORAGE_FRAMES_HOST = urljoin(STORAGE_HOST, '/storage/frames/get')
+STORAGE_EXPERIMENTS_HOST = urljoin(STORAGE_HOST, '/storage/experiments/get')
+STORAGE_CREATE_USER_HOST = urljoin(STORAGE_HOST, '/storage/users/get')
+STORAGE_ALT_USER_HOST = urljoin(STORAGE_HOST, '/storage/users/update')
+
+EXPERIMENT_HOST = 'http://109.234.34.140:5001/'
+# address templates, where {} is a placeholder for tomograph number
+EXPERIMENT_SOURCE_POWER_ON = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/power-on')
+EXPERIMENT_SOURCE_POWER_OFF = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/power-off')
+
+EXPERIMENT_MOTOR_SET_HORIZ = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/set-horizontal-position')
+EXPERIMENT_MOTOR_SET_VERT = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/set-vertical-position')
+EXPERIMENT_MOTOR_SET_ANGLE = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/set-angle-position')
+EXPERIMENT_MOTOR_RESET_ANGLE = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/reset-angle-position')
+EXPERIMENT_SHUTTER_OPEN = urljoin(EXPERIMENT_HOST, '/tomograph/{}/shutter/open/0')
+EXPERIMENT_SHUTTER_CLOSE = urljoin(EXPERIMENT_HOST, '/tomograph/{}/shutter/close/0')
+EXPERIMENT_SOURCE_SET_VOLT = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/set-voltage')
+EXPERIMENT_SOURCE_SET_CURR = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/set-current')
+EXPERIMENT_DETECTOR_GET_FRAME = urljoin(EXPERIMENT_HOST, '/tomograph/{}/detector/get-frame')
+
+EXPERIMENT_START = urljoin(EXPERIMENT_HOST, '/tomograph/{}/experiment/start')
+EXPERIMENT_STOP = urljoin(EXPERIMENT_HOST, '/tomograph/{}/experiment/stop')
+
+EXPERIMENT_MOTOR_GET_HORIZ = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/get-horizontal-position')
+EXPERIMENT_MOTOR_GET_VERT = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/get-vertical-position')
+EXPERIMENT_MOTOR_GET_ANGLE = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/get-angle-position')
+# EXPERIMENT_SHUTTER_GET_STATUS = urljoin(EXPERIMENT_HOST, '/tomograph/{}/shutter/')
+EXPERIMENT_SOURCE_GET_VOLT = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/get-voltage')
+EXPERIMENT_SOURCE_GET_CURR = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/get-current')
 
 import os
 
@@ -65,7 +97,7 @@ USE_I18N = True
 
 # If you set this to False, Django will not format dates, numbers and
 # calendars according to the current locale.
-USE_L10N = True
+USE_L10N = False
 
 # If you set this to False, Django will not use timezone-aware datetimes.
 USE_TZ = True
@@ -158,23 +190,27 @@ INSTALLED_APPS = (
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error when DEBUG=False.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
+def skip_suspicious_operations(record):
+    if record.name == 'django.security.DisallowedHost':
+        return False
+    return True
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
+        },
+        'skip_suspicious_operations': {
+            '()': 'django.utils.log.CallbackFilter',
+            'callback': skip_suspicious_operations,
         }
     },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
-            'filters': ['require_debug_false'],
+            'filters': ['require_debug_false', 'skip_suspicious_operations'],
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'write_to_file': {
@@ -188,6 +224,11 @@ LOGGING = {
             'handlers': ['mail_admins'],
             'level': 'ERROR',
             'propagate': True,
+        },
+        'django.security': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
         },
         'rest_logger': {
             'handlers': ['write_to_file'],

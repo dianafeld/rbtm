@@ -1,0 +1,19 @@
+database:
+  image: postgres:9.4
+  ports:
+    - "15432:5432"
+  volumes:
+     - ./db:/var/lib/postgresql/data
+  restart: always
+  #environment:
+  #   - POSTGRES_PASSWORD=postgres
+
+server:
+  build: .
+  ports:
+    - "8000:80"
+  links:
+    - database
+  volumes:
+     - ./robotom/static:/var/www/web/robotom/static
+  restart: always

@@ -1,0 +1,18 @@
+database:
+  image: mongo:3.0
+  ports:
+    - "27017:27017"
+  volumes:
+     - ./data/db:/data/db
+  restart: always
+
+server:
+  build: .
+  volumes:
+    - ./data/experiments:/var/www/storage/data/experiments
+    - ./logs:/var/www/storage/logs
+  ports:
+    - "5006:5006"
+  links:
+    - database
+  restart: always

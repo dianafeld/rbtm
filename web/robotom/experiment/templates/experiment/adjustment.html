@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-    <!--<script type="text/javascript">
+
+   <script type="text/javascript">
         function Disable() {
             document.getElementById('picture_exposure_submit').value="Получение...";
             document.getElementById('picture_exposure_submit').disabled = true;
@@ -8,7 +9,33 @@
             document.forms['picture_exposure_form'].submit();
             return false;
         }
-    </script> -->
+
+        function post(path, params) {
+		    var form = document.createElement("form");
+		    form.setAttribute("method", "post");
+		    form.setAttribute("action", path);
+
+		    for(var key in params) {
+		        if(params.hasOwnProperty(key)) {
+		            var hiddenField = document.createElement("input");
+		            hiddenField.setAttribute("type", "hidden");
+		            hiddenField.setAttribute("name", key);
+		            hiddenField.setAttribute("value", params[key]);
+
+		            form.appendChild(hiddenField);
+		         }
+		    }
+
+		    var hiddenField = document.createElement("input");
+		    hiddenField.setAttribute("type", "hidden");
+		    hiddenField.setAttribute("name", "csrfmiddlewaretoken");
+	        hiddenField.setAttribute("value", "{{ csrf_token }}");
+            form.appendChild(hiddenField);
+
+		    document.body.appendChild(form);
+		    form.submit();
+		}
+    </script> 
 
     {% if messages %}
         <div class="row">
@@ -37,12 +64,20 @@
                                 <form method="POST" action="">
                                     <div class="control-group">
                                         {% csrf_token %}
-                                        <label for="voltage">Напряжение</label>
+                                        <label for="voltage">Напряжение</label> <button type="button" onclick="post('', {'refresh': 'voltage'})" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+                                       	<div class="current_value"><small>Текущее напряжение: 
+                                       	{% if tomograph.voltage == None %}
+                                       	неизвестно
+                                       	{% else %}
+                                       	{{ tomograph.voltage }} кВ
+                                       	{% endif %}   	
+                                       	</small></div>
 
                                         <div class="input-group">
                                             <input type="number" step="0.01" min="2" max="60"
                                                    class="form-control ntSaveForms" required
-                                                   id="voltage" name="voltage" placeholder="2-60">
+                                                   id="voltage" name="voltage" placeholder="2-60"
+                                                   value="{{ tomograph.voltage }}">
 
                                             <div class="input-group-addon">кВ</div>
                                         </div>
@@ -63,12 +98,18 @@
                             <div class="col-xs-6">
                                 <form method="POST" action="">
                                     {% csrf_token %}
-                                    <label for="current">Ток</label>
+                                    <label for="current">Ток</label> <button type="button" onclick="post('', {'refresh': 'current'})" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+                                       	<div class="current_value"><small>Текущая сила тока: 
+                                       	{% if tomograph.current == None %}
+                                       	неизвестна
+                                       	{% else %}
+                                       	{{ tomograph.current }} мА
+                                       	{% endif %}   	
+                                       	</small></div>
 
                                     <div class="input-group">
                                         <input type="number" step="0.01" min="2" max="80"
-                                               class="form-control ntSaveForms" required id="current" name="current"
-                                               placeholder="2-80">
+                                               class="form-control ntSaveForms" required id="current" name="current" placeholder="2-80" value="{{ tomograph.current }}">
 
                                         <div class="input-group-addon">мА</div>
                                     </div>
@@ -92,19 +133,27 @@
                                 <form method="POST" action="">
                                     <div class="control-group">
                                         {% csrf_token %}
-                                        <label for="move_hor">Подвинуть по горизонтали</label>
-                                        <input type="number" step="0.01" min="0" class="form-control ntSaveForms"
-                                               required id="move_hor" name="move_hor" placeholder="">
+                                        <label for="move_hor">Сдвиг по горизонтали</label> <button type="button" onclick="post('', {'refresh': 'horizontal_shift'})" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+                                       	<div class="current_value"><small>Текущий сдвиг по горизонтали: 
+                                       	{% if tomograph.horizontal_shift == None %}
+                                       	неизвестно
+                                       	{% else %}
+                                       	{{ tomograph.horizontal_shift }}
+                                       	{% endif %}   	
+                                       	</small></div>
+
+                                        <input type="number" step="1" min="0" class="form-control ntSaveForms"
+                                               required id="move_hor" name="move_hor" placeholder="" value="{{ tomograph.horizontal_shift }}">
                                         {% if user.is_authenticated and user.userprofile.is_experimentator and off == 0 and exper == 0 %}
                                             <input type="submit"
                                                    style="white-space:normal; margin-top:7px; margin-bottom:7px"
                                                    class="btn btn-default btn-md" name="move_hor_submit"
-                                                   value="Подвинуть образец">
+                                                   value="Сдвинуть образец">
                                         {% else %}
                                             <input type="submit"
                                                    style="white-space:normal; margin-top:7px; margin-bottom:7px"
                                                    class="btn btn-default btn-md" name="move_hor_adm"
-                                                   value="Подвинуть образец" disabled>
+                                                   value="Сдвинуть образец" disabled>
                                         {% endif %}
                                     </div>
                                 </form>
@@ -113,20 +162,28 @@
                                 <form method="POST" action="">
                                     <div class="control-group">
                                         {% csrf_token %}
-                                        <label for="move_ver">Подвинуть по вертикали</label>
-                                        <input type="number" step="0.01" min="0" class="form-control ntSaveForms"
+                                        <label for="move_ver">Сдвиг по вертикали</label> <button type="button" disabled onclick="post('', {'refresh': 'vertical_shift'})" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+                                       	<div class="current_value"><small>Текущий сдвиг по вертикали: 
+                                       	{% if tomograph.vertical_shift == None %}
+                                       	неизвестно
+                                       	{% else %}
+                                       	{{ tomograph.vertical_shift }}
+                                       	{% endif %}   	
+                                       	</small></div>
+
+                                        <input type="number" step="1" min="0" class="form-control ntSaveForms"
                                                required disabled
-                                               id="move_hor" name="move_ver" placeholder="">
+                                               id="move_ver" name="move_ver" placeholder="" value="{{ tomograph.vertical_shift }}">
                                         {% if user.is_authenticated and user.userprofile.is_experimentator and off == 0 and exper == 0 %}
                                             <input type="submit"
                                                    style="white-space:normal; margin-top:7px; margin-bottom:7px"
                                                    class="btn btn-default btn-md" disabled name="move_ver_submit"
-                                                   value="Подвинуть образец">
+                                                   value="Сдвинуть образец">
                                         {% else %}
                                             <input type="submit"
                                                    style="white-space:normal; margin-top:7px; margin-bottom:7px"
                                                    class="btn btn-default btn-md" name="move_ver_adm"
-                                                   value="Подвинуть образец" disabled>
+                                                   value="Сдвинуть образец" disabled>
                                         {% endif %}
                                     </div>
                                 </form>
@@ -137,11 +194,18 @@
                                 <form method="POST" action="">
                                     <div class="control-group">
                                         {% csrf_token %}
-                                        <label for="rotate">Изменить угловое положение</label>
+                                        <label for="rotate">Изменить угловое положение</label> <button type="button" onclick="post('', {'refresh': 'angle'})" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+                                       	<div class="current_value"><small>Текущий угол: 
+                                       	{% if tomograph.angle == None %}
+                                       	неизвестно
+                                       	{% else %}
+                                       	{{ tomograph.angle }}&deg;
+                                       	{% endif %}   	
+                                       	</small></div>
 
                                         <div class="input-group">
                                             <input type="number" step="0.01" min="0" class="form-control ntSaveForms"
-                                                   required id="rotate" name="rotate" placeholder="">
+                                                   required id="rotate" name="rotate" placeholder="" value="{{ tomograph.angle }}">
 
                                             <div class="input-group-addon">&deg;</div>
                                         </div>
@@ -163,15 +227,22 @@
                                 <form method="POST" action="">
                                     <div class="control-group">
                                         {% csrf_token %}
-                                        <label for="text_gate">Заслонка</label>
+                                        <label for="text_gate">Заслонка</label> <button type="button" disabled onclick="post('', {'refresh': 'shutter'})" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+                                       	<div class="current_value"><small>Текущее состояние заслонки: 
+                                       	{% if tomograph.shutter == None %}
+                                       	неизвестно
+                                       	{% else %}
+                                       		{% if tomograph.shutter == 'opened' %}
+                                       		открыта
+                                       		{% else %}
+                                       		закрыта
+                                       		{% endif %}
+                                       	{% endif %}   	
+                                       	</small></div>
 
                                         <div id="text_gate" class="btn-group" data-toggle="buttons">
-                                            <label class="btn btn-default" id="open"> <input id="open" name="gate_state"
-                                                                                             type="radio" value="open">Открыта</label>
-                                            <label class="btn btn-default" id="close"> <input id="close"
-                                                                                              name="gate_state"
-                                                                                              type="radio"
-                                                                                              value="close">Закрыта</label>
+                                            <label class="btn btn-default {% if tomograph.shutter == 'opened' %} active {% endif %}" id="open"> <input id="open" name="gate_state" type="radio" value="open" {% if tomograph.shutter == 'opened' %} checked {% endif %}>Открыта</label>
+                                            <label class="btn btn-default {% if tomograph.shutter == 'closed' %} active {% endif %}>" id="close"> <input id="close" name="gate_state" type="radio" value="close" {% if tomograph.shutter == 'closed' %} checked {% endif %}>Закрыта</label>
                                         </div>
 
                                         {% if user.is_authenticated and user.userprofile.is_experimentator and off == 0 and exper == 0 %}
