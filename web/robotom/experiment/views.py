@@ -330,6 +330,11 @@ def experiment_adjustment(request):
                         'preview_path': os.path.join(settings.MEDIA_URL, file_name),
                         'preview': True,
                         'exposure': exposure,
+                        'off': (tomo.state == 'off'),
+                        'waiting': (tomo.state == 'waiting'),
+                        'adj': (tomo.state == 'adjustment'),
+                        'exper': (tomo.state == 'experiment'),
+                        'tomograph': tomo,
                     })
             except BaseException as e:
                 messages.warning(request, u'Не удалось выполнить предпросмотр. Попробуйте повторно')
