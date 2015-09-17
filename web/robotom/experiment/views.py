@@ -310,7 +310,7 @@ def experiment_adjustment(request):
             try:
                 exposure = request.POST['picture_exposure']
                 data = json.dumps(float(exposure))
-                response = requests.post(settings.EXPERIMENT_DETECTOR_GET_FRAME, data, stream=True)
+                response = requests.post(settings.EXPERIMENT_DETECTOR_GET_FRAME.format(1), data, stream=True)
                 if response.status_code != 200:
                     messages.warning(request, u'Не удалось получить картинку')
                     logger.error(u'Не удалось получить картинку, код ошибки: {}'.format(response.status_code))
