@@ -11,10 +11,13 @@ cdef extern from "m3api/xiApi.h":
     ctypedef DWORD *PDWORD
     ctypedef void *LPVOID
 
-    cdef char *XI_PRM_IMAGE_DATA_FORMAT = "imgdataformat" # Output data format. XI_IMG_FORMAT
-    cdef char *XI_PRM_EXPOSURE = "exposure" # Exposure time in microseconds
-    cdef char *XI_PRM_COOLING = "cooling" # Start camera cooling. XI_SWITCH
-    cdef char *XI_PRM_BUFFER_POLICY = "buffer_policy"# Data move policy XI_BP
+    cdef char *XI_PRM_IMAGE_DATA_FORMAT = "imgdataformat"  # Output data format. XI_IMG_FORMAT
+    cdef char *XI_PRM_EXPOSURE = "exposure"  # Exposure time in microseconds
+    cdef char *XI_PRM_COOLING = "cooling"  # Start camera cooling. XI_SWITCH
+    cdef char *XI_PRM_BUFFER_POLICY = "buffer_policy"  # Data move policy XI_BP
+    cdef char *XI_PRM_CHIP_TEMP = "chip_temp"  # Camera sensor temperature 
+    cdef char *XI_PRM_HOUS_TEMP = "hous_temp"  #Camera housing tepmerature
+    cdef char *XI_PRM_IS_DEVICE_EXIST = "isexist"  # Returns 1 if camera connected and works properly. XI_SWITCH
 
     ctypedef enum XI_IMG_FORMAT:
         XI_MONO8,  # 8 bits per pixel

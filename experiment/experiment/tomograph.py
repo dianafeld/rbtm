@@ -1051,4 +1051,4 @@ class Tomograph:
             if not success:
                 return response_if_fail
             else:
-                return send_file(FRAME_PNG_FILENAME, mimetype='image/png')
+                return send_file('../' + FRAME_PNG_FILENAME, mimetype='image/png')
