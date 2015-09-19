@@ -161,6 +161,18 @@ cdef class Detector:
         e = xiSetParamInt(self.handle, XI_PRM_COOLING, XI_OFF)
         handle_error(e, "Detector.disable_cooling()")
 
+    def get_chip_temp(self):
+        cdef float chip_temp
+        e = xiGetParamFloat(self.handle, XI_PRM_CHIP_TEMP, &chip_temp)
+        handle_error(e, "Detector.get_chip_temp()")
+        return chip_temp
+
+    def get_hous_temp(self):
+        cdef float hous_temp
+        e = xiGetParamFloat(self.handle, XI_PRM_HOUS_TEMP, &hous_temp)
+        handle_error(e, "Detector.get_hous_temp()")
+        return hous_temp
+
     def __dealloc__(self):
         e = xiCloseDevice(self.handle)
         handle_error(e, "Detector.__dealloc__()")

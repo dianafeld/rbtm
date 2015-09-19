@@ -60,7 +60,8 @@ cdef class Motor:
 
     def get_position(self):
         cdef get_position_t position
-        get_position(self.device_id, &position)
+        result_code = get_position(self.device_id, &position)
+        handle_error(result_code, "Motor.get_position()")
         return position
 
     def move_to_position(self, position, uposition):
@@ -69,7 +70,8 @@ cdef class Motor:
 
     def get_move_settings(self):
         cdef move_settings_t move_settings
-        get_move_settings(self.device_id, &move_settings)
+        result_code = get_move_settings(self.device_id, &move_settings)
+        handle_error(result_code, "Motor.get_move_settings()")
         return move_settings
 
     def set_move_settings(self, speed, accel):
@@ -78,8 +80,8 @@ cdef class Motor:
         move_settings.Speed = speed
         move_settings.Accel = accel
         move_settings.Decel = accel
-        set_move_settings(self.device_id, &move_settings)
-        return move_settings
+        result_code = set_move_settings(self.device_id, &move_settings)
+        handle_error(result_code, "Motor.set_move_settings()")
 
     def get_status(self):
         cdef status_t status

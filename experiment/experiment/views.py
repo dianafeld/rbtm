@@ -63,7 +63,7 @@ def check_request(request_data):
 
 # in almost every function below we have argument 'tomo_num' - number of tomograph in TOMOGRAPHS list
 
-@app.route('/tomograph/<int:tomo_num>/check-state', methods=['GET'])
+@app.route('/tomograph/<int:tomo_num>/state', methods=['GET'])
 def check_state(tomo_num):
     logger.info('\n\nREQUEST: CHECK STATE')
     tomograph = TOMOGRAPHS[tomo_num - 1]
