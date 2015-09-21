@@ -64,7 +64,7 @@
                                 <form method="POST" action="">
                                     <div class="control-group">
                                         {% csrf_token %}
-                                        <label for="voltage">Напряжение</label> <button type="button" onclick="post('', {'refresh': 'voltage'})" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+                                        <label for="voltage">Напряжение</label> 
                                        	<div class="current_value"><small>Текущее напряжение: 
                                        	<span id="current_voltage">неизвестно</span>   	
                                        	</small></div>
@@ -93,7 +93,7 @@
                             <div class="col-xs-6">
                                 <form method="POST" action="">
                                     {% csrf_token %}
-                                    <label for="current">Ток</label> <button type="button" onclick="post('', {'refresh': 'current'})" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+                                    <label for="current">Ток</label>
                                        	<div class="current_value"><small>Текущая сила тока: 
                                        	<span id="current_current">неизвестна</span>   	
                                        	</small></div>
@@ -124,7 +124,7 @@
                                 <form method="POST" action="">
                                     <div class="control-group">
                                         {% csrf_token %}
-                                        <label for="move_hor">Сдвиг по горизонтали</label> <button type="button" onclick="post('', {'refresh': 'horizontal_shift'})" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+                                        <label for="move_hor">Сдвиг по горизонтали</label> 
                                        	<div class="current_value"><small>Текущий сдвиг по горизонтали: 
                                        	<span id="current_horiz">неизвестен</span>    	
                                        	</small></div>
@@ -149,7 +149,7 @@
                                 <form method="POST" action="">
                                     <div class="control-group">
                                         {% csrf_token %}
-                                        <label for="move_ver">Сдвиг по вертикали</label> <button type="button" disabled onclick="post('', {'refresh': 'vertical_shift'})" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+                                        <label for="move_ver">Сдвиг по вертикали</label> 
                                        	<div class="current_value"><small>Текущий сдвиг по вертикали: 
                                        	<span id="current_vert">неизвестен</span>    	
                                        	</small></div>
@@ -177,7 +177,7 @@
                                 <form method="POST" action="">
                                     <div class="control-group">
                                         {% csrf_token %}
-                                        <label for="rotate">Изменить угловое положение</label> <button type="button" onclick="post('', {'refresh': 'angle'})" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+                                        <label for="rotate">Изменить угловое положение</label>
                                        	<div class="current_value"><small>Текущий угол: 
                                        	<span id="current_angle">неизвестен</span>    	
                                        	</small></div>
@@ -206,7 +206,7 @@
                                 <form method="POST" action="">
                                     <div class="control-group">
                                         {% csrf_token %}
-                                        <label for="text_gate">Заслонка</label> <button type="button" disabled onclick="post('', {'refresh': 'shutter'})" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
+                                        <label for="text_gate">Заслонка</label>
                                        	<div class="current_value"><small>Текущее состояние заслонки: 
                                        	<span id="current_shutter">неизвестно</span>   	
                                        	</small></div>
