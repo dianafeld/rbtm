@@ -13,7 +13,7 @@ RUN pip install -r requirements.txt
 
 COPY . /var/www/web/
 
-RUN sed -i "73s/.*/        'HOST': 'database',/" robotom/robotom/settings.py
+RUN sed -i "s/'HOST': 'localhost'/'HOST': 'database'/" robotom/robotom/settings.py
 
 RUN robotom/manage.py collectstatic --noinput
 
