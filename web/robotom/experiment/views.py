@@ -144,7 +144,6 @@ def update_state_before_run(view):
     return wrapped
 
 
-@update_state_before_run
 @login_required
 @user_passes_test(has_experiment_access)
 def experiment_view(request):
@@ -167,6 +166,8 @@ def experiment_view(request):
             response_dict = result['response_dict']
             check_result(response_dict, request, tomo, success_msg=u'Томограф выключен')
     
+    get_current_state(request, tomo)
+    set_current_state_msg(request, tomo)
     return render(request, 'experiment/start.html', {
         'caption': 'Эксперимент',
         'tomograph': tomo,
@@ -298,7 +299,6 @@ def experiment_adjustment(request):
     })
 
 
-@update_state_before_run
 @login_required
 @user_passes_test(has_experiment_access)
 def experiment_interface(request):
@@ -343,13 +343,15 @@ def experiment_interface(request):
             check_result(response_dict, request, tomo, success_msg=u'Эксперимент успешно начался')
 
         if 'turn_down' in request.POST:
-            result = try_request_get(request, settings.EXPERIMENT_START.format(1), 'experiment:index_interface')
+            result = try_request_get(request, settings.EXPERIMENT_STOP.format(1), 'experiment:index_interface')
             if result['error']:
                 return result['error']
 
             response_dict = result['response_dict']
             check_result(response_dict, request, tomo, success_msg=u'Эксперимент окончен')
 
+    get_current_state(request, tomo)
+    set_current_state_msg(request, tomo)
     return render(request, 'experiment/interface.html', {
         'caption': 'Эксперимент',
         'tomograph': tomo,
