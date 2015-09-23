@@ -43,7 +43,7 @@ EXPERIMENT_SHUTTER_GET_STATUS = urljoin(EXPERIMENT_HOST, '/tomograph/{}/shutter/
 EXPERIMENT_SOURCE_GET_VOLT = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/get-voltage')
 EXPERIMENT_SOURCE_GET_CURR = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/get-current')
 
-EXPERIMENT_GET_STATUS = urljoin(EXPERIMENT_HOST, '/tomograph/{}/status')
+EXPERIMENT_GET_STATE = urljoin(EXPERIMENT_HOST, '/tomograph/{}/state')
 
 import os
 
