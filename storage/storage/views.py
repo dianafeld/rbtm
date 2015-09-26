@@ -1,9 +1,12 @@
 import json
 import os
 import numpy as np
+import h5py
 
 from flask import jsonify, make_response, request, abort, Response, send_file
 from bson.json_util import dumps
+from bson.objectid import ObjectId
+
 import pymongo as pm
 
 from storage import pyframes
@@ -156,6 +159,34 @@ def get_frame_info():
                     mimetype="application/json")
 
     return resp
+
+
+def get_transformed_data_path(data, experiment_id):
+    transformed_data_path = os.path.abspath('/tmp/tmp_data_file')
+    data_transformed = h5py.File(transformed_data_path, "w", driver="core", backing_store=True)
+    experiments = db['experiments']
+    experiment = experiments.find({"_id": experiment_id})
+
+    data_transformed.attrs.create("exp_info", dumps(experiment).encode('utf8'))
+
+    frames = db['frames']
+    for frame_id in data.keys():
+        frame_group = data_transformed.create_group(frame_id)
+        frame_group.create_dataset(frame_id, data=data[frame_id])
+        frame = frames.find({"_id": ObjectId(frame_id)})
+        frame_group.attrs.create("frame_info", dumps(frame).encode('utf8'))
+    data_transformed.flush()
+    data_transformed.close()
+
+    return transformed_data_path
+
+
+@app.route('/storage/experiments/<experiment_id>/get', methods=['GET'])
+def get_experiment_by_id(experiment_id):
+
+    logger.info('Getting experiment: ' + experiment_id)
+    data = h5py.File(os.path.abspath(os.path.join('data', 'experiments', experiment_id, 'before_processing', 'frames.h5')), 'r')
+    return send_file(get_transformed_data_path(data, experiment_id), mimetype='application/x-hdf5', as_attachment=True, attachment_filename=str(experiment_id)+'.h5')
 
 
 @app.route('/storage/png/get', methods=['POST'])
