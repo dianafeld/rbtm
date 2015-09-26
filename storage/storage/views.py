@@ -4,7 +4,7 @@ import numpy as np
 import h5py
 
 from flask import jsonify, make_response, request, abort, Response, send_file
-from bson.json_util import dumps
+from bson.json_util import dumps, loads
 from bson.objectid import ObjectId
 
 import pymongo as pm
@@ -163,25 +163,32 @@ def get_frame_info():
 
 def get_transformed_data_path(data, experiment_id):
     transformed_data_path = os.path.abspath('/tmp/tmp_data_file')
-    data_transformed = h5py.File(transformed_data_path, "w", driver="core", backing_store=True)
-    experiments = db['experiments']
-    experiment = experiments.find({"_id": experiment_id})
+    data_transformed = h5py.File(transformed_data_path, "w")
 
-    data_transformed.attrs.create("exp_info", dumps(experiment).encode('utf8'))
+    experiments = db['experiments']
+    experiment_info = dumps(experiments.find({"_id": experiment_id}))
+    data_transformed.attrs.create("exp_info", experiment_info.encode('utf8'))
+
+    data_transformed.create_group("empty")
+    data_transformed.create_group("dark")
+    data_transformed.create_group("data")
 
     frames = db['frames']
     for frame_id in data.keys():
-        frame_group = data_transformed.create_group(frame_id)
-        frame_group.create_dataset(frame_id, data=data[frame_id])
-        frame = frames.find({"_id": ObjectId(frame_id)})
-        frame_group.attrs.create("frame_info", dumps(frame).encode('utf8'))
+        frame_info = dumps(frames.find({"_id": ObjectId(frame_id)}))
+        json_frame = loads(frame_info)
+        frame_number = str(json_frame[0]['frame']['number'])
+        frame_type = str(json_frame[0]['frame']['mode'])
+        frame_dataset = data_transformed[frame_type].create_dataset(frame_number, data=data[frame_id])
+        frame_dataset.attrs.create("frame_info", frame_info.encode('utf8'))
+
     data_transformed.flush()
     data_transformed.close()
 
     return transformed_data_path
 
 
-@app.route('/storage/experiments/<experiment_id>/get', methods=['GET'])
+@app.route('/storage/experiments/<experiment_id>/hdf5', methods=['GET'])
 def get_experiment_by_id(experiment_id):
 
     logger.info('Getting experiment: ' + experiment_id)
