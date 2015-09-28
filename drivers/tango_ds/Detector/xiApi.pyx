@@ -131,8 +131,8 @@ cdef class Detector:
         number_of_pixels = (image.width + image.padding_x / 2) * image.height
         size = number_of_pixels * 2
         cdef numpy.ndarray[numpy.uint16_t, ndim=2] img = numpy.empty(
-            shape=(image.height, image.width+ image.padding_x / 2),
-            dtype = 'uint16')
+            shape=(image.height, image.width + image.padding_x / 2),
+            dtype='uint16')
         memcpy(<void *> img.data, image.bp, size)
         return img
 
