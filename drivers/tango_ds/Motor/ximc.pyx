@@ -83,6 +83,27 @@ cdef class Motor:
         result_code = set_move_settings(self.device_id, &move_settings)
         handle_error(result_code, "Motor.set_move_settings()")
 
+    def set_speed(self, speed):
+        cdef move_settings_t move_settings
+        get_move_settings(self.device_id, &move_settings)
+        move_settings.Speed = speed
+        result_code = set_move_settings(self.device_id, &move_settings)
+        handle_error(result_code, "Motor.set_speed()")
+
+    def set_accel(self, accel):
+        cdef move_settings_t move_settings
+        get_move_settings(self.device_id, &move_settings)
+        move_settings.Accel = accel
+        result_code = set_move_settings(self.device_id, &move_settings)
+        handle_error(result_code, "Motor.set_accel()")
+
+    def set_decel(self, decel):
+        cdef move_settings_t move_settings
+        get_move_settings(self.device_id, &move_settings)
+        move_settings.Decel = decel
+        result_code = set_move_settings(self.device_id, &move_settings)
+        handle_error(result_code, "Motor.set_decel()")
+
     def get_status(self):
         cdef status_t status
         get_status(self.device_id, &status)
