@@ -517,6 +517,43 @@ class Tomograph:
         else:
             return create_response(True)
 
+    def shutter_state(self, exp_is_advanced=True):
+        #TODO documentation
+        """
+
+        :return: depends on "emptiness" of argument 'exp_id';
+                 if 'exp_id' is NOT empty, function returns success of function, type is bool
+                 if 'exp_id' IS empty, function returns prepared response for web-page of adjustment,
+                 type is json-string with format that is returned by  'create_response()'
+        """
+        logger.info('Getting shutter state...')
+        if not self.exp_id and self.experiment_is_running:
+            error = 'On this tomograph experiment is running'
+            logger.info(error)
+            return create_response(success=False, error=error)
+
+        if self.exp_id and not self.experiment_is_running:
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
+
+        success, status, exception_message = try_thrice_function(self.tomograph_proxy.ShutterStatus)
+        if success == False:
+            error = 'Could not get shutter status'
+            logger.info(exception_message)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id,
+                                           exception_message=exception_message, error=error)
+                return False
+            else:
+                return create_response(success, exception_message, error=error)
+
+        logger.info('Shutter return status successfully!')
+        if self.exp_id:
+            return True
+        else:
+            return create_response(True, result=success)
+
+
     def set_x(self, new_x, exp_is_advanced=True):
         """ Tries to set new horizontal position of object
 
