@@ -17,6 +17,8 @@ RUN sed -i "s/'HOST': 'localhost'/'HOST': 'database'/" robotom/robotom/settings.
 
 RUN robotom/manage.py collectstatic --noinput
 
+RUN chown www-data:www-data robotom/media
+
 # ENV APACHE_RUN_USER www-data
 # ENV APACHE_RUN_GROUP www-data
 # ENV APACHE_LOG_DIR /var/log/apache2
