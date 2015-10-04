@@ -149,6 +149,8 @@ class Detector (PyTango.Device_4Impl):
         self.set_state(PyTango.DevState.ON)
         self.attr_exposure_read = self._read_exposure()
 
+        self.detector.enable_cooling()
+
         self.attr_image_read = PyTango.EncodedAttribute()
 
         #----- PROTECTED REGION END -----#  //  Detector.init_device
@@ -233,6 +235,9 @@ class Detector (PyTango.Device_4Impl):
             self.error_stream(str(e))
             raise
         self.debug_stream("Image returned")
+
+        print(self.detector.get_chip_temp())
+        print(self.detector.get_hous_temp())
 
         # is_run.value = 0
         # p.join()

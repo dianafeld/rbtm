@@ -131,8 +131,8 @@ cdef class Detector:
         number_of_pixels = (image.width + image.padding_x / 2) * image.height
         size = number_of_pixels * 2
         cdef numpy.ndarray[numpy.uint16_t, ndim=2] img = numpy.empty(
-            shape=(image.height, image.width+ image.padding_x / 2),
-            dtype = 'uint16')
+            shape=(image.height, image.width + image.padding_x / 2),
+            dtype='uint16')
         memcpy(<void *> img.data, image.bp, size)
         return img
 
@@ -160,6 +160,18 @@ cdef class Detector:
     def disable_cooling(self):
         e = xiSetParamInt(self.handle, XI_PRM_COOLING, XI_OFF)
         handle_error(e, "Detector.disable_cooling()")
+
+    def get_chip_temp(self):
+        cdef float chip_temp
+        e = xiGetParamFloat(self.handle, XI_PRM_CHIP_TEMP, &chip_temp)
+        handle_error(e, "Detector.get_chip_temp()")
+        return chip_temp
+
+    def get_hous_temp(self):
+        cdef float hous_temp
+        e = xiGetParamFloat(self.handle, XI_PRM_HOUS_TEMP, &hous_temp)
+        handle_error(e, "Detector.get_hous_temp()")
+        return hous_temp
 
     def __dealloc__(self):
         e = xiCloseDevice(self.handle)
