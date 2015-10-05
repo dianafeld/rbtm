@@ -15,9 +15,11 @@ COPY . /var/www/web/
 
 RUN sed -i "s/'HOST': 'localhost'/'HOST': 'database'/" robotom/robotom/settings.py
 
-RUN robotom/manage.py collectstatic --noinput
 
+RUN mkdir -p robotom/media
 RUN chown www-data:www-data robotom/media
+RUN chown -R www-data:www-data robotom/main/static
+RUN robotom/manage.py collectstatic --noinput
 
 # ENV APACHE_RUN_USER www-data
 # ENV APACHE_RUN_GROUP www-data
