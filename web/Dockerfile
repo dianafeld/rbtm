@@ -18,8 +18,7 @@ RUN sed -i "s/'HOST': 'localhost'/'HOST': 'database'/" robotom/robotom/settings.
 
 RUN mkdir -p robotom/media
 RUN chown www-data:www-data robotom/media
-RUN chown -R www-data:www-data robotom/main/static
-RUN robotom/manage.py collectstatic --noinput
+RUN chown -R www-data:www-data robotom/static
 
 # ENV APACHE_RUN_USER www-data
 # ENV APACHE_RUN_GROUP www-data
@@ -31,3 +30,5 @@ RUN touch robotom/rest.log && chown www-data:www-data robotom/rest.log
 
 EXPOSE 80
 CMD ["apache2ctl", "-D", "FOREGROUND"]
+
+RUN robotom/manage.py collectstatic --noinput
