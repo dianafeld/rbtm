@@ -150,6 +150,7 @@ class Detector (PyTango.Device_4Impl):
         self.attr_exposure_read = self._read_exposure()
 
         self.detector.enable_cooling()
+        # self.detector.set_roi(200, 2400, 0, 3000)
 
         self.attr_image_read = PyTango.EncodedAttribute()
 
