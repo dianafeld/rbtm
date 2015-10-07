@@ -131,6 +131,8 @@ class Detector (PyTango.Device_4Impl):
         self.get_device_properties(self.get_device_class())
         self.attr_exposure_read = 0
         self.attr_image_read = ''
+        self.attr_hous_temp_read = 0.0
+        self.attr_chip_temp_read = 0.0
         #----- PROTECTED REGION ID(Detector.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
@@ -190,6 +192,20 @@ class Detector (PyTango.Device_4Impl):
         
         #----- PROTECTED REGION END -----#	//	Detector.image_read
         
+    def read_hous_temp(self, attr):
+        self.debug_stream("In read_hous_temp()")
+        #----- PROTECTED REGION ID(Detector.hous_temp_read) ENABLED START -----#
+        attr.set_value(self.detector.get_hous_temp())
+        
+        #----- PROTECTED REGION END -----#	//	Detector.hous_temp_read
+        
+    def read_chip_temp(self, attr):
+        self.debug_stream("In read_chip_temp()")
+        #----- PROTECTED REGION ID(Detector.chip_temp_read) ENABLED START -----#
+        attr.set_value(self.detector.get_chip_temp())
+        
+        #----- PROTECTED REGION END -----#	//	Detector.chip_temp_read
+        
     
     
         #----- PROTECTED REGION ID(Detector.initialize_dynamic_attributes) ENABLED START -----#
@@ -236,9 +252,6 @@ class Detector (PyTango.Device_4Impl):
             self.error_stream(str(e))
             raise
         self.debug_stream("Image returned")
-
-        print(self.detector.get_chip_temp())
-        print(self.detector.get_hous_temp())
 
         # is_run.value = 0
         # p.join()
@@ -322,6 +335,14 @@ class DetectorClass(PyTango.DeviceClass):
             } ],
         'image':
             [[PyTango.DevEncoded,
+            PyTango.SCALAR,
+            PyTango.READ]],
+        'hous_temp':
+            [[PyTango.DevDouble,
+            PyTango.SCALAR,
+            PyTango.READ]],
+        'chip_temp':
+            [[PyTango.DevDouble,
             PyTango.SCALAR,
             PyTango.READ]],
         }
