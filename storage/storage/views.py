@@ -163,6 +163,7 @@ def get_frame_info():
 
 def get_transformed_data_path(data, experiment_id):
     transformed_data_path = os.path.abspath('/tmp/tmp_data_file')
+    logger.debug(transformed_data_path)
     data_transformed = h5py.File(transformed_data_path, "w")
 
     experiments = db['experiments']
@@ -179,7 +180,7 @@ def get_transformed_data_path(data, experiment_id):
         json_frame = loads(frame_info)
         frame_number = str(json_frame[0]['frame']['number'])
         frame_type = str(json_frame[0]['frame']['mode'])
-        frame_dataset = data_transformed[frame_type].create_dataset(frame_number, data=data[frame_id])
+        frame_dataset = data_transformed[frame_type].create_dataset(frame_number, data=data[frame_id], compression="gzip", compression_opts=1)
         frame_dataset.attrs.create("frame_info", frame_info.encode('utf8'))
 
     data_transformed.flush()
