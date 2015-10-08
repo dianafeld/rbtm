@@ -165,6 +165,7 @@ def get_transformed_data_path(data, experiment_id):
     transformed_data_path = os.path.abspath('/tmp/tmp_data_file')
     logger.debug(transformed_data_path)
     data_transformed = h5py.File(transformed_data_path, "w")
+    logger.debug("hdf5: created file in temporary directory")
 
     experiments = db['experiments']
     experiment_info = dumps(experiments.find({"_id": experiment_id}))
@@ -173,6 +174,7 @@ def get_transformed_data_path(data, experiment_id):
     data_transformed.create_group("empty")
     data_transformed.create_group("dark")
     data_transformed.create_group("data")
+    logger.debug("hdf5: created groups")
 
     frames = db['frames']
     for frame_id in data.keys():
@@ -183,6 +185,7 @@ def get_transformed_data_path(data, experiment_id):
         frame_dataset = data_transformed[frame_type].create_dataset(frame_number, data=data[frame_id], compression="gzip", compression_opts=1)
         frame_dataset.attrs.create("frame_info", frame_info.encode('utf8'))
 
+    logger.debug("hdf5: wrote compressed datasets")
     data_transformed.flush()
     data_transformed.close()
 
