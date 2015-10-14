@@ -202,40 +202,29 @@
         <div class="container-fluid">
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-bordered">
+                    <td class="table-responsive">
+                        <table class="table table-condensed">
                             <thead>
                             <tr>
-                                <th rowspan="2" style="vertical-align: middle">Образец</th>
-                                <th colspan="4" style="text-align: center">DATA</th>
-                                <th colspan="2" style="text-align: center">EMPTY</th>
-                                <th colspan="2" style="text-align: center">DARK</th>
-                                <th rowspan="2" style="vertical-align: middle">ID эксперимента</th>
-                            </tr>
-                            <tr>
+                                <th>Образец</th>
                                 <th>Шаг угла</th>
-                                <th>Изображений на шаг</th>
+                                <th>Кадров на шаг</th>
                                 <th>Количество шагов</th>
-                                <th style="vertical-align: middle">Экспозиция</th>
-                                <th style="vertical-align: middle">Количество</th>
-                                <th style="vertical-align: middle">Экспозиция</th>
-                                <th style="vertical-align: middle">Количество</th>
-                                <th style="vertical-align: middle">Экспозиция</th>
+                                <th>Экспозиция</th>
+                                <th colspan="2"></th>
                             </tr>
                             </thead>
                             <tbody>
                             {% for record in record_range %}
-                                <tr class="paginated-content">
+                                <tr class="paginated-content tr-buttoned">
                                     <td><a href='{% url 'storage:storage_record' record.experiment_id %}'>{{ record.specimen }}</a></td>
                                     <td>{{ record.data_angle_step }}&deg;</td>
                                     <td>{{ record.data_count_per_step }}</td>
                                     <td>{{ record.data_step_count }}</td>
                                     <td>{{ record.data_exposure }} мс</td>
-                                    <td>{{ record.empty_count }}</td>
-                                    <td>{{ record.empty_exposure }} мс</td>
-                                    <td>{{ record.dark_count }}</td>
-                                    <td>{{ record.dark_exposure }} мс</td>
-                                    <td>{{ record.experiment_id }}</td>
+                                    <td><div class="btn"><img src="/static/storage/img/hdf.jpg"
+                                                              style="height: 20px; margin: -6px 0;"/></div></td>
+                                    <td><div style="cursor: pointer"><span class="glyphicon glyphicon-trash" style="padding-top:7px;"/></div></td>
                                 </tr>
                             {% endfor %}
                             </tbody>
