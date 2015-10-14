@@ -216,15 +216,20 @@
                             </thead>
                             <tbody>
                             {% for record in record_range %}
-                                <tr class="paginated-content tr-buttoned">
+                                <tr class="paginated-content tr-buttoned" id="id{{ record.experiment_id }}">
                                     <td><a href='{% url 'storage:storage_record' record.experiment_id %}'>{{ record.specimen }}</a></td>
                                     <td>{{ record.data_angle_step }}&deg;</td>
                                     <td>{{ record.data_count_per_step }}</td>
                                     <td>{{ record.data_step_count }}</td>
                                     <td>{{ record.data_exposure }} мс</td>
-                                    <td><div class="btn"><img src="/static/storage/img/hdf.jpg"
+                                    <td>
+                                        <div class="btn" data-toggle="tooltip" data-placement="top" title="Скачать hdf5">
+                                            <img src="/static/storage/img/hdf.jpg"
                                                               style="height: 20px; margin: -6px 0;"/></div></td>
-                                    <td><div style="cursor: pointer"><span class="glyphicon glyphicon-trash" style="padding-top:7px;"/></div></td>
+                                    <td><div style="cursor: pointer" data-toggle="tooltip" data-placement="top"
+                                             title="Удалить эксперимент" onClick="deleteExperiment(this.id)"
+                                             id="{{ record.experiment_id }}">
+                                        <span class="glyphicon glyphicon-trash" style="padding-top:7px;"/></div></td>
                                 </tr>
                             {% endfor %}
                             </tbody>
@@ -279,5 +284,30 @@
             $(this).parent().addClass("active");
             showPage(parseInt($(this).text()))
         });
+
+        function deleteExperiment(experiment_id) {
+            $.ajax({
+                url: '{% url 'storage:index' %}' + 'delete_experiment_' + experiment_id,
+                method: 'GET',
+                dataType: 'text',
+                success: function () {
+{#                    alert(data + " " + textStatus + " " + jqXHR.responseText);#}
+
+                    var td = document.getElementById('id' + experiment_id);
+                    td.parentNode.removeChild(td);
+                },
+                error: function () {
+{#                                        alert(jqXHR.responseText);#}
+                    var errorMessage = document.createElement('div');
+                    errorMessage.className = 'row';
+                    errorMessage.innerHTML = '<div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">' +
+                            '<div class="alert alert-danger">' + '<a class="close" data-dismiss="alert"">&times;</a>' +
+                            'Не удалось удалить эксперимент</div></div>';
+
+                    var searchResult = document.getElementsByClassName('container-fluid')[2];
+                    searchResult.parentNode.insertBefore(errorMessage, searchResult);
+                }
+            });
+        }
     </script>
 {% endblock content %}

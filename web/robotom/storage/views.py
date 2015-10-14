@@ -13,7 +13,7 @@ import json
 from django.shortcuts import render
 from requests.exceptions import Timeout
 from robotom.settings import STORAGE_EXPERIMENTS_HOST, STORAGE_FRAMES_HOST, STORAGE_FRAMES_INFO_HOST, MEDIA_ROOT, \
-    STORAGE_FRAMES_PNG
+    STORAGE_FRAMES_PNG, STORAGE_DROP_EXPERIMENT_HOST
 from django.contrib.auth.decorators import login_required, user_passes_test
 
 rest_logger = logging.getLogger('rest_logger')
@@ -372,3 +372,39 @@ def frames_downloading(request, storage_record_id):
                     content_type='text/plain')
 
     return HttpResponse(u'Изображения получены успешно', content_type='text/plain')
+
+
+def delete_experiment(request, experiment_id):
+    try:
+        experiment_request = json.dumps({"_id": 999})
+        rest_logger.debug(u'Удаление эксперимента: {}'.format(experiment_request))
+        response = requests.post(STORAGE_DROP_EXPERIMENT_HOST, experiment_request, timeout=1)
+
+        if response.status_code == 200:
+            response_content = json.loads(response.content)
+            rest_logger.debug(u'Удаление эксперимента: Результат: {}'.format(response_content))
+            result = response_content.deleted
+
+            if result == 0:
+                rest_logger.error(u'Удаление эксперимента: сервер не смог удалить эксперимент')
+                return HttpResponseBadRequest(u'Не удается удалить эксперимент.', content_type='text/plain')
+            else:
+                return HttpResponse(u'Эксперимент {} успешно удален'.format(experiment_id))
+        else:
+            rest_logger.error(
+                    u'Удаление эксперимента: Не удается удалить эксперимент. response.status_code: {}'.format(response.status_code))
+            return HttpResponseBadRequest(
+                    u'Не удается удалить эксперимент. Ошибка {}'.format(response.status_code),
+                    content_type='text/plain')
+    except Timeout as e:
+        rest_logger.error(
+                    u'Удаление эксперимента: Не удается удалить эксперимент. Ошибка: {}'.format(e.message))
+        return HttpResponseBadRequest(
+                    u'Не удается удалить эксперимент. Истекло время ожидания ответа',
+                    content_type='text/plain')
+    except BaseException as e:
+        rest_logger.error(
+                    u'Удаление эксперимента: Не удается удалить эксперимент. Ошибка: {}'.format(e.message))
+        return HttpResponseBadRequest(
+                    u'Не удается удалить эксперимент.',
+                    content_type='text/plain')

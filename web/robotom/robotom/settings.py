@@ -17,6 +17,7 @@ STORAGE_FRAMES_HOST = urljoin(STORAGE_HOST, '/storage/frames/get')
 STORAGE_EXPERIMENTS_HOST = urljoin(STORAGE_HOST, '/storage/experiments/get')
 STORAGE_CREATE_USER_HOST = urljoin(STORAGE_HOST, '/storage/users/get')
 STORAGE_ALT_USER_HOST = urljoin(STORAGE_HOST, '/storage/users/update')
+STORAGE_DROP_EXPERIMENT_HOST = urljoin(STORAGE_HOST, '/storage/experiments/delete')
 
 EXPERIMENT_HOST = 'http://109.234.34.140:5001/'
 # address templates, where {} is a placeholder for tomograph number
