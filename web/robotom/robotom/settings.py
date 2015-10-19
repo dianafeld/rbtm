@@ -1,13 +1,13 @@
 # Django settings for robotom project.
 
+from urlparse import urljoin
+import os
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 REQUEST_DEBUG = False
 
-TIMEOUT_DEFAULT = 10 # timeout in ms
-
-
-from urlparse import urljoin
+TIMEOUT_DEFAULT = 10  # timeout in ms
 
 STORAGE_HOST = 'http://109.234.34.140:5006/'
 
@@ -44,8 +44,6 @@ EXPERIMENT_SOURCE_GET_VOLT = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/get-
 EXPERIMENT_SOURCE_GET_CURR = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/get-current')
 
 EXPERIMENT_GET_STATE = urljoin(EXPERIMENT_HOST, '/tomograph/{}/state')
-
-import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..')
@@ -192,6 +190,7 @@ INSTALLED_APPS = (
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
+
 def skip_suspicious_operations(record):
     if record.name == 'django.security.DisallowedHost':
         return False
@@ -209,16 +208,37 @@ LOGGING = {
             'callback': skip_suspicious_operations,
         }
     },
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false', 'skip_suspicious_operations'],
             'class': 'django.utils.log.AdminEmailHandler'
         },
-        'write_to_file': {
+        'write_to_storage_log': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'rest.log')
+            'filename': os.path.join(BASE_DIR, 'storage.log'),
+            'formatter': 'verbose',
+        },
+        'write_to_experiment_log': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'experiment.log'),
+            'formatter': 'verbose',
+        },
+        'write_to_main_log': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'main.log'),
+            'formatter': 'verbose',
         }
     },
     'loggers': {
@@ -232,10 +252,18 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': False,
         },
-        'rest_logger': {
-            'handlers': ['write_to_file'],
+        'storage_logger': {
+            'handlers': ['write_to_storage_log'],
             'level': 'DEBUG',
-        }
+        },
+        'experiment_logger': {
+            'handlers': ['write_to_experiment_log'],
+            'level': 'DEBUG',
+        },
+        'main_logger': {
+            'handlers': ['write_to_main_log'],
+            'level': 'DEBUG',
+        },
     }
 }
 
