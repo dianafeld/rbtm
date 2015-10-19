@@ -1,9 +1,7 @@
 # coding=utf-8
-import csv
-import hashlib
 import logging
+from string import join
 import os
-import random
 import tempfile
 from django.contrib import messages
 from django.core.files.storage import default_storage
@@ -12,9 +10,10 @@ import requests
 import json
 from django.shortcuts import render
 from requests.exceptions import Timeout
-from robotom.settings import STORAGE_EXPERIMENTS_HOST, STORAGE_FRAMES_HOST, STORAGE_FRAMES_INFO_HOST, MEDIA_ROOT, \
-    STORAGE_FRAMES_PNG, STORAGE_DROP_EXPERIMENT_HOST
+from robotom.settings import STORAGE_EXPERIMENTS_GET_HOST, STORAGE_FRAMES_INFO_HOST, MEDIA_ROOT, \
+    STORAGE_FRAMES_PNG, STORAGE_EXPERIMENTS_HOST, STORAGE_HOST
 from django.contrib.auth.decorators import login_required, user_passes_test
+from urlparse import urljoin
 
 rest_logger = logging.getLogger('rest_logger')
 
@@ -47,6 +46,7 @@ class ExperimentRecord:
         self.data_exposure = record['experiment parameters']['DATA']['exposure']
         self.empty_count = record['experiment parameters']['EMPTY']['count']
         self.empty_exposure = record['experiment parameters']['EMPTY']['exposure']
+        self.hdf_host = STORAGE_EXPERIMENTS_HOST + '/' + self.experiment_id + '/hdf5'
 
 
 def make_info(post_args):
@@ -130,6 +130,7 @@ def make_info(post_args):
     rest_logger.debug(u'Текст запроса к базе {}'.format(json.dumps(request)))
     return json.dumps(request)
 
+
 @login_required
 @user_passes_test(is_active)
 def storage_view(request):
@@ -143,7 +144,7 @@ def storage_view(request):
     elif request.method == "POST":
         info = make_info(request.POST)
     try:
-        answer = requests.post(STORAGE_EXPERIMENTS_HOST, info, timeout=5)
+        answer = requests.post(STORAGE_EXPERIMENTS_GET_HOST, info, timeout=5)
         if answer.status_code == 200:
             experiments = json.loads(answer.content)
             rest_logger.debug(u'Найденные эксперименты: {}'.format(experiments))
@@ -152,7 +153,7 @@ def storage_view(request):
                 try:
                     record = ExperimentRecord(result)
                     records.append(record)
-                except KeyError as e:
+                except KeyError:
                     rest_logger.warning(u'Неверная запись об эксперименте {}'.format(result))
 
             if len(records) == 0:
@@ -241,6 +242,7 @@ class FrameRecord:
                 if "voltage" in frame["frame"]["X-ray source"]:
                     self.voltage = frame["frame"]["X-ray source"]["voltage"]
 
+
 @login_required
 @user_passes_test(is_active)
 def storage_record_view(request, storage_record_id):
@@ -248,7 +250,7 @@ def storage_record_view(request, storage_record_id):
     to_show = True
     try:
         exp_info = json.dumps({"_id": storage_record_id})
-        experiment = requests.post(STORAGE_EXPERIMENTS_HOST, exp_info, timeout=1)
+        experiment = requests.post(STORAGE_EXPERIMENTS_GET_HOST, exp_info, timeout=1)
         if experiment.status_code == 200:
             experiment_info = json.loads(experiment.content)
             rest_logger.debug(u'Страница записи: Данные эксперимента: {}'.format(experiment_info))
@@ -376,35 +378,35 @@ def frames_downloading(request, storage_record_id):
 
 def delete_experiment(request, experiment_id):
     try:
-        experiment_request = json.dumps({"_id": 999})
-        rest_logger.debug(u'Удаление эксперимента: {}'.format(experiment_request))
-        response = requests.post(STORAGE_DROP_EXPERIMENT_HOST, experiment_request, timeout=1)
+        rest_logger.debug(u'Удаление эксперимента: {}'.format(experiment_id))
+        response = requests.delete(STORAGE_EXPERIMENTS_HOST + '/' + experiment_id, timeout=1)
 
         if response.status_code == 200:
             response_content = json.loads(response.content)
             rest_logger.debug(u'Удаление эксперимента: Результат: {}'.format(response_content))
-            result = response_content.deleted
+            result = response_content[u'deleted']
 
-            if result == 0:
+            if result != u'success':
                 rest_logger.error(u'Удаление эксперимента: сервер не смог удалить эксперимент')
                 return HttpResponseBadRequest(u'Не удается удалить эксперимент.', content_type='text/plain')
             else:
                 return HttpResponse(u'Эксперимент {} успешно удален'.format(experiment_id))
         else:
             rest_logger.error(
-                    u'Удаление эксперимента: Не удается удалить эксперимент. response.status_code: {}'.format(response.status_code))
+                u'Удаление эксперимента: Не удается удалить эксперимент. response.status_code: {}'.format(
+                    response.status_code))
             return HttpResponseBadRequest(
-                    u'Не удается удалить эксперимент. Ошибка {}'.format(response.status_code),
-                    content_type='text/plain')
+                u'Не удается удалить эксперимент. Ошибка {}'.format(response.status_code),
+                content_type='text/plain')
     except Timeout as e:
         rest_logger.error(
-                    u'Удаление эксперимента: Не удается удалить эксперимент. Ошибка: {}'.format(e.message))
+            u'Удаление эксперимента: Не удается удалить эксперимент. Ошибка: {}'.format(e.message))
         return HttpResponseBadRequest(
-                    u'Не удается удалить эксперимент. Истекло время ожидания ответа',
-                    content_type='text/plain')
+            u'Не удается удалить эксперимент. Истекло время ожидания ответа',
+            content_type='text/plain')
     except BaseException as e:
         rest_logger.error(
-                    u'Удаление эксперимента: Не удается удалить эксперимент. Ошибка: {}'.format(e.message))
+            u'Удаление эксперимента: Не удается удалить эксперимент. Ошибка: {}'.format(e.message))
         return HttpResponseBadRequest(
-                    u'Не удается удалить эксперимент.',
-                    content_type='text/plain')
+            u'Не удается удалить эксперимент.',
+            content_type='text/plain')

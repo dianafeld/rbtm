@@ -208,7 +208,6 @@
                             <tr>
                                 <th>Образец</th>
                                 <th>Шаг угла</th>
-                                <th>Кадров на шаг</th>
                                 <th>Количество шагов</th>
                                 <th>Экспозиция</th>
                                 <th colspan="2"></th>
@@ -219,13 +218,12 @@
                                 <tr class="paginated-content tr-buttoned" id="id{{ record.experiment_id }}">
                                     <td><a href='{% url 'storage:storage_record' record.experiment_id %}'>{{ record.specimen }}</a></td>
                                     <td>{{ record.data_angle_step }}&deg;</td>
-                                    <td>{{ record.data_count_per_step }}</td>
                                     <td>{{ record.data_step_count }}</td>
                                     <td>{{ record.data_exposure }} мс</td>
                                     <td>
                                         <div class="btn" data-toggle="tooltip" data-placement="top" title="Скачать hdf5">
-                                            <img src="/static/storage/img/hdf.jpg"
-                                                              style="height: 20px; margin: -6px 0;"/></div></td>
+                                            <a href="{{ record.hdf_host }}" download><img src="/static/storage/img/hdf.jpg"
+                                                style="height: 20px; margin: -6px 0;"/></a></div></td>
                                     <td><div style="cursor: pointer" data-toggle="tooltip" data-placement="top"
                                              title="Удалить эксперимент" onClick="deleteExperiment(this.id)"
                                              id="{{ record.experiment_id }}">
@@ -286,28 +284,40 @@
         });
 
         function deleteExperiment(experiment_id) {
-            $.ajax({
-                url: '{% url 'storage:index' %}' + 'delete_experiment_' + experiment_id,
-                method: 'GET',
-                dataType: 'text',
-                success: function () {
-{#                    alert(data + " " + textStatus + " " + jqXHR.responseText);#}
+            if (confirm("Вы действительно хотите удалить эксперимент? Его невозможно будет восстановить.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ")) {
+                $.ajax({
+                    url: '{% url 'storage:index' %}' + 'delete_experiment_' + experiment_id,
+                    method: 'GET',
+                    dataType: 'text',
+                    success: function () {
+                        var errorMessage = document.createElement('div');
+                        errorMessage.className = 'row';
+                        errorMessage.innerHTML = '<div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">' +
+                                '<div class="alert alert-success">' + '<a class="close" data-dismiss="alert"">&times;</a>' +
+                                'Эксперимент успешно удален</div></div>';
 
-                    var td = document.getElementById('id' + experiment_id);
-                    td.parentNode.removeChild(td);
-                },
-                error: function () {
-{#                                        alert(jqXHR.responseText);#}
-                    var errorMessage = document.createElement('div');
-                    errorMessage.className = 'row';
-                    errorMessage.innerHTML = '<div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">' +
-                            '<div class="alert alert-danger">' + '<a class="close" data-dismiss="alert"">&times;</a>' +
-                            'Не удалось удалить эксперимент</div></div>';
+                        var searchResult = document.getElementsByClassName('container-fluid')[2];
+                        searchResult.parentNode.insertBefore(errorMessage, searchResult);
 
-                    var searchResult = document.getElementsByClassName('container-fluid')[2];
-                    searchResult.parentNode.insertBefore(errorMessage, searchResult);
-                }
-            });
+                        var td = document.getElementById('id' + experiment_id);
+                        td.parentNode.removeChild(td);
+                    },
+                    error: function () {
+                        var errorMessage = document.createElement('div');
+                        errorMessage.className = 'row';
+                        errorMessage.innerHTML = '<div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-3">' +
+                                '<div class="alert alert-danger">' + '<a class="close" data-dismiss="alert"">&times;</a>' +
+                                'Не удалось удалить эксперимент</div></div>';
+
+                        var searchResult = document.getElementsByClassName('container-fluid')[2];
+                        searchResult.parentNode.insertBefore(errorMessage, searchResult);
+                    }
+                });
+            }
+        }
+
+        function redirectToHdf5Load(host) {
+            location.href = host;
         }
     </script>
 {% endblock content %}
