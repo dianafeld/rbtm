@@ -1,5 +1,6 @@
 from cxiapi cimport *
 from libc.string cimport memset, memchr, memcmp, memcpy, memmove
+from libc.stdlib cimport free
 cimport numpy
 import numpy
 import PyTango
@@ -151,7 +152,9 @@ cdef class Detector:
             e = xiStopAcquisition(self.handle)
             handle_error(e, "Detector.get_image().xiStopAcquisition()")
 
-        return self.make_image(image)
+        res_image =  self.make_image(image)
+        free(<void *>image.bp)
+        return res_image
 
     def enable_cooling(self):
         e = xiSetParamInt(self.handle, XI_PRM_COOLING, XI_ON)
