@@ -435,7 +435,8 @@ class Tomograph (PyTango.Device_4Impl):
         current_datetime = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
         detector_data = {'model': 'Ximea xiRAY'}
-        image_data = {'exposure': exposure, 'datetime': current_datetime, 'detector': detector_data} #'image': image, 
+        image_data = {'exposure': exposure, 'datetime': current_datetime, 'detector': detector_data,
+                      'chip_temp': self.detector.chip_temp, 'hous_temp': self.detector.hous_temp} #'image': image,
         object_data = {'present': self.motor.horizontal_position < 4000,  # TODO
                        'angle position': self.motor.angle_position,
                        'horizontal position': self.motor.horizontal_position,

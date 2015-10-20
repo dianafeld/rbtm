@@ -519,7 +519,7 @@ class Tomograph:
 
     def shutter_state(self, exp_is_advanced=True):
         #TODO documentation
-        """
+        """ Tries to get tomo state
 
         :return: depends on "emptiness" of argument 'exp_id';
                  if 'exp_id' is NOT empty, function returns success of function, type is bool
@@ -551,7 +551,7 @@ class Tomograph:
         if self.exp_id:
             return True
         else:
-            return create_response(True, result=success)
+            return create_response(True, result=status)
 
 
     def set_x(self, new_x, exp_is_advanced=True):
