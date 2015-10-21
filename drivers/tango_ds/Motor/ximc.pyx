@@ -49,8 +49,6 @@ cdef class Motor:
         edges_settings.BorderFlags = 0
         set_edges_settings(self.device_id, &edges_settings)
 
-        return self
-
     def close(self):
         cdef int tmp_device_id = self.device_id
         result_code = close_device(&tmp_device_id)
