@@ -58,6 +58,7 @@ sys.path.insert(0, 'lib')
 import ximc
 import time
 import ConfigParser
+from contextlib import closing
 #----- PROTECTED REGION END -----#  //  Motor.additionnal_import
 
 ## Device States Description
@@ -155,10 +156,10 @@ class Motor (PyTango.Device_4Impl):
             self.error_stream(str(e))
             raise
 
-        self.angle_motor.open()
-        self.angle_motor.set_move_settings(500, 500)
-        steps = self._read_position(self.angle_motor)
-        self.attr_angle_position_read = steps
+        with closing(self.angle_motor.open()) as angle_motor:
+            angle_motor.set_move_settings(500, 500)
+            steps = self._read_position(angle_motor)
+            attr_angle_position_read = steps
         #self.angle_motor.close()
 
         self.horizontal_motor.open()
@@ -185,7 +186,8 @@ class Motor (PyTango.Device_4Impl):
         self.debug_stream("In read_angle_position()")
         #----- PROTECTED REGION ID(Motor.angle_position_read) ENABLED START -----#
         #self.angle_motor.open()
-        self.attr_angle_position_read = self._read_position(self.angle_motor) * 360. / 32300
+        with closing(self.angle_motor.open()) as angle_motor:
+            self.attr_angle_position_read = self._read_position(angle_motor) * 360. / 32300
         attr.set_value(self.attr_angle_position_read)
         #self.angle_motor.close()
 
@@ -199,11 +201,12 @@ class Motor (PyTango.Device_4Impl):
         prev_state = self.get_state()
         self.set_state(PyTango.DevState.MOVING)
 
-        #self.angle_motor.open()
-
         angle = data
         steps = int(round(angle * 32300 / 360.))
-        self._write_position(self.angle_motor, steps)
+
+        #self.angle_motor.open()
+        with closing(self.angle_motor.open()) as angle_motor:
+            self._write_position(angle_motor, steps)
         #self.angle_motor.close()
 
         self.set_state(prev_state)
@@ -302,7 +305,8 @@ class Motor (PyTango.Device_4Impl):
         self.debug_stream("In ResetAnglePosition()")
         #----- PROTECTED REGION ID(Motor.ResetAnglePosition) ENABLED START -----#
         self.debug_stream("Setting current angle position as new zero")
-        self.angle_motor.set_zero()
+        with closing(self.angle_motor.open()) as angle_motor:
+            angle_motor.set_zero()
         self.debug_stream("New zero has been set")
         #----- PROTECTED REGION END -----#  //  Motor.ResetAnglePosition
         
