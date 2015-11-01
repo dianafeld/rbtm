@@ -14,9 +14,10 @@ STORAGE_HOST = 'http://109.234.34.140:5006/'
 STORAGE_FRAMES_PNG = urljoin(STORAGE_HOST, '/storage/png/get')
 STORAGE_FRAMES_INFO_HOST = urljoin(STORAGE_HOST, '/storage/frames_info/get')
 STORAGE_FRAMES_HOST = urljoin(STORAGE_HOST, '/storage/frames/get')
-STORAGE_EXPERIMENTS_HOST = urljoin(STORAGE_HOST, '/storage/experiments/get')
+STORAGE_EXPERIMENTS_GET_HOST = urljoin(STORAGE_HOST, '/storage/experiments/get')
 STORAGE_CREATE_USER_HOST = urljoin(STORAGE_HOST, '/storage/users/get')
 STORAGE_ALT_USER_HOST = urljoin(STORAGE_HOST, '/storage/users/update')
+STORAGE_EXPERIMENTS_HOST = urljoin(STORAGE_HOST, '/storage/experiments')
 
 EXPERIMENT_HOST = 'http://109.234.34.140:5001/'
 # address templates, where {} is a placeholder for tomograph number

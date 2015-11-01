@@ -1,5 +1,6 @@
 # coding=utf-8
 import logging
+from string import join
 import os
 import tempfile
 from django.contrib import messages
@@ -9,9 +10,10 @@ import requests
 import json
 from django.shortcuts import render
 from requests.exceptions import Timeout
-from robotom.settings import STORAGE_EXPERIMENTS_HOST, STORAGE_FRAMES_INFO_HOST, MEDIA_ROOT, \
-    STORAGE_FRAMES_PNG
+from robotom.settings import STORAGE_EXPERIMENTS_GET_HOST, STORAGE_FRAMES_INFO_HOST, MEDIA_ROOT, \
+    STORAGE_FRAMES_PNG, STORAGE_EXPERIMENTS_HOST, STORAGE_HOST
 from django.contrib.auth.decorators import login_required, user_passes_test
+from urlparse import urljoin
 
 storage_logger = logging.getLogger('storage_logger')
 
@@ -44,6 +46,7 @@ class ExperimentRecord:
         self.data_exposure = record['experiment parameters']['DATA']['exposure']
         self.empty_count = record['experiment parameters']['EMPTY']['count']
         self.empty_exposure = record['experiment parameters']['EMPTY']['exposure']
+        self.hdf_host = STORAGE_EXPERIMENTS_HOST + '/' + self.experiment_id + '/hdf5'
 
 
 def make_info(post_args):
@@ -141,7 +144,7 @@ def storage_view(request):
     elif request.method == "POST":
         info = make_info(request.POST)
     try:
-        answer = requests.post(STORAGE_EXPERIMENTS_HOST, info, timeout=5)
+        answer = requests.post(STORAGE_EXPERIMENTS_GET_HOST, info, timeout=5)
         if answer.status_code == 200:
             experiments = json.loads(answer.content)
             storage_logger.debug(u'Найденные эксперименты: {}'.format(experiments))
@@ -247,7 +250,7 @@ def storage_record_view(request, storage_record_id):
     to_show = True
     try:
         exp_info = json.dumps({"_id": storage_record_id})
-        experiment = requests.post(STORAGE_EXPERIMENTS_HOST, exp_info, timeout=1)
+        experiment = requests.post(STORAGE_EXPERIMENTS_GET_HOST, exp_info, timeout=1)
         if experiment.status_code == 200:
             experiment_info = json.loads(experiment.content)
             storage_logger.debug(u'Страница записи: Данные эксперимента: {}'.format(experiment_info))
@@ -370,3 +373,39 @@ def frames_downloading(request, storage_record_id):
                     content_type='text/plain')
 
     return HttpResponse(u'Изображения получены успешно', content_type='text/plain')
+
+
+def delete_experiment(request, experiment_id):
+    try:
+        storage_logger.debug(u'Удаление эксперимента: {}'.format(experiment_id))
+        response = requests.delete(STORAGE_EXPERIMENTS_HOST + '/' + experiment_id, timeout=1)
+
+        if response.status_code == 200:
+            response_content = json.loads(response.content)
+            storage_logger.debug(u'Удаление эксперимента: Результат: {}'.format(response_content))
+            result = response_content[u'deleted']
+
+            if result != u'success':
+                storage_logger.error(u'Удаление эксперимента: сервер не смог удалить эксперимент')
+                return HttpResponseBadRequest(u'Не удается удалить эксперимент.', content_type='text/plain')
+            else:
+                return HttpResponse(u'Эксперимент {} успешно удален'.format(experiment_id))
+        else:
+            storage_logger.error(
+                u'Удаление эксперимента: Не удается удалить эксперимент. response.status_code: {}'.format(
+                    response.status_code))
+            return HttpResponseBadRequest(
+                u'Не удается удалить эксперимент. Ошибка {}'.format(response.status_code),
+                content_type='text/plain')
+    except Timeout as e:
+        storage_logger.error(
+            u'Удаление эксперимента: Не удается удалить эксперимент. Ошибка: {}'.format(e.message))
+        return HttpResponseBadRequest(
+            u'Не удается удалить эксперимент. Истекло время ожидания ответа',
+            content_type='text/plain')
+    except BaseException as e:
+        storage_logger.error(
+            u'Удаление эксперимента: Не удается удалить эксперимент. Ошибка: {}'.format(e.message))
+        return HttpResponseBadRequest(
+            u'Не удается удалить эксперимент.',
+            content_type='text/plain')
