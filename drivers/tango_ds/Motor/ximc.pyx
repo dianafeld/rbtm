@@ -1,6 +1,6 @@
 from cximc cimport *
 
-# import PyTango
+import PyTango
 
 error_description = {result_ok: "success",
                      result_error: "generic error",
@@ -20,7 +20,7 @@ cdef void create_exception(func_name, description) except *:
     print(reason, description, origin)
     # END DEBUG OUTPUT
 
-    # PyTango.Except.throw_exception(reason, description, origin)
+    PyTango.Except.throw_exception(reason, description, origin)
 
 def handle_error(error_code, origin):
     if error_code != result_ok:
@@ -48,6 +48,8 @@ cdef class Motor:
         get_edges_settings(self.device_id, &edges_settings)
         edges_settings.BorderFlags = 0
         set_edges_settings(self.device_id, &edges_settings)
+
+        return self
 
     def close(self):
         cdef int tmp_device_id = self.device_id
