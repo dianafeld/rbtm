@@ -225,19 +225,19 @@ LOGGING = {
         'write_to_storage_log': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'storage.log'),
+            'filename': os.path.join(BASE_DIR, 'logs/storage.log'),
             'formatter': 'verbose',
         },
         'write_to_experiment_log': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'experiment.log'),
+            'filename': os.path.join(BASE_DIR, 'logs/experiment.log'),
             'formatter': 'verbose',
         },
         'write_to_main_log': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'main.log'),
+            'filename': os.path.join(BASE_DIR, 'logs/main.log'),
             'formatter': 'verbose',
         }
     },
