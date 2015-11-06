@@ -79,7 +79,8 @@ class HorizontalMotor (PyTango.Device_4Impl):
 
         self.debug_stream("Reading position...")
         try:
-            steps = motor.get_position()["Position"]
+            motor.wait_for_stop()
+            steps = motor.get_position()
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
             raise
@@ -92,15 +93,18 @@ class HorizontalMotor (PyTango.Device_4Impl):
     def _write_position(self, motor, steps):
         self.debug_stream("In _write_position()")
 
+        self.debug_stream("Setting position = {}".format(steps))
         try:
-            self.debug_stream("Setting position = {}".format(steps))
-            motor.move_to_position(steps, 0)
             time.sleep(0.5)
-            status = motor.get_status()
-            while (status["MvCmdSts"] & 0x80) != 0:
-                time.sleep(0.5)
-                status = motor.get_status()
-            time.sleep(0.2)
+            motor.wait_for_stop()
+            motor.move_to_position(steps, 0)
+            motor.wait_for_stop()
+            #time.sleep(0.5)
+            #status = motor.get_status()
+            #while (status["MvCmdSts"] & 0x80) != 0:
+            #    time.sleep(0.5) 
+            #    status = motor.get_status()
+            #time.sleep(0.2)
             self.debug_stream("Position has been set")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -108,7 +112,6 @@ class HorizontalMotor (PyTango.Device_4Impl):
         except Exception as e:
             self.error_stream(str(e))
             raise
-
     #----- PROTECTED REGION END -----#	//	HorizontalMotor.global_variables
 
     def __init__(self,cl, name):

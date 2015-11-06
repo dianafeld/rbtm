@@ -58,6 +58,8 @@ sys.path.insert(0, 'lib')
 import ximc
 import time
 import ConfigParser
+import threading
+from pympler import tracker
 #----- PROTECTED REGION END -----#  //  Motor.additionnal_import
 
 ## Device States Description
@@ -83,36 +85,43 @@ class Motor (PyTango.Device_4Impl):
         self.debug_stream("In _read_position()")
 
         self.debug_stream("Reading position...")
-        try:
-            steps = motor.get_position()["Position"]
-        except PyTango.DevFailed as df:
-            self.error_stream(str(df))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
+        with self.lock:
+            try:
+                motor.wait_for_stop()
+                steps = motor.get_position()
+            except PyTango.DevFailed as df:
+                self.error_stream(str(df))
+                raise
+            except Exception as e:
+                self.error_stream(str(e))
+                raise
         self.debug_stream("Position = {}".format(steps))
         return steps
 
     def _write_position(self, motor, steps):
         self.debug_stream("In _write_position()")
 
-        try:
-            self.debug_stream("Setting position = {}".format(steps))
-            motor.move_to_position(steps, 0)
-            time.sleep(0.5)
-            status = motor.get_status()
-            while (status["MvCmdSts"] & 0x80) != 0:
-                time.sleep(0.5) 
-                status = motor.get_status()
-            time.sleep(0.2)
-            self.debug_stream("Position has been set")
-        except PyTango.DevFailed as df:
-            self.error_stream(str(df))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
+        self.debug_stream("Setting position = {}".format(steps))
+        with self.lock:
+            try:
+                
+                time.sleep(0.5)
+                motor.wait_for_stop()
+                motor.move_to_position(steps, 0)
+                motor.wait_for_stop()
+                #time.sleep(0.5)
+                #status = motor.get_status()
+                #while (status["MvCmdSts"] & 0x80) != 0:
+                #    time.sleep(0.5) 
+                #    status = motor.get_status()
+                #time.sleep(0.2)
+                self.debug_stream("Position has been set")
+            except PyTango.DevFailed as df:
+                self.error_stream(str(df))
+                raise
+            except Exception as e:
+                self.error_stream(str(e))
+                raise
 
     #----- PROTECTED REGION END -----#  //  Motor.global_variables
 
@@ -138,6 +147,7 @@ class Motor (PyTango.Device_4Impl):
         self.attr_vertical_position_read = 0
         self.attr_horizontal_position_read = 0
         #----- PROTECTED REGION ID(Motor.init_device) ENABLED START -----#
+        self.lock = threading.Lock()
 
         self.set_state(PyTango.DevState.OFF)
 
@@ -157,17 +167,16 @@ class Motor (PyTango.Device_4Impl):
 
         self.angle_motor.open()
         self.angle_motor.set_move_settings(500, 500)
-        steps = self._read_position(self.angle_motor)
-        self.attr_angle_position_read = steps
+        #steps = self._read_position(self.angle_motor)
+        #self.attr_angle_position_read = steps
         #self.angle_motor.close()
 
         self.horizontal_motor.open()
         self.horizontal_motor.set_move_settings(500, 500)
-        steps = self._read_position(self.horizontal_motor)
-        self.attr_horizontal_position_read = steps
+        #steps = self._read_position(self.horizontal_motor)
+        #self.attr_horizontal_position_read = steps
 
         self.set_state(PyTango.DevState.ON)
-
 
         #----- PROTECTED REGION END -----#  //  Motor.init_device
 

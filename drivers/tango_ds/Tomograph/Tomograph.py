@@ -103,7 +103,7 @@ class Tomograph (PyTango.Device_4Impl):
         self.angle_motor.set_timeout_millis(70000)
         self.horizontal_motor.set_timeout_millis(70000)
 
-        self.SelfTest()
+        #self.SelfTest()
 
         self.attr_xraysource_voltage_read = self.source.voltage
         self.attr_xraysource_current_read = self.source.current
@@ -468,10 +468,10 @@ class Tomograph (PyTango.Device_4Impl):
         :rtype: PyTango.DevVoid """
         self.debug_stream("In MoveAway()")
         #----- PROTECTED REGION ID(Tomograph.MoveAway) ENABLED START -----#
-        if self.present:
+        if self.object_present:
             self.prev_horizontal_position = self.horizontal_motor.position
             self.horizontal_motor.position = -4200
-            self.object_present = True
+            self.object_present = False
         #----- PROTECTED REGION END -----#  //  Tomograph.MoveAway
         
     def MoveBack(self):
@@ -485,6 +485,7 @@ class Tomograph (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(Tomograph.MoveBack) ENABLED START -----#
         if not self.object_present:
             self.horizontal_motor.position = self.prev_horizontal_position
+            self.object_present = True
         #----- PROTECTED REGION END -----#  //  Tomograph.MoveBack
         
 

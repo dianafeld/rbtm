@@ -70,8 +70,8 @@ class AngleMotor (PyTango.Device_4Impl):
 
     def get_port_from_config(self):
         config = ConfigParser.RawConfigParser()
-        config.read(HorizontalMotor.CONFIG_PATH)
-        motor_port = config.get("horizontal motor", "port")
+        config.read(AngleMotor.CONFIG_PATH)
+        motor_port = config.get("angle motor", "port")
         return motor_port
 
     def _read_position(self, motor):
@@ -79,7 +79,8 @@ class AngleMotor (PyTango.Device_4Impl):
 
         self.debug_stream("Reading position...")
         try:
-            steps = motor.get_position()["Position"]
+            motor.wait_for_stop()
+            steps = motor.get_position()
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
             raise
@@ -92,15 +93,18 @@ class AngleMotor (PyTango.Device_4Impl):
     def _write_position(self, motor, steps):
         self.debug_stream("In _write_position()")
 
+        self.debug_stream("Setting position = {}".format(steps))
         try:
-            self.debug_stream("Setting position = {}".format(steps))
-            motor.move_to_position(steps, 0)
             time.sleep(0.5)
-            status = motor.get_status()
-            while (status["MvCmdSts"] & 0x80) != 0:
-                time.sleep(0.5)
-                status = motor.get_status()
-            time.sleep(0.2)
+            motor.wait_for_stop()
+            motor.move_to_position(steps, 0)
+            motor.wait_for_stop()
+            #time.sleep(0.5)
+            #status = motor.get_status()
+            #while (status["MvCmdSts"] & 0x80) != 0:
+            #    time.sleep(0.5) 
+            #    status = motor.get_status()
+            #time.sleep(0.2)
             self.debug_stream("Position has been set")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -174,7 +178,15 @@ class AngleMotor (PyTango.Device_4Impl):
         self.debug_stream("In write_position()")
         data=attr.get_write_value()
         #----- PROTECTED REGION ID(AngleMotor.position_write) ENABLED START -----#
-        
+        prev_state = self.get_state()
+        self.set_state(PyTango.DevState.MOVING)
+
+        angle = data
+        steps = int(round(angle * 32300 / 360.))
+        self._write_position(self.angle_motor, steps)
+        #self.angle_motor.close()
+
+        self.set_state(prev_state)
         #----- PROTECTED REGION END -----#	//	AngleMotor.position_write
         
     
