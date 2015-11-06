@@ -18,6 +18,14 @@ def register_motor():
     register("tomo/motor/1", "Motor", "Motor/motor")
 
 
+def register_angle_motor():
+    register("tomo/angle_motor/1", "AngleMotor", "AngleMotor/angle_motor")
+
+
+def register_horizontal_motor():
+    register("tomo/horizontal_motor/1", "HorizontalMotor", "HorizontalMotor/horizontal_motor")
+
+
 def register_detector():
     register("tomo/detector/1", "Detector", "Detector/detector")
 
@@ -36,7 +44,9 @@ def register_tomograph():
 
 db = Database()
 
-register_motor()
+# register_motor()
+register_angle_motor()
+register_horizontal_motor()
 register_detector()
 register_shutter()
 register_source()

@@ -3,8 +3,8 @@ FROM ubuntu:trusty
 MAINTAINER itsnotme
 
 RUN apt-get update \
- && apt-get install -y python python-pip python-dev apache2 libapache2-mod-wsgi libpq-dev \
- && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y python python-pip python-dev apache2 libapache2-mod-wsgi libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /var/www/web/requirements.txt
 WORKDIR /var/www/web/
@@ -16,9 +16,8 @@ COPY . /var/www/web/
 RUN sed -i "s/'HOST': 'localhost'/'HOST': 'database'/" robotom/robotom/settings.py
 
 
-RUN mkdir -p robotom/media
-RUN chown www-data:www-data robotom/media
-RUN chown -R www-data:www-data robotom/static
+RUN mkdir -p robotom/media && mkdir -p robotom/logs && chown -R www-data:www-data robotom/logs \
+    && chown -R www-data:www-data robotom/media && chown -R www-data:www-data robotom/static
 RUN robotom/manage.py collectstatic --noinput
 
 # ENV APACHE_RUN_USER www-data
