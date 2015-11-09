@@ -235,23 +235,19 @@ def delete_experiment(experiment_id):
     cursor = experiments.find(exp_query)
     if cursor.count() == 0:
         logger.error('Experiment not found')
-        abort(404)
-
-    experiments.remove(exp_query)
-    if cursor.count() != 0:
-        logger.error("Can't remove experiment")
-        abort(500)
-    logger.info("database: deleted experiment {} successfully".format(experiment_id))
-
-    vals = db.experiments.find({}, {'_id': 1}).map(lambda experiment: experiment._id)
-    db.frames.remove({'exp_id': {'$nin': vals}})
+    else:
+        experiments.remove(exp_query)
+        if cursor.count() != 0:
+            logger.error("Can't remove experiment")
+        else:
+            logger.info("database: deleted experiment {} successfully".format(experiment_id))
 
     frames_query = {'exp_id': experiment_id}
     frames.remove(frames_query)
     if frames.find(frames_query).count() != 0:
         logger.error("Can't remove frames")
-        abort(500)
-    logger.info("database: deleted frames of {} successfully".format(experiment_id))
+    else:
+        logger.info("database: deleted frames of {} successfully".format(experiment_id))
 
     fs.delete_experiment(experiment_id)
 
