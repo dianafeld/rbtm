@@ -161,10 +161,8 @@ def get_frame_info():
     return resp
 
 
-def get_transformed_data_path(data, experiment_id):
-    transformed_data_path = os.path.abspath(os.path.join("data", "experiments", str(experiment_id), "before_processing",
-                                                         experiment_id + ".h5"))
-    logger.debug(transformed_data_path)
+def get_transformed_data_path(data, transformed_data_path, experiment_id):
+
     data_transformed = h5py.File(transformed_data_path, "w")
     logger.debug("hdf5: created file in temporary directory")
 
@@ -195,10 +193,13 @@ def get_transformed_data_path(data, experiment_id):
 
 @app.route('/storage/experiments/<experiment_id>/hdf5', methods=['GET'])
 def get_experiment_by_id(experiment_id):
-
     logger.info('Getting experiment: ' + experiment_id)
     data = h5py.File(os.path.abspath(os.path.join('data', 'experiments', experiment_id, 'before_processing', 'frames.h5')), 'r')
-    return send_file(get_transformed_data_path(data, experiment_id), mimetype='application/x-hdf5', as_attachment=True, attachment_filename=str(experiment_id)+'.h5')
+    transformed_data_path = os.path.abspath(os.path.join("data", "experiments", str(experiment_id), "before_processing",
+                                                         experiment_id + ".h5"))
+    logger.debug(transformed_data_path)
+    return send_file(get_transformed_data_path(data, transformed_data_path, experiment_id),
+                     mimetype='application/x-hdf5', as_attachment=True, attachment_filename=str(experiment_id)+'.h5')
 
 
 @app.route('/storage/png/get', methods=['POST'])
