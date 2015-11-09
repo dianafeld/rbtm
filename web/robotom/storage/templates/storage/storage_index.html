@@ -202,37 +202,35 @@
         <div class="container-fluid">
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <td class="table-responsive">
-                        <table class="table table-condensed">
-                            <thead>
-                            <tr>
-                                <th>Образец</th>
-                                <th>Шаг угла</th>
-                                <th>Количество шагов</th>
-                                <th>Экспозиция</th>
-                                <th colspan="2"></th>
+                    <table class="table table-condensed table-hover">
+                        <thead>
+                        <tr>
+                            <th>Образец</th>
+                            <th>Шаг угла</th>
+                            <th>Число шагов</th>
+                            <th>Экспозиция</th>
+                            <th colspan="2"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for record in record_range %}
+                            <tr class="paginated-content tr-buttoned" id="id{{ record.experiment_id }}">
+                                <td><a href='{% url 'storage:storage_record' record.experiment_id %}'>{{ record.specimen }}</a></td>
+                                <td>{{ record.data_angle_step }}&deg;</td>
+                                <td>{{ record.data_step_count }}</td>
+                                <td>{{ record.data_exposure }} мс</td>
+                                <td style="text-align: right;">
+                                    <div class="btn" data-toggle="tooltip" data-placement="top" title="Скачать hdf5">
+                                        <a href="{{ record.hdf_host }}" target="_blank" download><img src="/static/storage/img/hdf5.png"
+                                            style="height: 20px; margin: -6px 0;"/></a></div></td>
+                                <td><div style="cursor: pointer" data-toggle="tooltip" data-placement="top"
+                                         title="Удалить эксперимент" onClick="deleteExperiment(this.id)"
+                                         id="{{ record.experiment_id }}">
+                                    <span class="glyphicon glyphicon-trash" style="padding-top:7px;"/></div></td>
                             </tr>
-                            </thead>
-                            <tbody>
-                            {% for record in record_range %}
-                                <tr class="paginated-content tr-buttoned" id="id{{ record.experiment_id }}">
-                                    <td><a href='{% url 'storage:storage_record' record.experiment_id %}'>{{ record.specimen }}</a></td>
-                                    <td>{{ record.data_angle_step }}&deg;</td>
-                                    <td>{{ record.data_step_count }}</td>
-                                    <td>{{ record.data_exposure }} мс</td>
-                                    <td>
-                                        <div class="btn" data-toggle="tooltip" data-placement="top" title="Скачать hdf5">
-                                            <a href="{{ record.hdf_host }}" target="_blank" download><img src="/static/storage/img/hdf.jpg"
-                                                style="height: 20px; margin: -6px 0;"/></a></div></td>
-                                    <td><div style="cursor: pointer" data-toggle="tooltip" data-placement="top"
-                                             title="Удалить эксперимент" onClick="deleteExperiment(this.id)"
-                                             id="{{ record.experiment_id }}">
-                                        <span class="glyphicon glyphicon-trash" style="padding-top:7px;"/></div></td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                        {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
                 <div class="panel-footer">
                     <ul class="pagination">

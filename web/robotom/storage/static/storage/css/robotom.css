@@ -1,5 +1,6 @@
 .table > tbody > tr > td {
     vertical-align: middle;
+    max-width: 150px;
 }
 
 .tr-buttoned {
