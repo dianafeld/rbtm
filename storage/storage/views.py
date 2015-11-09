@@ -224,6 +224,42 @@ def get_png():
     return send_file(png_file_path, mimetype='image/png')
 
 
+@app.route('/storage/experiments/<experiment_id>', methods=['DELETE'])
+def delete_experiment(experiment_id):
+    logger.info('Deleting experiment: ' + experiment_id)
+
+    experiments = db['experiments']
+    frames = db['frames']
+
+    exp_query = {'_id': experiment_id}
+    cursor = experiments.find(exp_query)
+    if cursor.count() == 0:
+        logger.error('Experiment not found')
+        abort(404)
+
+    experiments.remove(exp_query)
+    if cursor.count() != 0:
+        logger.error("Can't remove experiment")
+        abort(500)
+    logger.info("database: deleted experiment {} successfully".format(experiment_id))
+
+    vals = db.experiments.find({}, {'_id': 1}).map(lambda experiment: experiment._id)
+    db.frames.remove({'exp_id': {'$nin': vals}})
+
+    frames_query = {'exp_id': experiment_id}
+    frames.remove(frames_query)
+    if frames.find(frames_query).count() != 0:
+        logger.error("Can't remove frames")
+        abort(500)
+    logger.info("database: deleted frames of {} successfully".format(experiment_id))
+
+    fs.delete_experiment(experiment_id)
+
+    # db['reconstructions'].remove(request.get_json())
+
+    return jsonify({'deleted': 'success'})
+
+
 # Needs rewriting
 # @app.route('/storage/frames/get', methods=['POST'])
 # def get_frame():
