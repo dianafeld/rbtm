@@ -87,13 +87,13 @@ class HorizontalMotor (PyTango.Device_4Impl):
         except Exception as e:
             self.error_stream(str(e))
             raise
-        self.debug_stream("Position = {}".format(steps))
+        self.info_stream("Position = {}".format(steps))
         return steps
 
     def _write_position(self, motor, steps):
         self.debug_stream("In _write_position()")
 
-        self.debug_stream("Setting position = {}".format(steps))
+        self.info_stream("Setting position = {}".format(steps))
         try:
             time.sleep(0.5)
             motor.wait_for_stop()
@@ -138,7 +138,7 @@ class HorizontalMotor (PyTango.Device_4Impl):
 
         try:
             self.debug_stream("Creating link to motor drivers...")
-            self.horizontal_motor = ximc.Motor(motor_port)
+            self.horizontal_motor = ximc.Motor(motor_port, 0)
             self.debug_stream("Links were created")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -147,10 +147,10 @@ class HorizontalMotor (PyTango.Device_4Impl):
             self.error_stream(str(e))
             raise
 
-        self.horizontal_motor.open()
-        self.horizontal_motor.set_move_settings(500, 500)
-        steps = self._read_position(self.horizontal_motor)
-        self.attr_horizontal_position_read = steps
+        with closing(self.horizontal_motor.open()):
+            self.horizontal_motor.set_move_settings(500, 500)
+            steps = self._read_position(self.horizontal_motor)
+        self.attr_position_read = steps
 
         self.set_state(PyTango.DevState.STANDBY)
         #----- PROTECTED REGION END -----#	//	HorizontalMotor.init_device
@@ -168,8 +168,9 @@ class HorizontalMotor (PyTango.Device_4Impl):
     def read_position(self, attr):
         self.debug_stream("In read_position()")
         #----- PROTECTED REGION ID(HorizontalMotor.position_read) ENABLED START -----#
-        self.attr_horizontal_position_read = self._read_position(self.horizontal_motor)
-        attr.set_value(self.attr_horizontal_position_read)
+        with closing(self.horizontal_motor.open()):
+            self.attr_position_read = self._read_position(self.horizontal_motor)
+        attr.set_value(self.attr_position_read)
         
         #----- PROTECTED REGION END -----#	//	HorizontalMotor.position_read
         
@@ -180,7 +181,8 @@ class HorizontalMotor (PyTango.Device_4Impl):
         prev_state = self.get_state()
         self.set_state(PyTango.DevState.MOVING)
         steps = data
-        self._write_position(self.horizontal_motor, steps)
+        with closing(self.horizontal_motor.open()):    
+            self._write_position(self.horizontal_motor, steps)
         self.set_state(prev_state)
         #----- PROTECTED REGION END -----#	//	HorizontalMotor.position_write
         

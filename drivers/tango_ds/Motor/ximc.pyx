@@ -1,5 +1,6 @@
 from cximc cimport *
 
+import time
 import PyTango
 
 error_description = {result_ok: "success",
@@ -20,7 +21,7 @@ cdef void create_exception(func_name, description) except *:
     print(reason, description, origin)
     # END DEBUG OUTPUT
 
-    PyTango.Except.throw_exception(reason, description, origin)
+    # PyTango.Except.throw_exception(reason, description, origin)
 
 def handle_error(error_code, origin):
     if error_code != result_ok:
@@ -30,16 +31,17 @@ cdef class Motor:
     cdef device_t device_id
     cdef char *device_name
 
-    def __cinit__(self, name):
+    def __cinit__(self, name, number):
         self.device_id = device_undefined
-        self.device_name = name
+        # self.device_name = name
+
+        cdef device_enumeration_t dev_enum
+        dev_enum = enumerate_devices(0, "")
+        self.device_name = get_device_name(dev_enum, number)
+        free_enumerate_devices(dev_enum)
+        print(self.device_name)
 
     def open(self):
-        # cdef device_enumeration_t dev_enum
-        # dev_enum = enumerate_devices(0)
-        # self.device_name = get_device_name(dev_enum, 0)
-        # free_enumerate_devices(dev_enum)
-
         self.device_id = open_device(self.device_name)
         if self.device_id == device_undefined:
             create_exception("Motor.open()", "open failed")
@@ -48,6 +50,8 @@ cdef class Motor:
         get_edges_settings(self.device_id, &edges_settings)
         edges_settings.BorderFlags = 0
         set_edges_settings(self.device_id, &edges_settings)
+
+        return self
 
     def close(self):
         cdef int tmp_device_id = self.device_id
@@ -62,11 +66,15 @@ cdef class Motor:
         cdef get_position_t position
         result_code = get_position(self.device_id, &position)
         handle_error(result_code, "Motor.get_position()")
-        return position
+        return position.Position
 
-    def move_to_position(self, position, uposition):
+    def move_to_position(self, position, uposition=0):
         result_code = command_move(self.device_id, position, uposition)
         handle_error(result_code, "Motor.move_to_position()")
+
+    def move_by_delta(self, delta_position, udelta_position=0):
+        result_code = command_movr(self.device_id, delta_position, udelta_position)
+        handle_error(result_code, "Motor.move_by_delta()")
 
     def get_move_settings(self):
         cdef move_settings_t move_settings
@@ -108,6 +116,11 @@ cdef class Motor:
         cdef status_t status
         get_status(self.device_id, &status)
         return status
+
+    def wait_for_stop(self, refresh_interval_in_ms=100):
+        time.sleep(0.1)
+        result_code = command_wait_for_stop(self.device_id, refresh_interval_in_ms)
+        handle_error(result_code, "Motor.wait_for_stop()")
 
     def __dealloc__(self):
         pass

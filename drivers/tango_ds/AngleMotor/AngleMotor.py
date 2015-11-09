@@ -55,6 +55,7 @@ sys.path.insert(0, 'lib')
 import ximc
 import time
 import ConfigParser
+from contextlib import closing
 #----- PROTECTED REGION END -----#	//	AngleMotor.additionnal_import
 
 ## Device States Description
@@ -79,7 +80,6 @@ class AngleMotor (PyTango.Device_4Impl):
 
         self.debug_stream("Reading position...")
         try:
-            motor.wait_for_stop()
             steps = motor.get_position()
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -87,24 +87,16 @@ class AngleMotor (PyTango.Device_4Impl):
         except Exception as e:
             self.error_stream(str(e))
             raise
-        self.debug_stream("Position = {}".format(steps))
+        self.info_stream("Position = {}".format(steps))
         return steps
 
     def _write_position(self, motor, steps):
         self.debug_stream("In _write_position()")
 
-        self.debug_stream("Setting position = {}".format(steps))
+        self.info_stream("Setting position = {}".format(steps))
         try:
-            time.sleep(0.5)
-            motor.wait_for_stop()
             motor.move_to_position(steps, 0)
             motor.wait_for_stop()
-            #time.sleep(0.5)
-            #status = motor.get_status()
-            #while (status["MvCmdSts"] & 0x80) != 0:
-            #    time.sleep(0.5) 
-            #    status = motor.get_status()
-            #time.sleep(0.2)
             self.debug_stream("Position has been set")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -139,7 +131,7 @@ class AngleMotor (PyTango.Device_4Impl):
 
         try:
             self.debug_stream("Creating link to motor drivers...")
-            self.angle_motor = ximc.Motor(motor_port)
+            self.angle_motor = ximc.Motor(motor_port, 1)
             self.debug_stream("Links were created")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -148,10 +140,10 @@ class AngleMotor (PyTango.Device_4Impl):
             self.error_stream(str(e))
             raise
 
-        self.angle_motor.open()
-        self.angle_motor.set_move_settings(500, 500)
-        steps = self._read_position(self.angle_motor)
-        self.attr_angle_position_read = steps
+        with closing(self.angle_motor.open()):
+            self.angle_motor.set_move_settings(500, 500)
+            steps = self._read_position(self.angle_motor)
+            self.attr_position_read = steps
 
         self.set_state(PyTango.DevState.STANDBY)
 
@@ -170,8 +162,9 @@ class AngleMotor (PyTango.Device_4Impl):
     def read_position(self, attr):
         self.debug_stream("In read_position()")
         #----- PROTECTED REGION ID(AngleMotor.position_read) ENABLED START -----#
-        self.attr_angle_position_read = self._read_position(self.angle_motor) * 360. / 32300
-        attr.set_value(self.attr_angle_position_read)
+        with closing(self.angle_motor.open()):
+            self.attr_position_read = self._read_position(self.angle_motor) * 360. / 32300
+            attr.set_value(self.attr_position_read)
         #----- PROTECTED REGION END -----#	//	AngleMotor.position_read
         
     def write_position(self, attr):
@@ -180,10 +173,10 @@ class AngleMotor (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(AngleMotor.position_write) ENABLED START -----#
         prev_state = self.get_state()
         self.set_state(PyTango.DevState.MOVING)
-
-        angle = data
-        steps = int(round(angle * 32300 / 360.))
-        self._write_position(self.angle_motor, steps)
+        with closing(self.angle_motor.open()):
+            angle = data
+            steps = int(round(angle * 32300 / 360.))
+            self._write_position(self.angle_motor, steps)
         #self.angle_motor.close()
 
         self.set_state(prev_state)
@@ -215,8 +208,9 @@ class AngleMotor (PyTango.Device_4Impl):
         :rtype: PyTango.DevVoid """
         self.debug_stream("In SetZero()")
         #----- PROTECTED REGION ID(AngleMotor.SetZero) ENABLED START -----#
-        self.debug_stream("Setting current angle position as new zero")
-        self.angle_motor.set_zero()
+        self.info_stream("Setting current angle position as new zero")
+        with closing(self.angle_motor.open()):
+            self.angle_motor.set_zero()
         self.debug_stream("New zero has been set")
         #----- PROTECTED REGION END -----#	//	AngleMotor.SetZero
         
