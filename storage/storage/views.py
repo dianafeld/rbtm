@@ -162,7 +162,8 @@ def get_frame_info():
 
 
 def get_transformed_data_path(data, experiment_id):
-    transformed_data_path = os.path.abspath('/tmp/tmp_data_file')
+    transformed_data_path = os.path.abspath(os.path.join("data", "experiments", str(experiment_id), "before_processing",
+                                                         experiment_id + ".h5"))
     logger.debug(transformed_data_path)
     data_transformed = h5py.File(transformed_data_path, "w")
     logger.debug("hdf5: created file in temporary directory")
@@ -212,8 +213,8 @@ def get_png():
     frame_id = find_query['frame_id']
     experiment_id = find_query['exp_id']
 
-    png_file_path = os.path.join('..', 'data', 'experiments', str(experiment_id), 'before_processing', 'png',
-                                 str(frame_id) + '.png')
+    png_file_path = os.path.abspath(os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
+                                 str(frame_id) + '.png'))
 
     #if not os.path.exists(os.path.join('storage', png_file_path)):
     #if not os.path.exists(png_file_path):
