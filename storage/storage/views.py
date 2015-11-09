@@ -244,6 +244,9 @@ def delete_experiment(experiment_id):
         else:
             logger.info("database: deleted experiment {} successfully".format(experiment_id))
 
+    vals = db.experiments.find({}, {'_id': 1}).map(lambda experiment: experiment._id)
+    db.frames.remove({'exp_id': {'$nin': vals}})
+
     frames_query = {'exp_id': experiment_id}
     frames.remove(frames_query)
     if frames.find(frames_query).count() != 0:
