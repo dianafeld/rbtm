@@ -226,6 +226,7 @@ def get_png():
 
 @app.route('/storage/experiments/<experiment_id>', methods=['DELETE'])
 def delete_experiment(experiment_id):
+    json_result = jsonify({'deleted': 'success'})
     logger.info('Deleting experiment: ' + experiment_id)
 
     experiments = db['experiments']
@@ -239,6 +240,7 @@ def delete_experiment(experiment_id):
         experiments.remove(exp_query)
         if cursor.count() != 0:
             logger.error("Can't remove experiment")
+            json_result = jsonify({'deleted': 'fail'})
         else:
             logger.info("database: deleted experiment {} successfully".format(experiment_id))
 
@@ -246,6 +248,7 @@ def delete_experiment(experiment_id):
     frames.remove(frames_query)
     if frames.find(frames_query).count() != 0:
         logger.error("Can't remove frames")
+        json_result = jsonify({'deleted': 'fail'})
     else:
         logger.info("database: deleted frames of {} successfully".format(experiment_id))
 
@@ -253,7 +256,7 @@ def delete_experiment(experiment_id):
 
     # db['reconstructions'].remove(request.get_json())
 
-    return jsonify({'deleted': 'success'})
+    return json_result
 
 
 # Needs rewriting
