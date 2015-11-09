@@ -1,3 +1,5 @@
+from libc.stdint cimport uint32_t
+
 cdef extern from "ximc.h":
     ctypedef int device_t
     ctypedef int result_t
@@ -56,7 +58,7 @@ cdef extern from "ximc.h":
         int RightBorder  # Right border position, used if BORDER_IS_ENCODER flag is set. Range: -2147483647..2147483647. \endenglish \russian Позиция правой границы, используется если установлен флаг BORDER_IS_ENCODER. Диапазон: -2147483647..2147483647. \endrussian */
         int uRightBorder # Right border position in 1/256 microsteps. Range: -255..255(used with stepper motor only). \endenglish \russian Позиция правой границы в 1/256 микрошагах( используется только с шаговым двигателем). Диапазон: -255..255. \endrussian */
 
-    device_enumeration_t enumerate_devices(int probe_flags)
+    device_enumeration_t enumerate_devices(int probe_flags, const char *hints)
     result_t free_enumerate_devices(int probe_flags)
     int get_device_count(device_enumeration_t device_enumeration)
     pchar get_device_name(device_enumeration_t device_enumeration, int device_index)
@@ -68,6 +70,7 @@ cdef extern from "ximc.h":
 
     result_t command_zero(device_t id)
     result_t command_move(device_t id, int Position, int uPosition)
+    result_t command_movr(device_t id, int DeltaPosition, int uDeltaPosition)
     result_t command_stop(device_t id)
 
     result_t get_move_settings(device_t id, move_settings_t *move_settings)
@@ -78,7 +81,4 @@ cdef extern from "ximc.h":
 
     result_t get_position(device_t id, get_position_t *the_get_position)
 
-
-
-
-
+    result_t command_wait_for_stop(device_t id, uint32_t refresh_interval_ms)
