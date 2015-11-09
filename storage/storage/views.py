@@ -161,7 +161,7 @@ def get_frame_info():
     return resp
 
 
-def get_transformed_data_path(data, transformed_data_path, experiment_id):
+def transform_data(data, transformed_data_path, experiment_id):
 
     data_transformed = h5py.File(transformed_data_path, "w")
     logger.debug("hdf5: created file in temporary directory")
@@ -198,7 +198,9 @@ def get_experiment_by_id(experiment_id):
     transformed_data_path = os.path.abspath(os.path.join("data", "experiments", str(experiment_id), "before_processing",
                                                          experiment_id + ".h5"))
     logger.debug(transformed_data_path)
-    return send_file(get_transformed_data_path(data, transformed_data_path, experiment_id),
+    if not os.path.exists(transformed_data_path):
+        transform_data(data, transformed_data_path, experiment_id)
+    return send_file(transformed_data_path,
                      mimetype='application/x-hdf5', as_attachment=True, attachment_filename=str(experiment_id)+'.h5')
 
 
