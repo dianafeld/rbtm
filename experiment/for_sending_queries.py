@@ -17,7 +17,7 @@ simple_experiment = json.dumps(
                     {
                         'count': 1,
                         'exposure': 1000.0,
-                        },
+                    },
                 'EMPTY':
                     {
                         'count': 1,

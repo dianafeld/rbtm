@@ -280,14 +280,14 @@ class Tomograph:
         self.detector_proxy.set_timeout_millis(timeout_millis)
 
     def try_thrice_read_attr(self, attr_name, extract_as=ExtractAs.Numpy):
-        """ Try to change some attribute of Tango device three times
+        """ Try to read some attribute of Tango device three times
 
         :arg: 'attr_name' - type is string
-              'new_value' - type is type of attribute
+              'extract-as' - method of extraction
 
         :return: list of 3 elements,
-                 1 - success of changing attribute, type is bool
-                 2 - set value of attribute, type is type of attribute
+                 1 - success of reading attribute, type is bool
+                 2 - value of attribute, type is type of attribute
                  3 - exception message in case of fail (empty string in case of success), type is string
         """
         success = True
