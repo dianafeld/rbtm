@@ -16,7 +16,6 @@ from flask import Response
 from flask import make_response
 
 from tomograph import Tomograph
-from tomograph import try_thrice_function
 from tomograph import create_event
 from tomograph import create_response
 from tomograph import send_to_storage
@@ -40,12 +39,7 @@ def check_request(request_data):
     """ Checks body part of request, if it is not empty and has JSON string try to load it to python object
 
     :arg: 'request_data' - body part of request, type is undetermined in common case
-    :return: list of 3 elements,
-             1 - success of finding JSON string and loading it to python object, type is bool
-             2 - JSON-string loaded to python object, type is undetermined, if 'success' is True; None if False
-             3 - if 'success' is False, function returns prepared response for web-page of adjustment,
-                 type is json-string with format that is returned by  'create_response()';
-                 if 'success' is True, empty string
+    :return: 
     """
     logger.info('Checking request...')
     if not request_data:
@@ -86,6 +80,85 @@ def check_state(tomo_num):
         logger.info("Tomograph is available; experiment is NOT running")
         return create_response(success=True, result="ready")
 
+
+
+
+
+@app.route('/tomograph/<int:tomo_num>/shutter/open/<int:time>', methods=['GET'])
+def shutter_open(tomo_num, time):
+    logger.info('\n\nREQUEST: SHUTTER/OPEN')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+    try:
+        tomograph.open_shutter(time)
+    except Tomograph.TomoError as e:
+        e.log()
+        return e.create_response()
+    return create_response(True)
+
+
+@app.route('/tomograph/<int:tomo_num>/shutter/state', methods=['GET'])
+def shutter_state(tomo_num):
+    logger.info('\n\nREQUEST: SHUTTER/STATE')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+    try:
+        status = tomograph.shutter_state(time)
+    except Tomograph.TomoError as e:
+        e.log()
+        return e.create_response()
+    return create_response(success=True, result=status)
+
+
+@app.route('/tomograph/<int:tomo_num>/shutter/close/<int:time>', methods=['GET'])
+def shutter_close(tomo_num, time):
+    logger.info('\n\nREQUEST: SHUTTER/CLOSE')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+    try:
+        tomograph.close_shutter(time)
+    except Tomograph.TomoError as e:
+        e.log()
+        return e.create_response()
+    return create_response(True)
+
+
+@app.route('/tomograph/<int:tomo_num>/motor/set-horizontal-position', methods=['POST'])
+def motor_set_horizontal_position(tomo_num):
+    logger.info('\n\nREQUEST: MOTOR/SET HORIZONTAL POSITION')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+
+    success, new_pos, response_if_fail = check_request(request.data)
+    if not success:
+        return response_if_fail
+
+    try:
+        tomograph.set_x(new_pos)
+    except Tomograph.TomoError as e:
+        e.log()
+        return e.create_response()
+    return create_response(True)
+
+
+@app.route('/tomograph/<int:tomo_num>/motor/set-vertical-position', methods=['POST'])
+def motor_set_vertical_position(tomo_num):
+    logger.info('\n\nREQUEST: MOTOR/SET VERTICAL POSITION')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+
+    success, new_pos, response_if_fail = check_request(request.data)
+    if not success:
+        return response_if_fail
+
+    try:
+        tomograph.set_y(new_pos)
+    except Tomograph.TomoError as e:
+        e.log()
+        return e.create_response()
+    return create_response(True)
+
+'''
 
 # NEED TO EDIT(GENERALLY)
 @app.route('/tomograph/<int:tomo_num>/source/power-on', methods=['GET'])
@@ -244,56 +317,6 @@ def source_get_current(tomo_num):
     current = current_attr.value
     logger.info("Current is %.2f" % current)
     return create_response(success=True, result=current)
-
-
-@app.route('/tomograph/<int:tomo_num>/shutter/open/<int:time>', methods=['GET'])
-def shutter_open(tomo_num, time):
-    logger.info('\n\nREQUEST: SHUTTER/OPEN')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return tomograph.open_shutter(time)
-
-
-@app.route('/tomograph/<int:tomo_num>/shutter/state', methods=['GET'])
-def shutter_state(tomo_num):
-    logger.info('\n\nREQUEST: SHUTTER/STATE')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return tomograph.shutter_state(time)
-
-
-@app.route('/tomograph/<int:tomo_num>/shutter/close/<int:time>', methods=['GET'])
-def shutter_close(tomo_num, time):
-    logger.info('\n\nREQUEST: SHUTTER/CLOSE')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return tomograph.close_shutter(time)
-
-
-@app.route('/tomograph/<int:tomo_num>/motor/set-horizontal-position', methods=['POST'])
-def motor_set_horizontal_position(tomo_num):
-    logger.info('\n\nREQUEST: MOTOR/SET HORIZONTAL POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-    success, new_pos, response_if_fail = check_request(request.data)
-    if not success:
-        return response_if_fail
-
-    return tomograph.set_x(new_pos)
-
-
-@app.route('/tomograph/<int:tomo_num>/motor/set-vertical-position', methods=['POST'])
-def motor_set_vertical_position(tomo_num):
-    logger.info('\n\nREQUEST: MOTOR/SET VERTICAL POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-    success, new_pos, response_if_fail = check_request(request.data)
-    if not success:
-        return response_if_fail
-
-    return tomograph.set_y(new_pos)
 
 
 @app.route('/tomograph/<int:tomo_num>/motor/set-angle-position', methods=['POST'])
@@ -675,3 +698,4 @@ def internal_server_error(exception):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
+'''
