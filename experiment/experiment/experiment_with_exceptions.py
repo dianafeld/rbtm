@@ -43,6 +43,8 @@ class Experiment:
     """ For storing information about experiment during time it runs """
 
     exp_id = ''
+    to_be_stopped = False
+    reason_of_stop = ''
 
     def __init__(self, tomograph, exp_param, FOSITW=5):
         # FOSITW - 'Frequency Of Sending Images To Webpage '
@@ -68,21 +70,22 @@ class Experiment:
     def get_and_send_frame():
 
         getting_frame_message = 'Getting image, number: %d, mode: %s ...' % (self.frame_num, self.mode)
-        logger.info(getting_frame_message % (self.frame_num ))
-        try:
-            frame_dict = tomograph.get_frame(exposure, send_to_webpage=True, exp_is_advanced=False)
-        except Tomograph.TomoError as e:
-            # bla bla
+        logger.info(getting_frame_message)
+    
+        frame_dict = tomograph.get_frame(exposure, send_to_webpage=True, exp_is_advanced=False)
 
         frame_dict['mode'] = self.mode
         frame_dict['number'] = self.number
 
+        frameMessage = FrameMessage(exp_id=self.exp_id, frame_dict=frame_dict)
         # sending to storage and webpage
 
-    def run():
+    def try_run():
         time_of_experiment_start = time.time()
         # Closing shutter to get DARK images
-        tomograph.close_shutter(0, exp_is_advanced=False)
+        self.to_be_stopped = False
+        self.reason_of_stop = ''
+        self.tomograph.close_shutter(0, exp_is_advanced=False)
 
         logger.info('Going to get DARK images!\n')
         self.mode = 'dark'
@@ -90,8 +93,8 @@ class Experiment:
             get_and_send_frame()
         logger.info('Finished with DARK images!\n')
 
-        tomograph.open_shutter(0, exp_is_advanced=False)
-        tomograph.move_away(exp_is_advanced=False)
+        self.tomograph.open_shutter(0, exp_is_advanced=False)
+        self.tomograph.move_away(exp_is_advanced=False)
 
         logger.info('Going to get EMPTY images!\n')
         self.mode = 'empty'
@@ -99,13 +102,13 @@ class Experiment:
             get_and_send_frame()
         logger.info('Finished with EMPTY images!\n')
 
-        tomograph.move_back(exp_is_advanced=False)
+        self.tomograph.move_back(exp_is_advanced=False)
 
 
 
         logger.info('Going to get DATA images, step count is %d!\n' % (self.DATA_step_count))
         self.mode = 'data'
-        initial_angle = tomograph.get_angle(exp_is_advanced=False)
+        initial_angle = self.tomograph.get_angle(exp_is_advanced=False)
         logger.info('Initial angle is %.2f' % initial_angle)
         angle_step = self.DATA_angle_step
 
@@ -119,10 +122,21 @@ class Experiment:
             # Rounding angles here, not in  check_and_prepare_exp_parameters(), cause it will be more accurately this way
             new_angle = (round((i + 1) * angle_step + initial_angle, 2)) % 360
             logger.info('Finished with this angle, turning to new angle %.2f...' % (new_angle))
-            tomograph.set_angle(new_angle, exp_is_advanced=False)
+            self.tomograph.set_angle(new_angle, exp_is_advanced=False)
 
         logger.info('Finished with DATA images!\n')
 
-        tomograph.handle_successful_stop(time_of_experiment_start)
+        self.tomograph.handle_successful_stop(time_of_experiment_start)
         return
    
+    def run():
+
+        try:
+            try_run()
+        except Tomograph.ModExpError as e:
+            e.log(self.exp_id)
+            e.create_Message(self.exp_id)
+        else:
+            pass
+
+print 1

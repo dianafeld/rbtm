@@ -90,7 +90,7 @@ def shutter_open(tomo_num, time):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
     try:
-        tomograph.open_shutter(time)
+        tomograph.open_shutter(time, from_experiment=False)
     except Tomograph.TomoError as e:
         e.log()
         return e.create_response()
@@ -103,7 +103,7 @@ def shutter_state(tomo_num):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
     try:
-        status = tomograph.shutter_state(time)
+        status = tomograph.shutter_state(time, from_experiment=False)
     except Tomograph.TomoError as e:
         e.log()
         return e.create_response()
@@ -116,7 +116,7 @@ def shutter_close(tomo_num, time):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
     try:
-        tomograph.close_shutter(time)
+        tomograph.close_shutter(time, from_experiment=False)
     except Tomograph.TomoError as e:
         e.log()
         return e.create_response()
@@ -134,7 +134,7 @@ def motor_set_horizontal_position(tomo_num):
         return response_if_fail
 
     try:
-        tomograph.set_x(new_pos)
+        tomograph.set_x(new_pos, from_experiment=False)
     except Tomograph.TomoError as e:
         e.log()
         return e.create_response()
@@ -152,7 +152,7 @@ def motor_set_vertical_position(tomo_num):
         return response_if_fail
 
     try:
-        tomograph.set_y(new_pos)
+        tomograph.set_y(new_pos, from_experiment=False)
     except Tomograph.TomoError as e:
         e.log()
         return e.create_response()

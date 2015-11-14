@@ -236,7 +236,7 @@ class Message:
 
 class InfoMessage(Message):
     info = ''
-    
+
     def __init__(self, exp_id='', info='', exception_message='', error=''):
     	Message.__init__(exp_id)
         self.info = info
@@ -255,23 +255,21 @@ class Tomograph:
     """ Wrapper of interaction with Tango tomograph server"""
     tomograph_proxy = None
     detector_proxy = None
-    experiment_is_running = False
+    current_experiment = None
     exp_id = ""
     exp_frame_num = 0
     exp_stop_reason = "unknown"
 
     class ModExpError(Exception):
-        exp_id = ''
 
-        def __init__(self, error='', exp_id=''):
+        def __init__(self, error=''):
             self.message = error
             self.error = error
-            self.exp_id = exp_id
 
         def __str__(self):
             return repr(self.message)
 
-        def create_Message(self):
+        def create_Message(self, exp_id):
             pass
 
         def log(self):
@@ -280,12 +278,12 @@ class Tomograph:
     class SomeoneStoppedError(ModExpError):
         reason = "unknown"
 
-        def __init__(self, exp_id, reason='unknown'):
-            Tomograph.ModExpError.__init__(self, error=reason, exp_id=exp_id)
+        def __init__(self, reason='unknown'):
+            Tomograph.ModExpError.__init__(self, error=reason)
             self.reason = reason
 
-        def create_Message(self):
-            return InfoMessage(exp_id=self.exp_id, info=SOMEONE_STOP_MSG, error=self.reason)
+        def create_Message(self, exp_id):
+            return InfoMessage(exp_id=exp_id, info=SOMEONE_STOP_MSG, error=self.reason)
 
         def log(self):
             logger.info(SOMEONE_STOP_MSG)
@@ -294,12 +292,12 @@ class Tomograph:
     class TomoError(ModExpError):
         exception_message = ''
 
-        def __init__(self, error='', exception_message='', exp_id=''):
-            Tomograph.ModExpError.__init__(self, error=error, exp_id=exp_id)
+        def __init__(self, error='', exception_message=''):
+            Tomograph.ModExpError.__init__(self, error=error)
             self.exception_message = exception_message
 
-        def create_Message(self):
-            return InfoMessage(exp_id=self.exp_id, info=EMERGENCY_STOP_MSG, error=self.error, 
+        def create_Message(self, exp_id):
+            return InfoMessage(exp_id=exp_id, info=EMERGENCY_STOP_MSG, error=self.error, 
                                exception_message=self.exception_message)
 
         def create_response(self):
@@ -311,8 +309,11 @@ class Tomograph:
             }
             return json.dumps(response_dict)
 
-        def log(self):
-            logger.info("ERROR:")
+        def log(self, exp_id=''):
+        	if exp_id:
+            	logger.info("ERROR IN EXPERIMENT %s:" % exp_id)
+            else:
+            	logger.info("ERROR:")
             logger.info("   " + self.error)
             logger.info("   " + self.exception_message)
 
@@ -351,7 +352,7 @@ class Tomograph:
                 exception_message = e.message
             else:
                 return answer
-        raise TomoError(error=error_str, exception_message=exception_message, exp_id=self.exp_id)
+        raise TomoError(error=error_str, exception_message=exception_message)
 
     def try_thrice_read_attr(self, attr_name, extract_as=ExtractAs.Numpy, error_str=''):
         """ Try to change some attribute of Tango device three times
@@ -370,7 +371,7 @@ class Tomograph:
                 attr = None
             else:
                 return attr
-        raise TomoError(error=error_str, exception_message=exception_message, exp_id=self.exp_id)
+        raise TomoError(error=error_str, exception_message=exception_message)
 
     def try_thrice_change_attr(self, attr_name, new_value, error_str=''):
         """ Try to change some attribute of Tango device three times
@@ -389,7 +390,7 @@ class Tomograph:
                 exception_message = e[-1].desc
             else:
                 return set_value
-        raise TomoError(error=error_str, exception_message=exception_message, exp_id=self.exp_id)
+        raise TomoError(error=error_str, exception_message=exception_message)
 
     # NEED TO EDIT (ADD MAKING FIELD 'experiment_is_running' FALSE, IF EXPERIMENT IS STOPPED)
     # Here is converting to text
@@ -445,15 +446,18 @@ class Tomograph:
         return success
 
 
-    def basic_tomo_check(self):
-        if not self.exp_id and self.experiment_is_running:
-            raise TomoError(error='On this tomograph experiment is running')
+    def basic_tomo_check(self, from_experiment):
+        if not from_experiment:
+        	if self.current_experiment != None:
+            	raise TomoError(error='On this tomograph experiment is running')
 
-        if self.exp_id and not self.experiment_is_running:
-            raise TomoError(error=error, exception_message='', exp_id=self.exp_id)
+        else:
+        	if self.current_experiment.to_be_stopped == True:
+            	raise SomeoneStoppedError(reason=self.current_experiment.reason_of_stop)
 
 
-    def open_shutter(self, time=0, exp_is_advanced=True):
+
+    def open_shutter(self, time=0, from_experiment=True, exp_is_advanced=True):
         """ Tries to open shutter
 
         :arg: 
@@ -461,12 +465,12 @@ class Tomograph:
         """
         logger.info('Opening shutter...')
 
-        self.basic_tomo_check()
+        self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.OpenShutter, args=time, error_str='Could not open shutter')
         logger.info('Shutter has been opened!')
 
-    def close_shutter(self, time=0, exp_is_advanced=True):
+    def close_shutter(self, time=0, from_experiment=True, exp_is_advanced=True):
         """ Tries to close shutter
 
         :arg: 
@@ -474,12 +478,12 @@ class Tomograph:
         """
         logger.info('Closing shutter...')
 
-        self.basic_tomo_check()
+        self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.CloseShutter, args=time, error_str='Could not close shutter')
         logger.info('Shutter has been closed!')
 
-    def shutter_state(self, exp_is_advanced=True):
+    def shutter_state(self, from_experiment=True, exp_is_advanced=True):
         #TODO documentation
         """ Tries to get tomo state
 
@@ -487,7 +491,7 @@ class Tomograph:
         """
         logger.info('Getting shutter state...')
 
-        self.basic_tomo_check()
+        self.basic_tomo_check(from_experiment)
 
         status = try_thrice_function(func=tself.tomograph_proxy.ShutterStatus, args=ttime, error_str='Could not get shutter status')
 
@@ -499,28 +503,28 @@ class Tomograph:
 ########## One needs to look at checking types of arguments, which go to Tango-tomograph functions
 ##############################
 
-    def set_x(self, new_x, exp_is_advanced=True):
+    def set_x(self, new_x, from_experiment=True, exp_is_advanced=True):
         """ Tries to set new horizontal position of object
         :arg:
             :return:
         """
         logger.info('Going to set new horizontal position...')
 
-    	self.basic_tomo_check()
+    	self.basic_tomo_check(from_experiment)
 
         if type(new_x) not in (int, float):
-            raise TomoError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_x)), exp_id=self.exp_id)
+            raise TomoError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_x)))
 
         # TO DELETE THIS LATER
         logger.info('Setting value %.1f...' % (new_x))
         if new_x < -5000 or 2000 < new_x:
-            raise Tomograph.TomoError(error='Position must have value from -30 to 30', exp_id=self.exp_id)
+            raise Tomograph.TomoError(error='Position must have value from -30 to 30')
 
         set_x = self.try_thrice_change_attr("horizontal_position", new_x, error_str='Could not set new position because of tomograph')
 
         logger.info('Position was set!')
 
-    def set_y(self, new_y, exp_is_advanced=True):
+    def set_y(self, new_y, from_experiment=True, exp_is_advanced=True):
         """ Tries to set new vertical position of object
 
         :arg: 'new_y' - value of new vertical position, in 'popugaychiki', type is int
@@ -529,21 +533,21 @@ class Tomograph:
         """
         logger.info('Going to set new vertical position...')
 
-        self.basic_tomo_check()
+        self.basic_tomo_check(from_experiment)
 
         if type(new_y) not in (int, float):
-            raise TomoError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_y)), exp_id=self.exp_id)
+            raise TomoError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_y)))
 
         # TO DELETE THIS LATER
         logger.info('Setting value %.1f...' % (new_y))
         if new_x < -5000 or 2000 < new_x:
-            raise TomoError(error='Position must have value from -30 to 30', exp_id=self.exp_id)
+            raise TomoError(error='Position must have value from -30 to 30')
 
         set_x = self.try_thrice_change_attr("horizontal_position", new_y, error_str='Could not set new position because of tomograph')
 
         logger.info('Position was set!')
 
-    def set_angle(self, new_angle, exp_is_advanced=True):
+    def set_angle(self, new_angle, from_experiment=True, exp_is_advanced=True):
         """ Tries to set new angle position of object
 
         :arg: 'new_angle' - value of new angle position, in 'grades', type is float
@@ -552,12 +556,11 @@ class Tomograph:
         """
         logger.info('Going to set new angle position...')
 
-        self.basic_tomo_check()
+        self.basic_tomo_check(from_experiment)
 
 
         if type(new_angle) not in (int, float):
-            raise TomoError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_angle)),
-            				exp_id=self.exp_id)
+            raise TomoError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_angle)))
 
         # TO DELETE THIS LATER
         logger.info('Setting value %.1f...' % (new_angle))
@@ -569,14 +572,14 @@ class Tomograph:
         logger.info('Position was set!')
 
 
-    def get_x(self, exp_is_advanced=True):
+    def get_x(self, from_experiment=True, exp_is_advanced=True):
         """ Tries to get horizontal position of object
         :arg:
         :return:
         """
         logger.info('Going to get horizontal position...')
 
-        self.basic_tomo_check()
+        self.basic_tomo_check(from_experiment)
 
         x_attr = self.try_thrice_read_attr("horizontal_position", error_str='Could not get position because of tomograph')
 
@@ -584,14 +587,14 @@ class Tomograph:
         logger.info('Horizontal position is %d' % x_value)
         return x_value
 
-    def get_y(self, exp_is_advanced=True):
+    def get_y(self, from_experiment=True, exp_is_advanced=True):
         """ Tries to get vertical position of object
         :arg:
         :return:
         """
         logger.info('Going to get vertical position...')
 
-        self.basic_tomo_check()
+        self.basic_tomo_check(from_experiment)
 
         y_attr = self.try_thrice_read_attr("vertical_position", error_str='Could not get position because of tomograph')
 
@@ -600,14 +603,14 @@ class Tomograph:
         return y_value
 
 
-    def get_angle(self, exp_is_advanced=True):
+    def get_angle(self, from_experiment=True, exp_is_advanced=True):
         """ Tries to get vertical position of object
         :arg:
         :return:
         """
         logger.info('Going to get angle position...')
 
-        self.basic_tomo_check()
+        self.basic_tomo_check(from_experiment)
 
         angle_attr = self.try_thrice_read_attr("angle_position",
         										error_str='Could not get position because of tomograph')
@@ -617,62 +620,62 @@ class Tomograph:
         return angle_value
 
 
-    def reset_to_zero_angle(self, exp_is_advanced=True):
+    def reset_to_zero_angle(self, from_experiment=True, exp_is_advanced=True):
         """ Tries to set current angle position as 0
         :arg:
         :return:
         """
         logger.info('Resetting angle position...')
 
-        self.basic_tomo_check()
+        self.basic_tomo_check(from_experiment)
 
         self.try_thrice_function(func=self.tomograph_proxy.ResetAnglePosition, error_str='Could not reset angle position because of tomograph')
 
         logger.info('Angle position was reset!')
 
 
-    def move_away(self, exp_is_advanced=True):
+    def move_away(self, from_experiment=True, exp_is_advanced=True):
         """ Tries to move object away from detector
         :arg:
         :return:
         """
         logger.info('Moving object away...')
 
-       	self.basic_tomo_check()
+       	self.basic_tomo_check(from_experiment)
 
         self.try_thrice_function(func=self.tomograph_proxy.MoveAway, error_str='Could not move object away')
 
         logger.info('Object was moved away!')
 
-    def move_back(self, exp_is_advanced=True):
+    def move_back(self, from_experiment=True, exp_is_advanced=True):
         """ Tries to move object "back" to the detector, in front of detector
         :arg:
         :return:
         """
         logger.info('Moving object back...')
 
-        self.basic_tomo_check()
+        self.basic_tomo_check(from_experiment)
 
         self.try_thrice_function(func=self.tomograph_proxy.MoveBack, error_str='Could not move object back')
 
         logger.info('Object was moved back!')
 
-    def get_frame(self, exposure, send_to_webpage=True, exp_is_advanced=True):
+    def get_frame(self, exposure, send_to_webpage=True, from_experiment=True, exp_is_advanced=True):
         """ Tries get frame with some exposure
         :arg: 'exposure' - exposure, which frame should get with
         :return:
         """
         logger.info('Going to get image...')
 
-        self.basic_tomo_check()
+        self.basic_tomo_check(from_experiment)
 
         if type(exposure) not in (float, int):
-            raise TomoError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_angle)), exp_id=self.exp_id)
+            raise TomoError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_angle)))
 
         # TO DELETE THIS LATER
         logger.info('Getting image with exposure %.1f milliseconds...' % (exposure))
         if exposure < 0.1 or 16000 < exposure:
-            raise TomoError(error='Exposure must have value from 0.1 to 16000', exp_id=self.exp_id)
+            raise TomoError(error='Exposure must have value from 0.1 to 16000')
 
         # Tomograph takes exposure multiplied by 10 and rounded
         exposure = round(exposure)
@@ -682,7 +685,7 @@ class Tomograph:
         try:
             frame_dict = json.loads(frame_metadata_json)
         except TypeError:
-            raise TomoError(error='Could not convert frame\'s JSON into dict', exp_id=self.exp_id)
+            raise TomoError(error='Could not convert frame\'s JSON into dict')
         det = self.detector_proxy
 
         
@@ -696,8 +699,7 @@ class Tomograph:
             enc = PyTango.EncodedAttribute()
             image_numpy = enc.decode_gray16(image)
         except Exception as e:
-            raise TomoError(error='Could not convert image to numpy.array', exception_message='' '''e.message''',
-            	            exp_id=self.exp_id)
+            raise TomoError(error='Could not convert image to numpy.array', exception_message='' '''e.message''')
 
 
 ####################################################################

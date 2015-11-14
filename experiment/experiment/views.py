@@ -533,8 +533,7 @@ def carry_out_advanced_experiment(tomograph, exp_param):
     exp_code_string = exp_code_string.replace("move_back", "t_0M_o_9_r_.move_back")
     exp_code_string = exp_code_string.replace("get_frame", "t_0M_o_9_r_.get_frame")
     exp_code_string = exp_code_string.replace("send_frame", "t_0M_o_9_r_.se")
-    print
-    exp_code_string
+    print exp_code_string
     time_of_experiment_start = time.time()
     thr = threading.Thread(target=time_counter_of_experiment, args=(tomograph, exp_id))
     thr.start()
