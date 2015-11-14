@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """ 
-created for refactoring using class 'Message'
+created for refactoring using class 'Message' and exceptions
 
 Contains supporting functions and class "Tomograph" with methods for comfortable interaction with tomograph """
 # NEED TO EDIT DOCSTRINGS!
@@ -10,6 +10,7 @@ Contains supporting functions and class "Tomograph" with methods for comfortable
 # NEED TO EDIT DOCSTRINGS!
 # NEED TO EDIT DOCSTRINGS!
 # NEED TO EDIT DOCSTRINGS!
+# Need to look at checking types of arguments, which go to Tango-tomograph functions
 
 import json
 import requests
@@ -225,30 +226,29 @@ def send_to_storage(storage_uri, data, files=None):
 
 class Message:
     exp_id = ''
-    exception_message=''
-    error=''
 
 
-    def __init__(self, exp_id='', exception_message='', error=''):
-
+    def __init__(self, exp_id=''):
         self.exp_id = exp_id
-        self.exception_message = exception_message
-        self.error = error
 
     def to_dict():
         pass
 
 class InfoMessage(Message):
     info = ''
+    
     def __init__(self, exp_id='', info='', exception_message='', error=''):
-
-        self.exp_id = exp_id
+    	Message.__init__(exp_id)
         self.info = info
         self.exception_message = exception_message
         self.error = error
 
 class FrameMessage(Message):
-    pass
+    frame_dict = {}
+
+    def __init__(self, exp_id, frame_dict={}):
+    	Message.__init__(exp_id)
+        self.frame_dict = frame_dict
 
 
 class Tomograph:
@@ -495,6 +495,9 @@ class Tomograph:
 
         return status
 
+######################################## (14.11.15  10:37)
+########## One needs to look at checking types of arguments, which go to Tango-tomograph functions
+##############################
 
     def set_x(self, new_x, exp_is_advanced=True):
         """ Tries to set new horizontal position of object
@@ -553,7 +556,8 @@ class Tomograph:
 
 
         if type(new_angle) not in (int, float):
-            raise TomoError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_angle)), exp_id=self.exp_id)
+            raise TomoError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_angle)),
+            				exp_id=self.exp_id)
 
         # TO DELETE THIS LATER
         logger.info('Setting value %.1f...' % (new_angle))
@@ -605,7 +609,8 @@ class Tomograph:
 
         self.basic_tomo_check()
 
-        angle_attr = self.try_thrice_read_attr("angle_position", error_str='Could not get position because of tomograph')
+        angle_attr = self.try_thrice_read_attr("angle_position",
+        										error_str='Could not get position because of tomograph')
 
 		angle_value = angle_attr.value
         logger.info('Angle position is %.2f' % angle_value)
@@ -651,113 +656,53 @@ class Tomograph:
         self.try_thrice_function(func=self.tomograph_proxy.MoveBack, error_str='Could not move object back')
 
         logger.info('Object was moved back!')
-'''
+
     def get_frame(self, exposure, send_to_webpage=True, exp_is_advanced=True):
         """ Tries get frame with some exposure
-
         :arg: 'exposure' - exposure, which frame should get with
-
-        :return: depends on "emptiness" of argument 'exp_id';
-                 if 'exp_id' is NOT empty, function returns list of 2 elements:
-                    1 - success of function, type is bool
-                    2 - frame with metadata, if 'success' is True, type is dict
-                        None, if 'success' is False
-                 if 'exp_id' IS empty, function returns prepared response for web-page of adjustment,
-                    type is json-string with format that is returned by  'create_response()', if 'success' is False
-                    type is rtype of function 'send_file()', if 'success' is True
-
+        :return:
         """
         logger.info('Going to get image...')
 
-        if not self.exp_id and self.experiment_is_running:
-            error = 'On this tomograph experiment is running'
-            logger.info(error)
-            return create_response(success=False, error=error)
+        self.basic_tomo_check()
 
-        if self.exp_id and not self.experiment_is_running:
-            self.stop_experiment_because_someone(exp_is_advanced)
-            return False, None
-
-        if type(exposure) is not float:
-            error = 'Incorrect type! Exposure type must be float, but it is ' + str(type(exposure))
-            logger.info(error)
-            if self.exp_id:
-                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id, exception_message='',
-                                           error=error)
-                return False, None
-            else:
-                return create_response(success=False, error=error)
+        if type(exposure) not in (float, int):
+            raise TomoError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_angle)), exp_id=self.exp_id)
 
         # TO DELETE THIS LATER
         logger.info('Getting image with exposure %.1f milliseconds...' % (exposure))
         if exposure < 0.1 or 16000 < exposure:
-            error = 'Exposure must have value from 0.1 to 16000'
-            logger.info(error)
-            if self.exp_id:
-                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id, exception_message='',
-                                           error=error)
-                return False, None
-            else:
-                return create_response(success=False, error=error)
+            raise TomoError(error='Exposure must have value from 0.1 to 16000', exp_id=self.exp_id)
 
         # Tomograph takes exposure multiplied by 10 and rounded
         exposure = round(exposure)
-        success, frame_metadata_json, exception_message = try_thrice_function(self.tomograph_proxy.GetFrame, exposure)
-        if success == False:
-            error = 'Could not get image because of tomograph'
-            logger.info(exception_message)
-            if self.exp_id:
-                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id,
-                                           exception_message=exception_message, error=error)
-                return False, None
-            else:
-                return create_response(success, exception_message, error=error)
+        frame_metadata_json = self.try_thrice_function(func=self.tomograph_proxy.GetFrame, args=exposure,
+        											   error_str='Could not get image because of tomograph')
 
         try:
             frame_dict = json.loads(frame_metadata_json)
         except TypeError:
-            error = 'Could not convert frame\'s JSON into dict'
-            logger.info(error)
-            if self.exp_id:
-                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id, exception_message='',
-                                           error=error)
-                return False, None
-            else:
-                return create_response(success=False, error=error)
-
+            raise TomoError(error='Could not convert frame\'s JSON into dict', exp_id=self.exp_id)
         det = self.detector_proxy
-        try:
-            image = det.read_attribute("image", extract_as=PyTango.ExtractAs.Nothing)
-        except PyTango.DevFailed as e:
-            for stage in e:
-                logger.info(stage.desc)
 
-        """
-        success, image, exception_message = self.try_thrice_read_attr("image", extract_as=PyTango.ExtractAs.Nothing)
-        print 'Type of image before decoding:\n', type(image)
-        print 'Image before decoding:\n', image
-        if success == False:
-            error = 'Could not get image because of tomograph'
-            print(exception_message)
-            if exp_id:
-                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id= exp_id, exception_message= exception_message, error= error)
-                return False, None
-            else:
-                return create_response(success, exception_message, error= error)
-        """
+        
+        image = self.try_thrice_read_attr("image", extract_as=PyTango.ExtractAs.Nothing,
+        								  error_str='Could not get image because of tomograph')
+
+
         logger.info("Image was get, preparing image to send to storage...")
+
         try:
             enc = PyTango.EncodedAttribute()
             image_numpy = enc.decode_gray16(image)
         except Exception as e:
-            error = 'Could not convert image to numpy.array'
-            logger.info(error)
-            if self.exp_id:
-                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id,
-                                           exception_message='' ''e.message'', error=error)
-                return False, None
-            else:
-                return create_response(success=False, error=error, exception_message='' ''e.message'')
+            raise TomoError(error='Could not convert image to numpy.array', exception_message='' '''e.message''',
+            	            exp_id=self.exp_id)
+
+
+####################################################################
+##############   IT HASN'T BEEN EDITED YET UNDER
+###########################################
 
         if self.exp_id:
             # Joining numpy array of image and frame metadata

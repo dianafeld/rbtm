@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-created for refactoring using class 'Message'
+created for refactoring using class 'Message' and exceptions
 
 Contains the main part of module "Experiment"
 More exactly - some supporting functions and functions for receiving queries
