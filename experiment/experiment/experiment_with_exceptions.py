@@ -132,7 +132,7 @@ class Experiment:
     def run():
 
         try:
-            try_run()
+            self.try_run()
         except Tomograph.ModExpError as e:
             e.log(self.exp_id)
             e.create_Message(self.exp_id)

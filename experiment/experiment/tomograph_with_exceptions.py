@@ -224,31 +224,55 @@ def send_to_storage(storage_uri, data, files=None):
 
         return True, ''
 
-class Message:
-    exp_id = ''
 
+def send_message_to_storage_webpage(self, storage_uri, event_dict):        
+	""" Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
+        'event_dict' must be dictionary with format that is returned by  'create_event()'
 
-    def __init__(self, exp_id=''):
-        self.exp_id = exp_id
+    :arg:  'event_dict' - event (message (for storage and web-page of adjustment) or frame with some data),
+                          must be dictionary with format that is returned by  'create_event()'
+    :return: success of sending, type is bool
+    """
+    exp_id = event_dict['exp_id']
+    event_json_for_storage = json.dumps(event_dict)
+    success, exception_message = send_to_storage(storage_uri, data=event_json_for_storage)
+    send_event_to_webpage(event_dict)
+    return success
 
-    def to_dict():
-        pass
+def send_frame_to_storage_webpage(self, storage_uri, frame_dict, send_to_webpage=True):
+        """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
+            'frame_dict' must be dictionary with format that is returned by  'create_event()'
 
-class InfoMessage(Message):
-    info = ''
+        :arg:  'frame_dict' - event (message (for storage and web-page of adjustment) or frame with some data),
+                              must be dictionary with format that is returned by  'create_event()'
+               'send_to_webpage' - boolean; if False, it sends event to only storage;
+                                   if False it sends also to web-page of adjustment
+        :return: success of sending, type is bool
+        """
+        exp_id = frame_dict['exp_id']
+        image_numpy = frame_dict['frame']['image_data']['image']
+        del (frame_dict['frame']['image_data']['image'])
+        frame_dict_for_storage = copy.deepcopy(frame_dict)
 
-    def __init__(self, exp_id='', info='', exception_message='', error=''):
-    	Message.__init__(exp_id)
-        self.info = info
-        self.exception_message = exception_message
-        self.error = error
+        frame_dict['frame']['image_data']['image'] = image_numpy
 
-class FrameMessage(Message):
-    frame_dict = {}
+        s = StringIO()
 
-    def __init__(self, exp_id, frame_dict={}):
-    	Message.__init__(exp_id)
-        self.frame_dict = frame_dict
+        np.savez_compressed(s, frame_data=image_numpy)
+        s.seek(0)
+        data = {'data': json.dumps(frame_dict_for_storage)}
+        files = {'file': s}
+        success, exception_message = send_to_storage(storage_uri, data, files)
+
+        if not success:
+        	raise Tomograph.TomoError(error='Problems with storage', exception_message=exception_message)
+        # commented 27.07.15 for tests with real storage, because converting to png file in
+        # function 'send_event_to_webpage()' takes a lot of time    
+        else:
+            if send_to_webpage == True:
+                send_event_to_webpage(frame_dict)
+   
+        return success
 
 
 class Tomograph:
@@ -256,9 +280,6 @@ class Tomograph:
     tomograph_proxy = None
     detector_proxy = None
     current_experiment = None
-    exp_id = ""
-    exp_frame_num = 0
-    exp_stop_reason = "unknown"
 
     class ModExpError(Exception):
 
@@ -269,7 +290,7 @@ class Tomograph:
         def __str__(self):
             return repr(self.message)
 
-        def create_Message(self, exp_id):
+        def to_event_dict(self, exp_id):
             pass
 
         def log(self):
@@ -282,8 +303,8 @@ class Tomograph:
             Tomograph.ModExpError.__init__(self, error=reason)
             self.reason = reason
 
-        def create_Message(self, exp_id):
-            return InfoMessage(exp_id=exp_id, info=SOMEONE_STOP_MSG, error=self.reason)
+        def to_event_dict(self, exp_id):
+            return create_event(type='message', exp_id=exp_id, MoF=SOMEONE_STOP_MSG, error=self.reason)
 
         def log(self):
             logger.info(SOMEONE_STOP_MSG)
@@ -296,9 +317,9 @@ class Tomograph:
             Tomograph.ModExpError.__init__(self, error=error)
             self.exception_message = exception_message
 
-        def create_Message(self, exp_id):
-            return InfoMessage(exp_id=exp_id, info=EMERGENCY_STOP_MSG, error=self.error, 
-                               exception_message=self.exception_message)
+        def to_event_dict(self, exp_id):
+            return create_event(type='message', exp_id=exp_id, MoF=EMERGENCY_STOP_MSG,
+            					error=self.error, exception_message=self.exception_message)
 
         def create_response(self):
             response_dict = {
@@ -316,6 +337,11 @@ class Tomograph:
             	logger.info("ERROR:")
             logger.info("   " + self.error)
             logger.info("   " + self.exception_message)
+
+
+
+
+
 
     def __init__(self, tomograph_proxy_addr, detector_proxy_addr, timeout_millis=TIMEOUT_MILLIS):
         """
@@ -391,9 +417,7 @@ class Tomograph:
             else:
                 return set_value
         raise TomoError(error=error_str, exception_message=exception_message)
-
-    # NEED TO EDIT (ADD MAKING FIELD 'experiment_is_running' FALSE, IF EXPERIMENT IS STOPPED)
-    # Here is converting to text
+'''
     def send_event_to_storage_webpage(self, storage_uri, event_dict, send_to_webpage=True):
         """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
             'event_dict' must be dictionary with format that is returned by  'create_event()'
@@ -444,7 +468,7 @@ class Tomograph:
         """
 
         return success
-
+'''
 
     def basic_tomo_check(self, from_experiment):
         if not from_experiment:
@@ -702,19 +726,18 @@ class Tomograph:
             raise TomoError(error='Could not convert image to numpy.array', exception_message='' '''e.message''')
 
 
+        if from_experiment:
+            # Joining numpy array of image and frame metadata
+            frame_dict['image_data']['image'] = image_numpy
+
+
 ####################################################################
 ##############   IT HASN'T BEEN EDITED YET UNDER
 ###########################################
-
-        if self.exp_id:
-            # Joining numpy array of image and frame metadata
-            frame_dict['image_data']['image'] = image_numpy
-            frame_dict['number'] = self.exp_frame_num
-            self.exp_frame_num += 1
             # POKA KOSTYL
             if exp_is_advanced:
-                frame_event = create_event('frame', self.exp_id, frame_dict)
-                self.send_event_to_storage_webpage(STORAGE_FRAMES_URI, frame_event, send_to_webpage)
+                frame_event = create_event('frame', self.current_experiment.exp_id, frame_dict)
+                send_frame_to_storage_webpage(STORAGE_FRAMES_URI, frame_event, send_to_webpage)
                 return True, frame_dict
             else:
                 return True, frame_dict
