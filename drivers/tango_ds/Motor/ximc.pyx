@@ -38,8 +38,11 @@ cdef class Motor:
         cdef device_enumeration_t dev_enum
         dev_enum = enumerate_devices(0, "")
         self.device_name = get_device_name(dev_enum, number)
+        if self.device_name != name:
+            number = 1 - number
+            self.device_name = get_device_name(dev_enum, number)
         free_enumerate_devices(dev_enum)
-        print(self.device_name)
+        print(number, self.device_name)
 
     def open(self):
         self.device_id = open_device(self.device_name)
