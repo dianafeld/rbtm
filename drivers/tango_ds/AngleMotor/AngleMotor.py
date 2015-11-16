@@ -68,6 +68,8 @@ class AngleMotor (PyTango.Device_4Impl):
     #----- PROTECTED REGION ID(AngleMotor.global_variables) ENABLED START -----#
 
     CONFIG_PATH = 'tango_ds.cfg'
+    STEPS_IN_360 = 32300 # steps in 360 degrees
+    STEPS_IN_DEGREE = STEPS_IN_360 / 360.
 
     def get_port_from_config(self):
         config = ConfigParser.RawConfigParser()
@@ -125,13 +127,15 @@ class AngleMotor (PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         self.attr_position_read = 0.0
+        self.attr_speed_read = 0.0
+        self.attr_accel_read = 0.0
         #----- PROTECTED REGION ID(AngleMotor.init_device) ENABLED START -----#
 
         motor_port = self.get_port_from_config()
 
         try:
             self.debug_stream("Creating link to motor drivers...")
-            self.angle_motor = ximc.Motor(motor_port, 1)
+            self.angle_motor = ximc.Motor(motor_port, 0)
             self.debug_stream("Links were created")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -163,7 +167,7 @@ class AngleMotor (PyTango.Device_4Impl):
         self.debug_stream("In read_position()")
         #----- PROTECTED REGION ID(AngleMotor.position_read) ENABLED START -----#
         with closing(self.angle_motor.open()):
-            self.attr_position_read = self._read_position(self.angle_motor) * 360. / 32300
+            self.attr_position_read = self._read_position(self.angle_motor) / AngleMotor.STEPS_IN_DEGREE
         attr.set_value(self.attr_position_read)
         #----- PROTECTED REGION END -----#	//	AngleMotor.position_read
         
@@ -174,13 +178,51 @@ class AngleMotor (PyTango.Device_4Impl):
         prev_state = self.get_state()
         self.set_state(PyTango.DevState.MOVING)
         angle = data
-        steps = int(round(angle * 32300 / 360.))
+        steps = int(round(angle * AngleMotor.STEPS_IN_DEGREE))
         with closing(self.angle_motor.open()):
             self._write_position(self.angle_motor, steps)
         #self.angle_motor.close()
 
         self.set_state(prev_state)
         #----- PROTECTED REGION END -----#	//	AngleMotor.position_write
+        
+    def read_speed(self, attr):
+        self.debug_stream("In read_speed()")
+        #----- PROTECTED REGION ID(AngleMotor.speed_read) ENABLED START -----#
+        with closing(self.angle_motor.open()):
+            speed_steps = self.angle_motor.get_move_settings()["Speed"]
+        speed_degrees = speed_steps / AngleMotor.STEPS_IN_DEGREE
+        self.attr_speed_read = speed_degrees
+        attr.set_value(self.attr_speed_read)
+        #----- PROTECTED REGION END -----#	//	AngleMotor.speed_read
+        
+    def write_speed(self, attr):
+        self.debug_stream("In write_speed()")
+        data=attr.get_write_value()
+        #----- PROTECTED REGION ID(AngleMotor.speed_write) ENABLED START -----#
+        speed = data * AngleMotor.STEPS_IN_DEGREE
+        with closing(self.angle_motor.open()):
+            self.angle_motor.set_move_settings(speed=speed)
+        #----- PROTECTED REGION END -----#	//	AngleMotor.speed_write
+        
+    def read_accel(self, attr):
+        self.debug_stream("In read_accel()")
+        #----- PROTECTED REGION ID(AngleMotor.accel_read) ENABLED START -----#
+        with closing(self.angle_motor.open()):
+            accel_steps = self.angle_motor.get_move_settings()["Accel"]
+        accel_degrees = accel_steps / AngleMotor.STEPS_IN_DEGREE
+        self.attr_accel_read = accel_degrees
+        attr.set_value(self.attr_accel_read)
+        #----- PROTECTED REGION END -----#	//	AngleMotor.accel_read
+        
+    def write_accel(self, attr):
+        self.debug_stream("In write_accel()")
+        data=attr.get_write_value()
+        #----- PROTECTED REGION ID(AngleMotor.accel_write) ENABLED START -----#
+        accel = data * AngleMotor.STEPS_IN_DEGREE
+        with closing(self.angle_motor.open()):
+            self.angle_motor.set_move_settings(accel=accel)
+        #----- PROTECTED REGION END -----#	//	AngleMotor.accel_write
         
     
     
@@ -214,10 +256,6 @@ class AngleMotor (PyTango.Device_4Impl):
         self.debug_stream("New zero has been set")
         #----- PROTECTED REGION END -----#	//	AngleMotor.SetZero
         
-
-    #----- PROTECTED REGION ID(AngleMotor.programmer_methods) ENABLED START -----#
-    
-    #----- PROTECTED REGION END -----#	//	AngleMotor.programmer_methods
 
 class AngleMotorClass(PyTango.DeviceClass):
     #--------- Add you global class variables here --------------------------
@@ -268,6 +306,26 @@ class AngleMotorClass(PyTango.DeviceClass):
             [[PyTango.DevDouble,
             PyTango.SCALAR,
             PyTango.READ_WRITE]],
+        'speed':
+            [[PyTango.DevDouble,
+            PyTango.SCALAR,
+            PyTango.READ_WRITE],
+            {
+                'label': "speed",
+                'unit': "degrees/s",
+                'max value': "1100",
+                'min value': "0",
+            } ],
+        'accel':
+            [[PyTango.DevDouble,
+            PyTango.SCALAR,
+            PyTango.READ_WRITE],
+            {
+                'label': "acceleration",
+                'unit': "degrees/s^2",
+                'max value': "730",
+                'min value': "0.012",
+            } ],
         }
 
 
@@ -275,9 +333,6 @@ def main():
     try:
         py = PyTango.Util(sys.argv)
         py.add_class(AngleMotorClass,AngleMotor,'AngleMotor')
-        #----- PROTECTED REGION ID(AngleMotor.add_classes) ENABLED START -----#
-        
-        #----- PROTECTED REGION END -----#	//	AngleMotor.add_classes
 
         U = PyTango.Util.instance()
         U.server_init()
