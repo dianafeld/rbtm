@@ -54,17 +54,15 @@ import PyTango
 import sys
 # Add additional import
 # ----- PROTECTED REGION ID(Detector.additionnal_import) ENABLED START -----#
+import random
 import numpy as np
-import zlib
-import json
-from multiprocessing import Process, Value
+# from multiprocessing import Process, Value
 
-
-def func(is_run):
-    a = 0
-
-    while is_run.value:
-        a += 1
+# def func(is_run):
+#     a = 0
+#
+#     while is_run.value:
+#         a += 1
 
 
 # ----- PROTECTED REGION END -----# //  Detector.additionnal_import
@@ -79,6 +77,7 @@ class Detector (PyTango.Device_4Impl):
 
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(Detector.global_variables) ENABLED START -----#
+
 
     #----- PROTECTED REGION END -----#  //  Detector.global_variables
 
@@ -101,19 +100,11 @@ class Detector (PyTango.Device_4Impl):
         self.get_device_properties(self.get_device_class())
         self.attr_exposure_read = 0
         self.attr_image_read = ''
+        self.attr_hous_temp_read = 0.0
+        self.attr_chip_temp_read = 0.0
         #----- PROTECTED REGION ID(Detector.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
-
-        try:
-            self.debug_stream("Creating link to detector driver...")
-            self.debug_stream("Link created")
-        except PyTango.DevFailed as df:
-            self.error_stream(str(df))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
 
         self.set_state(PyTango.DevState.ON)
 
@@ -150,10 +141,23 @@ class Detector (PyTango.Device_4Impl):
     def read_image(self, attr):
         self.debug_stream("In read_image()")
         #----- PROTECTED REGION ID(Detector.image_read) ENABLED START -----#
-
         attr.set_value(self.attr_image_read)
         
         #----- PROTECTED REGION END -----#	//	Detector.image_read
+        
+    def read_hous_temp(self, attr):
+        self.debug_stream("In read_hous_temp()")
+        #----- PROTECTED REGION ID(Detector.hous_temp_read) ENABLED START -----#
+        attr.set_value(random.uniform(20, 40))
+        
+        #----- PROTECTED REGION END -----#	//	Detector.hous_temp_read
+        
+    def read_chip_temp(self, attr):
+        self.debug_stream("In read_chip_temp()")
+        #----- PROTECTED REGION ID(Detector.chip_temp_read) ENABLED START -----#
+        attr.set_value(random.uniform(20, 40))
+        
+        #----- PROTECTED REGION END -----#	//	Detector.chip_temp_read
         
     
     
@@ -173,7 +177,7 @@ class Detector (PyTango.Device_4Impl):
     #-----------------------------------------------------------------------------
     
     def GetFrame(self):
-        """ Returns image from detector
+        """ Get image from detector and save in image attribute
         
         :param : 
         :type: PyTango.DevVoid
@@ -285,12 +289,21 @@ class DetectorClass(PyTango.DeviceClass):
                 'label': "exposure time",
                 'unit': "0,1 ms",
                 'standard unit': "10E-4",
+                'format': "%6d",
                 'max value': "160000",
                 'min value': "1",
                 'description': "exposure time",
             } ],
         'image':
             [[PyTango.DevEncoded,
+            PyTango.SCALAR,
+            PyTango.READ]],
+        'hous_temp':
+            [[PyTango.DevDouble,
+            PyTango.SCALAR,
+            PyTango.READ]],
+        'chip_temp':
+            [[PyTango.DevDouble,
             PyTango.SCALAR,
             PyTango.READ]],
         }
