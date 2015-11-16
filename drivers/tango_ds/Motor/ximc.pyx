@@ -21,7 +21,7 @@ cdef void create_exception(func_name, description) except *:
     print(reason, description, origin)
     # END DEBUG OUTPUT
 
-    # PyTango.Except.throw_exception(reason, description, origin)
+    PyTango.Except.throw_exception(reason, description, origin)
 
 def handle_error(error_code, origin):
     if error_code != result_ok:

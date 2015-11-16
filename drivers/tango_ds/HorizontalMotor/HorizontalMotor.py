@@ -79,7 +79,6 @@ class HorizontalMotor (PyTango.Device_4Impl):
 
         self.debug_stream("Reading position...")
         try:
-            motor.wait_for_stop()
             steps = motor.get_position()
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -95,16 +94,8 @@ class HorizontalMotor (PyTango.Device_4Impl):
 
         self.info_stream("Setting position = {}".format(steps))
         try:
-            time.sleep(0.5)
+            motor.move_to_position(steps)
             motor.wait_for_stop()
-            motor.move_to_position(steps, 0)
-            motor.wait_for_stop()
-            #time.sleep(0.5)
-            #status = motor.get_status()
-            #while (status["MvCmdSts"] & 0x80) != 0:
-            #    time.sleep(0.5) 
-            #    status = motor.get_status()
-            #time.sleep(0.2)
             self.debug_stream("Position has been set")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))

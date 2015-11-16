@@ -95,7 +95,7 @@ class AngleMotor (PyTango.Device_4Impl):
 
         self.info_stream("Setting position = {}".format(steps))
         try:
-            motor.move_to_position(steps, 0)
+            motor.move_to_position(steps)
             motor.wait_for_stop()
             self.debug_stream("Position has been set")
         except PyTango.DevFailed as df:
@@ -143,7 +143,7 @@ class AngleMotor (PyTango.Device_4Impl):
         with closing(self.angle_motor.open()):
             self.angle_motor.set_move_settings(500, 500)
             steps = self._read_position(self.angle_motor)
-            self.attr_position_read = steps
+        self.attr_position_read = steps
 
         self.set_state(PyTango.DevState.STANDBY)
 
@@ -164,7 +164,7 @@ class AngleMotor (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(AngleMotor.position_read) ENABLED START -----#
         with closing(self.angle_motor.open()):
             self.attr_position_read = self._read_position(self.angle_motor) * 360. / 32300
-            attr.set_value(self.attr_position_read)
+        attr.set_value(self.attr_position_read)
         #----- PROTECTED REGION END -----#	//	AngleMotor.position_read
         
     def write_position(self, attr):
@@ -173,9 +173,9 @@ class AngleMotor (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(AngleMotor.position_write) ENABLED START -----#
         prev_state = self.get_state()
         self.set_state(PyTango.DevState.MOVING)
+        angle = data
+        steps = int(round(angle * 32300 / 360.))
         with closing(self.angle_motor.open()):
-            angle = data
-            steps = int(round(angle * 32300 / 360.))
             self._write_position(self.angle_motor, steps)
         #self.angle_motor.close()
 
