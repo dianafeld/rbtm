@@ -82,35 +82,20 @@ cdef class Motor:
         handle_error(result_code, "Motor.get_move_settings()")
         return move_settings
 
-    def set_move_settings(self, speed, accel):
+    def set_move_settings(self, speed=None, accel=None, decel=None):
         cdef move_settings_t move_settings
         get_move_settings(self.device_id, &move_settings)
-        move_settings.Speed = speed
-        move_settings.Accel = accel
-        move_settings.Decel = accel
+        if speed is not None:
+            move_settings.Speed = speed
+        if accel is not None:
+            move_settings.Accel = accel
+        if decel is not None:
+            move_settings.Decel = decel
+        elif accel is not None: # may cause problems if we don't want to change decel
+            move_settings.Decel = accel
+
         result_code = set_move_settings(self.device_id, &move_settings)
         handle_error(result_code, "Motor.set_move_settings()")
-
-    def set_speed(self, speed):
-        cdef move_settings_t move_settings
-        get_move_settings(self.device_id, &move_settings)
-        move_settings.Speed = speed
-        result_code = set_move_settings(self.device_id, &move_settings)
-        handle_error(result_code, "Motor.set_speed()")
-
-    def set_accel(self, accel):
-        cdef move_settings_t move_settings
-        get_move_settings(self.device_id, &move_settings)
-        move_settings.Accel = accel
-        result_code = set_move_settings(self.device_id, &move_settings)
-        handle_error(result_code, "Motor.set_accel()")
-
-    def set_decel(self, decel):
-        cdef move_settings_t move_settings
-        get_move_settings(self.device_id, &move_settings)
-        move_settings.Decel = decel
-        result_code = set_move_settings(self.device_id, &move_settings)
-        handle_error(result_code, "Motor.set_decel()")
 
     def get_status(self):
         cdef status_t status
