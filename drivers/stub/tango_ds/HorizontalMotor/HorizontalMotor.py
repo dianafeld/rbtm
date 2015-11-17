@@ -50,9 +50,6 @@ import PyTango
 import sys
 # Add additional import
 #----- PROTECTED REGION ID(HorizontalMotor.additionnal_import) ENABLED START -----#
-import sys
-sys.path.insert(0, 'lib')
-import ximc
 import time
 import ConfigParser
 from contextlib import closing
@@ -79,6 +76,7 @@ class HorizontalMotor (PyTango.Device_4Impl):
 
         self.debug_stream("Reading position...")
         try:
+            motor.wait_for_stop()
             steps = motor.get_position()
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -94,8 +92,16 @@ class HorizontalMotor (PyTango.Device_4Impl):
 
         self.info_stream("Setting position = {}".format(steps))
         try:
-            motor.move_to_position(steps)
+            time.sleep(0.5)
             motor.wait_for_stop()
+            motor.move_to_position(steps, 0)
+            motor.wait_for_stop()
+            #time.sleep(0.5)
+            #status = motor.get_status()
+            #while (status["MvCmdSts"] & 0x80) != 0:
+            #    time.sleep(0.5) 
+            #    status = motor.get_status()
+            #time.sleep(0.2)
             self.debug_stream("Position has been set")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
@@ -123,27 +129,7 @@ class HorizontalMotor (PyTango.Device_4Impl):
         self.debug_stream("In init_device()")
         self.get_device_properties(self.get_device_class())
         self.attr_position_read = 0
-        self.attr_speed_read = 0
-        self.attr_accel_read = 0
         #----- PROTECTED REGION ID(HorizontalMotor.init_device) ENABLED START -----#
-
-        motor_port = self.get_port_from_config()
-
-        try:
-            self.debug_stream("Creating link to motor drivers...")
-            self.horizontal_motor = ximc.Motor(motor_port, 1)
-            self.debug_stream("Links were created")
-        except PyTango.DevFailed as df:
-            self.error_stream(str(df))
-            raise
-        except Exception as e:
-            self.error_stream(str(e))
-            raise
-
-        with closing(self.horizontal_motor.open()):
-            self.horizontal_motor.set_move_settings(500, 500)
-            steps = self._read_position(self.horizontal_motor)
-        self.attr_position_read = steps
 
         self.set_state(PyTango.DevState.STANDBY)
         #----- PROTECTED REGION END -----#	//	HorizontalMotor.init_device
@@ -161,8 +147,6 @@ class HorizontalMotor (PyTango.Device_4Impl):
     def read_position(self, attr):
         self.debug_stream("In read_position()")
         #----- PROTECTED REGION ID(HorizontalMotor.position_read) ENABLED START -----#
-        with closing(self.horizontal_motor.open()):
-            self.attr_position_read = self._read_position(self.horizontal_motor)
         attr.set_value(self.attr_position_read)
         
         #----- PROTECTED REGION END -----#	//	HorizontalMotor.position_read
@@ -174,45 +158,9 @@ class HorizontalMotor (PyTango.Device_4Impl):
         prev_state = self.get_state()
         self.set_state(PyTango.DevState.MOVING)
         steps = data
-        with closing(self.horizontal_motor.open()):
-            self._write_position(self.horizontal_motor, steps)
+        self.attr_position_read = steps
         self.set_state(prev_state)
         #----- PROTECTED REGION END -----#	//	HorizontalMotor.position_write
-        
-    def read_speed(self, attr):
-        self.debug_stream("In read_speed()")
-        #----- PROTECTED REGION ID(HorizontalMotor.speed_read) ENABLED START -----#
-        with closing(self.horizontal_motor.open()):
-            self.attr_speed_read = self.horizontal_motor.get_move_settings()["Speed"]
-        attr.set_value(self.attr_speed_read)
-        #----- PROTECTED REGION END -----#	//	HorizontalMotor.speed_read
-        
-    def write_speed(self, attr):
-        self.debug_stream("In write_speed()")
-        data=attr.get_write_value()
-        #----- PROTECTED REGION ID(HorizontalMotor.speed_write) ENABLED START -----#
-        speed = data
-        with closing(self.horizontal_motor.open()):
-            self.horizontal_motor.set_move_settings(speed=speed)
-        #----- PROTECTED REGION END -----#	//	HorizontalMotor.speed_write
-        
-    def read_accel(self, attr):
-        self.debug_stream("In read_accel()")
-        #----- PROTECTED REGION ID(HorizontalMotor.accel_read) ENABLED START -----#
-        with closing(self.horizontal_motor.open()):
-            self.attr_accel_read = self.horizontal_motor.get_move_settings()["Accel"]
-        attr.set_value(self.attr_accel_read)
-        
-        #----- PROTECTED REGION END -----#	//	HorizontalMotor.accel_read
-        
-    def write_accel(self, attr):
-        self.debug_stream("In write_accel()")
-        data=attr.get_write_value()
-        #----- PROTECTED REGION ID(HorizontalMotor.accel_write) ENABLED START -----#
-        accel = data
-        with closing(self.horizontal_motor.open()):
-            self.horizontal_motor.set_move_settings(accel=accel)
-        #----- PROTECTED REGION END -----#	//	HorizontalMotor.accel_write
         
     
     
@@ -231,6 +179,10 @@ class HorizontalMotor (PyTango.Device_4Impl):
     #    HorizontalMotor command methods
     #-----------------------------------------------------------------------------
     
+
+    #----- PROTECTED REGION ID(HorizontalMotor.programmer_methods) ENABLED START -----#
+    
+    #----- PROTECTED REGION END -----#	//	HorizontalMotor.programmer_methods
 
 class HorizontalMotorClass(PyTango.DeviceClass):
     #--------- Add you global class variables here --------------------------
@@ -277,33 +229,7 @@ class HorizontalMotorClass(PyTango.DeviceClass):
         'position':
             [[PyTango.DevLong,
             PyTango.SCALAR,
-            PyTango.READ_WRITE],
-            {
-                'label': "position",
-                'unit': "steps",
-                'max value': "3000",
-                'min value': "-5000",
-            } ],
-        'speed':
-            [[PyTango.DevULong,
-            PyTango.SCALAR,
-            PyTango.READ_WRITE],
-            {
-                'label': "speed",
-                'unit': "steps/s",
-                'max value': "2000",
-                'min value': "0",
-            } ],
-        'accel':
-            [[PyTango.DevULong,
-            PyTango.SCALAR,
-            PyTango.READ_WRITE],
-            {
-                'label': "acceleration",
-                'unit': "steps/s^2",
-                'max value': "2000",
-                'min value': "1",
-            } ],
+            PyTango.READ_WRITE]],
         }
 
 
@@ -311,6 +237,9 @@ def main():
     try:
         py = PyTango.Util(sys.argv)
         py.add_class(HorizontalMotorClass,HorizontalMotor,'HorizontalMotor')
+        #----- PROTECTED REGION ID(HorizontalMotor.add_classes) ENABLED START -----#
+        
+        #----- PROTECTED REGION END -----#	//	HorizontalMotor.add_classes
 
         U = PyTango.Util.instance()
         U.server_init()

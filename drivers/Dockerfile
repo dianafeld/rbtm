@@ -4,6 +4,8 @@ FROM ubuntu:trusty
 
 MAINTAINER itsnotme
 
+# general
+
 ENV DEBIAN_FRONTEND=noninteractive \
     DB_ROOT_PASSWORD=root \
     TANGO_ADMIN_PASSWORD=root \
@@ -32,6 +34,8 @@ RUN service mysql start && \
 RUN apt-get install -y wget python python-pip python-dev python-numpy python-pytango && \
     rm -rf /var/lib/apt/lists/*
 
+# ROBO-TOM
+
 COPY requirements_docker.txt /var/www/drivers/requirements_docker.txt
 WORKDIR /var/www/drivers/
 
@@ -39,31 +43,24 @@ RUN pip install -r requirements_docker.txt
 
 COPY . /var/www/drivers/
 
+# detector
+RUN wget http://www.ximea.com/support/attachments/271/XIMEA_Linux_SP.tgz && tar -zxvf XIMEA_Linux_SP.tgz && cd package
+# RUN echo "LD_LIBRARY_PATH=/package/libs/libusb/X64/:package/libs/libraw1394/X64" >> ~/.bashrc
+
+RUN service tango-db start && \
+    service tango-starter start && \
+    service tango-accesscontrol start # && \
+    # /usr/lib/tango/TangoTest test
+
+# RUN echo "TANGO_HOST=rbtm-tango:10000" >> ~/.bashrc
+
+
+RUN python setup.py build_ext
+
+WORKDIR /var/www/drivers/tango_ds
+
+RUN ./add_to_db.py
+
 EXPOSE 10000
 
-CMD service tango-db start && \
-    service tango-starter start && \
-    service tango-accesscontrol start && \
-    /usr/lib/tango/TangoTest test
-
-# RUN wget http://www.ximea.com/support/attachments/271/XIMEA_Linux_SP.tgz && tar -zxvf XIMEA_Linux_SP.tgz && cd package && ./install
-
-# RUN python setup.py build_ext
-
-# CMD ["tango_ds/run.sh"]
-
-# RUN apt-get update \
-# && DEBIAN_FRONTEND=noninteractive apt-get install -y wget python python-pip python-dev python-numpy \
-#                       libzmq3 libomniorb4-1 mysql-server python-pytango \
-#                       tango-common tango-db tango-starter libtango8 libtango8-dev liblog4tango5 liblog4tango5-dev \
-# && rm -rf /var/lib/apt/lists/*
-
-
-# COPY requirements_docker.txt /var/www/drivers/requirements_docker.txt
-# WORKDIR /var/www/drivers/
-
-# RUN pip install -r requirements_docker.txt
-
-# COPY . /var/www/drivers/
-
-# RUN echo "TANGO_HOST=rbtm-tango:10000"
+CMD ["run.sh"]
