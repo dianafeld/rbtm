@@ -178,7 +178,7 @@ class AngleMotor (PyTango.Device_4Impl):
         prev_state = self.get_state()
         self.set_state(PyTango.DevState.MOVING)
         angle = data
-        steps = int(round(angle * AngleMotor.STEPS_IN_DEGREE))
+        steps = int(round(angle * AngleMotor.STEPS_IN_DEGREE)) % AngleMotor.STEPS_IN_360
         with closing(self.angle_motor.open()):
             self._write_position(self.angle_motor, steps)
         #self.angle_motor.close()
@@ -200,7 +200,7 @@ class AngleMotor (PyTango.Device_4Impl):
         self.debug_stream("In write_speed()")
         data=attr.get_write_value()
         #----- PROTECTED REGION ID(AngleMotor.speed_write) ENABLED START -----#
-        speed = data * AngleMotor.STEPS_IN_DEGREE
+        speed = int(round(data * AngleMotor.STEPS_IN_DEGREE))
         with closing(self.angle_motor.open()):
             self.angle_motor.set_move_settings(speed=speed)
         #----- PROTECTED REGION END -----#	//	AngleMotor.speed_write
@@ -219,7 +219,7 @@ class AngleMotor (PyTango.Device_4Impl):
         self.debug_stream("In write_accel()")
         data=attr.get_write_value()
         #----- PROTECTED REGION ID(AngleMotor.accel_write) ENABLED START -----#
-        accel = data * AngleMotor.STEPS_IN_DEGREE
+        accel = int(round(data * AngleMotor.STEPS_IN_DEGREE))
         with closing(self.angle_motor.open()):
             self.angle_motor.set_move_settings(accel=accel)
         #----- PROTECTED REGION END -----#	//	AngleMotor.accel_write
