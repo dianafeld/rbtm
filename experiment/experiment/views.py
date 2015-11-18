@@ -639,6 +639,7 @@ def experiment_start(tomo_num):
 
 @app.route('/tomograph/<int:tomo_num>/experiment/stop', methods=['GET'])
 def experiment_stop(tomo_num):
+    #TODO
     logger.info('\n\nREQUEST: EXPERIMENT/STOP')
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
@@ -649,15 +650,20 @@ def experiment_stop(tomo_num):
 
     #if not exp_stop_reason_txt:
     #    exp_stop_reason_txt = "unknown"
-    exp_stop_reason_txt = "unknown"
-
-    tomograph.exp_stop_reason = exp_stop_reason_txt
-    tomograph.experiment_is_running = False
-    resp = Response(response=json.dumps({'success': True}),
-                    status=200,
-                    mimetype="application/json")
-
-    return resp
+    #---------------------------
+    # exp_stop_reason_txt = "unknown"
+    #
+    # tomograph.exp_stop_reason = exp_stop_reason_txt
+    # tomograph.experiment_is_running = False
+    # resp = Response(response=json.dumps({'success': True}),
+    #                 status=200,
+    #                 mimetype="application/json")
+    # return resp
+    #----------------
+    try:
+        tomograph.handle_successful_stop()
+    except Exception as e:
+        return create_response(True, "", "", e.message)
 
 
 """
