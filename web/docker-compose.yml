@@ -14,4 +14,6 @@ server:
     - "8000:80"
   links:
     - database
+  volumes:
+    - ./robotom/logs:/var/www/web/robotom/logs
   restart: unless-stopped

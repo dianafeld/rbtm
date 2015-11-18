@@ -16,9 +16,11 @@ COPY . /var/www/web/
 RUN sed -i "s/'HOST': 'localhost'/'HOST': 'database'/" robotom/robotom/settings.py
 
 
-RUN mkdir -p robotom/media && mkdir -p robotom/logs && chown -R www-data:www-data robotom/logs \
-    && chown -R www-data:www-data robotom/media && chown -R www-data:www-data robotom/static
-RUN robotom/manage.py collectstatic --noinput
+RUN mkdir -p robotom/media && mkdir -p robotom/logs && \
+    chown -R www-data:www-data robotom/media && chown -R www-data:www-data robotom/static && \
+	touch robotom/logs/experiment.log && touch robotom/logs/storage.log && touch robotom/logs/main.log && \
+	chown -R www-data:www-data robotom/logs && \
+	touch robotom/rest.log && chown www-data:www-data robotom/rest.log
 
 # ENV APACHE_RUN_USER www-data
 # ENV APACHE_RUN_GROUP www-data
@@ -26,7 +28,9 @@ RUN robotom/manage.py collectstatic --noinput
 
 # setup apache
 RUN cp /var/www/web/000-default.conf /etc/apache2/sites-available/
-RUN touch robotom/rest.log && chown www-data:www-data robotom/rest.log
+
+
+RUN robotom/manage.py collectstatic --noinput
 
 EXPOSE 80
 CMD ["apache2ctl", "-D", "FOREGROUND"]
