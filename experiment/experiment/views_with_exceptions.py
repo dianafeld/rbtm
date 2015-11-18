@@ -525,6 +525,7 @@ def experiment_start(tomo_num):
     if not success:
         return create_response(success=False, exception_message=exception_message, error='Problems with storage')
 
+    '''
     logger.info('Experiment begins!')
     tomograph.experiment_is_running = True
     tomograph.exp_id = exp_id
@@ -532,6 +533,13 @@ def experiment_start(tomo_num):
         thr = threading.Thread(target=carry_out_advanced_experiment, args=(tomograph, exp_param))
     else:
         thr = threading.Thread(target=carry_out_simple_experiment, args=(tomograph, exp_param))
+    '''
+    logger.info('Experiment begins!')
+    if exp_param['advanced']:
+        pass
+        #thr = threading.Thread(target=carry_out_advanced_experiment, args=(tomograph, exp_param))
+    else:
+        thr = threading.Thread(target=tomograph.carry_out_simple_experiment, args=(exp_param))
     thr.start()
 
     return create_response(True)
@@ -551,8 +559,9 @@ def experiment_stop(tomo_num):
     #    exp_stop_reason_txt = "unknown"
     exp_stop_reason_txt = "unknown"
 
-    tomograph.exp_stop_reason = exp_stop_reason_txt
-    tomograph.experiment_is_running = False
+    if tomograph.current_experiment != None:
+        tomograph.current_experiment.to_be_stopped = True
+        tomograph.current_experiment.reason_of_stop = exp_stop_reason_txt
     resp = Response(response=json.dumps({'success': True}),
                     status=200,
                     mimetype="application/json")
