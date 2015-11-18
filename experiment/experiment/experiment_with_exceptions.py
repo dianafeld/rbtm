@@ -28,6 +28,8 @@ from conf import TIMEOUT_MILLIS
 from conf import FRAME_PNG_FILENAME
 from experiment import app
 from tomograph import Tomograph
+from tomograph import send_frame_to_storage_webpage
+from tomograph import send_message_to_storage_webpage
 
 
 logger = app.logger
@@ -72,13 +74,20 @@ class Experiment:
         getting_frame_message = 'Getting image, number: %d, mode: %s ...' % (self.frame_num, self.mode)
         logger.info(getting_frame_message)
     
-        frame_dict = tomograph.get_frame(exposure, send_to_webpage=True, exp_is_advanced=False)
+        frame_dict = tomograph.get_frame(exposure=exposure, exp_is_advanced=False)
 
         frame_dict['mode'] = self.mode
         frame_dict['number'] = self.number
 
-        frameMessage = FrameMessage(exp_id=self.exp_id, frame_dict=frame_dict)
-        # sending to storage and webpage
+        send_to_webpage = (self.number % self.FOSITW == self.FOSITW - 1)
+        
+        frame_metadata_dict = frame_dict
+        del(frame_metadata_dict['frame']['image_data']['image'])
+
+        send_frame_to_storage_webpage(frame_metadata_dict=frame_metadata_dict,
+                                      image_numpy=frame_dict['frame']['image_data']['image'],
+                                      send_to_webpage=send_to_webpage)
+        #send_frame_to_storage_webpage(frame_dict=frame_dict, send_to_webpage=send_to_webpage)
 
     def try_run():
         time_of_experiment_start = time.time()
@@ -135,7 +144,7 @@ class Experiment:
             self.try_run()
         except Tomograph.ModExpError as e:
             e.log(self.exp_id)
-            e.create_Message(self.exp_id)
+            send_message_to_storage_webpage(e.to_event_dict(self.exp_id))
         else:
             pass
 

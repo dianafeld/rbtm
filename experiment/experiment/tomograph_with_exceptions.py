@@ -95,39 +95,22 @@ def create_event(type, exp_id, MoF, exception_message='', error=''):
     return None
 
 
-def make_png(res, exp_id=''):
+def frame_to_png(frame_dict, png_filename=FRAME_PNG_FILENAME):
     """ Takes 2-dimensional numpy array and creates png file from it
 
     :arg: 'res' - image from tomograph in the form of 2-dimensional numpy array
-          'exp_id' - ID of experiment, during that function is called.
-                     If 'exp_id' is empty string, that means that function is called during adjustment, not
-                     experiment, in this case function return answer in different format;
-                     Type is string
 
-    :return: list of 2 elements:
-             1 - success of function, type is bool
-             2 - depends on "emptiness" of argument 'exp_id';
-             if 'exp_id' is NOT empty, function returns "event"(dictionary with format that is returned by
-                 'create_event()'), converted to JSON-string
-             if 'exp_id' IS empty, function returns prepared response for web-page of adjustment,
-             type is json-string with format that is returned by  'create_response()'
+    :return: 
     """
     logger.info("Converting image to png-file...")
+    image_numpy = frame_dict['frame']['image_data']['image']
+    res = image_numpy
     try:
         small_res = zoom(res, zoom=0.25, order=2)
-        plt.imsave(FRAME_PNG_FILENAME, small_res, cmap=plt.cm.gray)
+        plt.imsave(png_filename, small_res, cmap=plt.cm.gray)
     except Exception as e:
-        error = "Could not convert image to png-file"
-        logger.info(error)
-        if not exp_id:
-            return False, create_response(success=False, error="Could not convert image to png-file",
+        return False, Tomograph.TomoError(error="Could not convert image to png-file",
                                           exception_message='' '''e.message''')
-        else:
-            # In this case, we suppose that our function was called from 'send_event_to_webpage()'
-            error_event_dict = create_event("message", exp_id, MoF="Problems with sending to web-page of adjustment",
-                                            exception_message='' '''e.message''', error=error)
-            error_event_json = json.dumps(error_event_dict)
-            return False, error_event_json
 
     logger.info("Image was converted!")
     return True, None
@@ -146,19 +129,16 @@ def send_event_to_webpage(event_dict):
     """
 
     if event_dict['type'] == 'frame':
-
-        image_numpy = event_dict['frame']['image_data']['image']
-        exp_id = event_dict['exp_id']
-        success, error_event_json_if_fail = make_png(image_numpy, exp_id)
+        success, ModExpError_if_fail = frame_to_png(event_dict)
         if not success:
             files = None
-            event_json = error_event_json_if_fail
+            event_json = json.dumps(ModExpError_if_fail.to_dict())
             logger.info('Sending error message to web-page of adjustment...')
 
         else:
             files = {'file': open(FRAME_PNG_FILENAME, 'rb')}
 
-            del (event_dict['frame'])
+            del (event_dict['frame']['image_data']['image'])
             event_json = json.dumps(event_dict)
             logger.info('Sending frame to web-page of adjustment...')
 
@@ -225,7 +205,7 @@ def send_to_storage(storage_uri, data, files=None):
         return True, ''
 
 
-def send_message_to_storage_webpage(self, storage_uri, event_dict):        
+def send_message_to_storage_webpage(event_dict):        
 	""" Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
         'event_dict' must be dictionary with format that is returned by  'create_event()'
 
@@ -233,47 +213,62 @@ def send_message_to_storage_webpage(self, storage_uri, event_dict):
                           must be dictionary with format that is returned by  'create_event()'
     :return: success of sending, type is bool
     """
-    exp_id = event_dict['exp_id']
     event_json_for_storage = json.dumps(event_dict)
-    success, exception_message = send_to_storage(storage_uri, data=event_json_for_storage)
+    success, exception_message = send_to_storage(STORAGE_EXP_FINISH_URI, data=event_json_for_storage)
     send_event_to_webpage(event_dict)
     return success
 
-def send_frame_to_storage_webpage(self, storage_uri, frame_dict, send_to_webpage=True):
+def send_frame_to_storage_webpage(frame_metadata_dict, image_numpy, send_to_webpage=True):
         """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
             'frame_dict' must be dictionary with format that is returned by  'create_event()'
 
-        :arg:  'frame_dict' - event (message (for storage and web-page of adjustment) or frame with some data),
-                              must be dictionary with format that is returned by  'create_event()'
-               'send_to_webpage' - boolean; if False, it sends event to only storage;
-                                   if False it sends also to web-page of adjustment
+        :arg:
         :return: success of sending, type is bool
         """
-        exp_id = frame_dict['exp_id']
-        image_numpy = frame_dict['frame']['image_data']['image']
-        del (frame_dict['frame']['image_data']['image'])
-        frame_dict_for_storage = copy.deepcopy(frame_dict)
-
-        frame_dict['frame']['image_data']['image'] = image_numpy
-
         s = StringIO()
 
         np.savez_compressed(s, frame_data=image_numpy)
         s.seek(0)
-        data = {'data': json.dumps(frame_dict_for_storage)}
+        data = {'data': json.dumps(frame_metadata_dict)}
         files = {'file': s}
-        success, exception_message = send_to_storage(storage_uri, data, files)
+        success, exception_message = send_to_storage(STORAGE_FRAMES_URI, data, files)
 
         if not success:
-        	raise Tomograph.TomoError(error='Problems with storage', exception_message=exception_message)
+            raise Tomograph.TomoError(error='Problems with storage', exception_message=exception_message)
         # commented 27.07.15 for tests with real storage, because converting to png file in
         # function 'send_event_to_webpage()' takes a lot of time    
         else:
             if send_to_webpage == True:
+                frame_dict = frame_metadata_dict
+                frame_dict['frame']['image_data']['image'] = image_numpy
                 send_event_to_webpage(frame_dict)
-   
-        return success
+        #return success
 
+
+def try_thrice_function(error_str, func, args=()):
+    """ Tries to call some TANGO function three times
+
+    :arg: 'func' - called function
+        'args' - function 'func' is being called with arguments 'args'
+    :return:
+    """
+    if type(args) not in (tuple, list):
+    	args = tuple(args)
+    exception_message = ''
+    for i in range(0, 3):
+        try:
+            answer = func(*args)
+        except PyTango.DevFailed as e:
+            for stage in e:
+                logger.info(stage.desc)
+            exception_message = e[-1].desc
+        except Exception as e:
+            logger.info(e.message)
+            # Can be problems with converting to JSON e.message
+            exception_message = e.message
+        else:
+            return answer
+    raise TomoError(error=error_str, exception_message=exception_message)
 
 class Tomograph:
     """ Wrapper of interaction with Tango tomograph server"""
@@ -355,30 +350,6 @@ class Tomograph:
         self.detector_proxy = PyTango.DeviceProxy(detector_proxy_addr)
         self.detector_proxy.set_timeout_millis(timeout_millis)
 
-    def try_thrice_function(error_str, func, args=()):
-        """ Tries to call some TANGO function three times
-
-        :arg: 'func' - called function
-              'args' - function 'func' is being called with arguments 'args'
-        :return:
-        """
-        if type(args) not in (tuple, list):
-        	args = tuple(args)
-        exception_message = ''
-        for i in range(0, 3):
-            try:
-                answer = func(*args)
-            except PyTango.DevFailed as e:
-                for stage in e:
-                    logger.info(stage.desc)
-                exception_message = e[-1].desc
-            except Exception as e:
-                logger.info(e.message)
-                # Can be problems with converting to JSON e.message
-                exception_message = e.message
-            else:
-                return answer
-        raise TomoError(error=error_str, exception_message=exception_message)
 
     def try_thrice_read_attr(self, attr_name, extract_as=ExtractAs.Numpy, error_str=''):
         """ Try to change some attribute of Tango device three times
@@ -417,7 +388,7 @@ class Tomograph:
             else:
                 return set_value
         raise TomoError(error=error_str, exception_message=exception_message)
-'''
+	'''
     def send_event_to_storage_webpage(self, storage_uri, event_dict, send_to_webpage=True):
         """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
             'event_dict' must be dictionary with format that is returned by  'create_event()'
@@ -468,7 +439,7 @@ class Tomograph:
         """
 
         return success
-'''
+	'''
 
     def basic_tomo_check(self, from_experiment):
         if not from_experiment:
@@ -481,7 +452,7 @@ class Tomograph:
 
 
 
-    def open_shutter(self, time=0, from_experiment=True, exp_is_advanced=True):
+    def open_shutter(self, time=0, from_experiment=False, exp_is_advanced=True):
         """ Tries to open shutter
 
         :arg: 
@@ -494,7 +465,7 @@ class Tomograph:
         try_thrice_function(func=self.tomograph_proxy.OpenShutter, args=time, error_str='Could not open shutter')
         logger.info('Shutter has been opened!')
 
-    def close_shutter(self, time=0, from_experiment=True, exp_is_advanced=True):
+    def close_shutter(self, time=0, from_experiment=False, exp_is_advanced=True):
         """ Tries to close shutter
 
         :arg: 
@@ -507,7 +478,7 @@ class Tomograph:
         try_thrice_function(func=self.tomograph_proxy.CloseShutter, args=time, error_str='Could not close shutter')
         logger.info('Shutter has been closed!')
 
-    def shutter_state(self, from_experiment=True, exp_is_advanced=True):
+    def shutter_state(self, time=0, from_experiment=False, exp_is_advanced=True):
         #TODO documentation
         """ Tries to get tomo state
 
@@ -517,17 +488,106 @@ class Tomograph:
 
         self.basic_tomo_check(from_experiment)
 
-        status = try_thrice_function(func=tself.tomograph_proxy.ShutterStatus, args=ttime, error_str='Could not get shutter status')
+        status = try_thrice_function(func=tself.tomograph_proxy.ShutterStatus, args=time,
+        							 error_str='Could not get shutter status')
 
         logger.info('Shutter return status successfully!')
 
         return status
 
-######################################## (14.11.15  10:37)
-########## One needs to look at checking types of arguments, which go to Tango-tomograph functions
-##############################
 
-    def set_x(self, new_x, from_experiment=True, exp_is_advanced=True):
+	######################################## (14.11.15  10:37)
+	########## One needs to look at checking types of arguments, which go to Tango-tomograph functions
+	##############################
+
+	def source_power_on(self):
+        """
+        :arg:
+        :return:
+        """
+	    logger.info('Powering on source...')
+    	self.basic_tomo_check(from_experiment=False)
+
+        try_thrice_function(func=self.tomograph_proxy.PowerOn,
+        					error_str='Could not power on source')
+	    logger.info('Source was powered ON!')
+
+	def source_power_off(self):
+        """
+        :arg:
+        :return:
+        """
+	    logger.info('Powering off source...')
+    	self.basic_tomo_check(from_experiment=False)
+
+        try_thrice_function(func=self.tomograph_proxy.PowerOff,
+        					error_str='Could not power off source')
+	    logger.info('Source was powered OFF!')
+
+	def source_set_voltage(self, new_voltage):
+	    logger.info('Going to set voltage on source...')
+    	self.basic_tomo_check(from_experiment=False)
+
+	    logger.info('Checking format...')
+	    if type(new_voltage) is not float:
+	        logger.info('Incorrect format! Voltage type must be float, but it is ' + str(type(new_voltage)))
+            raise TomoError(error='Incorrect format: type must be float')
+
+	    # TO DELETE THIS LATER
+	    logger.info('Format is correct, new voltage value is %.1f...' % (new_voltage))
+	    if new_voltage < 2 or 60 < new_voltage:
+            raise Tomograph.TomoError(error='Voltage must have value from 2 to 60!')
+
+	    logger.info('Parameters are normal, setting new voltage...')
+        set_voltage = self.try_thrice_change_attr("xraysource_voltage", new_voltage,
+        										  error_str='Could not set voltage')
+
+	    logger.info('New value of voltage was set!')
+
+	def source_set_current(tomo_num, current):
+	    logger.info('Going to set current on source...')
+    	self.basic_tomo_check(from_experiment=False)
+
+	    logger.info('Checking format...')
+	    if type(current) is not float:
+	        logger.info('Incorrect format! Current type must be float, but it is ' + str(type(current)))
+            raise TomoError(error='Incorrect format: type must be float')
+
+	    # TO DELETE THIS LATER
+	    logger.info('Format is correct, new current value is %.1f...' % (current))
+	    if current < 2 or 80 < current:
+            raise Tomograph.TomoError(error='Current must have value from 2 to 80!')
+
+	    logger.info('Parameters are normal, setting new current...')
+        set_current = self.try_thrice_change_attr("xraysource_current", current,
+        										  error_str='Could not set current')
+
+	    logger.info('New value of current was set!')
+
+	def source_get_voltage(tomo_num):
+	    logger.info('Going to get voltage...')
+    	self.basic_tomo_check(from_experiment=False)
+
+        voltage_attr = self.try_thrice_read_attr("xraysource_voltage",
+										   		 error_str='Could not get voltage')
+
+	    voltage = voltage_attr.value
+	    logger.info("Voltage is %.2f" % voltage)
+	    return voltage
+
+	def source_get_current(tomo_num):
+	    logger.info('Going to get current...')
+    	self.basic_tomo_check(from_experiment=False)
+
+        current_attr = self.try_thrice_read_attr("xraysource_current",
+										   		 error_str='Could not get current')
+	    current = current_attr.value
+	    logger.info("Current is %.2f" % current)
+	    return current
+
+
+
+    def set_x(self, new_x, from_experiment=False, exp_is_advanced=True):
         """ Tries to set new horizontal position of object
         :arg:
             :return:
@@ -537,18 +597,18 @@ class Tomograph:
     	self.basic_tomo_check(from_experiment)
 
         if type(new_x) not in (int, float):
-            raise TomoError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_x)))
+            raise Tomograph.TomoError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_x)))
 
         # TO DELETE THIS LATER
         logger.info('Setting value %.1f...' % (new_x))
         if new_x < -5000 or 2000 < new_x:
             raise Tomograph.TomoError(error='Position must have value from -30 to 30')
 
-        set_x = self.try_thrice_change_attr("horizontal_position", new_x, error_str='Could not set new position because of tomograph')
-
+        set_x = self.try_thrice_change_attr("horizontal_position", new_x,
+        									error_str='Could not set new position because of tomograph')
         logger.info('Position was set!')
 
-    def set_y(self, new_y, from_experiment=True, exp_is_advanced=True):
+    def set_y(self, new_y, from_experiment=False, exp_is_advanced=True):
         """ Tries to set new vertical position of object
 
         :arg: 'new_y' - value of new vertical position, in 'popugaychiki', type is int
@@ -567,11 +627,12 @@ class Tomograph:
         if new_x < -5000 or 2000 < new_x:
             raise TomoError(error='Position must have value from -30 to 30')
 
-        set_x = self.try_thrice_change_attr("horizontal_position", new_y, error_str='Could not set new position because of tomograph')
+        set_x = self.try_thrice_change_attr("horizontal_position", new_y,
+        									error_str='Could not set new position because of tomograph')
 
         logger.info('Position was set!')
 
-    def set_angle(self, new_angle, from_experiment=True, exp_is_advanced=True):
+    def set_angle(self, new_angle, from_experiment=False, exp_is_advanced=True):
         """ Tries to set new angle position of object
 
         :arg: 'new_angle' - value of new angle position, in 'grades', type is float
@@ -591,12 +652,13 @@ class Tomograph:
         new_angle %= 360
 
 
-        set_angle = self.try_thrice_change_attr("angle_position", new_angle, error_str='Could not set new position because of tomograph')
+        set_angle = self.try_thrice_change_attr("angle_position", new_angle,
+        										error_str='Could not set new position because of tomograph')
 
         logger.info('Position was set!')
 
 
-    def get_x(self, from_experiment=True, exp_is_advanced=True):
+    def get_x(self, from_experiment=False, exp_is_advanced=True):
         """ Tries to get horizontal position of object
         :arg:
         :return:
@@ -605,13 +667,14 @@ class Tomograph:
 
         self.basic_tomo_check(from_experiment)
 
-        x_attr = self.try_thrice_read_attr("horizontal_position", error_str='Could not get position because of tomograph')
+        x_attr = self.try_thrice_read_attr("horizontal_position",
+										   error_str='Could not get position because of tomograph')
 
 		x_value = x_attr.value
         logger.info('Horizontal position is %d' % x_value)
         return x_value
 
-    def get_y(self, from_experiment=True, exp_is_advanced=True):
+    def get_y(self, from_experiment=False, exp_is_advanced=True):
         """ Tries to get vertical position of object
         :arg:
         :return:
@@ -620,14 +683,15 @@ class Tomograph:
 
         self.basic_tomo_check(from_experiment)
 
-        y_attr = self.try_thrice_read_attr("vertical_position", error_str='Could not get position because of tomograph')
+        y_attr = self.try_thrice_read_attr("vertical_position",
+        								   error_str='Could not get position because of tomograph')
 
 		y_value = y_attr.value
         logger.info('Vertical position is %d' % y_value)
         return y_value
 
 
-    def get_angle(self, from_experiment=True, exp_is_advanced=True):
+    def get_angle(self, from_experiment=False, exp_is_advanced=True):
         """ Tries to get vertical position of object
         :arg:
         :return:
@@ -644,7 +708,7 @@ class Tomograph:
         return angle_value
 
 
-    def reset_to_zero_angle(self, from_experiment=True, exp_is_advanced=True):
+    def reset_to_zero_angle(self, from_experiment=False, exp_is_advanced=True):
         """ Tries to set current angle position as 0
         :arg:
         :return:
@@ -653,12 +717,13 @@ class Tomograph:
 
         self.basic_tomo_check(from_experiment)
 
-        self.try_thrice_function(func=self.tomograph_proxy.ResetAnglePosition, error_str='Could not reset angle position because of tomograph')
+        self.try_thrice_function(func=self.tomograph_proxy.ResetAnglePosition,
+        						 error_str='Could not reset angle position because of tomograph')
 
         logger.info('Angle position was reset!')
 
 
-    def move_away(self, from_experiment=True, exp_is_advanced=True):
+    def move_away(self, from_experiment=False, exp_is_advanced=True):
         """ Tries to move object away from detector
         :arg:
         :return:
@@ -671,7 +736,7 @@ class Tomograph:
 
         logger.info('Object was moved away!')
 
-    def move_back(self, from_experiment=True, exp_is_advanced=True):
+    def move_back(self, from_experiment=False, exp_is_advanced=True):
         """ Tries to move object "back" to the detector, in front of detector
         :arg:
         :return:
@@ -684,7 +749,7 @@ class Tomograph:
 
         logger.info('Object was moved back!')
 
-    def get_frame(self, exposure, send_to_webpage=True, from_experiment=True, exp_is_advanced=True):
+    def get_frame(self, exposure, send_to_webpage=False, from_experiment=True, exp_is_advanced=True):
         """ Tries get frame with some exposure
         :arg: 'exposure' - exposure, which frame should get with
         :return:
@@ -725,26 +790,5 @@ class Tomograph:
         except Exception as e:
             raise TomoError(error='Could not convert image to numpy.array', exception_message='' '''e.message''')
 
-
-        if from_experiment:
-            # Joining numpy array of image and frame metadata
-            frame_dict['image_data']['image'] = image_numpy
-
-
-####################################################################
-##############   IT HASN'T BEEN EDITED YET UNDER
-###########################################
-            # POKA KOSTYL
-            if exp_is_advanced:
-                frame_event = create_event('frame', self.current_experiment.exp_id, frame_dict)
-                send_frame_to_storage_webpage(STORAGE_FRAMES_URI, frame_event, send_to_webpage)
-                return True, frame_dict
-            else:
-                return True, frame_dict
-        else:
-            success, response_if_fail = make_png(image_numpy)
-            if not success:
-                return response_if_fail
-            else:
-                return send_file('../' + FRAME_PNG_FILENAME, mimetype='image/png')
-'''
+        frame_dict['image_data']['image'] = image_numpy
+        return frame_dict
