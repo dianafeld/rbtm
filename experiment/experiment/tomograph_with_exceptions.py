@@ -74,43 +74,6 @@ class Tomograph:
     detector_proxy = None
     current_experiment = None
 
-    class ModExpError(Exception):
-        exception_message = ""
-        type_of_stop = EMERGENCY_STOP_MSG
-
-        def __init__(self, error='', exception_message='', type_of_stop=EMERGENCY_STOP_MSG):
-            self.message = error
-            self.error = error
-            self.exception_message = exception_message
-
-        def __str__(self):
-            return repr(self.message)
-
-        def to_event_dict(self, exp_id):
-            return create_event(type='message', exp_id=exp_id, MoF=EMERGENCY_STOP_MSG,
-            					error=self.error, exception_message=self.exception_message)
-
-        def create_response(self):
-            response_dict = {
-                'success': False,
-                'exception message': self.exception_message,
-                'error': self.error,
-                'result': None,
-            }
-            return json.dumps(response_dict)
-
-        def log(self, exp_id=''):
-        	if exp_id:
-                logger.info(("EXPERIMENT %s: " + SOMEONE_STOP_MSG) % exp_id)
-            else:
-            	logger.info("ERROR:")
-
-            if type_of_stop == EMERGENCY_STOP_MSG:
-                logger.info("   " + self.error)
-                logger.info("   " + self.exception_message)
-            else:
-                logger.info("Reason:    " + self.error)
-
 
     def __init__(self, tomograph_proxy_addr, detector_proxy_addr, timeout_millis=TIMEOUT_MILLIS):
         """
@@ -310,7 +273,7 @@ class Tomograph:
 	    # TO DELETE THIS LATER
 	    logger.info('Format is correct, new voltage value is %.1f...' % (new_voltage))
 	    if new_voltage < 2 or 60 < new_voltage:
-            raise Tomograph.ModExpError(error='Voltage must have value from 2 to 60!')
+            raise ModExpError(error='Voltage must have value from 2 to 60!')
 
 	    logger.info('Parameters are normal, setting new voltage...')
         set_voltage = self.try_thrice_change_attr("xraysource_voltage", new_voltage,
@@ -330,7 +293,7 @@ class Tomograph:
 	    # TO DELETE THIS LATER
 	    logger.info('Format is correct, new current value is %.1f...' % (current))
 	    if current < 2 or 80 < current:
-            raise Tomograph.ModExpError(error='Current must have value from 2 to 80!')
+            raise ModExpError(error='Current must have value from 2 to 80!')
 
 	    logger.info('Parameters are normal, setting new current...')
         set_current = self.try_thrice_change_attr("xraysource_current", current,
@@ -371,12 +334,12 @@ class Tomograph:
     	self.basic_tomo_check(from_experiment)
 
         if type(new_x) not in (int, float):
-            raise Tomograph.ModExpError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_x)))
+            raise ModExpError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_x)))
 
         # TO DELETE THIS LATER
         logger.info('Setting value %.1f...' % (new_x))
         if new_x < -5000 or 2000 < new_x:
-            raise Tomograph.ModExpError(error='Position must have value from -30 to 30')
+            raise ModExpError(error='Position must have value from -30 to 30')
 
         set_x = self.try_thrice_change_attr("horizontal_position", new_x,
         									error_str='Could not set new position because of tomograph')
@@ -577,7 +540,7 @@ class Tomograph:
 
         try:
            self.current_experiment.run()
-        except Tomograph.ModExpError as e:
+        except ModExpError as e:
             e.log(exp_id)
             event_for_send = e.to_event_dict(exp_id)
             type_of_experiment_msg = e.type_of_stop
