@@ -4,7 +4,7 @@ database:
     - "15432:5432"
   volumes:
      - ./db:/var/lib/postgresql/data
-  restart: always
+  restart: unless-stopped
   #environment:
   #   - POSTGRES_PASSWORD=postgres
 
@@ -15,5 +15,5 @@ server:
   links:
     - database
   volumes:
-     - ./robotom/static:/var/www/web/robotom/static
-  restart: always
+    - ./robotom/logs:/var/www/web/robotom/logs
+  restart: unless-stopped

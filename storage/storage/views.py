@@ -1,9 +1,12 @@
 import json
 import os
 import numpy as np
+import h5py
 
 from flask import jsonify, make_response, request, abort, Response, send_file
-from bson.json_util import dumps
+from bson.json_util import dumps, loads
+from bson.objectid import ObjectId
+
 import pymongo as pm
 
 from storage import pyframes
@@ -158,6 +161,49 @@ def get_frame_info():
     return resp
 
 
+def transform_data(data, transformed_data_path, experiment_id):
+
+    data_transformed = h5py.File(transformed_data_path, "w")
+    logger.debug("hdf5: created file in temporary directory")
+
+    experiments = db['experiments']
+    experiment_info = dumps(experiments.find({"_id": experiment_id}))
+    data_transformed.attrs.create("exp_info", experiment_info.encode('utf8'))
+
+    data_transformed.create_group("empty")
+    data_transformed.create_group("dark")
+    data_transformed.create_group("data")
+    logger.debug("hdf5: created groups")
+
+    frames = db['frames']
+    for frame_id in data.keys():
+        frame_info = dumps(frames.find({"_id": ObjectId(frame_id)}))
+        json_frame = loads(frame_info)
+        frame_number = str(json_frame[0]['frame']['number'])
+        frame_type = str(json_frame[0]['frame']['mode'])
+        frame_dataset = data_transformed[frame_type].create_dataset(frame_number, data=data[frame_id], compression="gzip", compression_opts=1)
+        frame_dataset.attrs.create("frame_info", frame_info.encode('utf8'))
+
+    logger.debug("hdf5: wrote compressed datasets")
+    data_transformed.flush()
+    data_transformed.close()
+
+    return transformed_data_path
+
+
+@app.route('/storage/experiments/<experiment_id>/hdf5', methods=['GET'])
+def get_experiment_by_id(experiment_id):
+    logger.info('Getting experiment: ' + experiment_id)
+    data = h5py.File(os.path.abspath(os.path.join('data', 'experiments', experiment_id, 'before_processing', 'frames.h5')), 'r')
+    transformed_data_path = os.path.abspath(os.path.join("data", "experiments", str(experiment_id), "before_processing",
+                                                         experiment_id + ".h5"))
+    logger.debug(transformed_data_path)
+    if not os.path.exists(transformed_data_path):
+        transform_data(data, transformed_data_path, experiment_id)
+    return send_file(transformed_data_path,
+                     mimetype='application/x-hdf5', as_attachment=True, attachment_filename=str(experiment_id)+'.h5')
+
+
 @app.route('/storage/png/get', methods=['POST'])
 def get_png():
     if not request.data:
@@ -170,14 +216,49 @@ def get_png():
     frame_id = find_query['frame_id']
     experiment_id = find_query['exp_id']
 
-    png_file_path = os.path.join('..', 'data', 'experiments', str(experiment_id), 'before_processing', 'png',
-                                 str(frame_id) + '.png')
+    png_file_path = os.path.abspath(os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
+                                 str(frame_id) + '.png'))
 
     #if not os.path.exists(os.path.join('storage', png_file_path)):
     #if not os.path.exists(png_file_path):
     #    abort(404)
 
     return send_file(png_file_path, mimetype='image/png')
+
+
+@app.route('/storage/experiments/<experiment_id>', methods=['DELETE'])
+def delete_experiment(experiment_id):
+    json_result = jsonify({'deleted': 'success'})
+    logger.info('Deleting experiment: ' + experiment_id)
+
+    experiments = db['experiments']
+    frames = db['frames']
+
+    exp_query = {'_id': experiment_id}
+    cursor = experiments.find(exp_query)
+    if cursor.count() == 0:
+        logger.error('Experiment not found')
+    else:
+        experiments.remove(exp_query)
+        if cursor.count() != 0:
+            logger.error("Can't remove experiment")
+            json_result = jsonify({'deleted': 'fail'})
+        else:
+            logger.info("database: deleted experiment {} successfully".format(experiment_id))
+
+    frames_query = {'exp_id': experiment_id}
+    frames.remove(frames_query)
+    if frames.find(frames_query).count() != 0:
+        logger.error("Can't remove frames")
+        json_result = jsonify({'deleted': 'fail'})
+    else:
+        logger.info("database: deleted frames of {} successfully".format(experiment_id))
+
+    fs.delete_experiment(experiment_id)
+
+    # db['reconstructions'].remove(request.get_json())
+
+    return json_result
 
 
 # Needs rewriting

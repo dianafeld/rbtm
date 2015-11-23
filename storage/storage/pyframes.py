@@ -22,7 +22,7 @@ def extract_frame(frame_id, experiment_id):
 def add_frame(frame, frame_id, experiment_id):
     frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'frames.h5')
     with h5py.File(frames_file_path, 'r+') as frames_file:
-        frames_file.create_dataset(str(frame_id), data=frame)
+        frames_file.create_dataset(str(frame_id), data=frame, compression="gzip", compression_opts=1)
     logger.info('hdf5 file: add frame {} to experiment {} successfully'.format(frame_id, experiment_id))
 
     png_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',

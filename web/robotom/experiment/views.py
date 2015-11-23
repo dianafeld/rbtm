@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.core.mail import send_mail
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.contrib import messages
@@ -14,15 +13,13 @@ import tempfile
 import os
 from models import Tomograph
 from django.shortcuts import get_object_or_404
-from django.core import files
 import json
 from requests.exceptions import Timeout
 import uuid
 from django.core.files.storage import default_storage
-from django.http import HttpResponse, HttpResponseBadRequest
 from functools import wraps
 
-logger = logging.getLogger('django.request')
+experiment_logger = logging.getLogger('experiment_logger')
 
 
 def has_experiment_access(user):
@@ -48,14 +45,14 @@ def try_request_post(request, address, content, source_page, stream=False):
         result['response_dict'] = json.loads(answer.content)
         if answer.status_code != 200:
             messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-            logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+            experiment_logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
             result['error'] = redirect(reverse(source_page))
     except Timeout as e:
         messages.warning(request, 'Нет ответа от модуля "Эксперимент".')
-        logger.error(e)
+        experiment_logger.error(e)
         result['error'] = redirect(reverse(source_page))
     except BaseException as e:
-        logger.error(e)
+        experiment_logger.error(e)
         messages.warning(request, 
             'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
         result['error'] = redirect(reverse(source_page))
@@ -69,21 +66,21 @@ def try_request_get(request, address, source_page=''):
         result['response_dict'] = json.loads(answer.content)
         if answer.status_code != 200:
             messages.warning(request, u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
-            logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
+            experiment_logger.error(u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code))
             if source_page:
                 result['error'] = redirect(reverse(source_page))
             else:
                 result['error'] = u'Модуль "Эксперимент" завершил работу с кодом ошибки {}'.format(answer.status_code)
     except Timeout as e:
         messages.warning(request, 'Нет ответа от модуля "Эксперимент"')
-        logger.error(e)
+        experiment_logger.error(e)
         if source_page:
             result['error'] = redirect(reverse(source_page))
         else:
             result['error'] = 'Нет ответа от модуля "Эксперимент"'
 
     except BaseException as e:
-        logger.error(e)
+        experiment_logger.error(e)
         messages.warning(request, 
             'Ошибка связи с модулем "Эксперимент", невозможно сохранить данные. Возможно, отсутствует подключение к сети. Попробуйте снова через некоторое время или свяжитесь с администратором')
         if source_page:
@@ -100,7 +97,7 @@ def check_result(response_dict, request, tomo, success_msg=''):
             messages.success(request, success_msg)
         tomo.save()
     else:
-        logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
+        experiment_logger.error(u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(
                     response_dict['error']))
         messages.warning(request, 
             u'Модуль "Эксперимент" работает некорректно в данный момент. Попробуйте позже {}'.format(response_dict['error']))
@@ -265,7 +262,7 @@ def experiment_adjustment(request):
                 response = requests.post(settings.EXPERIMENT_DETECTOR_GET_FRAME.format(1), data, stream=True)
                 if response.status_code != 200:
                     messages.warning(request, u'Не удалось получить картинку')
-                    logger.error(u'Не удалось получить картинку, код ошибки: {}'.format(response.status_code))
+                    experiment_logger.error(u'Не удалось получить картинку, код ошибки: {}'.format(response.status_code))
                 else:
                     salt = hashlib.sha1(str(random.random())).hexdigest()[:5]
                     file_name = hashlib.sha1(salt + str(request.user.id)).hexdigest() + '.png'
@@ -291,7 +288,7 @@ def experiment_adjustment(request):
                     })
             except BaseException as e:
                 messages.warning(request, u'Не удалось выполнить предпросмотр. Попробуйте повторно')
-                logger.error(e)
+                experiment_logger.error(e)
 
     return render(request, 'experiment/adjustment.html', {
         'caption': 'Эксперимент',

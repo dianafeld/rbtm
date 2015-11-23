@@ -94,21 +94,25 @@ class Tomograph (PyTango.Device_4Impl):
 
         self.set_state(PyTango.DevState.OFF)
 
-        self.motor = PyTango.DeviceProxy('tomo/motor/1')
+        self.angle_motor = PyTango.DeviceProxy('tomo/angle_motor/1')
+        self.horizontal_motor = PyTango.DeviceProxy('tomo/horizontal_motor/1')
         self.source = PyTango.DeviceProxy('tomo/source/1')
         self.shutter = PyTango.DeviceProxy('tomo/shutter/1')
         self.detector = PyTango.DeviceProxy('tomo/detector/1')
         self.detector.set_timeout_millis(320000)
-        self.motor.set_timeout_millis(70000)
+        self.angle_motor.set_timeout_millis(70000)
+        self.horizontal_motor.set_timeout_millis(70000)
 
-        self.SelfTest()
+        #self.SelfTest()
 
         self.attr_xraysource_voltage_read = self.source.voltage
         self.attr_xraysource_current_read = self.source.current
 
-        self.attr_angle_position_read = self.motor.angle_position
-        self.attr_horizontal_position_read = self.motor.horizontal_position
-        self.attr_vertical_position_read = self.motor.vertical_position
+        self.attr_angle_position_read = self.angle_motor.position
+        self.attr_horizontal_position_read = self.horizontal_motor.position
+        # self.attr_vertical_position_read = self.motor.vertical_position
+        self.prev_horizontal_position = 0
+        self.object_present = True
 
         self.set_state(PyTango.DevState.ON)
 
@@ -160,7 +164,7 @@ class Tomograph (PyTango.Device_4Impl):
         self.debug_stream("In read_angle_position()")
         #----- PROTECTED REGION ID(Tomograph.angle_position_read) ENABLED START -----#
 
-        self.attr_angle_position_read = self.motor.angle_position
+        self.attr_angle_position_read = self.angle_motor.position
         attr.set_value(self.attr_angle_position_read)
         
         #----- PROTECTED REGION END -----#  //  Tomograph.angle_position_read
@@ -170,7 +174,7 @@ class Tomograph (PyTango.Device_4Impl):
         data=attr.get_write_value()
         #----- PROTECTED REGION ID(Tomograph.angle_position_write) ENABLED START -----#
 
-        self.motor.angle_position = data
+        self.angle_motor.position = data
         
         #----- PROTECTED REGION END -----#  //  Tomograph.angle_position_write
         
@@ -178,7 +182,7 @@ class Tomograph (PyTango.Device_4Impl):
         self.debug_stream("In read_horizontal_position()")
         #----- PROTECTED REGION ID(Tomograph.horizontal_position_read) ENABLED START -----#
 
-        self.attr_horizontal_position_read = self.motor.horizontal_position
+        self.attr_horizontal_position_read = self.horizontal_motor.position
         attr.set_value(self.attr_horizontal_position_read)
         
         #----- PROTECTED REGION END -----#  //  Tomograph.horizontal_position_read
@@ -188,7 +192,7 @@ class Tomograph (PyTango.Device_4Impl):
         data=attr.get_write_value()
         #----- PROTECTED REGION ID(Tomograph.horizontal_position_write) ENABLED START -----#
 
-        self.motor.horizontal_position = data
+        self.horizontal_motor.position = data
         
         #----- PROTECTED REGION END -----#  //  Tomograph.horizontal_position_write
         
@@ -196,7 +200,7 @@ class Tomograph (PyTango.Device_4Impl):
         self.debug_stream("In read_vertical_position()")
         #----- PROTECTED REGION ID(Tomograph.vertical_position_read) ENABLED START -----#
 
-        self.attr_vertical_position_read = self.motor.vertical_position
+        # self.attr_vertical_position_read = self.motor.vertical_position
         attr.set_value(self.attr_vertical_position_read)
         
         #----- PROTECTED REGION END -----#  //  Tomograph.vertical_position_read
@@ -206,7 +210,7 @@ class Tomograph (PyTango.Device_4Impl):
         data=attr.get_write_value()
         #----- PROTECTED REGION ID(Tomograph.vertical_position_write) ENABLED START -----#
 
-        self.motor.vertical_position = data
+        # self.motor.vertical_position = data
 
         #----- PROTECTED REGION END -----#  //  Tomograph.vertical_position_write
         
@@ -259,10 +263,11 @@ class Tomograph (PyTango.Device_4Impl):
         self.debug_stream("In SelfTest()")
         #----- PROTECTED REGION ID(Tomograph.SelfTest) ENABLED START -----#
 
-        self.motor.ping()
         self.source.ping()
         self.shutter.ping()
         self.detector.ping()
+        self.angle_motor.ping()
+        self.horizontal_motor.ping()
 
         #----- PROTECTED REGION END -----#  //  Tomograph.SelfTest
         
@@ -277,10 +282,11 @@ class Tomograph (PyTango.Device_4Impl):
         argout = ''
         #----- PROTECTED REGION ID(Tomograph.MotorStatus) ENABLED START -----#
 
-        motor_data = {'state': str(self.motor.State()),
-                      'horizontal position': self.motor.horizontal_position,
-                      'vertical position': self.motor.vertical_position,
-                      'angle position': self.motor.angle_position}
+        motor_data = {'angle_motor_state': str(self.angle_motor.State()),
+                      'horizontal_motor_state': str(self.horizontal_motor.State()),
+                      'horizontal position': self.horizontal_motor.position,
+                      # 'vertical position': self.motor.vertical_position,
+                      'angle position': self.angle_motor.position}
 
         json_data = json.dumps(motor_data)
         argout = json_data
@@ -297,7 +303,7 @@ class Tomograph (PyTango.Device_4Impl):
         :rtype: PyTango.DevVoid """
         self.debug_stream("In ResetAnglePosition()")
         #----- PROTECTED REGION ID(Tomograph.ResetAnglePosition) ENABLED START -----#
-        self.motor.ResetAnglePosition()
+        self.angle_motor.SetZero()
         #----- PROTECTED REGION END -----#  //  Tomograph.ResetAnglePosition
         
     def XRaySourceStatus(self):
@@ -435,11 +441,13 @@ class Tomograph (PyTango.Device_4Impl):
         current_datetime = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
         detector_data = {'model': 'Ximea xiRAY'}
-        image_data = {'exposure': exposure, 'datetime': current_datetime, 'detector': detector_data} #'image': image, 
-        object_data = {'present': self.motor.horizontal_position < 4000,  # TODO
-                       'angle position': self.motor.angle_position,
-                       'horizontal position': self.motor.horizontal_position,
-                       'vertical position': self.motor.vertical_position}
+        image_data = {'exposure': exposure, 'datetime': current_datetime, 'detector': detector_data,
+                      'chip_temp': self.detector.chip_temp, 'hous_temp': self.detector.hous_temp} # 'image': image,
+        object_data = {'present': self.object_present,
+                       'angle position': self.angle_motor.position,
+                       'horizontal position': self.horizontal_motor.position,
+                       # 'vertical position': self.motor.vertical_position
+                       }
         shutter_data = {'open': self.shutter.State() == PyTango.DevState.OPEN}
         source_data = {'voltage': self.source.voltage, 'current': self.source.current}
 
@@ -460,7 +468,10 @@ class Tomograph (PyTango.Device_4Impl):
         :rtype: PyTango.DevVoid """
         self.debug_stream("In MoveAway()")
         #----- PROTECTED REGION ID(Tomograph.MoveAway) ENABLED START -----#
-        self.motor.horizontal_position = -4200
+        if self.object_present:
+            self.prev_horizontal_position = self.horizontal_motor.position
+            self.horizontal_motor.position = -4200
+            self.object_present = False
         #----- PROTECTED REGION END -----#  //  Tomograph.MoveAway
         
     def MoveBack(self):
@@ -472,7 +483,9 @@ class Tomograph (PyTango.Device_4Impl):
         :rtype: PyTango.DevVoid """
         self.debug_stream("In MoveBack()")
         #----- PROTECTED REGION ID(Tomograph.MoveBack) ENABLED START -----#
-        self.motor.horizontal_position = 0
+        if not self.object_present:
+            self.horizontal_motor.position = self.prev_horizontal_position
+            self.object_present = True
         #----- PROTECTED REGION END -----#  //  Tomograph.MoveBack
         
 

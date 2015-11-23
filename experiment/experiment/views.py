@@ -252,6 +252,14 @@ def shutter_open(tomo_num, time):
     return tomograph.open_shutter(time)
 
 
+@app.route('/tomograph/<int:tomo_num>/shutter/state', methods=['GET'])
+def shutter_state(tomo_num):
+    logger.info('\n\nREQUEST: SHUTTER/STATE')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+    return tomograph.shutter_state(time)
+
+
 @app.route('/tomograph/<int:tomo_num>/shutter/close/<int:time>', methods=['GET'])
 def shutter_close(tomo_num, time):
     logger.info('\n\nREQUEST: SHUTTER/CLOSE')
@@ -364,6 +372,21 @@ def detector_get_frame(tomo_num):
         return response_if_fail
 
     return tomograph.get_frame(exposure)
+
+
+@app.route('/tomograph/<int:tomo_num>/detector/chip_temp', methods=['GET'])
+def detector_get_chip_temperature(tomo_num):
+    logger.info('\n\nREQUEST: DETECTOR/GET CHIP TEMPERATURE')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    return tomograph.get_detector_chip_temperature(tomo_num)
+
+@app.route('/tomograph/<int:tomo_num>/detector/hous_temp', methods=['GET'])
+def detector_get_hous_temperature(tomo_num):
+    logger.info('\n\nREQUEST: DETECTOR/GET HOUS TEMPERATURE')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    return tomograph.get_detector_hous_temperature(tomo_num)
+
+
 
 
 #---------------------------------------------------------#

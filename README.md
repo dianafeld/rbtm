@@ -1,21 +1,10 @@
-# rbtm
-desc
-
-
-109.234.34.140
+# ROBO-TOM
+A service-oriented web application for carrying out computed tomography experiments with data processing (numpy, scipy) and visualization. Currently used in the laboratory in Institute of Crystallograhy. The system enables multiple users to take CT scans, store (mongoDB, HDF5) and browse collected imagery via a web-based UI (Django, Flask) operating on top of a TANGO-based network interface to CT hardware.
 
 http://109.234.38.83/
 
+Test login: test_experimentator
 
-### Полезные команды
-ssh -T -N -g -R 5001:10.0.3.104:5001 mardanov@109.234.34.140
+Test password: test_experimentator
 
-docker-compose build && docker-compose up
-docker exec -i -t storage_server_1 /bin/bash
-
-mongorestore --drop storage_mongodump_clean/
-
-Delete all containers
-docker rm $(docker ps -a -q)
-Delete all images
-docker rmi $(docker images -q)
+Documentation: http://rbtm.readthedocs.org/
