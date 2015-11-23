@@ -25,14 +25,11 @@ from PyTango import ExtractAs
 import pylab as plt
 from flask import send_file
 
-from conf import STORAGE_FRAMES_URI
-from conf import STORAGE_EXP_FINISH_URI
-from conf import WEBPAGE_URI
 from conf import TIMEOUT_MILLIS
 from conf import FRAME_PNG_FILENAME
 from experiment import app
 
-from experiment_with_exceptions import *
+from experiment_class import *
 
 
 logger = app.logger
@@ -51,7 +48,7 @@ def try_thrice_function(error_str, func, args=()):
     :return:
     """
     if type(args) not in (tuple, list):
-    	args = tuple(args)
+        args = (args,)
     exception_message = ''
     for i in range(0, 3):
         try:
@@ -67,7 +64,7 @@ def try_thrice_function(error_str, func, args=()):
         else:
             return answer
     raise ModExpError(error=error_str, exception_message=exception_message)
-
+    
 class Tomograph:
     """ Wrapper of interaction with Tango tomograph server"""
     tomograph_proxy = None
@@ -125,66 +122,13 @@ class Tomograph:
             else:
                 return set_value
         raise ModExpError(error=error_str, exception_message=exception_message)
-	'''
-    def send_event_to_storage_webpage(self, storage_uri, event_dict, send_to_webpage=True):
-        """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
-            'event_dict' must be dictionary with format that is returned by  'create_event()'
-
-        :arg:  'event_dict' - event (message (for storage and web-page of adjustment) or frame with some data),
-                              must be dictionary with format that is returned by  'create_event()'
-               'send_to_webpage' - boolean; if False, it sends event to only storage;
-                                   if False it sends also to web-page of adjustment
-        :return: success of sending, type is bool"""
-        success = False
-        exception_message = ''
-        exp_id = event_dict['exp_id']
-        event_dict_for_storage = event_dict
-        if event_dict['type'] == 'frame':
-            image_numpy = event_dict['frame']['image_data']['image']
-            del (event_dict['frame']['image_data']['image'])
-            event_dict_for_storage = copy.deepcopy(event_dict)
-
-            event_dict = event_dict
-            event_dict['frame']['image_data']['image'] = image_numpy
-
-            s = StringIO()
-
-            np.savez_compressed(s, frame_data=image_numpy)
-            s.seek(0)
-            data = {'data': json.dumps(event_dict_for_storage)}
-            files = {'file': s}
-            success, exception_message = send_to_storage(storage_uri, data, files)
-
-        else:
-            event_json_for_storage = json.dumps(event_dict_for_storage)
-            success, exception_message = send_to_storage(storage_uri, data=event_json_for_storage)
-        if not success:
-            exp_emergency_event = create_event(type='message', exp_id=exp_id, MoF='Experiment was emergency stopped',
-                                               exception_message=exception_message, error='Problems with storage')
-
-            logger.info('\nEXPERIMENT IS EMERGENCY STOPPED!!!\n')
-            self.experiment_is_running = False
-            self.exp_id = ''
-            logger.info('Sending to web page about problems with storage storage...')
-            send_event_to_webpage(exp_emergency_event)
-        # commented 27.07.15 for tests with real storage, because converting to png file in
-        # function 'send_event_to_webpage()' takes a lot of time
-        """
-        else:
-            if send_to_webpage == True:
-                send_event_to_webpage(event_dict)
-        """
-
-        return success
-	'''
 
     def basic_tomo_check(self, from_experiment):
         if not from_experiment:
-        	if self.current_experiment != None:
-            	raise ModExpError(error='On this tomograph experiment is running')
-
+            if self.current_experiment != None:
+                raise ModExpError(error='On this tomograph experiment is running')
         else:
-        	if self.current_experiment.to_be_stopped == True:
+            if self.current_experiment.to_be_stopped == True:
                 raise ModExpError(error=self.current_experiment.reason_of_stop, type_of_stop=SOMEONE_STOP_MSG)
 
 
@@ -225,7 +169,7 @@ class Tomograph:
 
         self.basic_tomo_check(from_experiment)
 
-        status = try_thrice_function(func=tself.tomograph_proxy.ShutterStatus, args=time,
+        status = try_thrice_function(func=self.tomograph_proxy.ShutterStatus, args=time,
         							 error_str='Could not get shutter status')
 
         logger.info('Shutter return status successfully!')
@@ -236,91 +180,91 @@ class Tomograph:
 	######################################## (14.11.15  10:37)
 	########## One needs to look at checking types of arguments, which go to Tango-tomograph functions
 	##############################
-
-	def source_power_on(self):
+    
+    def source_power_on(self):
         """
         :arg:
         :return:
         """
-	    logger.info('Powering on source...')
-    	self.basic_tomo_check(from_experiment=False)
+        logger.info('Powering on source...')
+        self.basic_tomo_check(from_experiment=False)
 
         try_thrice_function(func=self.tomograph_proxy.PowerOn,
         					error_str='Could not power on source')
-	    logger.info('Source was powered ON!')
+        logger.info('Source was powered ON!')
 
-	def source_power_off(self):
+    def source_power_off(self):
         """
         :arg:
         :return:
         """
-	    logger.info('Powering off source...')
-    	self.basic_tomo_check(from_experiment=False)
+        logger.info('Powering off source...')
+        self.basic_tomo_check(from_experiment=False)
 
         try_thrice_function(func=self.tomograph_proxy.PowerOff,
         					error_str='Could not power off source')
-	    logger.info('Source was powered OFF!')
+        logger.info('Source was powered OFF!')
 
 	def source_set_voltage(self, new_voltage):
 	    logger.info('Going to set voltage on source...')
     	self.basic_tomo_check(from_experiment=False)
 
-	    logger.info('Checking format...')
-	    if type(new_voltage) is not float:
-	        logger.info('Incorrect format! Voltage type must be float, but it is ' + str(type(new_voltage)))
+        logger.info('Checking format...')
+        if type(new_voltage) is not float: 
+            logger.info('Incorrect format! Voltage type must be float, but it is ' + str(type(new_voltage)))  
             raise ModExpError(error='Incorrect format: type must be float')
 
 	    # TO DELETE THIS LATER
-	    logger.info('Format is correct, new voltage value is %.1f...' % (new_voltage))
-	    if new_voltage < 2 or 60 < new_voltage:
+        logger.info('Format is correct, new voltage value is %.1f...' % (new_voltage))
+        if new_voltage < 2 or 60 < new_voltage:
             raise ModExpError(error='Voltage must have value from 2 to 60!')
 
-	    logger.info('Parameters are normal, setting new voltage...')
+        logger.info('Parameters are normal, setting new voltage...')
         set_voltage = self.try_thrice_change_attr("xraysource_voltage", new_voltage,
         										  error_str='Could not set voltage')
+        
+        logger.info('New value of voltage was set!')
 
-	    logger.info('New value of voltage was set!')
-
-	def source_set_current(tomo_num, current):
+	def source_set_current(self, current):
 	    logger.info('Going to set current on source...')
     	self.basic_tomo_check(from_experiment=False)
 
-	    logger.info('Checking format...')
-	    if type(current) is not float:
-	        logger.info('Incorrect format! Current type must be float, but it is ' + str(type(current)))
+        logger.info('Checking format...')
+        if type(current) is not float:
+            logger.info('Incorrect format! Current type must be float, but it is ' + str(type(current)))
             raise ModExpError(error='Incorrect format: type must be float')
 
 	    # TO DELETE THIS LATER
-	    logger.info('Format is correct, new current value is %.1f...' % (current))
-	    if current < 2 or 80 < current:
+        logger.info('Format is correct, new current value is %.1f...' % (current))
+        if current < 2 or 80 < current:
             raise ModExpError(error='Current must have value from 2 to 80!')
 
-	    logger.info('Parameters are normal, setting new current...')
+        logger.info('Parameters are normal, setting new current...')
         set_current = self.try_thrice_change_attr("xraysource_current", current,
         										  error_str='Could not set current')
 
-	    logger.info('New value of current was set!')
+        logger.info('New value of current was set!')
 
-	def source_get_voltage(tomo_num):
+	def source_get_voltage(self):
 	    logger.info('Going to get voltage...')
     	self.basic_tomo_check(from_experiment=False)
 
         voltage_attr = self.try_thrice_read_attr("xraysource_voltage",
 										   		 error_str='Could not get voltage')
 
-	    voltage = voltage_attr.value
-	    logger.info("Voltage is %.2f" % voltage)
-	    return voltage
+        voltage = voltage_attr.value
+        logger.info("Voltage is %.2f" % voltage)
+        return voltage
 
-	def source_get_current(tomo_num):
+	def source_get_current(self):
 	    logger.info('Going to get current...')
     	self.basic_tomo_check(from_experiment=False)
 
         current_attr = self.try_thrice_read_attr("xraysource_current",
 										   		 error_str='Could not get current')
-	    current = current_attr.value
-	    logger.info("Current is %.2f" % current)
-	    return current
+        current = current_attr.value
+        logger.info("Current is %.2f" % current)
+        return current
 
 
 
@@ -407,7 +351,7 @@ class Tomograph:
         x_attr = self.try_thrice_read_attr("horizontal_position",
 										   error_str='Could not get position because of tomograph')
 
-		x_value = x_attr.value
+        x_value = x_attr.value
         logger.info('Horizontal position is %d' % x_value)
         return x_value
 
@@ -423,7 +367,7 @@ class Tomograph:
         y_attr = self.try_thrice_read_attr("vertical_position",
         								   error_str='Could not get position because of tomograph')
 
-		y_value = y_attr.value
+        y_value = y_attr.value
         logger.info('Vertical position is %d' % y_value)
         return y_value
 
@@ -440,7 +384,7 @@ class Tomograph:
         angle_attr = self.try_thrice_read_attr("angle_position",
         										error_str='Could not get position because of tomograph')
 
-		angle_value = angle_attr.value
+        angle_value = angle_attr.value
         logger.info('Angle position is %.2f' % angle_value)
         return angle_value
 
@@ -568,3 +512,17 @@ class Tomograph:
         experiment_time = time.time() - time_of_experiment_start
         logger.info("Experiment took %.4f seconds" % experiment_time)
 
+
+    def call_method_create_response(self, method, args=(), GET_FRAME_method=False):
+        if type(args) not in (tuple, list):
+            args = (args,)
+        try:
+            result = method(*args)
+        except ModExpError as e:
+            e.log()
+            return e.create_response()
+        except Exception as e:
+            try:
+                return create_response(success=False, error="unexpected exception", exception_message=e.message)
+            except Exception as e2:
+                return create_response(success=False, error="unexpected exception")

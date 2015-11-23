@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-created for refactoring using class 'Message' and exceptions
+created for refactoring using exceptions
 
 Contains the main part of module "Experiment"
 More exactly - some supporting functions and functions for receiving queries
@@ -16,9 +16,8 @@ from flask import Response
 from flask import make_response
 
 from tomograph import Tomograph
-from tomograph import create_event
-from tomograph import create_response
-from tomograph import send_to_storage
+from tomograph import Tomograph
+from experiment_class import *
 from conf import STORAGE_FRAMES_URI
 from conf import STORAGE_EXP_START_URI
 from conf import TOMO_ADDR
@@ -56,12 +55,16 @@ def check_request(request_data):
         logger.info('Request has JSON data!')
         return True, request_data_dict, ''
 
-def call_method_create_response(method, args=(), GET_FRAME_method=False):
+def call_method_create_response(tomo_num, method_name, args=(), GET_FRAME_method=False):
     if type(args) not in (tuple, list):
-        args = tuple(args)
+        args = (args,)
+
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+
     try:
-        result = func(*args)
-    except Tomograph.TomoError as e:
+        result = getattr(tomograph, method_name)(*args)
+    except ModExpError as e:
         e.log()
         return e.create_response()
     except Exception as e:
@@ -95,9 +98,9 @@ def check_state(tomo_num):
     if not success:
         logger.info("Tomograph is unavailable")
         logger.info(exception_message)
-        return create_response(True, exception_message, result="unavailable")
+        return create_response(success=True, exception_message=exception_message, result="unavailable")
 
-    if tomograph.experiment_is_running:
+    if tomograph.current_experiment != None:
         logger.info("Tomograph is available; experiment IS running")
         return create_response(success=True, result="experiment")
     else:
@@ -108,17 +111,13 @@ def check_state(tomo_num):
 @app.route('/tomograph/<int:tomo_num>/source/power-on', methods=['GET'])
 def source_power_on(tomo_num):
     logger.info('\n\nREQUEST: SOURCE/POWER ON')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return call_method_create_response(tomograph.source_power_on)
+    return call_method_create_response(tomo_num, method_name='source_power_on')
 
 # NEED TO EDIT(GENERALLY)
 @app.route('/tomograph/<int:tomo_num>/source/power-off', methods=['GET'])
 def source_power_off(tomo_num):
     logger.info('\n\nREQUEST: SOURCE/POWER OFF')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return call_method_create_response(tomograph.source_power_off)
+    return call_method_create_response(tomo_num, method_name='source_power_off')
 
 
 # ---------------------------------------------------------#
@@ -129,65 +128,45 @@ def source_power_off(tomo_num):
 @app.route('/tomograph/<int:tomo_num>/source/set-voltage', methods=['POST'])
 def source_set_voltage(tomo_num):
     logger.info('\n\nREQUEST: SOURCE/SET VOLTAGE')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
     success, new_voltage, response_if_fail = check_request(request.data)
     if not success:
         return response_if_fail
+    return call_method_create_response(tomo_num, method_name='source_set_voltage', args=new_voltage)
 
-    return call_method_create_response(tomograph.source_set_voltage, new_voltage)
 
 @app.route('/tomograph/<int:tomo_num>/source/set-current', methods=['POST'])
 def source_set_current(tomo_num):
     logger.info('\n\nREQUEST: SOURCE/SET CURRENT')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-    success, current, response_if_fail = check_request(request.data)
+    success, new_current, response_if_fail = check_request(request.data)
     if not success:
         return response_if_fail
-
-    return call_method_create_response(tomograph.source_set_current, current)
+    return call_method_create_response(tomo_num, method_name='source_set_current', args=new_current)
 
 
 @app.route('/tomograph/<int:tomo_num>/source/get-voltage', methods=['GET'])
 def source_get_voltage(tomo_num):
     logger.info('\n\nREQUEST: SOURCE/GET VOLTAGE')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return call_method_create_response(tomograph.source_get_voltage)
+    return call_method_create_response(tomo_num, method_name='source_get_voltage')
 
 @app.route('/tomograph/<int:tomo_num>/source/get-current', methods=['GET'])
 def source_get_current(tomo_num):
     logger.info('\n\nREQUEST: SOURCE/GET CURRENT')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return call_method_create_response(tomograph.source_get_current)
-
-
-
+    return call_method_create_response(tomo_num, method_name='source_get_current')
 
 @app.route('/tomograph/<int:tomo_num>/shutter/open/<int:time>', methods=['GET'])
 def shutter_open(tomo_num, time):
     logger.info('\n\nREQUEST: SHUTTER/OPEN')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return call_method_create_response(tomograph.open_shutter, time)
+    return call_method_create_response(tomo_num, method_name='open_shutter', args=time)
 
 @app.route('/tomograph/<int:tomo_num>/shutter/close/<int:time>', methods=['GET'])
 def shutter_close(tomo_num, time):
     logger.info('\n\nREQUEST: SHUTTER/CLOSE')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return call_method_create_response(tomograph.close_shutter, time)
+    return call_method_create_response(tomo_num, method_name='close_shutter', args=time)
 
 @app.route('/tomograph/<int:tomo_num>/shutter/state', methods=['GET'])
 def shutter_state(tomo_num):
     logger.info('\n\nREQUEST: SHUTTER/STATE')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return call_method_create_response(tomograph.shutter_state, time)
+    return call_method_create_response(tomo_num, method_name='shutter_state')
 
 
 
@@ -195,98 +174,71 @@ def shutter_state(tomo_num):
 @app.route('/tomograph/<int:tomo_num>/motor/set-horizontal-position', methods=['POST'])
 def motor_set_horizontal_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/SET HORIZONTAL POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
     success, new_pos, response_if_fail = check_request(request.data)
     if not success:
         return response_if_fail
-
-    return call_method_create_response(tomograph.set_x, new_pos)
+    return call_method_create_response(tomo_num, method_name='set_x', args=new_pos)
 
 @app.route('/tomograph/<int:tomo_num>/motor/set-vertical-position', methods=['POST'])
 def motor_set_vertical_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/SET VERTICAL POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
     success, new_pos, response_if_fail = check_request(request.data)
     if not success:
         return response_if_fail
-
-    return call_method_create_response(tomograph.set_y, new_pos)
+    return call_method_create_response(tomo_num, method_name='set_y', args=new_pos)
 
 @app.route('/tomograph/<int:tomo_num>/motor/set-angle-position', methods=['POST'])
 def motor_set_angle_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/SET ANGLE POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
     success, new_pos, response_if_fail = check_request(request.data)
     if not success:
         return response_if_fail
-
-    return call_method_create_response(tomograph.set_angle, new_pos)
+    return call_method_create_response(tomo_num, method_name='set_angle', args=new_pos)
 
 
 
 @app.route('/tomograph/<int:tomo_num>/motor/get-horizontal-position', methods=['GET'])
 def motor_get_horizontal_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/GET HORIZONTAL POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return call_method_create_response(tomograph.get_x)
+    return call_method_create_response(tomo_num, method_name='get_x')
 
 @app.route('/tomograph/<int:tomo_num>/motor/get-vertical-position', methods=['GET'])
 def motor_get_vertical_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/GET VERTICAL POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return call_method_create_response(tomograph.get_y)
+    return call_method_create_response(tomo_num, method_name='get_y')
 
 @app.route('/tomograph/<int:tomo_num>/motor/get-angle-position', methods=['GET'])
 def motor_get_angle_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/GET ANGLE POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return call_method_create_response(tomograph.get_angle)
+    return call_method_create_response(tomo_num, method_name='get_angle')
 
 
 
 @app.route('/tomograph/<int:tomo_num>/motor/move-away', methods=['GET'])
 def motor_move_away(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/MOVE AWAY')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return call_method_create_response(tomograph.move_away)
+    return call_method_create_response(tomo_num, method_name='move_away')
+
 
 @app.route('/tomograph/<int:tomo_num>/motor/move-back', methods=['GET'])
 def motor_move_back(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/MOVE BACK')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return call_method_create_response(tomograph.move_back)
+    return call_method_create_response(tomo_num, method_name='move_back')
 
 @app.route('/tomograph/<int:tomo_num>/motor/reset-angle-position', methods=['GET'])
 def motor_reset_angle_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/RESET ANGLE POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return call_method_create_response(tomograph.reset_to_zero_angle)
-
+    return call_method_create_response(tomo_num, method_name='reset_to_zero_angle')
 
 
 
 @app.route('/tomograph/<int:tomo_num>/detector/get-frame', methods=['POST'])
 def detector_get_frame(tomo_num):
     logger.info('\n\nREQUEST: DETECTOR/GET FRAME')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
     success, exposure, response_if_fail = check_request(request.data)
     if not success:
         return response_if_fail
-
-    return call_method_create_response(tomograph.get_frame, exposure, GET_FRAME_method=True)
+    return call_method_create_response(tomo_num, method_name='get_frame', args=exposure, GET_FRAME_method=True)
 
 
 #---------------------------------------------------------#
@@ -415,7 +367,7 @@ def experiment_start(tomo_num):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
-    if tomograph.experiment_is_running:
+    if tomograph.current_experiment != None:
         error = 'On this tomograph experiment is running'
         logger.info(error)
         return create_response(success=False, error=error)
@@ -529,4 +481,3 @@ def internal_server_error(exception):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
-'''

@@ -16,10 +16,7 @@ from StringIO import StringIO
 import time
 from scipy.ndimage import zoom
 
-import PyTango
-from PyTango import ExtractAs
 import pylab as plt
-from flask import send_file
 
 from conf import STORAGE_FRAMES_URI
 from conf import STORAGE_EXP_FINISH_URI
@@ -27,9 +24,6 @@ from conf import WEBPAGE_URI
 from conf import TIMEOUT_MILLIS
 from conf import FRAME_PNG_FILENAME
 from experiment import app
-from tomograph import Tomograph
-from tomograph import send_frame_to_storage_webpage
-from tomograph import send_message_to_storage_webpage
 
 
 logger = app.logger
@@ -53,7 +47,6 @@ def create_response(success=True, exception_message='', error='', result=None):
         'result': result,
     }
     return json.dumps(response_dict)
-
 
 def create_event(type, exp_id, MoF, exception_message='', error=''):
     # MoF - Message or Frame
@@ -92,6 +85,7 @@ def create_event(type, exp_id, MoF, exception_message='', error=''):
     return None
 
 
+
 def frame_to_png(frame_dict, png_filename=FRAME_PNG_FILENAME):
     """ Takes 2-dimensional numpy array and creates png file from it
 
@@ -111,6 +105,7 @@ def frame_to_png(frame_dict, png_filename=FRAME_PNG_FILENAME):
 
     logger.info("Image was converted!")
     return True, None
+
 
 
 def send_event_to_webpage(event_dict):
@@ -158,7 +153,6 @@ def send_event_to_webpage(event_dict):
         else:
             logger.info(req_webpage.content)
 
-
 def send_to_storage(storage_uri, data, files=None):
     """ Sends  to storage
 
@@ -201,7 +195,6 @@ def send_to_storage(storage_uri, data, files=None):
 
         return True, ''
 
-
 def send_message_to_storage_webpage(event_dict):        
     """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
         'event_dict' must be dictionary with format that is returned by  'create_event()'
@@ -241,6 +234,8 @@ def send_frame_to_storage_webpage(frame_metadata_dict, image_numpy, send_to_webp
                 send_event_to_webpage(frame_dict)
         #return success
 
+
+
 class ModExpError(Exception):
     exception_message = ""
     type_of_stop = EMERGENCY_STOP_MSG
@@ -272,7 +267,7 @@ class ModExpError(Exception):
         else:
             logger.info("ERROR:")
 
-        if type_of_stop == EMERGENCY_STOP_MSG:
+        if self.type_of_stop == EMERGENCY_STOP_MSG:
             logger.info("   " + self.error)
             logger.info("   " + self.exception_message)
         else:
@@ -373,6 +368,4 @@ class Experiment:
 
         logger.info('Finished with DATA images!\n')
         return
-   
 
-print 1
