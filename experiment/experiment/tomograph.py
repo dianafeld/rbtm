@@ -1089,3 +1089,89 @@ class Tomograph:
                 return response_if_fail
             else:
                 return send_file('../' + FRAME_PNG_FILENAME, mimetype='image/png')
+#-----------------------------------------------------------------------------------------------
+
+
+    def try_thrice_read_attr_detector(self, attr_name, extract_as=ExtractAs.Numpy):
+        """ Try to read some attribute of Tango device three times
+
+        :arg: 'attr_name' - type is string
+              'extract-as' - method of extraction
+
+        :return: list of 3 elements,
+                 1 - success of reading attribute, type is bool
+                 2 - value of attribute, type is type of attribute
+                 3 - exception message in case of fail (empty string in case of success), type is string
+        """
+        success = True
+        exception_message = ''
+        for i in range(0, 3):
+            try:
+                attr = self.detector_proxy.read_attribute(attr_name, extract_as)
+            except PyTango.DevFailed as e:
+                success = False
+                exception_message = e[-1].desc
+                attr = None
+            else:
+                break
+        return success, attr, exception_message
+
+    def get_detector_chip_temperature(self, exp_is_advanced=True):
+        logger.info('Going to get detector chip temperature...')
+
+        if not self.exp_id and self.experiment_is_running:
+            error = 'On this tomograph experiment is running'
+            logger.info(error)
+            return create_response(success=False, error=error)
+
+        if self.exp_id and not self.experiment_is_running:
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
+
+        success, y_attr, exception_message = self.try_thrice_read_attr_detector("chip_temp")
+        if success == False:
+            error = 'Could not get temperature because of tomograph'
+            logger.info(exception_message)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id,
+                                           exception_message=exception_message, error=error)
+                return False, None
+            else:
+                return create_response(success, exception_message, error=error)
+
+        y_value = y_attr.value
+        logger.info('Chip temperature is %.2f' % y_value)
+        if self.exp_id:
+            return True, y_value
+        else:
+            return create_response(success=True, result=y_value)
+
+    def get_detector_hous_temperature(self, exp_is_advanced=True):
+        logger.info('Going to get detector hous temperature...')
+
+        if not self.exp_id and self.experiment_is_running:
+            error = 'On this tomograph experiment is running'
+            logger.info(error)
+            return create_response(success=False, error=error)
+
+        if self.exp_id and not self.experiment_is_running:
+            self.stop_experiment_because_someone(exp_is_advanced)
+            return False
+
+        success, y_attr, exception_message = self.try_thrice_read_attr_detector("hous_temp")
+        if success == False:
+            error = 'Could not get temperature because of tomograph'
+            logger.info(exception_message)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id,
+                                           exception_message=exception_message, error=error)
+                return False, None
+            else:
+                return create_response(success, exception_message, error=error)
+
+        y_value = y_attr.value
+        logger.info('Hous temperature is %.2f' % y_value)
+        if self.exp_id:
+            return True, y_value
+        else:
+            return create_response(success=True, result=y_value)
