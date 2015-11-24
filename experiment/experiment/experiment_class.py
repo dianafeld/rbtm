@@ -1,9 +1,8 @@
 #!/usr/bin/python
 
-""" 
-created for refactoring using class 'Message' and exceptions
-
-Contains class "Experiment" """
+"""
+Contains class 'Experiment', for storing information about experiment during time it runs
+"""
 # NEED TO EDIT DOCSTRINGS!
 # NEED TO EDIT DOCSTRINGS!
 # Need to look at checking types of arguments, which go to Tango-tomograph functions

@@ -1,8 +1,6 @@
 #!/usr/bin/python
 
 """
-created for refactoring using exceptions
-
 Contains the main part of module "Experiment"
 More exactly - some supporting functions and functions for receiving queries
 """
@@ -90,20 +88,8 @@ def check_state(tomo_num):
     logger.info('\n\nREQUEST: CHECK STATE')
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-    logger.info('Checking tomograph...')
-    try:
-        try_thrice_function(func=tomograph.tomograph_proxy.ping, error_str="Tomograph is unavailable")
-    except ModExpError as e:
-        e.log()
-        return create_response(success=True, exception_message=exception_message, result="unavailable")
-
-    if tomograph.current_experiment != None:
-        logger.info("Tomograph is available; experiment IS running")
-        return create_response(success=True, result="experiment")
-    else:
-        logger.info("Tomograph is available; experiment is NOT running")
-        return create_response(success=True, result="ready")
+    tomo_state, exception_message = tomograph.tomo_state()
+    return create_response(success=True, result=tomo_state, exception_message=exception_message)
 
 # NEED TO EDIT(GENERALLY)
 @app.route('/tomograph/<int:tomo_num>/source/power-on', methods=['GET'])
@@ -366,11 +352,6 @@ def experiment_start(tomo_num):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
-    if tomograph.current_experiment != None:
-        error = 'On this tomograph experiment is running'
-        logger.info(error)
-        return create_response(success=False, error=error)
-
     success, data, response_if_fail = check_request(request.data)
     if not success:
         return response_if_fail
@@ -383,23 +364,30 @@ def experiment_start(tomo_num):
     if not ((type(data['experiment parameters']) is dict) and (type(data['exp_id']) is unicode)):
         logger.info('Incorrect format of types!')
         return create_response(success=False, error='Incorrect format: incorrect types')
-
     logger.info('Generous format is normal!')
+    
     exp_param = data['experiment parameters']
-    exp_id = data['exp_id']
-    exp_param['exp_id'] = exp_id
+    exp_param['exp_id'] = data['exp_id']
 
     logger.info('Checking parameters...')
     success, error = check_and_prepare_exp_parameters(exp_param)
     if not success:
         logger.info(error)
         return create_response(success=success, error=error)
-
     logger.info('Parameters are normal!')
+
+    tomo_state, exception_message = tomograph.tomo_state()
+    if tomo_state == 'unavailable':
+        return create_response(success=False, error="Could not connect with tomograph", exception_message=exception_message)
+    if tomo_state == 'experiment':
+        return create_response(success=False, error="On this tomograph experiment is running")
+    if tomo_state != 'ready':
+        return create_response(success=False, error="Undefined tomograph state")
+
     logger.info('Sending to storage leading to prepare...')
     success, exception_message = send_to_storage(STORAGE_EXP_START_URI, data=request.data)
-#    if not success:
- #       return create_response(success=False, exception_message=exception_message, error='Problems with storage')
+    if not success:
+        return create_response(success=False, exception_message=exception_message, error='Problems with storage')
 
     '''
     logger.info('Experiment begins!')

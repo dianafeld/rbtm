@@ -1,9 +1,8 @@
 #!/usr/bin/python
 
 """ 
-created for refactoring using class 'Message' and exceptions
-
-Contains supporting functions and class "Tomograph" with methods for comfortable interaction with tomograph """
+Contains supporting functions and class "Tomograph" with methods for comfortable interaction with tomograph
+"""
 # NEED TO EDIT DOCSTRINGS!
 # NEED TO EDIT DOCSTRINGS!
 # NEED TO EDIT DOCSTRINGS!
@@ -113,6 +112,24 @@ class Tomograph:
             else:
                 return set_value
         raise ModExpError(error=error_str, exception_message=exception_message)
+
+    def tomo_state(self):
+        logger.info('Checking tomograph...')
+        try:
+            try_thrice_function(func=self.tomograph_proxy.ping, error_str="Tomograph is unavailable")
+        except ModExpError as e:
+            e.log()
+            return 'unavailable', e.exception_message
+            #return create_response(success=True, exception_message=exception_message, result=)
+
+        if self.current_experiment != None:
+            logger.info("Tomograph is available; experiment IS running")
+            return 'experiment', ""
+            #return create_response(success=True, result="experiment")
+        else:
+            logger.info("Tomograph is available; experiment is NOT running")
+            return 'ready', ""
+            #return create_response(success=True, result="ready")
 
     def basic_tomo_check(self, from_experiment):
         if not from_experiment:
