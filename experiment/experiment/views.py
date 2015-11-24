@@ -365,7 +365,7 @@ def experiment_start(tomo_num):
         logger.info('Incorrect format of types!')
         return create_response(success=False, error='Incorrect format: incorrect types')
     logger.info('Generous format is normal!')
-    
+
     exp_param = data['experiment parameters']
     exp_param['exp_id'] = data['exp_id']
 
@@ -379,9 +379,9 @@ def experiment_start(tomo_num):
     tomo_state, exception_message = tomograph.tomo_state()
     if tomo_state == 'unavailable':
         return create_response(success=False, error="Could not connect with tomograph", exception_message=exception_message)
-    if tomo_state == 'experiment':
+    elif tomo_state == 'experiment':
         return create_response(success=False, error="On this tomograph experiment is running")
-    if tomo_state != 'ready':
+    elif tomo_state != 'ready':
         return create_response(success=False, error="Undefined tomograph state")
 
     logger.info('Sending to storage leading to prepare...')

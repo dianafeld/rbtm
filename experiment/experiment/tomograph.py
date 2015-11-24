@@ -15,6 +15,7 @@ import json
 import time
 
 import PyTango
+import numpy
 from PyTango import ExtractAs
 from flask import send_file
 
@@ -462,15 +463,15 @@ class Tomograph:
         det = self.detector_proxy
 
         
-        image = self.try_thrice_read_attr("image", extract_as=PyTango.ExtractAs.Nothing,
-        								  error_str='Could not get image because of tomograph')
-
+        #image = self.try_thrice_read_attr("image", extract_as=PyTango.ExtractAs.Nothing,
+        #								  error_str='Could not get image because of tomograph')
 
         logger.info("Image was get, preparing image to send to storage...")
 
         try:
             enc = PyTango.EncodedAttribute()
-            image_numpy = enc.decode_gray16(image)
+            #image_numpy = enc.decode_gray16(image)
+            image_numpy = numpy.zeros((10, 10))
         except Exception as e:
             raise ModExpError(error='Could not convert image to numpy.array', exception_message='' '''e.message''')
 

@@ -1,18 +1,17 @@
 #!/usr/bin/python
-
 """
 Configuration file for module "Experiment"
 Contains web-addresses of storage, of web-page of adjustment(of tomograph), of tomograph,
 also contains name of name of png-file, creating for storing current image during experiment,
 finally contains time that tomograph waits for commands
 """
+import os
 
+STORAGE_IS_STUB = True
 
-STORAGE_IS_FICTITIOUS = True
+WEBPAGE_OF_ADJUSTMENT_IS_STUB = True
 
-WEBPAGE_OF_ADJUSTMENT_IS_FICTITIOUS = True
-
-TOMOGRAPH_IS_FICTITIOUS = True
+TOMOGRAPH_IS_STUB = True
 
 
 
@@ -30,10 +29,11 @@ MAX_EXPERIMENT_TIME = 100
 
 
 
-if STORAGE_IS_FICTITIOUS:
-    STORAGE_FRAMES_URI = "http://109.234.34.140:5020/fictitious-storage"
-    STORAGE_EXP_START_URI = "http://109.234.34.140:5020/fictitious-storage"
-    STORAGE_EXP_FINISH_URI = "http://109.234.34.140:5020/fictitious-storage"
+
+if STORAGE_IS_STUB:
+    STORAGE_FRAMES_URI = "http://localhost:5020/stub_storage"
+    STORAGE_EXP_START_URI = "http://localhost:5020/stub_storage"
+    STORAGE_EXP_FINISH_URI = "http://localhost:5020/stub_storage"
 else:
     #STORAGE_URI = "http://188.166.66.37:5006/storage/frames/post"                     # To send frames
     #STORAGE_EXPERIMENT_URI = "http://188.166.66.37:5006/storage/experiments/post"     # To send experiment parameters
@@ -41,13 +41,12 @@ else:
     STORAGE_EXP_START_URI = "http://109.234.34.140:5006/storage/experiments/create"     # To send experiment parameters
     STORAGE_EXP_FINISH_URI = "http://109.234.34.140:5006/storage/experiments/finish"    # To send messages about experiment stops
 
-if WEBPAGE_OF_ADJUSTMENT_IS_FICTITIOUS:
-    WEBPAGE_URI = "http://109.234.34.140:5021/take_image"
+if WEBPAGE_OF_ADJUSTMENT_IS_STUB:
+    WEBPAGE_URI = "http://localhost:5021/stub_storage"
 else:
-    WEBPAGE_URI = "http://109.234.34.140:5021/take_image"
+    WEBPAGE_URI = "http://localhost:5021/stub_storage"
 
-if TOMOGRAPH_IS_FICTITIOUS:
+if TOMOGRAPH_IS_STUB:
     TOMO_ADDR = '188.166.73.250:10000'
 else:
     TOMO_ADDR = 'localhost:10000'
-
