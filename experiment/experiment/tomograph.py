@@ -13,34 +13,22 @@ Contains supporting functions and class "Tomograph" with methods for comfortable
 # Need to look at checking types of arguments, which go to Tango-tomograph functions
 
 import json
-import requests
-import numpy as np
-import copy
-from StringIO import StringIO
 import time
-from scipy.ndimage import zoom
 
 import PyTango
 from PyTango import ExtractAs
-import pylab as plt
 from flask import send_file
 
 from conf import TIMEOUT_MILLIS
 from conf import FRAME_PNG_FILENAME
-from experiment import app
-
 from experiment_class import *
 
-
+from experiment import app
 logger = app.logger
 
 
-EMERGENCY_STOP_MSG = 'Experiment has been emergency stopped!'
-SOMEONE_STOP_MSG = 'Experiment has been stopped by someone!'
-SUCCESSFULL_STOP_MSG = 'Experiment has been done successfully!'
 
-
-def try_thrice_function(error_str, func, args=()):
+def try_thrice_function(func, args=(), error_str=''):
     """ Tries to call some TANGO function three times
 
     :arg: 'func' - called function
@@ -54,6 +42,9 @@ def try_thrice_function(error_str, func, args=()):
         try:
             answer = func(*args)
         except PyTango.DevFailed as e:
+
+            # (24.11.15) Not very mature place: logging exception description before logging common 
+            # error info (error_str), which will be logged after catching ModExpError exception
             for stage in e:
                 logger.info(stage.desc)
             exception_message = e[-1].desc
@@ -129,18 +120,17 @@ class Tomograph:
                 raise ModExpError(error='On this tomograph experiment is running')
         else:
             if self.current_experiment.to_be_stopped == True:
-                raise ModExpError(error=self.current_experiment.reason_of_stop, type_of_stop=SOMEONE_STOP_MSG)
+                # someone called experiment_stop() function
+                raise ModExpError(error=self.current_experiment.reason_of_stop, stop_msg=SOMEONE_STOP_MSG)
 
 
 
     def open_shutter(self, time=0, from_experiment=False, exp_is_advanced=True):
         """ Tries to open shutter
-
         :arg: 
         :return: 
         """
         logger.info('Opening shutter...')
-
         self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.OpenShutter, args=time, error_str='Could not open shutter')
@@ -153,7 +143,6 @@ class Tomograph:
         :return: 
         """
         logger.info('Closing shutter...')
-
         self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.CloseShutter, args=time, error_str='Could not close shutter')
@@ -166,14 +155,11 @@ class Tomograph:
         :return: 
         """
         logger.info('Getting shutter state...')
-
         self.basic_tomo_check(from_experiment)
 
         status = try_thrice_function(func=self.tomograph_proxy.ShutterStatus, args=time,
         							 error_str='Could not get shutter status')
-
         logger.info('Shutter return status successfully!')
-
         return status
 
 
@@ -205,9 +191,9 @@ class Tomograph:
         					error_str='Could not power off source')
         logger.info('Source was powered OFF!')
 
-	def source_set_voltage(self, new_voltage):
-	    logger.info('Going to set voltage on source...')
-    	self.basic_tomo_check(from_experiment=False)
+    def source_set_voltage(self, new_voltage):
+        logger.info('Going to set voltage on source...')
+        self.basic_tomo_check(from_experiment=False)
 
         logger.info('Checking format...')
         if type(new_voltage) is not float: 
@@ -225,29 +211,30 @@ class Tomograph:
         
         logger.info('New value of voltage was set!')
 
-	def source_set_current(self, current):
-	    logger.info('Going to set current on source...')
-    	self.basic_tomo_check(from_experiment=False)
+    def source_set_current(self, new_current):
+        logger.info('Going to set current on source...')
+        self.basic_tomo_check(from_experiment=False)
 
         logger.info('Checking format...')
-        if type(current) is not float:
-            logger.info('Incorrect format! Current type must be float, but it is ' + str(type(current)))
+        if type(new_current) is not float:
+            logger.info('Incorrect format! Current type must be float, but it is ' + str(type(new_current)))
             raise ModExpError(error='Incorrect format: type must be float')
 
 	    # TO DELETE THIS LATER
-        logger.info('Format is correct, new current value is %.1f...' % (current))
-        if current < 2 or 80 < current:
+        logger.info('Format is correct, new current value is %.1f...' % (new_current))
+        if new_current < 2 or 80 < new_current:
             raise ModExpError(error='Current must have value from 2 to 80!')
 
         logger.info('Parameters are normal, setting new current...')
-        set_current = self.try_thrice_change_attr("xraysource_current", current,
+        set_current = self.try_thrice_change_attr("xraysource_current", new_current,
         										  error_str='Could not set current')
 
         logger.info('New value of current was set!')
 
-	def source_get_voltage(self):
-	    logger.info('Going to get voltage...')
-    	self.basic_tomo_check(from_experiment=False)
+
+    def source_get_voltage(self):
+        logger.info('Going to get voltage...')
+        self.basic_tomo_check(from_experiment=False)
 
         voltage_attr = self.try_thrice_read_attr("xraysource_voltage",
 										   		 error_str='Could not get voltage')
@@ -256,9 +243,9 @@ class Tomograph:
         logger.info("Voltage is %.2f" % voltage)
         return voltage
 
-	def source_get_current(self):
-	    logger.info('Going to get current...')
-    	self.basic_tomo_check(from_experiment=False)
+    def source_get_current(self):
+        logger.info('Going to get current...')
+        self.basic_tomo_check(from_experiment=False)
 
         current_attr = self.try_thrice_read_attr("xraysource_current",
 										   		 error_str='Could not get current')
@@ -283,7 +270,7 @@ class Tomograph:
         # TO DELETE THIS LATER
         logger.info('Setting value %.1f...' % (new_x))
         if new_x < -5000 or 2000 < new_x:
-            raise ModExpError(error='Position must have value from -30 to 30')
+            raise ModExpError(error='Position must have value from -5000 to 2000')
 
         set_x = self.try_thrice_change_attr("horizontal_position", new_x,
         									error_str='Could not set new position because of tomograph')
@@ -305,10 +292,10 @@ class Tomograph:
 
         # TO DELETE THIS LATER
         logger.info('Setting value %.1f...' % (new_y))
-        if new_x < -5000 or 2000 < new_x:
+        if new_y < -5000 or 2000 < new_y:
             raise ModExpError(error='Position must have value from -30 to 30')
 
-        set_x = self.try_thrice_change_attr("horizontal_position", new_y,
+        set_y = self.try_thrice_change_attr("vertical_position", new_y,
         									error_str='Could not set new position because of tomograph')
 
         logger.info('Position was set!')
@@ -371,7 +358,6 @@ class Tomograph:
         logger.info('Vertical position is %d' % y_value)
         return y_value
 
-
     def get_angle(self, from_experiment=False, exp_is_advanced=True):
         """ Tries to get vertical position of object
         :arg:
@@ -398,8 +384,8 @@ class Tomograph:
 
         self.basic_tomo_check(from_experiment)
 
-        self.try_thrice_function(func=self.tomograph_proxy.ResetAnglePosition,
-        						 error_str='Could not reset angle position because of tomograph')
+        try_thrice_function(func=self.tomograph_proxy.ResetAnglePosition,
+                            error_str='Could not reset angle position because of tomograph')
 
         logger.info('Angle position was reset!')
 
@@ -413,7 +399,7 @@ class Tomograph:
 
        	self.basic_tomo_check(from_experiment)
 
-        self.try_thrice_function(func=self.tomograph_proxy.MoveAway, error_str='Could not move object away')
+        try_thrice_function(func=self.tomograph_proxy.MoveAway, error_str='Could not move object away')
 
         logger.info('Object was moved away!')
 
@@ -426,11 +412,11 @@ class Tomograph:
 
         self.basic_tomo_check(from_experiment)
 
-        self.try_thrice_function(func=self.tomograph_proxy.MoveBack, error_str='Could not move object back')
+        try_thrice_function(func=self.tomograph_proxy.MoveBack, error_str='Could not move object back')
 
         logger.info('Object was moved back!')
 
-    def get_frame(self, exposure, send_to_webpage=False, from_experiment=True, exp_is_advanced=True):
+    def get_frame(self, exposure, send_to_webpage=False, from_experiment=False, exp_is_advanced=True):
         """ Tries get frame with some exposure
         :arg: 'exposure' - exposure, which frame should get with
         :return:
@@ -449,8 +435,8 @@ class Tomograph:
 
         # Tomograph takes exposure multiplied by 10 and rounded
         exposure = round(exposure)
-        frame_metadata_json = self.try_thrice_function(func=self.tomograph_proxy.GetFrame, args=exposure,
-        											   error_str='Could not get image because of tomograph')
+        frame_metadata_json = try_thrice_function(func=self.tomograph_proxy.GetFrame, args=exposure,
+        										  error_str='Could not get image because of tomograph')
 
         try:
             frame_dict = json.loads(frame_metadata_json)
@@ -480,20 +466,20 @@ class Tomograph:
 
         exp_id = self.current_experiment.exp_id
         event_for_send = {}
-        type_of_experiment_msg = ""
+        stop_msg = ""
 
         try:
            self.current_experiment.run()
         except ModExpError as e:
             e.log(exp_id)
             event_for_send = e.to_event_dict(exp_id)
-            type_of_experiment_msg = e.type_of_stop
+            stop_msg = e.stop_msg
         except Exception as e:
             error = "unexpected exception"
             exception_message = e.message
             logger.info(error)
             logger.info(exception_message)
-            type_of_experiment_msg = EMERGENCY_STOP_MSG
+            stop_msg = EMERGENCY_STOP_MSG
 
             try:
                 event_for_send = create_event(type='message', exp_id=exp_id, MoF=EMERGENCY_STOP_MSG, error=error,
@@ -502,9 +488,9 @@ class Tomograph:
                 event_for_send = create_event(type='message', exp_id=exp_id, MoF=EMERGENCY_STOP_MSG, error=error)
         else:
             event_for_send = create_event(type='message', exp_id=exp_id, MoF=SUCCESSFULL_STOP_MSG)
-            type_of_experiment_msg = SUCCESSFULL_STOP_MSG
+            stop_msg = SUCCESSFULL_STOP_MSG
 
-        logger.info(type_of_experiment_msg)
+        logger.info(stop_msg % exp_id)
         logger.info("Sending messages about stop of experiment...")
         send_message_to_storage_webpage(event_for_send)
 
@@ -512,17 +498,3 @@ class Tomograph:
         experiment_time = time.time() - time_of_experiment_start
         logger.info("Experiment took %.4f seconds" % experiment_time)
 
-
-    def call_method_create_response(self, method, args=(), GET_FRAME_method=False):
-        if type(args) not in (tuple, list):
-            args = (args,)
-        try:
-            result = method(*args)
-        except ModExpError as e:
-            e.log()
-            return e.create_response()
-        except Exception as e:
-            try:
-                return create_response(success=False, error="unexpected exception", exception_message=e.message)
-            except Exception as e2:
-                return create_response(success=False, error="unexpected exception")

@@ -11,9 +11,7 @@ Contains class "Experiment" """
 import json
 import requests
 import numpy as np
-import copy
 from StringIO import StringIO
-import time
 from scipy.ndimage import zoom
 
 import pylab as plt
@@ -21,17 +19,15 @@ import pylab as plt
 from conf import STORAGE_FRAMES_URI
 from conf import STORAGE_EXP_FINISH_URI
 from conf import WEBPAGE_URI
-from conf import TIMEOUT_MILLIS
 from conf import FRAME_PNG_FILENAME
+
 from experiment import app
-
-
 logger = app.logger
 
 
-EMERGENCY_STOP_MSG = 'Experiment has been emergency stopped!'
-SOMEONE_STOP_MSG = 'Experiment has been stopped by someone!'
-SUCCESS_MSG = 'Experiment has been done successfully!'
+EMERGENCY_STOP_MSG = 'Experiment  %s  has been emergency stopped!'
+SOMEONE_STOP_MSG = 'Experiment  %s  has been stopped by someone!'
+SUCCESSFULL_STOP_MSG = 'Experiment  %s  has been done successfully!'
 
 
 def create_response(success=True, exception_message='', error='', result=None):
@@ -238,9 +234,9 @@ def send_frame_to_storage_webpage(frame_metadata_dict, image_numpy, send_to_webp
 
 class ModExpError(Exception):
     exception_message = ""
-    type_of_stop = EMERGENCY_STOP_MSG
+    stop_msg = EMERGENCY_STOP_MSG
 
-    def __init__(self, error='', exception_message='', type_of_stop=EMERGENCY_STOP_MSG):
+    def __init__(self, error='', exception_message='', stop_msg=EMERGENCY_STOP_MSG):
         self.message = error
         self.error = error
         self.exception_message = exception_message
@@ -263,11 +259,11 @@ class ModExpError(Exception):
 
     def log(self, exp_id=''):
         if exp_id:
-            logger.info(("EXPERIMENT %s: " + SOMEONE_STOP_MSG) % exp_id)
+            logger.info(self.stop_msg % exp_id)
         else:
             logger.info("ERROR:")
 
-        if self.type_of_stop == EMERGENCY_STOP_MSG:
+        if self.stop_msg == EMERGENCY_STOP_MSG:
             logger.info("   " + self.error)
             logger.info("   " + self.exception_message)
         else:
@@ -280,6 +276,7 @@ class Experiment:
     exp_id = ''
     to_be_stopped = False
     reason_of_stop = ''
+    current_exposure = ''
 
     def __init__(self, tomograph, exp_param, FOSITW=5):
         # FOSITW - 'Frequency Of Sending Images To Webpage '
@@ -302,69 +299,66 @@ class Experiment:
 
         self.frame_num = 0
 
-    def get_and_send_frame():
+    def get_and_send_frame(self, exposure, mode):
 
-        getting_frame_message = 'Getting image, number: %d, mode: %s ...' % (self.frame_num, self.mode)
+        getting_frame_message = 'Getting image, number: %d, mode: %s ...' % (self.frame_num, mode)
         logger.info(getting_frame_message)
     
-        frame_dict = tomograph.get_frame(exposure=exposure, exp_is_advanced=False)
+        frame_dict = self.tomograph.get_frame(exposure=exposure, from_experiment=True, exp_is_advanced=False)
 
-        frame_dict['mode'] = self.mode
-        frame_dict['number'] = self.number
+        frame_dict['mode'] = mode
+        frame_dict['number'] = self.frame_num
 
-        send_to_webpage = (self.number % self.FOSITW == self.FOSITW - 1)
+        send_to_webpage = (self.frame_num % self.FOSITW == self.FOSITW - 1)
         
         frame_metadata_dict = frame_dict
+        
         del(frame_metadata_dict['frame']['image_data']['image'])
 
         send_frame_to_storage_webpage(frame_metadata_dict=frame_metadata_dict,
                                       image_numpy=frame_dict['frame']['image_data']['image'],
                                       send_to_webpage=send_to_webpage)
-        #send_frame_to_storage_webpage(frame_dict=frame_dict, send_to_webpage=send_to_webpage)
 
 
-    def run():
+    def run(self):
         # Closing shutter to get DARK images
         self.to_be_stopped = False
         self.reason_of_stop = ''
-        self.tomograph.close_shutter(0, exp_is_advanced=False)
+        self.tomograph.close_shutter(0, from_experiment=True, exp_is_advanced=False)
 
         logger.info('Going to get DARK images!\n')
-        self.mode = 'dark'
         for i in range(0, self.DARK_count):
-            get_and_send_frame()
+            self.get_and_send_frame(exposure=self.DARK_exposure, mode='dark')
         logger.info('Finished with DARK images!\n')
 
-        self.tomograph.open_shutter(0, exp_is_advanced=False)
-        self.tomograph.move_away(exp_is_advanced=False)
+        self.tomograph.open_shutter(0, from_experiment=True, exp_is_advanced=False)
+        self.tomograph.move_away(from_experiment=True, exp_is_advanced=False)
 
         logger.info('Going to get EMPTY images!\n')
-        self.mode = 'empty'
         for i in range(0, self.EMPTY_count):
-            get_and_send_frame()
+            self.get_and_send_frame(exposure=self.EMPTY_exposure, mode='empty')
         logger.info('Finished with EMPTY images!\n')
 
-        self.tomograph.move_back(exp_is_advanced=False)
+        self.tomograph.move_back(from_experiment=True, exp_is_advanced=False)
 
 
 
         logger.info('Going to get DATA images, step count is %d!\n' % (self.DATA_step_count))
-        self.mode = 'data'
-        initial_angle = self.tomograph.get_angle(exp_is_advanced=False)
+        initial_angle = self.tomograph.get_angle(from_experiment=True, exp_is_advanced=False)
         logger.info('Initial angle is %.2f' % initial_angle)
         angle_step = self.DATA_angle_step
 
-        for i in range(0, self.EMPTY_step_count):
+        for i in range(0, self.DATA_step_count):
             current_angle = (round((i * angle_step) + initial_angle, 2)) % 360
             logger.info('Getting DATA images: angle is %.2f' % current_angle)
 
             for i in range(0, self.DATA_count_per_step):
-                get_and_send_frame()
+                self.get_and_send_frame(exposure=self.DATA_exposure, mode='data')
 
             # Rounding angles here, not in  check_and_prepare_exp_parameters(), cause it will be more accurately this way
             new_angle = (round((i + 1) * angle_step + initial_angle, 2)) % 360
             logger.info('Finished with this angle, turning to new angle %.2f...' % (new_angle))
-            self.tomograph.set_angle(new_angle, exp_is_advanced=False)
+            self.tomograph.set_angle(new_angle, from_experiment=True, exp_is_advanced=False)
 
         logger.info('Finished with DATA images!\n')
         return

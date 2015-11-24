@@ -16,17 +16,13 @@ from flask import Response
 from flask import make_response
 
 from tomograph import Tomograph
-from tomograph import Tomograph
+from tomograph import try_thrice_function
 from experiment_class import *
-from conf import STORAGE_FRAMES_URI
 from conf import STORAGE_EXP_START_URI
 from conf import TOMO_ADDR
 from conf import MAX_EXPERIMENT_TIME
 
-
-# logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = u'experiment.log')
 from experiment import app
-
 logger = app.logger
 
 TOMOGRAPHS = (
@@ -67,12 +63,15 @@ def call_method_create_response(tomo_num, method_name, args=(), GET_FRAME_method
     except ModExpError as e:
         e.log()
         return e.create_response()
+    """
     except Exception as e:
+        logger.info(e.message)
         try:
             return create_response(success=False, error="unexpected exception", exception_message=e.message)
         except Exception as e2:
+            logger.info(e.message)
             return create_response(success=False, error="unexpected exception")
-
+    """
     if GET_FRAME_method == False:
         return create_response(success=True, result=result)
     else:
@@ -92,12 +91,11 @@ def check_state(tomo_num):
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
 
-
     logger.info('Checking tomograph...')
-    success, useless, exception_message = try_thrice_function(tomograph.tomograph_proxy.ping)
-    if not success:
-        logger.info("Tomograph is unavailable")
-        logger.info(exception_message)
+    try:
+        try_thrice_function(func=tomograph.tomograph_proxy.ping, error_str="Tomograph is unavailable")
+    except ModExpError as e:
+        e.log()
         return create_response(success=True, exception_message=exception_message, result="unavailable")
 
     if tomograph.current_experiment != None:
@@ -307,10 +305,11 @@ def check_and_prepare_exp_parameters(exp_param):
 
 def time_counter_of_experiment(tomograph, exp_id, exp_time=MAX_EXPERIMENT_TIME):
     time.sleep(exp_time)
-    if (tomograph.experiment_is_running and tomograph.exp_id == exp_id):
+    cur_exp = tomograph.current_experiment
+    if (cur_exp != None and cur_exp.exp_id == exp_id):
         logger.info("\nEXPERIMENT TAKES TOO LONG, GOING TO STOP IT!\n")
-        tomograph.experiment_is_running = False
-        tomograph.exp_stop_reason = "# MODULE EXPERIMENT: EXPERIMENT TAKES TOO LONG #"
+        cur_exp.to_be_stopped = True
+        cur_exp.exp_stop_reason = "# MODULE EXPERIMENT: EXPERIMENT TAKES TOO LONG #"
     return
 
 
@@ -394,20 +393,13 @@ def experiment_start(tomo_num):
     success, error = check_and_prepare_exp_parameters(exp_param)
     if not success:
         logger.info(error)
-        return create_response(success, error)
+        return create_response(success=success, error=error)
 
     logger.info('Parameters are normal!')
-    logger.info('Powering on tomograph...')
-    success, useless, exception_message = try_thrice_function(tomograph.tomograph_proxy.PowerOn)
-    if success == False:
-        return create_response(success=False, exception_message=exception_message, error='Could not power on source')
-
-    # NEED TO CHANGE MAYBE, TO ADD CHECKING STATE
-    logger.info('Was powered on!')
     logger.info('Sending to storage leading to prepare...')
     success, exception_message = send_to_storage(STORAGE_EXP_START_URI, data=request.data)
-    if not success:
-        return create_response(success=False, exception_message=exception_message, error='Problems with storage')
+#    if not success:
+ #       return create_response(success=False, exception_message=exception_message, error='Problems with storage')
 
     '''
     logger.info('Experiment begins!')
@@ -423,7 +415,7 @@ def experiment_start(tomo_num):
         pass
         #thr = threading.Thread(target=carry_out_advanced_experiment, args=(tomograph, exp_param))
     else:
-        thr = threading.Thread(target=tomograph.carry_out_simple_experiment, args=(exp_param))
+        thr = threading.Thread(target=tomograph.carry_out_simple_experiment, args=(exp_param,))
     thr.start()
 
     return create_response(True)
@@ -446,12 +438,8 @@ def experiment_stop(tomo_num):
     if tomograph.current_experiment != None:
         tomograph.current_experiment.to_be_stopped = True
         tomograph.current_experiment.reason_of_stop = exp_stop_reason_txt
-    resp = Response(response=json.dumps({'success': True}),
-                    status=200,
-                    mimetype="application/json")
 
-    return resp
-
+    return create_response(True)
 
 """
 @app.before_request
@@ -478,6 +466,3 @@ def internal_server_error(exception):
     logger.exception(exception)
     return make_response(create_response(success=False, error='Internal Server Error'), 500)
 
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001)
