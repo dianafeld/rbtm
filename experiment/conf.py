@@ -8,11 +8,11 @@ finally contains time that tomograph waits for commands
 """
 
 
-STORAGE_IS_FICTITIOUS = True
+STORAGE_IS_FICTITIOUS = False
 
-WEBPAGE_OF_ADJUSTMENT_IS_FICTITIOUS = True
+WEBPAGE_OF_ADJUSTMENT_IS_FICTITIOUS = False
 
-TOMOGRAPH_IS_FICTITIOUS = True
+TOMOGRAPH_IS_FICTITIOUS = False
 
 
 
