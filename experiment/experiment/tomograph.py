@@ -19,8 +19,6 @@ import numpy
 from PyTango import ExtractAs
 from flask import send_file
 
-from conf import TIMEOUT_MILLIS
-from conf import FRAME_PNG_FILENAME
 from experiment_class import *
 
 from experiment import app

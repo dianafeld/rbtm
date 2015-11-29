@@ -1,10 +1,21 @@
 #!/usr/bin/python
+
+"""
+29.11.15 - Rustam
+Stub storage for testing module "Experiment" without changing anything more
+It just recieves messages from 'experiment' and returns 'success'
+Logs to 'stub_storage.log' file
+Launch server on port 5020
+"""
+
 from flask import Flask, jsonify
 from flask import request
 import json
 import logging
+from socket import error as socket_error
 
-logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = u'stub_storage.log')
+logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG,
+					filename = u'experiment/stubs/stub_storage.log')
 
 
 app = Flask(__name__)
@@ -13,25 +24,33 @@ app = Flask(__name__)
 
 @app.route('/stub_storage', methods=['POST'])
 def got_request():
-	logging.debug("Something has been recieved...")
-	if not request.data:
-		logging.debug("- empty\n")
+    logging.info("Something has been recieved...")
+    if not request.data:
+        logging.info("- empty\n")
         return jsonify({'result': 'fail'})
-	else:
-		message = json.loads(request.data)
-        if message['type'] == 'message':
-            logging.debug('- it is message:')
-			logging.debug( message[u'message'] +  "\n")
-        elif message[u'type'] == 'frame':
-            image_str = message['frame']['image_data']['image']
-            logging.debug('- it is image\n')
+    else:
+        message = json.loads(request.data)
+        if 'type' not in message.keys():
+            logging.info('- it is not message at all')
         else:
-            logging.debug('- undefined')
+            if message['type'] == 'message':
+                logging.info('- it is message:')
+                logging.info( message['message'] +  "\n")
+            elif message['type'] == 'frame':
+                image_str = message['frame']['image_data']['image']
+                logging.info('- it is image\n')
+            else:
+                logging.info('- undefined')
         return jsonify({'result': 'success'})
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port = 5020)
+    try:
+        app.run(host='0.0.0.0', port = 5020)
+    except socket_error: pass
+    # if you don't pass - it will complain "socket.error: [Errno 98] Address already in use"
+    # because of twice execution (all files are run twice because of flask reloader, look
+    # http://stackoverflow.com/questions/26958952/python-program-seems-to-be-running-twice)
 
 
 

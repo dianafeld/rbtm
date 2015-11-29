@@ -15,10 +15,7 @@ from scipy.ndimage import zoom
 
 import pylab as plt
 
-from conf import STORAGE_FRAMES_URI
-from conf import STORAGE_EXP_FINISH_URI
-from conf import WEBPAGE_URI
-from conf import FRAME_PNG_FILENAME
+from conf import *
 
 from experiment import app
 logger = app.logger

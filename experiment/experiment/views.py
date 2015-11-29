@@ -16,9 +16,6 @@ from flask import make_response
 from tomograph import Tomograph
 from tomograph import try_thrice_function
 from experiment_class import *
-from conf import STORAGE_EXP_START_URI
-from conf import TOMO_ADDR
-from conf import MAX_EXPERIMENT_TIME
 
 from experiment import app
 logger = app.logger
