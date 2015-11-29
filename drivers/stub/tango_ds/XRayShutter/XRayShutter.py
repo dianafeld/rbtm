@@ -58,6 +58,8 @@ import threading
 
 class XRayShutter (PyTango.Device_4Impl):
 
+    EPS = 1e-5
+
     #--------- Add you global variables here --------------------------
     #----- PROTECTED REGION ID(XRayShutter.global_variables) ENABLED START -----#
     #----- PROTECTED REGION END -----#  //  XRayShutter.global_variables
