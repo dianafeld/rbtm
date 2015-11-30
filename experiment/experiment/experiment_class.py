@@ -86,7 +86,7 @@ def frame_to_png(frame_dict, png_filename=FRAME_PNG_FILENAME):
     :return: 
     """
     logger.info("Converting image to png-file...")
-    image_numpy = frame_dict['frame']['image_data']['image']
+    image_numpy = frame_dict['image_data']['image']
     res = image_numpy
     try:
         small_res = zoom(res, zoom=0.25, order=2)
@@ -113,7 +113,7 @@ def send_event_to_webpage(event_dict):
     """
 
     if event_dict['type'] == 'frame':
-        success, ModExpError_if_fail = frame_to_png(event_dict)
+        success, ModExpError_if_fail = frame_to_png(event_dict['frame'])
         if not success:
             files = None
             event_json = json.dumps(ModExpError_if_fail.to_dict())
@@ -157,6 +157,8 @@ def send_to_storage(storage_uri, data, files=None):
 
     logger.info('Sending to storage...')
     try:
+        print "  files:  ", files
+        print "  data :  ", data
         storage_resp = requests.post(storage_uri, files=files, data=data)
     except requests.ConnectionError as e:
         exception_message = e.message
@@ -170,20 +172,14 @@ def send_to_storage(storage_uri, data, files=None):
             logger.info(storage_resp.content)
             storage_resp_dict = json.loads(storage_resp.content)
         except (ValueError, TypeError):
-            exception_message = 'Storage\'s response is not JSON'
-            logger.info(exception_message)
-            return False, exception_message
+            return False, 'Storage\'s response is not JSON'
 
         if not ('result' in storage_resp_dict.keys()):
-            exception_message = 'Storage\'s response has incorrect format'
-            logger.info(exception_message)
             logger.info(storage_resp_dict)
-            return False, exception_message
+            return False, "Storage\'s response has incorrect format (no 'result' key)"
 
-        logger.info('Storage\'s response:')
-        logger.info(storage_resp_dict['result'])
         if storage_resp_dict['result'] != 'success':
-            return False, storage_resp_dict['result']
+            return False,   'Storage\'s response:  ' + str(storage_resp_dict['result'])
 
         return True, ''
 
@@ -213,7 +209,7 @@ def send_frame_to_storage_webpage(frame_metadata_dict, image_numpy, send_to_webp
         s.seek(0)
         data = {'data': json.dumps(frame_metadata_dict)}
         files = {'file': s}
-        success, exception_message = send_to_storage(STORAGE_FRAMES_URI, data, files)
+        success, exception_message = send_to_storage(storage_uri=STORAGE_FRAMES_URI, data=data, files=files)
 
         if not success:
             raise ModExpError(error='Problems with storage', exception_message=exception_message)
@@ -300,19 +296,53 @@ class Experiment:
         getting_frame_message = 'Getting image, number: %d, mode: %s ...' % (self.frame_num, mode)
         logger.info(getting_frame_message)
     
-        frame_dict = self.tomograph.get_frame(exposure=exposure, from_experiment=True, exp_is_advanced=False)
-
+        #frame_dict = self.tomograph.get_frame(exposure=exposure, from_experiment=True, exp_is_advanced=False)
+        frame_dict = {
+                u'object': 
+                {
+                    u'horizontal position': 0, 
+                    u'angle position': 0.0, 
+                    u'present': True
+                },
+                'number': 0,
+                u'X-ray source':
+                {
+                    u'current': 0.0,
+                    u'voltage': 0.0},
+                u'shutter':
+                {
+                    u'open': False
+                },
+                'mode': 'dark',
+                u'image_data':
+                {
+                    u'datetime': u'29.11.2015 16:50:20', 
+                    u'hous_temp': 28.712708565497692, 
+                    u'detector': 
+                    {
+                        u'model': u'Ximea xiRAY'
+                    },
+                    u'chip_temp': 21.335663340850658,
+                    u'exposure': 1000,
+                    'image': np.empty((10, 10)),
+                },
+            }
         frame_dict['mode'] = mode
         frame_dict['number'] = self.frame_num
 
-        send_to_webpage = (self.frame_num % self.FOSITW == self.FOSITW - 1)
-        
-        frame_metadata_dict = frame_dict
-        
-        del(frame_metadata_dict['frame']['image_data']['image'])
+        image_numpy = frame_dict['image_data']['image']
 
-        send_frame_to_storage_webpage(frame_metadata_dict=frame_metadata_dict,
-                                      image_numpy=frame_dict['frame']['image_data']['image'],
+        del(frame_dict['image_data']['image'])
+
+        frame_metadata_event = create_event(type='frame', exp_id=self.exp_id, MoF=frame_dict)
+
+        print "  frame_metadata_event: ", frame_metadata_event
+        print "  image shape:          ", image_numpy.shape
+
+        send_to_webpage = (self.frame_num % self.FOSITW == self.FOSITW - 1)
+
+        send_frame_to_storage_webpage(frame_metadata_dict=frame_metadata_event,
+                                      image_numpy=image_numpy,
                                       send_to_webpage=send_to_webpage)
 
 

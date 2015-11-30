@@ -25,10 +25,14 @@ app = Flask(__name__)
 @app.route('/stub_storage', methods=['POST'])
 def got_request():
     logging.info("Something has been recieved...")
-    if not request.data:
+    return jsonify({'result': 'success'})
+
+'''
+    if not (request.data or request.form):
         logging.info("- empty\n")
         return jsonify({'result': 'fail'})
     else:
+        """
         message = json.loads(request.data)
         if 'type' not in message.keys():
             logging.info('- it is not message at all')
@@ -41,16 +45,18 @@ def got_request():
                 logging.info('- it is image\n')
             else:
                 logging.info('- undefined')
-        return jsonify({'result': 'success'})
-
+        """
+'''
 
 if __name__ == '__main__':
     try:
         app.run(host='0.0.0.0', port = 5020)
     except socket_error: pass
-    # if you don't pass - it will complain "socket.error: [Errno 98] Address already in use"
-    # because of twice execution (all files are run twice because of flask reloader, look
-    # http://stackoverflow.com/questions/26958952/python-program-seems-to-be-running-twice)
+        # if you don't pass - it will complain "socket.error: [Errno 98] Address already in use"
+        # because of twice execution (all files are run twice because of flask reloader, look
+        # http://stackoverflow.com/questions/26958952/python-program-seems-to-be-running-twice)
+    else:
+        print "Stub storage starts to run"
 
 
 

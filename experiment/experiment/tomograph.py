@@ -445,7 +445,7 @@ class Tomograph:
             raise ModExpError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_angle)))
 
         # TO DELETE THIS LATER
-        logger.info('Getting image with exposure %.1f milliseconds...' % (exposure))
+        logger.info('Getting an image with exposure %.1f milliseconds...' % (exposure))
         if exposure < 0.1 or 16000 < exposure:
             raise ModExpError(error='Exposure must have value from 0.1 to 16000')
 
@@ -461,17 +461,21 @@ class Tomograph:
         det = self.detector_proxy
 
         
-        #image = self.try_thrice_read_attr("image", extract_as=PyTango.ExtractAs.Nothing,
-        #								  error_str='Could not get image because of tomograph')
+        logger.info('Image was get, reading the image from detector...')
+        try:
+            image = self.detector_proxy.read_attribute("image", extract_as=PyTango.ExtractAs.Nothing)
+        except Exception as e:
+            logger.info(e.message)
+            repr(e)
 
-        logger.info("Image was get, preparing image to send to storage...")
+        logger.info("Image was red, preparing the image to send to storage...")
 
         try:
             enc = PyTango.EncodedAttribute()
-            #image_numpy = enc.decode_gray16(image)
-            image_numpy = numpy.zeros((10, 10))
+            image_numpy = enc.decode_gray16(image)
+            #image_numpy = numpy.zeros((10, 10))
         except Exception as e:
-            raise ModExpError(error='Could not convert image to numpy.array', exception_message='' '''e.message''')
+            raise ModExpError(error='Could not convert the image to numpy.array', exception_message='' '''e.message''')
 
         frame_dict['image_data']['image'] = image_numpy
         return frame_dict
@@ -490,6 +494,7 @@ class Tomograph:
             e.log(exp_id)
             event_for_send = e.to_event_dict(exp_id)
             stop_msg = e.stop_msg
+            """
         except Exception as e:
             error = "unexpected exception"
             exception_message = e.message
@@ -497,11 +502,13 @@ class Tomograph:
             logger.info(exception_message)
             stop_msg = EMERGENCY_STOP_MSG
 
+
             try:
                 event_for_send = create_event(type='message', exp_id=exp_id, MoF=EMERGENCY_STOP_MSG, error=error,
                                               exception_message=exception_message)
             except Exception as e2:
                 event_for_send = create_event(type='message', exp_id=exp_id, MoF=EMERGENCY_STOP_MSG, error=error)
+            """
         else:
             event_for_send = create_event(type='message', exp_id=exp_id, MoF=SUCCESSFULL_STOP_MSG)
             stop_msg = SUCCESSFULL_STOP_MSG

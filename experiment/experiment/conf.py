@@ -3,8 +3,9 @@
 29.11.15 - Rustam
 Configuration file for module "Experiment"
 Contains web-addresses of storage, of web-page of adjustment(of tomograph), of tomograph,
-also contains name of name of png-file, creating for storing current image during experiment,
-finally contains time that tomograph waits for commands durning advanced experiments with exec,
+also contains name of png-file, creating for storing current image during experiment,
+finally contains time that tomograph waits for commands during advanced experiments with exec,
+
 If STORAGE_IS_STUB and/or WEBPAGE_OF_ADJUSTMENT_IS_STUB variables are set True, it launches stub servers
 for storage and/or web-page of adjustment
 """

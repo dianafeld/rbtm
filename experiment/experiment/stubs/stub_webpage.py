@@ -47,9 +47,11 @@ if __name__ == '__main__':
     try:
         app.run(host='0.0.0.0', port = 5021)
     except socket_error: pass
-    # if you don't pass - it will complain "socket.error: [Errno 98] Address already in use"
-    # because of twice execution (all files are run twice because of flask reloader, look
-    # http://stackoverflow.com/questions/26958952/python-program-seems-to-be-running-twice)
+        # if you don't pass - it will complain "socket.error: [Errno 98] Address already in use"
+        # because of twice execution (all files are run twice because of flask reloader, look
+        # http://stackoverflow.com/questions/26958952/python-program-seems-to-be-running-twice)
+    else:
+        print "Stub web-page of adjustment starts to run"
 
 
 
