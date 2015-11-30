@@ -1,0 +1,6 @@
+largeData/*
+!largeData/hand
+largeData/hand/*
+!largeData/hand/MA0.6_RF1.js
+
+

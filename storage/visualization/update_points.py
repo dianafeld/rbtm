@@ -23,8 +23,8 @@ def main():
 
 
 
-    hfd5FileName = "<path to reconstruction's hdf5 file>"
-    outputFileName = "<folder_for_numbers_of_one_reconstruction>/MA" + str(MIN_ALPHA) + "_RF" + str(RAREFACTION) + ".js"
+    hfd5FileName = "largeData/hand/result.hdf5"
+    outputFileName = "largeData/hand_with_round/MA" + str(MIN_ALPHA) + "_RF" + str(RAREFACTION) + ".js"
     # !! ATTENTION, THIS FILE WILL BE TOTALLY OWERWRITTEN !!
 
 
@@ -38,7 +38,7 @@ def main():
 
     # this block of code is used to set boundaries in visualization, the longest side of limiting box is 80
     maxDim = max(Q, W, E)
-    spacePerPoint = 40.0 / float(maxDim) 
+    spacePerPoint = 400.0 / float(maxDim)
     maxAbsX = Q * spacePerPoint
     maxAbsY = W * spacePerPoint
     maxAbsZ = E * spacePerPoint
@@ -47,22 +47,17 @@ def main():
     if (RAREFACTION > 1):
         rarefiedDataCube = dataCube[::RAREFACTION, ::RAREFACTION, ::RAREFACTION]
     else:
-        rarefiedDataCube = dataCube
+        rarefiedDataCube = dataCube[::2,:,:]
 
     print "Rarefied cube shape:", rarefiedDataCube.shape
     N, M, K = rarefiedDataCube.shape
 
-    def convertToX(binNum):
-        return (2 * binNum/float(N) - 1.0) * maxAbsX
-
-    def convertToY(binNum):
-        return (2 * binNum/float(M) - 1.0) * maxAbsY
-
-    def convertToZ(binNum):
-        return (2 * binNum/float(K) - 1.0) * maxAbsZ
 
     minValue = np.min(rarefiedDataCube)
     maxValue = np.max(rarefiedDataCube)
+    if maxValue == minValue:
+        print "All values are the same - look for better data!\nStop."
+        return
 
     norm = mpl.colors.Normalize(vmin=MIN_ALPHA, vmax=1)
     m = cm.ScalarMappable(norm=norm, cmap=COLORMAP)
@@ -86,27 +81,60 @@ def main():
     for i in xrange(numVertices):
         A[i] = A_all[ Ix[i], Iy[i], Iz[i] ]
 
-
     f = open(outputFileName, 'w')
     print("File opened, starting to write...")
     f.seek(0)
     f.truncate()
-    f.write("var NMK = [%d, %d, %d];\nvar numbers = " % (N, M, K))
+    #f.write("var NMK = [%d, %d, %d];\nvar number_str = " % (N, M, K))
+    f.write("var NMK = [%d, %d, %d]" % (N, M, K))
 
 
-    if (maxValue != minValue):
-        RGBA = m.to_rgba(A)
+    RGBA = m.to_rgba(A)
+    RGBA = RGBA * 512
+    RGBA = RGBA.astype(int)
 
-        X = np.reshape(convertToX(Ix), (-1, 1))
-        Y = np.reshape(convertToY(Iy), (-1, 1))
-        Z = np.reshape(convertToZ(Iz), (-1, 1))
 
-        A = np.reshape(A, (-1, 1))
+    A = A * 512
+    A = A.astype(int)
+    
+    R = (RGBA[:,0]).flatten()
+    G = (RGBA[:,1]).flatten()
+    B = (RGBA[:,2]).flatten()
 
-        number_arr = (np.concatenate((RGBA[:,:3], A, X, Y, Z), axis = 1)).flatten()
-        f.write(str(number_arr.tolist()))
+    if RAREFACTION != 1:
+        X = Ix - N / 2
     else:
-        f.write('[]')
+        X = 2 * Ix - N
+    Y = Iy - M / 2
+    Z = Iz - K / 2
+
+    print("Writing R values...")
+    f.write(";\nvar R_arr = ")
+    f.write(str(R.tolist()))
+
+    print("Writing G values...")
+    f.write(";\nvar G_arr = ")
+    f.write(str(G.tolist()))
+
+    print("Writing B values...")
+    f.write(";\nvar B_arr = ")
+    f.write(str(B.tolist()))
+
+    print("Writing A values...")
+    f.write(";\nvar A_arr = ")
+    f.write(str(A.tolist()))
+
+    print("Writing X values...")
+    f.write(";\nvar X_arr = ")
+    f.write(str(X.tolist()))
+
+    print("Writing Y values...")
+    f.write(";\nvar Y_arr = ")
+    f.write(str(Y.tolist()))
+
+    print("Writing Z values...")
+    f.write(";\nvar Z_arr = ")
+    f.write(str(Z.tolist()))
 
 
     f.write(";\n")
