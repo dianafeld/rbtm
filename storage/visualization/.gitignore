@@ -2,6 +2,5 @@ largeData/*
 !largeData/hand
 largeData/hand/*
 !largeData/hand/MA0.6_RF1.js
-!largeData/hand/MA0.9_RF1.js
 
 
