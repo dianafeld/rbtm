@@ -24,7 +24,7 @@ def main():
 
 
     hfd5FileName = "largeData/hand/result.hdf5"
-    outputFileName = "largeData/hand_with_round/MA" + str(MIN_ALPHA) + "_RF" + str(RAREFACTION) + ".js"
+    outputFileName = "largeData/hand/MA" + str(MIN_ALPHA) + "_RF" + str(RAREFACTION) + ".js"
     # !! ATTENTION, THIS FILE WILL BE TOTALLY OWERWRITTEN !!
 
 
@@ -33,15 +33,6 @@ def main():
     
     dataCube = hdf5File["Results"]
     print "Original cube shape:", dataCube.shape
-    Q, W, E = dataCube.shape
-
-
-    # this block of code is used to set boundaries in visualization, the longest side of limiting box is 80
-    maxDim = max(Q, W, E)
-    spacePerPoint = 400.0 / float(maxDim)
-    maxAbsX = Q * spacePerPoint
-    maxAbsY = W * spacePerPoint
-    maxAbsZ = E * spacePerPoint
 
     print("Rarefying dataCube...")
     if (RAREFACTION > 1):
@@ -85,7 +76,6 @@ def main():
     print("File opened, starting to write...")
     f.seek(0)
     f.truncate()
-    #f.write("var NMK = [%d, %d, %d];\nvar number_str = " % (N, M, K))
     f.write("var NMK = [%d, %d, %d]" % (N, M, K))
 
 
@@ -96,7 +86,7 @@ def main():
 
     A = A * 512
     A = A.astype(int)
-    
+
     R = (RGBA[:,0]).flatten()
     G = (RGBA[:,1]).flatten()
     B = (RGBA[:,2]).flatten()
@@ -105,6 +95,8 @@ def main():
         X = Ix - N / 2
     else:
         X = 2 * Ix - N
+        # strange multiplying by 2 when RAREFACTION==1, it's becuase of using half of 
+        # array, not full (look at code above where array is rarefied)
     Y = Iy - M / 2
     Z = Iz - K / 2
 
@@ -140,9 +132,6 @@ def main():
     f.write(";\n")
     print "number of leftover vertices: %d,  %.2f%% from all" % (numVertices, float(numVertices * 100)/float(N * M * K))
     f.write("var numVertices = " + str(numVertices) + ";\n")
-    f.write("var maxAbsX = " + str(maxAbsX) + ";\n")
-    f.write("var maxAbsY = " + str(maxAbsY) + ";\n")
-    f.write("var maxAbsZ = " + str(maxAbsZ) + ";\n")
 
     f.close()
     hdf5File.close()
