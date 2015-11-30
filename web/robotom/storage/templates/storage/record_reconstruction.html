@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="page-header">
+        <div class="container-fluid">
+            <h2>Реконструкция эксперимента {{ record_id }}</h2>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="panel panel-default">
+            <div class="panel-body visualization">
+                {% load staticfiles %}
+                <div id="container"></div>
+
+                <script src="{% static 'storage/visualization/three.min.js' %}"></script>
+                <script src="{% static 'storage/visualization/TrackballControls.js' %}"></script>
+                <script src="{% static 'storage/visualization/Detector.js' %}"></script>
+                <script src="{% static 'storage/visualization/stats.min.js' %}"></script>
+            </div>
+            <div class="panel-footer">
+                <a class="btn btn-default" href="{% url 'storage:storage_record' record_id %}">Назад к записи</a>
+            </div>
+        </div>
+    </div>
+    <script type="x-shader/x-vertex" id="vertexshader">
+        precision mediump float;
+        precision mediump int;
+
+        uniform mat4 modelViewMatrix; // optional
+        uniform mat4 projectionMatrix; // optional
+        uniform float median_pSize;
+
+        attribute vec3 position;
+        attribute vec3 color;
+        attribute float alpha;
+
+        varying vec4 vColor;
+
+        void main() {
+            vColor= vec4(color, alpha);
+
+            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+            gl_PointSize = median_pSize * 2.0 * alpha;
+
+        }
+
+
+    </script>
+
+    <script type="x-shader/x-fragment" id="fragmentshader">
+
+        precision mediump float;
+        precision mediump int;
+
+        uniform float time;
+
+        varying vec4 vColor;
+        void main() {
+            gl_FragColor = vColor;
+        }
+
+    </script>
+
+    <script src="{% static 'storage/visualization/MA0.9_RF1.js' %}"></script>
+    <script src="{% static 'storage/visualization/main.js' %}"></script>
+
+{% endblock content %}

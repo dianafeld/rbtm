@@ -409,3 +409,10 @@ def delete_experiment(request, experiment_id):
         return HttpResponseBadRequest(
             u'Не удается удалить эксперимент.',
             content_type='text/plain')
+
+
+def record_reconstruction(request, storage_record_id):
+    return render(request, 'storage/record_reconstruction.html', {
+        "record_id": storage_record_id,
+        'caption': 'Реконструкция эксперимента ' + str(storage_record_id)
+    })

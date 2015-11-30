@@ -8,5 +8,7 @@ urlpatterns = patterns('',
                        url(r'^frames_downloading_(?P<storage_record_id>[a-zA-Z\d\-]+)/$', views.frames_downloading,
                            name='frames_downloading'),
                        url(r'^delete_experiment_(?P<experiment_id>[a-zA-Z\d\-]+)/$', views.delete_experiment,
-                           name='delete_experiment')
+                           name='delete_experiment'),
+                       url(r'^record_reconstruction_(?P<storage_record_id>[a-zA-Z\d\-]+)/$', views.record_reconstruction,
+                           name='record_reconstruction')
                        )

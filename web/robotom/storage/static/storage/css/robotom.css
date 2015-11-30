@@ -14,3 +14,25 @@
 .tr-buttoned:hover > td > div {
     visibility: visible;
 }
+
+body {
+    position: relative;
+}
+
+.visualization #container {
+    display: inline-block;
+    text-align: center;
+}
+
+.visualization canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.visualization {
+    position: relative;
+}
+
+.visualization #stats {
+    top: 15px !important;
+}
