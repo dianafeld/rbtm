@@ -20,11 +20,13 @@ from conf import *
 from experiment import app
 logger = app.logger
 
-
 EMERGENCY_STOP_MSG = 'Experiment  %s  has been emergency stopped!'
 SOMEONE_STOP_MSG = 'Experiment  %s  has been stopped by someone!'
 SUCCESSFULL_STOP_MSG = 'Experiment  %s  has been done successfully!'
 
+EMERGENCY_STOP_MSG = 'Experiment was emergency stopped'
+SOMEONE_STOP_MSG = 'Experiment was stopped by someone'
+SUCCESSFULL_STOP_MSG = 'Experiment was finished successfully'
 
 def create_response(success=True, exception_message='', error='', result=None):
     """ Creates response for queries in one format
@@ -157,8 +159,8 @@ def send_to_storage(storage_uri, data, files=None):
 
     logger.info('Sending to storage...')
     try:
-        print "  files:  ", files
-        print "  data :  ", data
+        #print "  files:  ", files
+        #print "  data :  ", data
         storage_resp = requests.post(storage_uri, files=files, data=data)
     except requests.ConnectionError as e:
         exception_message = e.message
@@ -209,7 +211,11 @@ def send_frame_to_storage_webpage(frame_metadata_dict, image_numpy, send_to_webp
         s.seek(0)
         data = {'data': json.dumps(frame_metadata_dict)}
         files = {'file': s}
-        success, exception_message = send_to_storage(storage_uri=STORAGE_FRAMES_URI, data=data, files=files)
+        if not STORAGE_IS_STUB:
+            success, exception_message = send_to_storage(storage_uri=STORAGE_FRAMES_URI, data=data, files=files)
+            #if storage is stub there are problems with sending images there
+        else:
+            success = True
 
         if not success:
             raise ModExpError(error='Problems with storage', exception_message=exception_message)
@@ -232,6 +238,7 @@ class ModExpError(Exception):
         self.message = error
         self.error = error
         self.exception_message = exception_message
+        self.stop_msg = stop_msg
 
     def __str__(self):
         return repr(self.message)
@@ -251,7 +258,7 @@ class ModExpError(Exception):
 
     def log(self, exp_id=''):
         if exp_id:
-            logger.info(self.stop_msg % exp_id)
+            logger.info(self.stop_msg + ', id: ' + exp_id)
         else:
             logger.info("ERROR:")
 
@@ -296,37 +303,8 @@ class Experiment:
         getting_frame_message = 'Getting image, number: %d, mode: %s ...' % (self.frame_num, mode)
         logger.info(getting_frame_message)
     
-        #frame_dict = self.tomograph.get_frame(exposure=exposure, from_experiment=True, exp_is_advanced=False)
-        frame_dict = {
-                u'object': 
-                {
-                    u'horizontal position': 0, 
-                    u'angle position': 0.0, 
-                    u'present': True
-                },
-                'number': 0,
-                u'X-ray source':
-                {
-                    u'current': 0.0,
-                    u'voltage': 0.0},
-                u'shutter':
-                {
-                    u'open': False
-                },
-                'mode': 'dark',
-                u'image_data':
-                {
-                    u'datetime': u'29.11.2015 16:50:20', 
-                    u'hous_temp': 28.712708565497692, 
-                    u'detector': 
-                    {
-                        u'model': u'Ximea xiRAY'
-                    },
-                    u'chip_temp': 21.335663340850658,
-                    u'exposure': 1000,
-                    'image': np.empty((10, 10)),
-                },
-            }
+        frame_dict = self.tomograph.get_frame(exposure=exposure, from_experiment=True, exp_is_advanced=False)
+        #frame_dict = {  u'image_data':  {   'image': np.empty((10, 10)),    },  }
         frame_dict['mode'] = mode
         frame_dict['number'] = self.frame_num
 
@@ -335,9 +313,6 @@ class Experiment:
         del(frame_dict['image_data']['image'])
 
         frame_metadata_event = create_event(type='frame', exp_id=self.exp_id, MoF=frame_dict)
-
-        print "  frame_metadata_event: ", frame_metadata_event
-        print "  image shape:          ", image_numpy.shape
 
         send_to_webpage = (self.frame_num % self.FOSITW == self.FOSITW - 1)
 

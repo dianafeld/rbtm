@@ -513,7 +513,7 @@ class Tomograph:
             event_for_send = create_event(type='message', exp_id=exp_id, MoF=SUCCESSFULL_STOP_MSG)
             stop_msg = SUCCESSFULL_STOP_MSG
 
-        logger.info(stop_msg % exp_id)
+        logger.info(stop_msg + ', id: ' + exp_id)
         logger.info("Sending messages about stop of experiment...")
         send_message_to_storage_webpage(event_for_send)
 

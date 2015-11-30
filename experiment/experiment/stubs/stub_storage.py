@@ -47,6 +47,7 @@ def got_request():
                 logging.info('- undefined')
         """
 '''
+# commented 30.11.15 (Rustam) when try to send here images from "Experiment" and have problems with it
 
 if __name__ == '__main__':
     try:

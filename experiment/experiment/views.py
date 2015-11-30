@@ -286,7 +286,7 @@ def check_and_prepare_exp_parameters(exp_param):
     # because it will be more accurate this way
     return True, ''
 
-
+"""
 def time_counter_of_experiment(tomograph, exp_id, exp_time=MAX_EXPERIMENT_TIME):
     time.sleep(exp_time)
     cur_exp = tomograph.current_experiment
@@ -341,7 +341,7 @@ def carry_out_advanced_experiment(tomograph, exp_param):
 
     tomograph.handle_successful_stop(time_of_experiment_start)
     return
-
+"""
 
 # NEED TO EDIT (COMMENT BEFORE POWERING ON SOURCE)
 @app.route('/tomograph/<int:tomo_num>/experiment/start', methods=['POST'])
