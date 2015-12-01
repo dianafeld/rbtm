@@ -420,44 +420,49 @@ class Tomograph:
 
         logger.info('Object was moved back!')
 
-    def get_frame(self, exposure, send_to_webpage=False, from_experiment=False, exp_is_advanced=True):
+    def get_frame(self, exposure, with_open_shutter, send_to_webpage=False, from_experiment=False, exp_is_advanced=True):
         """ Tries get frame with some exposure
         :arg: 'exposure' - exposure, which frame should get with
         :return:
         """
         logger.info('Going to get image...')
-
+        logger.info('With open shutter: ' + str(with_open_shutter))
         self.basic_tomo_check(from_experiment)
 
         if type(exposure) not in (float, int):
             raise ModExpError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_angle)))
 
         # TO DELETE THIS LATER
-        logger.info('Getting an image with exposure %.1f milliseconds...' % (exposure))
         if exposure < 0.1 or 16000 < exposure:
-            raise ModExpError(error='Exposure must have value from 0.1 to 16000')
+            raise ModExpError(error = ('Exposure must have value from 0.1 to 16000 (given is %.1f )' % (exposure)) )
 
+
+        if with_open_shutter == True:
+            self.open_shutter(0, from_experiment=from_experiment, exp_is_advanced=exp_is_advanced)
+        logger.info('Getting an image with exposure %.1f milliseconds...' % (exposure))
         # Tomograph takes exposure multiplied by 10 and rounded
         exposure = round(exposure)
-        frame_metadata_json = try_thrice_function(func=self.tomograph_proxy.GetFrame, args=exposure,
-        										  error_str='Could not get image because of tomograph')
+        try:
+            frame_metadata_json = try_thrice_function(func=self.tomograph_proxy.GetFrame, args=exposure,
+            										  error_str='Could not get image because of tomograph')
+        except Exception as e:
+            raise e
+        finally:
+            if with_open_shutter == True:
+                self.close_shutter(0, from_experiment=from_experiment, exp_is_advanced=exp_is_advanced)
+
 
         try:
             frame_dict = json.loads(frame_metadata_json)
         except TypeError:
             raise ModExpError(error='Could not convert frame\'s JSON into dict')
-        det = self.detector_proxy
 
-        
         logger.info('Image was get, reading the image from detector...')
-        try:
-            image = self.detector_proxy.read_attribute("image", extract_as=PyTango.ExtractAs.Nothing)
-        except Exception as e:
-            logger.info(e.message)
-            repr(e)
+        image = self.try_thrice_read_attr_detector("image", extract_as=PyTango.ExtractAs.Nothing,
+                                                   error_str='Could not read image because of tomograph')
+
 
         logger.info("Image was red, preparing the image to send to storage...")
-
         try:
             enc = PyTango.EncodedAttribute()
             image_numpy = enc.decode_gray16(image)
@@ -535,7 +540,7 @@ class Tomograph:
         self.basic_tomo_check(from_experiment)
 
         chip_temp_attr = self.try_thrice_read_attr_detector("chip_temp",
-                                                            error_str='Could not chip temperature because of tomograph')
+                                                            error_str='Could not get chip temperature because of tomograph')
         chip_temp = chip_temp_attr.value
         logger.info('Chip temperature is %.2f' % chip_temp)
         return chip_temp
@@ -546,7 +551,7 @@ class Tomograph:
         self.basic_tomo_check(from_experiment)
 
         hous_temp_attr = self.try_thrice_read_attr_detector("hous_temp",
-                                                            error_str='Could not hous temperature because of tomograph')
+                                                            error_str='Could not get hous temperature because of tomograph')
 
         hous_temp = hous_temp_attr.value
         logger.info('Hous temperature is %.2f' % hous_temp)

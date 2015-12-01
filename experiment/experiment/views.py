@@ -227,7 +227,15 @@ def detector_get_frame(tomo_num):
     success, exposure, response_if_fail = check_request(request.data)
     if not success:
         return response_if_fail
-    return call_method_create_response(tomo_num, method_name='get_frame', args=exposure, GET_FRAME_method=True)
+    return call_method_create_response(tomo_num, method_name='get_frame', args=(exposure, True), GET_FRAME_method=True)
+
+@app.route('/tomograph/<int:tomo_num>/detector/get-frame-with-closed-shutter', methods=['POST'])
+def detector_get_frame_with_closed_shutter(tomo_num):
+    logger.info('\n\nREQUEST: DETECTOR/GET FRAME WITH CLOSED SHUTTER')
+    success, exposure, response_if_fail = check_request(request.data)
+    if not success:
+        return response_if_fail
+    return call_method_create_response(tomo_num, method_name='get_frame', args=(exposure, False), GET_FRAME_method=True)
 
 
 @app.route('/tomograph/<int:tomo_num>/detector/chip_temp', methods=['GET'])

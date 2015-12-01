@@ -298,10 +298,15 @@ class Experiment:
 
     def get_and_send_frame(self, exposure, mode):
 
-        getting_frame_message = 'Getting image, number: %d, mode: %s ...' % (self.frame_num, mode)
+        getting_frame_message = 'Getting image, number: %d, mode: %s ...\n' % (self.frame_num, mode)
         logger.info(getting_frame_message)
     
-        frame_dict = self.tomograph.get_frame(exposure=exposure, from_experiment=True, exp_is_advanced=False)
+        if mode == 'dark':
+            frame_dict = self.tomograph.get_frame(exposure=exposure, with_open_shutter=False, 
+                                                  from_experiment=True, exp_is_advanced=False)
+        else:
+            frame_dict = self.tomograph.get_frame(exposure=exposure, with_open_shutter=True, 
+                                                  from_experiment=True, exp_is_advanced=False)
         #frame_dict = {  u'image_data':  {   'image': np.empty((10, 10)),    },  }
         frame_dict['mode'] = mode
         frame_dict['number'] = self.frame_num
@@ -328,7 +333,6 @@ class Experiment:
             self.get_and_send_frame(exposure=self.DARK_exposure, mode='dark')
         logger.info('Finished with DARK images!\n')
 
-        self.tomograph.open_shutter(0, from_experiment=True, exp_is_advanced=False)
         self.tomograph.move_away(from_experiment=True, exp_is_advanced=False)
 
         logger.info('Going to get EMPTY images!\n')
