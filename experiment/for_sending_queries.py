@@ -1,8 +1,8 @@
 import json
 import requests
 
-MODULE_EXPERIMENT_URI = "http://109.234.34.140:5001"
-#MODULE_EXPERIMENT_URI = "http://109.234.34.140:5002"
+#MODULE_EXPERIMENT_URI = "http://109.234.34.140:5001"
+MODULE_EXPERIMENT_URI = "http://localhost:5001"
 
 
 simple_experiment = json.dumps(
@@ -17,7 +17,7 @@ simple_experiment = json.dumps(
                     {
                         'count': 1,
                         'exposure': 1000.0,
-                    },
+                        },
                 'EMPTY':
                     {
                         'count': 1,
@@ -25,10 +25,10 @@ simple_experiment = json.dumps(
                     },
                 'DATA':
                     {
-                        'step count': 1,
+                        'step count': 2,
                         'exposure': 1000.0,
                         'angle step': 40.5,
-                        'count per step': 1,
+                        'count per step': 2,
                     }
             },
     }
@@ -52,11 +52,11 @@ advanced_experiment = json.dumps(
 new_voltage = json.dumps(50.0)
 new_current = json.dumps(20.0)
 exposure = json.dumps(1000.0)
-new_pos = json.dumps(5.0)
+new_pos = json.dumps(7.0)
 
 try:
 
-    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/check-state")
+    req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/state")
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/source/power-on")
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/source/power-off")
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/source/set-voltage", data = new_voltage)
@@ -72,13 +72,21 @@ try:
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/get-vertical-position")
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/get-angle-position")
 
+    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/detector/chip_temp")
+    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/detector/hous_temp")
+
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/reset-angle-position", data = new_pos)
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/move-away")
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/move-back")
 
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/detector/get-frame", data = exposure)
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/start", data = simple_experiment)
-    req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/start", data = advanced_experiment)
+    #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/start", data = advanced_experiment)
+    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/stop")
+
+
+
+    # Future "Experiment stop"
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/stop", data = json.dumps("prosto"))
 
 
@@ -87,4 +95,3 @@ except requests.ConnectionError as e:
     print "Could not connect", e.message
 else:
     print req.content
-
