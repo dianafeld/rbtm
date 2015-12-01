@@ -6,17 +6,43 @@ Contains web-addresses of storage, of web-page of adjustment(of tomograph), of t
 also contains name of png-file, creating for storing current image during experiment,
 finally contains time that tomograph waits for commands during advanced experiments with exec,
 
-If STORAGE_IS_STUB and/or WEBPAGE_OF_ADJUSTMENT_IS_STUB variables are set True, it launches stub servers
-for storage and/or web-page of adjustment
+If REAL_TOMOGRAPH_STORAGE_WEBPAGE is set as False, it launches stub servers
+for storage and web-page of adjustment
 """
 
-import subprocess
 
-STORAGE_IS_STUB = True
 
-WEBPAGE_OF_ADJUSTMENT_IS_STUB = True
+REAL_TOMOGRAPH_STORAGE_WEBPAGE = True
 
-TOMOGRAPH_IS_STUB = True
+
+
+
+
+if REAL_TOMOGRAPH_STORAGE_WEBPAGE == True:
+    TOMO_ADDR = '188.166.73.250:10000'
+
+    STORAGE_FRAMES_URI     = "http://109.234.34.140:5016/storage/frames/post"       
+    STORAGE_EXP_START_URI  = "http://109.234.34.140:5016/storage/experiments/create"
+    STORAGE_EXP_FINISH_URI = "http://109.234.34.140:5016/storage/experiments/finish"
+
+    WEBPAGE_URI = "http://109.234.34.140:5021/take_image"
+
+
+else:
+    import subprocess
+    TOMO_ADDR = '188.166.73.250:10000'
+
+    STORAGE_FRAMES_URI     = "http://localhost:5020/stub_storage"
+    STORAGE_EXP_START_URI  = "http://localhost:5020/stub_storage"
+    STORAGE_EXP_FINISH_URI = "http://localhost:5020/stub_storage"
+    subprocess.Popen(["./experiment/stubs/stub_storage.py"])
+    # launch stub storage server on port 5020 - just for recieving messages from 'experiment' and answering 'success'
+
+    WEBPAGE_URI = "http://localhost:5021/stub_webpage"
+    subprocess.Popen(["./experiment/stubs/stub_webpage.py"])
+    # launch stub web-page server on port 5021 - just for recieving messages from 'experiment' and answering 'success'
+
+
 
 
 
@@ -34,31 +60,5 @@ MAX_EXPERIMENT_TIME = 100
 
 
 
-if STORAGE_IS_STUB:
-    STORAGE_FRAMES_URI     = "http://localhost:5020/stub_storage"               # To send frames
-    STORAGE_EXP_START_URI  = "http://localhost:5020/stub_storage"               # To send experiment parameters
-    STORAGE_EXP_FINISH_URI = "http://localhost:5020/stub_storage"               # To send messages about experiment stops
-
-    subprocess.Popen(["./experiment/stubs/stub_storage.py"])
-    # launch stub storage server on port 5020 - just for recieving messages from 'experiment' and answering 'success'
-else:
-    STORAGE_FRAMES_URI     = "http://109.234.34.140:5006/storage/frames/post"           
-    STORAGE_EXP_START_URI  = "http://109.234.34.140:5006/storage/experiments/create"
-    STORAGE_EXP_FINISH_URI = "http://109.234.34.140:5006/storage/experiments/finish"
 
 
-
-if WEBPAGE_OF_ADJUSTMENT_IS_STUB:
-    WEBPAGE_URI = "http://localhost:5021/stub_webpage"
-    
-    subprocess.Popen(["./experiment/stubs/stub_webpage.py"])
-    # launch stub web-page server on port 5021 - just for recieving messages from 'experiment' and answering 'success'
-else:
-    WEBPAGE_URI = "http://109.234.34.140:5021/take_image"
-
-
-
-if TOMOGRAPH_IS_STUB:
-    TOMO_ADDR = '188.166.73.250:10000'
-else:
-    TOMO_ADDR = 'localhost:10000'

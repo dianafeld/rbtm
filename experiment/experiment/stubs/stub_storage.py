@@ -25,7 +25,7 @@ app = Flask(__name__)
 @app.route('/stub_storage', methods=['POST'])
 def got_request():
     logging.info("Something has been recieved...")
-    return jsonify({'result': 'success'})
+    return jsonify({'result': 'success', "I'm": "STUB storage",})
 
 '''
     if not (request.data or request.form):

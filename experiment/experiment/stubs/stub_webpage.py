@@ -39,7 +39,7 @@ def got_request():
                 logging.info('- it is image\n')
             else:
                 logging.info('- undefined')
-        return jsonify({'result': 'success'})
+        return jsonify({'result': 'success', "I'm": "STUB web-page of adjustment",})
 
 
 

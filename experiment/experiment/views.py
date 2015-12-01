@@ -21,6 +21,13 @@ from flask import send_file
 from experiment import app
 logger = app.logger
 
+if REAL_TOMOGRAPH_STORAGE_WEBPAGE == True:
+    logger.info(' !! Tomograph, storage, web-page are REAL !! ')
+else:
+    logger.info(' !! Tomograph, storage, web-page are STUBS !! ')
+
+
+
 TOMOGRAPHS = (
     Tomograph(TOMO_ADDR + "/tomo/tomograph/1", TOMO_ADDR + "/tomo/detector/1"),
 )

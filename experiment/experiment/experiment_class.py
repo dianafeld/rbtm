@@ -211,16 +211,14 @@ def send_frame_to_storage_webpage(frame_metadata_dict, image_numpy, send_to_webp
         s.seek(0)
         data = {'data': json.dumps(frame_metadata_dict)}
         files = {'file': s}
-        if not STORAGE_IS_STUB:
+        if REAL_TOMOGRAPH_STORAGE_WEBPAGE:
             success, exception_message = send_to_storage(storage_uri=STORAGE_FRAMES_URI, data=data, files=files)
-            #if storage is stub there are problems with sending images there
+            # if storage is stub there are problems with sending images there
         else:
             success = True
 
         if not success:
-            raise ModExpError(error='Problems with storage', exception_message=exception_message)
-        # commented 27.07.15 for tests with real storage, because converting to png file in
-        # function 'send_event_to_webpage()' takes a lot of time    
+            raise ModExpError(error='Problems with storage', exception_message=exception_message)   
         else:
             if send_to_webpage == True:
                 frame_dict = frame_metadata_dict
@@ -280,7 +278,7 @@ class Experiment:
     def __init__(self, tomograph, exp_param, FOSITW=5):
         # FOSITW - 'Frequency Of Sending Images To Webpage '
 
-        self.tomograph=tomograph
+        self.tomograph = tomograph
         self.exp_id = exp_param['exp_id']
 
         self.DARK_count = exp_param['DARK']['count']
@@ -309,9 +307,7 @@ class Experiment:
         frame_dict['number'] = self.frame_num
 
         image_numpy = frame_dict['image_data']['image']
-
         del(frame_dict['image_data']['image'])
-
         frame_metadata_event = create_event(type='frame', exp_id=self.exp_id, MoF=frame_dict)
 
         send_to_webpage = (self.frame_num % self.FOSITW == self.FOSITW - 1)
