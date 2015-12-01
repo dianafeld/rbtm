@@ -75,12 +75,11 @@ class Tomograph:
 
 
     def try_thrice_read_attr(self, attr_name, extract_as=ExtractAs.Numpy, error_str=''):
-        """ Try to change some attribute of Tango device three times
-
+        """ Try to read some attribute of Tango device three times
         :arg: 'attr_name' - type is string
-              'new_value' - type is type of attribute
-
+              'extract-as' - method of extraction
         :return:
+
         """
         exception_message = ''
         for i in range(0, 3):
@@ -88,7 +87,6 @@ class Tomograph:
                 attr = self.tomograph_proxy.read_attribute(attr_name, extract_as)
             except PyTango.DevFailed as e:
                 exception_message = e[-1].desc
-                attr = None
             else:
                 return attr
         raise ModExpError(error=error_str, exception_message=exception_message)
@@ -348,12 +346,10 @@ class Tomograph:
         :return:
         """
         logger.info('Going to get horizontal position...')
-
         self.basic_tomo_check(from_experiment)
 
         x_attr = self.try_thrice_read_attr("horizontal_position",
 										   error_str='Could not get position because of tomograph')
-
         x_value = x_attr.value
         logger.info('Horizontal position is %d' % x_value)
         return x_value
@@ -364,12 +360,10 @@ class Tomograph:
         :return:
         """
         logger.info('Going to get vertical position...')
-
         self.basic_tomo_check(from_experiment)
 
         y_attr = self.try_thrice_read_attr("vertical_position",
         								   error_str='Could not get position because of tomograph')
-
         y_value = y_attr.value
         logger.info('Vertical position is %d' % y_value)
         return y_value
@@ -380,12 +374,10 @@ class Tomograph:
         :return:
         """
         logger.info('Going to get angle position...')
-
         self.basic_tomo_check(from_experiment)
 
         angle_attr = self.try_thrice_read_attr("angle_position",
         										error_str='Could not get position because of tomograph')
-
         angle_value = angle_attr.value
         logger.info('Angle position is %.2f' % angle_value)
         return angle_value
@@ -397,12 +389,10 @@ class Tomograph:
         :return:
         """
         logger.info('Resetting angle position...')
-
         self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.ResetAnglePosition,
                             error_str='Could not reset angle position because of tomograph')
-
         logger.info('Angle position was reset!')
 
 
@@ -412,11 +402,9 @@ class Tomograph:
         :return:
         """
         logger.info('Moving object away...')
-
        	self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.MoveAway, error_str='Could not move object away')
-
         logger.info('Object was moved away!')
 
     def move_back(self, from_experiment=False, exp_is_advanced=True):
@@ -521,3 +509,46 @@ class Tomograph:
         experiment_time = time.time() - time_of_experiment_start
         logger.info("Experiment took %.4f seconds" % experiment_time)
 
+#-----------------------------------------------------------------------------------------------
+
+
+    def try_thrice_read_attr_detector(self, attr_name, extract_as=ExtractAs.Numpy, error_str=''):
+        """ Try to read some attribute of Tango device three times
+
+        :arg: 'attr_name' - type is string
+              'extract-as' - method of extraction
+        :return:
+        """
+        exception_message = ''
+        for i in range(0, 3):
+            try:
+                attr = self.detector_proxy.read_attribute(attr_name, extract_as)
+            except PyTango.DevFailed as e:
+                exception_message = e[-1].desc
+            else:
+                return attr
+        raise ModExpError(error=error_str, exception_message=exception_message)
+
+    def get_detector_chip_temperature(self, from_experiment=False, exp_is_advanced=True):
+
+        logger.info('Going to get detector chip temperature...')
+        self.basic_tomo_check(from_experiment)
+
+        chip_temp_attr = self.try_thrice_read_attr_detector("chip_temp",
+                                                            error_str='Could not chip temperature because of tomograph')
+        chip_temp = chip_temp_attr.value
+        logger.info('Chip temperature is %.2f' % chip_temp)
+        return chip_temp
+
+
+    def get_detector_hous_temperature(self, from_experiment=False, exp_is_advanced=True):
+        logger.info('Going to get detector hous temperature...')
+        self.basic_tomo_check(from_experiment)
+
+        hous_temp_attr = self.try_thrice_read_attr_detector("hous_temp",
+                                                            error_str='Could not hous temperature because of tomograph')
+
+        hous_temp = hous_temp_attr.value
+        logger.info('Hous temperature is %.2f' % hous_temp)
+        return hous_temp
+        

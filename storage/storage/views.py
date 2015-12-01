@@ -161,9 +161,8 @@ def get_frame_info():
     return resp
 
 
-def get_transformed_data_path(data, experiment_id):
-    transformed_data_path = os.path.abspath('/tmp/tmp_data_file')
-    logger.debug(transformed_data_path)
+def transform_data(data, transformed_data_path, experiment_id):
+
     data_transformed = h5py.File(transformed_data_path, "w")
     logger.debug("hdf5: created file in temporary directory")
 
@@ -194,10 +193,15 @@ def get_transformed_data_path(data, experiment_id):
 
 @app.route('/storage/experiments/<experiment_id>/hdf5', methods=['GET'])
 def get_experiment_by_id(experiment_id):
-
     logger.info('Getting experiment: ' + experiment_id)
     data = h5py.File(os.path.abspath(os.path.join('data', 'experiments', experiment_id, 'before_processing', 'frames.h5')), 'r')
-    return send_file(get_transformed_data_path(data, experiment_id), mimetype='application/x-hdf5', as_attachment=True, attachment_filename=str(experiment_id)+'.h5')
+    transformed_data_path = os.path.abspath(os.path.join("data", "experiments", str(experiment_id), "before_processing",
+                                                         experiment_id + ".h5"))
+    logger.debug(transformed_data_path)
+    if not os.path.exists(transformed_data_path):
+        transform_data(data, transformed_data_path, experiment_id)
+    return send_file(transformed_data_path,
+                     mimetype='application/x-hdf5', as_attachment=True, attachment_filename=str(experiment_id)+'.h5')
 
 
 @app.route('/storage/png/get', methods=['POST'])
@@ -212,14 +216,49 @@ def get_png():
     frame_id = find_query['frame_id']
     experiment_id = find_query['exp_id']
 
-    png_file_path = os.path.join('..', 'data', 'experiments', str(experiment_id), 'before_processing', 'png',
-                                 str(frame_id) + '.png')
+    png_file_path = os.path.abspath(os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
+                                 str(frame_id) + '.png'))
 
     #if not os.path.exists(os.path.join('storage', png_file_path)):
     #if not os.path.exists(png_file_path):
     #    abort(404)
 
     return send_file(png_file_path, mimetype='image/png')
+
+
+@app.route('/storage/experiments/<experiment_id>', methods=['DELETE'])
+def delete_experiment(experiment_id):
+    json_result = jsonify({'deleted': 'success'})
+    logger.info('Deleting experiment: ' + experiment_id)
+
+    experiments = db['experiments']
+    frames = db['frames']
+
+    exp_query = {'_id': experiment_id}
+    cursor = experiments.find(exp_query)
+    if cursor.count() == 0:
+        logger.error('Experiment not found')
+    else:
+        experiments.remove(exp_query)
+        if cursor.count() != 0:
+            logger.error("Can't remove experiment")
+            json_result = jsonify({'deleted': 'fail'})
+        else:
+            logger.info("database: deleted experiment {} successfully".format(experiment_id))
+
+    frames_query = {'exp_id': experiment_id}
+    frames.remove(frames_query)
+    if frames.find(frames_query).count() != 0:
+        logger.error("Can't remove frames")
+        json_result = jsonify({'deleted': 'fail'})
+    else:
+        logger.info("database: deleted frames of {} successfully".format(experiment_id))
+
+    fs.delete_experiment(experiment_id)
+
+    # db['reconstructions'].remove(request.get_json())
+
+    return json_result
 
 
 # Needs rewriting

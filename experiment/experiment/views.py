@@ -223,6 +223,19 @@ def detector_get_frame(tomo_num):
     return call_method_create_response(tomo_num, method_name='get_frame', args=exposure, GET_FRAME_method=True)
 
 
+@app.route('/tomograph/<int:tomo_num>/detector/chip_temp', methods=['GET'])
+def detector_get_chip_temperature(tomo_num):
+    logger.info('\n\nREQUEST: DETECTOR/GET CHIP TEMPERATURE')
+    return call_method_create_response(tomo_num, method_name='get_detector_chip_temperature')
+
+@app.route('/tomograph/<int:tomo_num>/detector/hous_temp', methods=['GET'])
+def detector_get_hous_temperature(tomo_num):
+    logger.info('\n\nREQUEST: DETECTOR/GET HOUS TEMPERATURE')
+    return call_method_create_response(tomo_num, method_name='get_detector_hous_temperature')
+
+
+
+
 #---------------------------------------------------------#
 #    Functions for running experiment
 #---------------------------------------------------------#

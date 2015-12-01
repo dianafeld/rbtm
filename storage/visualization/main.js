@@ -9,12 +9,14 @@ animate();
 
 function init() {
 
-	// variables from "numbers.js" : NMK, maxAbsX, maxAbsY, maxAbsZ, numVertices and numbers
+
+	// variables from "numbers.js" : NMK, R_arr, G_arr, B_arr, A_arr, X_arr, Y_arr, Z_arr
 	var N = NMK[0];
 	var M = NMK[1];
 	var K = NMK[2];
 
-	var medianPointSize = (Math.min (2 * maxAbsX / N, 2 * maxAbsY / M, 2 * maxAbsZ / K)) * 10; //5
+
+	var medianPointSize =  1;
 
 			
 
@@ -33,7 +35,7 @@ function init() {
 	//camera = new THREE.OrthographicCamera( - maxAbsX * CMW * wDivH, maxAbsX * CMW * wDivH, maxAbsY * CMW, - maxAbsY * CMW, 0.1, 1000 );
 	camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
 
-	camera.position.z = 50;
+	camera.position.z = 500;
 
 	controls = new THREE.TrackballControls( camera, renderer.domElement );
 	//controls.addEventListener( 'change', render ); // add this only if there is no animation loop (requestAnimationFrame)
@@ -46,58 +48,21 @@ function init() {
 	var	geometry = new THREE.BufferGeometry();
 
 
-	if (numbers === []){
-		// This is case when max and min values in reconstruction are the same - very rare case, appearing 
-		// primarily when you test with couple of points
-
-		numVertices = N * M * K;
-		function convertToX(binNum){	return (2 * binNum/N - 1.0) * maxAbsX;	}
-		function convertToY(binNum){	return (2 * binNum/M - 1.0) * maxAbsY;	}
-		function convertToZ(binNum){	return (2 * binNum/K - 1.0) * maxAbsZ;	}
-
-		var ind = 0;
-		var positions = new Float32Array( M * N * K * 3 );
-		for (var i = 0; i < N; i++){
-			for (var j = 0; j < M; j++){
-				for (var k = 0; k < K; k++){
-					positions[ind * 3]     = convertToX(i);
-					positions[ind * 3 + 1] = convertToY(j);
-					positions[ind * 3 + 2] = convertToZ(k);
-					ind++;
-				}
-			}
-		}
-
-    	var colors = new Float32Array( numVertices * 3 );
-    	var alphas = new Float32Array( numVertices * 1 );
-    	for (var i = 0; i < numVertices; i++){
-    		colors[i * 3] = 0;
-    		colors[i * 3 + 1] = 1;
-    		colors[i * 3 + 2] = 0;
-    		alphas[i] = 0.5;
-    	}
-	} else {
-		// This is normal case
-
-	    var colors = new Float32Array( numVertices * 3 );
-	    var alphas = new Float32Array( numVertices * 1 );
-		var positions = new Float32Array( numVertices * 3 );
+	var colors = new Float32Array( numVertices * 3 );
+	var alphas = new Float32Array( numVertices * 1 );
+	var positions = new Float32Array( numVertices * 3 );
 
 
-		var ind = 0;
-					
-
-		for (var i = 0; i < numbers.length - 1; i++){
-			colors[ind * 3] =  numbers[i++];
-			colors[ind * 3 + 1] =  numbers[i++];
-			colors[ind * 3 + 2] =  numbers[i++];
-			alphas[ind] = numbers[i++];
-			positions[ind * 3] =  numbers[i++];
-			positions[ind * 3 + 1] =  numbers[i++];
-			positions[ind * 3 + 2] =  numbers[i];
-			ind++;
-		}
+	for (var i = 0; i < numVertices; i++){
+		colors[i * 3] =  (R_arr[i] / 512);
+		colors[i * 3 + 1] =  (G_arr[i] / 512);
+		colors[i * 3 + 2] =  (B_arr[i] / 512);
+		alphas[i] = (A_arr[i] / 512);
+		positions[i * 3] =  X_arr[i];
+		positions[i * 3 + 1] =  Y_arr[i];
+		positions[i * 3 + 2] =  Z_arr[i];
 	}
+
    	geometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 3 ) );
    	geometry.addAttribute( 'alpha', new THREE.BufferAttribute( alphas, 1 ) );
    	geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );

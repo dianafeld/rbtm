@@ -14,7 +14,7 @@ RUN pip install -r requirements_docker.txt
 
 COPY . /var/www/experiment/
 
-RUN echo "STORAGE_FRAMES_URI = 'http://109.234.34.140:5006/storage/frames/post'\nSTORAGE_EXP_START_URI = 'http://109.234.34.140:5006/storage/experiments/create'\nSTORAGE_EXP_FINISH_URI = 'http://109.234.34.140:5006/storage/experiments/finish'" >> conf.py
+RUN echo "STORAGE_FRAMES_URI = 'http://109.234.34.140:5016/storage/frames/post'\nSTORAGE_EXP_START_URI = 'http://109.234.34.140:5016/storage/experiments/create'\nSTORAGE_EXP_FINISH_URI = 'http://109.234.34.140:5016/storage/experiments/finish'" >> conf.py
 RUN echo "WEBPAGE_URI = 'http://109.234.34.140:5021/take_image'" >> conf.py
 RUN echo "TOMO_ADDR = '188.166.73.250:10000'" >> conf.py
 

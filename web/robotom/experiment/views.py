@@ -105,6 +105,12 @@ def check_result(response_dict, request, tomo, success_msg=''):
             'full_access': request.user.userprofile.is_experimentator,
             'caption': 'Эксперимент',
             'tomograph': tomo,
+            'get_voltage_url': settings.EXPERIMENT_SOURCE_GET_VOLT.format(1),
+            'get_current_url': settings.EXPERIMENT_SOURCE_GET_CURR.format(1),
+            'get_vert_url': settings.EXPERIMENT_MOTOR_GET_VERT.format(1),
+            'get_horiz_url': settings.EXPERIMENT_MOTOR_GET_HORIZ.format(1),
+            'get_angle_url': settings.EXPERIMENT_MOTOR_GET_ANGLE.format(1),
+            'get_shutter_url': settings.EXPERIMENT_SHUTTER_GET_STATUS.format(1),
         })
 
 
@@ -272,12 +278,12 @@ def experiment_adjustment(request):
                         'preview_path': os.path.join(settings.MEDIA_URL, file_name),
                         'preview': True,
                         'exposure': exposure,
-                        'get_voltage_url': settings.EXPERIMENT_SOURCE_GET_VOLT,
-                        'get_current_url': settings.EXPERIMENT_SOURCE_GET_CURR,
-                        'get_vert_url': settings.EXPERIMENT_MOTOR_GET_VERT,
-                        'get_horiz_url': settings.EXPERIMENT_MOTOR_GET_HORIZ,
-                        'get_angle_url': settings.EXPERIMENT_MOTOR_GET_ANGLE,
-                        'get_shutter_url': settings.EXPERIMENT_SHUTTER_GET_STATUS,
+                        'get_voltage_url': settings.EXPERIMENT_SOURCE_GET_VOLT.format(1),
+                        'get_current_url': settings.EXPERIMENT_SOURCE_GET_CURR.format(1),
+                        'get_vert_url': settings.EXPERIMENT_MOTOR_GET_VERT.format(1),
+                        'get_horiz_url': settings.EXPERIMENT_MOTOR_GET_HORIZ.format(1),
+                        'get_angle_url': settings.EXPERIMENT_MOTOR_GET_ANGLE.format(1),
+                        'get_shutter_url': settings.EXPERIMENT_SHUTTER_GET_STATUS.format(1),
                         'tomograph': tomo,
                     })
             except BaseException as e:

@@ -9,7 +9,7 @@ REQUEST_DEBUG = False
 
 TIMEOUT_DEFAULT = 10  # timeout in ms
 
-STORAGE_HOST = 'http://109.234.34.140:5006/'
+STORAGE_HOST = 'http://109.234.34.140:5016/'
 
 STORAGE_FRAMES_PNG = urljoin(STORAGE_HOST, '/storage/png/get')
 STORAGE_FRAMES_INFO_HOST = urljoin(STORAGE_HOST, '/storage/frames_info/get')

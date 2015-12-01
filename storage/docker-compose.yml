@@ -4,7 +4,7 @@ database:
     - "27017:27017"
   volumes:
      - ./data/db:/data/db
-  restart: always
+  restart: unless-stopped
 
 server:
   build: .
@@ -15,4 +15,4 @@ server:
     - "5006:5006"
   links:
     - database
-  restart: always
+  restart: unless-stopped
