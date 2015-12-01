@@ -964,7 +964,7 @@ class Tomograph:
         else:
             return create_response(True)
 
-    def get_frame(self, exposure, send_to_webpage=True, exp_is_advanced=True):
+    def get_frame(self, exposure, with_open_shutter, send_to_webpage=True, exp_is_advanced=True):
         """ Tries get frame with some exposure
 
         :arg: 'exposure' - exposure, which frame should get with
@@ -980,6 +980,7 @@ class Tomograph:
 
         """
         logger.info('Going to get image...')
+        logger.info('With open shutter: ' + str(with_open_shutter))
 
         if not self.exp_id and self.experiment_is_running:
             error = 'On this tomograph experiment is running'
@@ -1001,9 +1002,8 @@ class Tomograph:
                 return create_response(success=False, error=error)
 
         # TO DELETE THIS LATER
-        logger.info('Getting image with exposure %.1f milliseconds...' % (exposure))
         if exposure < 0.1 or 16000 < exposure:
-            error = 'Exposure must have value from 0.1 to 16000'
+            error = ('Exposure must have value from 0.1 to 16000 (given is %.1f )' % (exposure))
             logger.info(error)
             if self.exp_id:
                 self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id, exception_message='',
@@ -1012,10 +1012,21 @@ class Tomograph:
             else:
                 return create_response(success=False, error=error)
 
+        if with_open_shutter == True:
+            if self.open_shutter(0, exp_is_advanced=False) == False:
+                return False, None
+
         # Tomograph takes exposure multiplied by 10 and rounded
         exposure = round(exposure)
-        success, frame_metadata_json, exception_message = try_thrice_function(self.tomograph_proxy.GetFrame, exposure)
-        if success == False:
+
+        logger.info('Getting image with exposure %.1f milliseconds...' % (exposure))
+        success_GF, frame_metadata_json, exception_message = try_thrice_function(self.tomograph_proxy.GetFrame, exposure)
+
+        if with_open_shutter == True:
+            if self.close_shutter(0, exp_is_advanced=False) == False:
+                return False, None
+
+        if success_GF == False:
             error = 'Could not get image because of tomograph'
             logger.info(exception_message)
             if self.exp_id:
@@ -1037,12 +1048,24 @@ class Tomograph:
             else:
                 return create_response(success=False, error=error)
 
-        det = self.detector_proxy
-        try:
-            image = det.read_attribute("image", extract_as=PyTango.ExtractAs.Nothing)
-        except PyTango.DevFailed as e:
-            for stage in e:
-                logger.info(stage.desc)
+
+        logger.info("The image was get, reading it from detector...")
+        success, image, exception_message = self.try_thrice_read_attr_detector("image", extract_as=PyTango.ExtractAs.Nothing)
+        if success == False:
+            error = 'Could not get temperature because of tomograph'
+            logger.info(exception_message)
+            if self.exp_id:
+                self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id,
+                                           exception_message=exception_message, error=error)
+                return False, None
+            else:
+                return create_response(success, exception_message, error=error)
+        #det = self.detector_proxy
+        #try:
+        #    image = det.read_attribute("image", extract_as=PyTango.ExtractAs.Nothing)
+        #except PyTango.DevFailed as e:
+        #    for stage in e:
+        #        logger.info(stage.desc)
 
         """
         success, image, exception_message = self.try_thrice_read_attr("image", extract_as=PyTango.ExtractAs.Nothing)
@@ -1057,7 +1080,7 @@ class Tomograph:
             else:
                 return create_response(success, exception_message, error= error)
         """
-        logger.info("Image was get, preparing image to send to storage...")
+        logger.info("The image was red, preparing it to send to storage...")
         try:
             enc = PyTango.EncodedAttribute()
             image_numpy = enc.decode_gray16(image)

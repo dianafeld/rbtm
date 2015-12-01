@@ -381,7 +381,19 @@ def detector_get_frame(tomo_num):
     if not success:
         return response_if_fail
 
-    return tomograph.get_frame(exposure)
+    return tomograph.get_frame(exposure, with_open_shutter=True)
+
+@app.route('/tomograph/<int:tomo_num>/detector/get-frame-with-closed-shutter', methods=['POST'])
+def detector_get_frame_with_closed_shutter(tomo_num):
+    logger.info('\n\nREQUEST: DETECTOR/GET FRAME WITH CLOSED SHUTTER')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+
+    success, exposure, response_if_fail = check_request(request.data)
+    if not success:
+        return response_if_fail
+
+    return tomograph.get_frame(exposure, with_open_shutter=False)
 
 
 @app.route('/tomograph/<int:tomo_num>/detector/chip_temp', methods=['GET'])
@@ -467,7 +479,12 @@ def loop_of_get_send_frames(tomograph, count, exposure, getting_frame_message, m
     for i in range(0, count):
 
         logger.info(getting_frame_message % (i))
-        success, frame_dict = tomograph.get_frame(exposure, send_to_webpage=True, exp_is_advanced=False)
+        if mode == 'dark':
+            success, frame_dict = tomograph.get_frame(exposure, with_open_shutter=False, send_to_webpage=True, 
+                                                      exp_is_advanced=False)
+        else:
+            success, frame_dict = tomograph.get_frame(exposure, with_open_shutter=True, send_to_webpage=True, 
+                                                      exp_is_advanced=False)
         if not success:
             return False
 
@@ -493,8 +510,6 @@ def carry_out_simple_experiment(tomograph, exp_param):
         return
     logger.info('Finished with DARK images!\n')
 
-    if tomograph.open_shutter(0, exp_is_advanced=False) == False:
-        return
     if tomograph.move_away(exp_is_advanced=False) == False:
         return
 
