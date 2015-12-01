@@ -1052,7 +1052,7 @@ class Tomograph:
         logger.info("The image was get, reading it from detector...")
         success, image, exception_message = self.try_thrice_read_attr_detector("image", extract_as=PyTango.ExtractAs.Nothing)
         if success == False:
-            error = 'Could not get temperature because of tomograph'
+            error = 'Could not read image because of tomograph'
             logger.info(exception_message)
             if self.exp_id:
                 self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id,
@@ -1151,9 +1151,9 @@ class Tomograph:
             self.stop_experiment_because_someone(exp_is_advanced)
             return False
 
-        success, y_attr, exception_message = self.try_thrice_read_attr_detector("chip_temp")
+        success, chip_temp_attr, exception_message = self.try_thrice_read_attr_detector("chip_temp")
         if success == False:
-            error = 'Could not get temperature because of tomograph'
+            error = 'Could not get chip temperature because of tomograph'
             logger.info(exception_message)
             if self.exp_id:
                 self.handle_emergency_stop(exp_is_advanced=exp_is_advanced, exp_id=self.exp_id,
@@ -1162,12 +1162,12 @@ class Tomograph:
             else:
                 return create_response(success, exception_message, error=error)
 
-        y_value = y_attr.value
-        logger.info('Chip temperature is %.2f' % y_value)
+        chip_temp = chip_temp_attr.value
+        logger.info('Chip temperature is %.2f' % chip_temp)
         if self.exp_id:
-            return True, y_value
+            return True, chip_temp
         else:
-            return create_response(success=True, result=y_value)
+            return create_response(success=True, result=chip_temp)
 
     def get_detector_hous_temperature(self, exp_is_advanced=True):
         logger.info('Going to get detector hous temperature...')
@@ -1181,7 +1181,7 @@ class Tomograph:
             self.stop_experiment_because_someone(exp_is_advanced)
             return False
 
-        success, y_attr, exception_message = self.try_thrice_read_attr_detector("hous_temp")
+        success, hous_temp_attr, exception_message = self.try_thrice_read_attr_detector("hous_temp")
         if success == False:
             error = 'Could not get temperature because of tomograph'
             logger.info(exception_message)
@@ -1192,9 +1192,9 @@ class Tomograph:
             else:
                 return create_response(success, exception_message, error=error)
 
-        y_value = y_attr.value
-        logger.info('Hous temperature is %.2f' % y_value)
+        hous_temp = hous_temp_attr.value
+        logger.info('Hous temperature is %.2f' % hous_temp)
         if self.exp_id:
-            return True, y_value
+            return True, hous_temp
         else:
-            return create_response(success=True, result=y_value)
+            return create_response(success=True, result=hous_temp)
