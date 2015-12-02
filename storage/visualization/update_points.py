@@ -12,19 +12,23 @@ def main():
 
 
     RAREFACTION = 1
-    MIN_ALPHA = 0.5
+    LEVEL = 5
     COLORMAP = cm.hsv
 
     if len (sys.argv) > 1:
-        MIN_ALPHA = float(sys.argv[1])
+        LEVEL = int(sys.argv[1])
         if len (sys.argv) > 2:
             RAREFACTION = int(sys.argv[2])
-    print "MIN_ALPHA = ", MIN_ALPHA, "  RAREFACTION = ",  RAREFACTION
+    print "LEVEL = ", LEVEL, "  RAREFACTION = ",  RAREFACTION
+
+    percent_to_left = (0.5 ** LEVEL) * 100
+
+    print ("%.4f%% points with biggest values will left" % percent_to_left)
 
 
 
     hfd5FileName = "largeData/hand/result.hdf5"
-    outputFileName = "largeData/hand/MA" + str(MIN_ALPHA) + "_RF" + str(RAREFACTION) + ".js"
+    outputFileName = "largeData/hand/LVL" + str(LEVEL) + "_RF" + str(RAREFACTION) + ".js"
     # !! ATTENTION, THIS FILE WILL BE TOTALLY OWERWRITTEN !!
 
 
@@ -43,41 +47,30 @@ def main():
     print "Rarefied cube shape:", rarefiedDataCube.shape
     N, M, K = rarefiedDataCube.shape
 
-
     minValue = np.min(rarefiedDataCube)
     maxValue = np.max(rarefiedDataCube)
     if maxValue == minValue:
         print "All values are the same - look for better data!\nStop."
         return
 
-    norm = mpl.colors.Normalize(vmin=MIN_ALPHA, vmax=1)
-    m = cm.ScalarMappable(norm=norm, cmap=COLORMAP)
+    print("Looking for threshold...")
+    threshold = np.percentile(rarefiedDataCube, (100 - percent_to_left))
 
-
-
-    # this block normalizes all values
-    # I divided normalization into three steps beacuse of limited memory of my laptop
-    A_all = rarefiedDataCube
-    # A_all = (A_all - minValue) / (maxValue - minValue)
-    A_all[:,:,:200] =    (A_all[:,:,:200] - minValue) / (maxValue - minValue)
-    A_all[:,:,200:400] = (A_all[:,:,200:400] - minValue) / (maxValue - minValue)
-    A_all[:,:,400:] =    (A_all[:,:,400:] - minValue) / (maxValue - minValue)
-
-    
-
-    # leaving only vertices that have alpha more than MIN_ALPHA
-    Ix, Iy, Iz = np.where(A_all > MIN_ALPHA)
+    print("Throwing away points with small values...")
+    Ix, Iy, Iz = np.where(rarefiedDataCube > threshold)
     numVertices =  len(Ix)
     A = np.empty((numVertices), dtype=float)
     for i in xrange(numVertices):
-        A[i] = A_all[ Ix[i], Iy[i], Iz[i] ]
+        A[i] = rarefiedDataCube[ Ix[i], Iy[i], Iz[i] ]
 
-    f = open(outputFileName, 'w')
-    print("File opened, starting to write...")
-    f.seek(0)
-    f.truncate()
-    f.write("var NMK = [%d, %d, %d]" % (N, M, K))
 
+    print("Calculating color values...")
+    # this block normalizes all values
+    A = (A - minValue) / (maxValue - minValue)
+    threshold
+
+    norm = mpl.colors.Normalize(vmin=(threshold - minValue) /  (maxValue - minValue), vmax=1)
+    m = cm.ScalarMappable(norm=norm, cmap=COLORMAP)
 
     RGBA = m.to_rgba(A)
     RGBA = RGBA * 512
@@ -99,6 +92,13 @@ def main():
         # array, not full (look at code above where array is rarefied)
     Y = Iy - M / 2
     Z = Iz - K / 2
+
+
+    f = open(outputFileName, 'w')
+    print("Writing to file...")
+    f.seek(0)
+    f.truncate()
+    f.write("var NMK = [%d, %d, %d]" % (N, M, K))
 
     print("Writing R values...")
     f.write(";\nvar R_arr = ")
@@ -130,12 +130,12 @@ def main():
 
 
     f.write(";\n")
-    print "number of leftover vertices: %d,  %.2f%% from all" % (numVertices, float(numVertices * 100)/float(N * M * K))
     f.write("var numVertices = " + str(numVertices) + ";\n")
 
     f.close()
     hdf5File.close()
-    print("File is closed, FINISH")
+    print("Finish writing, file is closed")
+    print("Number of leftover vertices: %d,  %.2f%% from all" % (numVertices, float(numVertices * 100)/float(N * M * K)))
 
 if __name__ == "__main__":
     main()
