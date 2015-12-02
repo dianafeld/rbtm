@@ -18,6 +18,10 @@ COPY . /var/www/experiment/
 #RUN echo "WEBPAGE_URI = 'http://109.234.34.140:5021/take_image'" >> conf.py
 #RUN echo "TOMO_ADDR = '188.166.73.250:10000'" >> conf.py
 
+# RUN echo "STORAGE_FRAMES_URI = 'http://10.0.7.153:5006/storage/frames/post'\nSTORAGE_EXP_START_URI = 'http://10.0.7.153:5006/storage/experiments/create'\nSTORAGE_EXP_FINISH_URI = 'http://10.0.7.153:5006/storage/experiments/finish'" >> conf.py
+# RUN echo "WEBPAGE_URI = 'http://109.234.34.140:5021/take_image'" >> conf.py
+# RUN echo "TOMO_ADDR = '172.17.0.1:10000'" >> conf.py
+
 # setup nginx
 RUN mkdir -p logs && echo "daemon off;" >> /etc/nginx/nginx.conf \
     && rm /etc/nginx/sites-enabled/default \
