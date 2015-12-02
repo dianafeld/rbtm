@@ -18,6 +18,8 @@ from tomograph import try_thrice_function
 from tomograph import create_event
 from tomograph import create_response
 from tomograph import send_to_storage
+
+from conf import REAL_TOMOGRAPH_STORAGE_WEBPAGE
 from conf import STORAGE_FRAMES_URI
 from conf import STORAGE_EXP_START_URI
 from conf import TOMO_ADDR
@@ -26,8 +28,16 @@ from conf import MAX_EXPERIMENT_TIME
 
 # logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = u'experiment.log')
 from experiment import app
-
 logger = app.logger
+
+
+
+if REAL_TOMOGRAPH_STORAGE_WEBPAGE == True:
+    logger.info(' !! Tomograph, storage, web-page are REAL !! ')
+else:
+    logger.info(' !! Tomograph, storage, web-page are STUBS !! ')
+
+
 
 TOMOGRAPHS = (
     Tomograph(TOMO_ADDR + "/tomo/tomograph/1", TOMO_ADDR + "/tomo/detector/1"),
@@ -371,7 +381,19 @@ def detector_get_frame(tomo_num):
     if not success:
         return response_if_fail
 
-    return tomograph.get_frame(exposure)
+    return tomograph.get_frame(exposure, with_open_shutter=True)
+
+@app.route('/tomograph/<int:tomo_num>/detector/get-frame-with-closed-shutter', methods=['POST'])
+def detector_get_frame_with_closed_shutter(tomo_num):
+    logger.info('\n\nREQUEST: DETECTOR/GET FRAME WITH CLOSED SHUTTER')
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+
+    success, exposure, response_if_fail = check_request(request.data)
+    if not success:
+        return response_if_fail
+
+    return tomograph.get_frame(exposure, with_open_shutter=False)
 
 
 @app.route('/tomograph/<int:tomo_num>/detector/chip_temp', methods=['GET'])
@@ -457,14 +479,21 @@ def loop_of_get_send_frames(tomograph, count, exposure, getting_frame_message, m
     for i in range(0, count):
 
         logger.info(getting_frame_message % (i))
-        success, frame_dict = tomograph.get_frame(exposure, send_to_webpage=True, exp_is_advanced=False)
+        if mode == 'dark':
+            success, frame_dict = tomograph.get_frame(exposure, with_open_shutter=False, send_to_webpage=True, 
+                                                      exp_is_advanced=False)
+        else:
+            success, frame_dict = tomograph.get_frame(exposure, with_open_shutter=True, send_to_webpage=True, 
+                                                      exp_is_advanced=False)
         if not success:
             return False
 
         frame_dict['mode'] = mode
         frame_with_data = create_event('frame', tomograph.exp_id, frame_dict)
-        if tomograph.send_event_to_storage_webpage(STORAGE_FRAMES_URI, frame_with_data) == False:
-            return False
+        if REAL_TOMOGRAPH_STORAGE_WEBPAGE == True:
+            if tomograph.send_event_to_storage_webpage(STORAGE_FRAMES_URI, frame_with_data) == False:
+                return False
+            # if storage is stub there are problems with sending images there
     return True
 
 
@@ -481,8 +510,6 @@ def carry_out_simple_experiment(tomograph, exp_param):
         return
     logger.info('Finished with DARK images!\n')
 
-    if tomograph.open_shutter(0, exp_is_advanced=False) == False:
-        return
     if tomograph.move_away(exp_is_advanced=False) == False:
         return
 
@@ -653,11 +680,9 @@ def experiment_stop(tomo_num):
 
     tomograph.exp_stop_reason = exp_stop_reason_txt
     tomograph.experiment_is_running = False
-    resp = Response(response=json.dumps({'success': True}),
-                    status=200,
-                    mimetype="application/json")
-
-    return resp
+    return create_response(True)
+    #resp = Response(response=json.dumps({'success': True}), status=200, mimetype="application/json")
+    #return resp
 
 
 """
