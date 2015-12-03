@@ -77,6 +77,49 @@ def create_event(type, exp_id, MoF, exception_message='', error=''):
 
     return None
 
+class ModExpError(Exception):
+    exception_message = ""
+    stop_msg = EMERGENCY_STOP_MSG
+
+    def __init__(self, error='', exception_message='', stop_msg=EMERGENCY_STOP_MSG):
+        self.message = error
+        self.error = error
+        self.exception_message = exception_message
+        self.stop_msg = stop_msg
+
+    def __str__(self):
+        return repr(self.message)
+
+    def to_event_dict(self, exp_id):
+        return create_event(type='message', exp_id=exp_id, MoF=EMERGENCY_STOP_MSG,
+                            error=self.error, exception_message=self.exception_message)
+
+    def create_response(self):
+        response_dict = {
+            'success': False,
+            'exception message': self.exception_message,
+            'error': self.error,
+            'result': None,
+        }
+        return json.dumps(response_dict)
+
+    def log(self, exp_id=''):
+        if exp_id:
+            logger.info(self.stop_msg + ', id: ' + exp_id)
+        else:
+            logger.info("ERROR:")
+
+        if self.stop_msg == EMERGENCY_STOP_MSG:
+            logger.info("   " + self.error)
+            logger.info("   " + self.exception_message)
+        else:
+            logger.info("Reason:    " + self.error)
+
+
+
+
+
+
 
 
 def make_png(image_numpy, png_filename=FRAME_PNG_FILENAME):
@@ -201,7 +244,6 @@ def send_frame_to_storage_webpage(frame_metadata_event, image_numpy, send_to_web
         send_to_storage(storage_uri=STORAGE_FRAMES_URI, data=data, files=files)
         # if storage is stub there are problems with sending images there
 
-        logger.info("send_to_webpage is: " + str(send_to_webpage))
         if send_to_webpage == True:
             frame_event = frame_metadata_event
             frame_event['frame']['image_data']['image'] = image_numpy
@@ -242,44 +284,6 @@ def prepare_send_frame(row_image_with_metadata, experiment, send_to_webpage=Fals
 
     return True, None
 
-
-class ModExpError(Exception):
-    exception_message = ""
-    stop_msg = EMERGENCY_STOP_MSG
-
-    def __init__(self, error='', exception_message='', stop_msg=EMERGENCY_STOP_MSG):
-        self.message = error
-        self.error = error
-        self.exception_message = exception_message
-        self.stop_msg = stop_msg
-
-    def __str__(self):
-        return repr(self.message)
-
-    def to_event_dict(self, exp_id):
-        return create_event(type='message', exp_id=exp_id, MoF=EMERGENCY_STOP_MSG,
-                            error=self.error, exception_message=self.exception_message)
-
-    def create_response(self):
-        response_dict = {
-            'success': False,
-            'exception message': self.exception_message,
-            'error': self.error,
-            'result': None,
-        }
-        return json.dumps(response_dict)
-
-    def log(self, exp_id=''):
-        if exp_id:
-            logger.info(self.stop_msg + ', id: ' + exp_id)
-        else:
-            logger.info("ERROR:")
-
-        if self.stop_msg == EMERGENCY_STOP_MSG:
-            logger.info("   " + self.error)
-            logger.info("   " + self.exception_message)
-        else:
-            logger.info("Reason:    " + self.error)
 
 
 class Experiment:
@@ -328,8 +332,9 @@ class Experiment:
         send_to_webpage = (self.frame_num % self.FOSITW == 0)
         self.frame_num += 1
 
-        thr = threading.Thread(target=prepare_send_frame, args=(row_image_with_metadata,self,send_to_webpage))
-        thr.start()
+        prepare_send_frame(row_image_with_metadata,self,send_to_webpage)
+        #thr = threading.Thread(target=prepare_send_frame, args=(row_image_with_metadata,self,send_to_webpage))
+        #thr.start()
 
 
     def run(self):
@@ -363,7 +368,8 @@ class Experiment:
             current_angle = (round((i * angle_step) + initial_angle, 2)) % 360
             logger.info('Getting DATA images: angle is %.2f' % current_angle)
 
-            for i in range(0, self.DATA_count_per_step):
+
+            for j in range(0, self.DATA_count_per_step):
                 self.get_and_send_frame(exposure=self.DATA_exposure, mode='data')
 
             # Rounding angles here, not in  check_and_prepare_exp_parameters(), cause it will be more accurately this way

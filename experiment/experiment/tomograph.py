@@ -411,11 +411,9 @@ class Tomograph:
         :return:
         """
         logger.info('Moving object back...')
-
         self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.MoveBack, error_str='Could not move object back')
-
         logger.info('Object was moved back!')
 
     def get_frame(self, exposure, with_open_shutter, send_to_webpage=False, from_experiment=False, exp_is_advanced=True):
