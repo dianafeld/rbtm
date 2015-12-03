@@ -6,7 +6,6 @@ More exactly - some supporting functions and functions for receiving queries
 """
 
 import json
-import threading
 import time
 
 from flask import request
@@ -78,8 +77,7 @@ def call_method_create_response(tomo_num, method_name, args=(), GET_FRAME_method
     if GET_FRAME_method == False:
         return create_response(success=True, result=result)
     else:
-        frame_dict = result
-        success, ModExpError_if_fail = frame_to_png(frame_dict, FRAME_PNG_FILENAME)
+        success, ModExpError_if_fail = prepare_send_frame(row_image_with_metadata=result, experiment=None)
         if not success:
             return ModExpError_if_fail.create_response()
 
@@ -411,9 +409,11 @@ def experiment_start(tomo_num):
         return create_response(success=False, error="Undefined tomograph state")
 
     logger.info('Sending to storage leading to prepare...')
-    success, exception_message = send_to_storage(STORAGE_EXP_START_URI, data=request.data)
-    if not success:
-        return create_response(success=False, exception_message=exception_message, error='Problems with storage')
+    try:
+        send_to_storage(STORAGE_EXP_START_URI, data=request.data)
+    except ModExpError as e:
+        e.log()
+        return e.create_response()
 
     '''
     logger.info('Experiment begins!')
@@ -430,7 +430,7 @@ def experiment_start(tomo_num):
         #thr = threading.Thread(target=carry_out_advanced_experiment, args=(tomograph, exp_param))
     else:
         thr = threading.Thread(target=tomograph.carry_out_simple_experiment, args=(exp_param,))
-    thr.start()
+        thr.start()
 
     return create_response(True)
 
@@ -451,7 +451,8 @@ def experiment_stop(tomo_num):
 
     if tomograph.current_experiment != None:
         tomograph.current_experiment.to_be_stopped = True
-        tomograph.current_experiment.reason_of_stop = exp_stop_reason_txt
+        #tomograph.current_experiment.reason_of_stop = exp_stop_reason_txt
+        tomograph.current_experiment.stop_exception = ModExpError(error=exp_stop_reason_txt, stop_msg=SOMEONE_STOP_MSG)
 
     return create_response(True)
 

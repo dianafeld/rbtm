@@ -11,10 +11,8 @@ Contains supporting functions and class "Tomograph" with methods for comfortable
 # NEED TO EDIT DOCSTRINGS!
 # Need to look at checking types of arguments, which go to Tango-tomograph functions
 
-import json
 import time
 
-import PyTango
 import numpy
 from PyTango import ExtractAs
 from flask import send_file
@@ -135,7 +133,8 @@ class Tomograph:
         else:
             if self.current_experiment.to_be_stopped == True:
                 # someone called experiment_stop() function
-                raise ModExpError(error=self.current_experiment.reason_of_stop, stop_msg=SOMEONE_STOP_MSG)
+                #raise ModExpError(error=self.current_experiment.reason_of_stop, stop_msg=SOMEONE_STOP_MSG)
+                raise self.current_experiment.stop_exception
 
 
 
@@ -162,7 +161,7 @@ class Tomograph:
         try_thrice_function(func=self.tomograph_proxy.CloseShutter, args=time, error_str='Could not close shutter')
         logger.info('Shutter has been closed!')
 
-    def shutter_state(self, time=0, from_experiment=False, exp_is_advanced=True):
+    def shutter_state(self, from_experiment=False, exp_is_advanced=True):
         #TODO documentation
         """ Tries to get tomo state
 
@@ -171,8 +170,7 @@ class Tomograph:
         logger.info('Getting shutter state...')
         self.basic_tomo_check(from_experiment)
 
-        status = try_thrice_function(func=self.tomograph_proxy.ShutterStatus, args=time,
-        							 error_str='Could not get shutter status')
+        status = try_thrice_function(func=self.tomograph_proxy.ShutterStatus, error_str='Could not get shutter status')
         logger.info('Shutter return status successfully!')
         return status
 
@@ -453,25 +451,18 @@ class Tomograph:
 
 
         try:
-            frame_dict = json.loads(frame_metadata_json)
+            frame_metadata = json.loads(frame_metadata_json)
         except TypeError:
             raise ModExpError(error='Could not convert frame\'s JSON into dict')
 
         logger.info('Image was get, reading the image from detector...')
-        image = self.try_thrice_read_attr_detector("image", extract_as=PyTango.ExtractAs.Nothing,
-                                                   error_str='Could not read image because of tomograph')
+        row_image = self.try_thrice_read_attr_detector("image", extract_as=PyTango.ExtractAs.Nothing,
+                                                       error_str='Could not read image because of tomograph')
 
+        frame_metadata['image_data']['row_image'] = row_image
+        row_image_with_metadata = frame_metadata
+        return row_image_with_metadata
 
-        logger.info("Image was red, preparing the image to send to storage...")
-        try:
-            enc = PyTango.EncodedAttribute()
-            image_numpy = enc.decode_gray16(image)
-            #image_numpy = numpy.zeros((10, 10))
-        except Exception as e:
-            raise ModExpError(error='Could not convert the image to numpy.array', exception_message='' '''e.message''')
-
-        frame_dict['image_data']['image'] = image_numpy
-        return frame_dict
 
     def carry_out_simple_experiment(self, exp_param):
         time_of_experiment_start = time.time()

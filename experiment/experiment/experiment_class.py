@@ -7,11 +7,13 @@ Contains class 'Experiment', for storing information about experiment during tim
 # NEED TO EDIT DOCSTRINGS!
 # Need to look at checking types of arguments, which go to Tango-tomograph functions
 
+import PyTango
 import json
 import requests
 import numpy as np
 from StringIO import StringIO
 from scipy.ndimage import zoom
+import threading
 
 import pylab as plt
 
@@ -20,9 +22,6 @@ from conf import *
 from experiment import app
 logger = app.logger
 
-EMERGENCY_STOP_MSG = 'Experiment  %s  has been emergency stopped!'
-SOMEONE_STOP_MSG = 'Experiment  %s  has been stopped by someone!'
-SUCCESSFULL_STOP_MSG = 'Experiment  %s  has been done successfully!'
 
 EMERGENCY_STOP_MSG = 'Experiment was emergency stopped'
 SOMEONE_STOP_MSG = 'Experiment was stopped by someone'
@@ -80,7 +79,7 @@ def create_event(type, exp_id, MoF, exception_message='', error=''):
 
 
 
-def frame_to_png(frame_dict, png_filename=FRAME_PNG_FILENAME):
+def make_png(image_numpy, png_filename=FRAME_PNG_FILENAME):
     """ Takes 2-dimensional numpy array and creates png file from it
 
     :arg: 'res' - image from tomograph in the form of 2-dimensional numpy array
@@ -88,17 +87,14 @@ def frame_to_png(frame_dict, png_filename=FRAME_PNG_FILENAME):
     :return: 
     """
     logger.info("Converting image to png-file...")
-    image_numpy = frame_dict['image_data']['image']
     res = image_numpy
     try:
         small_res = zoom(res, zoom=0.25, order=2)
         plt.imsave(png_filename, small_res, cmap=plt.cm.gray)
     except Exception as e:
-        return False, ModExpError(error="Could not convert image to png-file",
-                                          exception_message='' '''e.message''')
+        raise ModExpError(error="Could not make png-file from image", exception_message='' '''e.message''')
 
     logger.info("Image was converted!")
-    return True, None
 
 
 
@@ -113,79 +109,61 @@ def send_event_to_webpage(event_dict):
            must be dictionary with format that is returned by  'create_event()'
     :return: None
     """
+    data = None
+    files = None
 
     if event_dict['type'] == 'frame':
-        success, ModExpError_if_fail = frame_to_png(event_dict['frame'])
-        if not success:
-            files = None
-            event_json = json.dumps(ModExpError_if_fail.to_dict())
-            logger.info('Sending error message to web-page of adjustment...')
+        make_png(event_dict['frame']['image_data']['image'])
+        files = {'file': open(FRAME_PNG_FILENAME, 'rb')}
 
-        else:
-            files = {'file': open(FRAME_PNG_FILENAME, 'rb')}
+        del (event_dict['frame']['image_data']['image'])
+        #data = json.dumps(event_dict)
+        # WE DON'T SEND TO WEB-PAGE METADATA OF FRAME YET, IN FUTURE WE CAN ADD IT
+        # req_webpage = requests.post(WEBPAGE_URI, files=files, data= event_json)
 
-            del (event_dict['frame']['image_data']['image'])
-            event_json = json.dumps(event_dict)
-            logger.info('Sending frame to web-page of adjustment...')
+    elif event_dict['type'] == 'message':
+        data = json.dumps(event_dict)
 
-        try:
-            req_webpage = requests.post(WEBPAGE_URI, files=files)
-            # WE DON'T SEND TO WEB-PAGE METADATA OF FRAME YET, IN FUTURE WE CAN ADD IT
-            # req_webpage = requests.post(WEBPAGE_URI, files=files, data= event_json)
-        except requests.ConnectionError as e:
-            logger.info('Could not send to web-page of adjustment')
-        else:
-            logger.info(req_webpage.content)
+    logger.info('Sending to web-page of adjustment...')
+    try:
+        req_webpage = requests.post(WEBPAGE_URI, data=data, files=files)
+    except Exception as e:
+        raise ModExpError(error='Could not send to web-page of adjustment', exception_message='' 'e.message')
 
-    if event_dict['type'] == 'message':
-        event_json = json.dumps(event_dict)
-        logger.info('Sending message to web-page of adjustment...')
-        try:
-            req_webpage = requests.post(WEBPAGE_URI, data=event_json)
-        except requests.ConnectionError as e:
-            logger.info('Could not send to web-page of adjustment')
-        else:
-            logger.info(req_webpage.content)
+    logger.info(req_webpage.content)
+
+
 
 def send_to_storage(storage_uri, data, files=None):
     """ Sends  to storage
 
-    :arg:  message, type is string
-    :return: list of 2 elements;
-             1 element is success of sending, type is bool
-             2 element is information about problem, if success is false;
-                          empty string if success is true; type is string
+    :arg:
+    :return:
     """
 
     logger.info('Sending to storage...')
     try:
-        #print "  files:  ", files
-        #print "  data :  ", data
         storage_resp = requests.post(storage_uri, files=files, data=data)
-    except requests.ConnectionError as e:
-        exception_message = e.message
-        logger.info(exception_message)
-
+    except Exception as e:
+        logger.info(e.message)
+        raise ModExpError(error='Problems with storage', exception_message='Could not send to storage' """e.message""")
         # IF UNCOMMENT   #exception_message,    OCCURS PROBLEMS WITH JSON.DUMPS(...) LATER
-        return False, 'Could not send to storage'  # exception_message
 
-    else:
-        try:
-            logger.info(storage_resp.content)
-            storage_resp_dict = json.loads(storage_resp.content)
-        except (ValueError, TypeError):
-            return False, 'Storage\'s response is not JSON'
+    logger.info(storage_resp.content)
+    try:
+        storage_resp_dict = json.loads(storage_resp.content)
+    except (ValueError, TypeError):
+        raise ModExpError(error='Problems with storage', exception_message='Storage\'s response is not JSON')
 
-        if not ('result' in storage_resp_dict.keys()):
-            logger.info(storage_resp_dict)
-            return False, "Storage\'s response has incorrect format (no 'result' key)"
+    if not ('result' in storage_resp_dict.keys()):
+        raise ModExpError(error='Problems with storage',
+                          exception_message="Storage\'s response has incorrect format (no 'result' key)")
 
-        if storage_resp_dict['result'] != 'success':
-            return False,   'Storage\'s response:  ' + str(storage_resp_dict['result'])
+    if storage_resp_dict['result'] != 'success':
+        raise ModExpError(error='Problems with storage',
+                          exception_message='Storage\'s response:  ' + str(storage_resp_dict['result']))
 
-        return True, ''
-
-def send_message_to_storage_webpage(event_dict):        
+def send_message_to_storage_webpage(event_dict):
     """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
         'event_dict' must be dictionary with format that is returned by  'create_event()'
 
@@ -193,12 +171,21 @@ def send_message_to_storage_webpage(event_dict):
                           must be dictionary with format that is returned by  'create_event()'
     :return: success of sending, type is bool
     """
+    # we don't do anything serious if we fail with sending to message
     event_json_for_storage = json.dumps(event_dict)
-    success, exception_message = send_to_storage(STORAGE_EXP_FINISH_URI, data=event_json_for_storage)
-    send_event_to_webpage(event_dict)
-    return success
+    try:
+        send_to_storage(STORAGE_EXP_FINISH_URI, data=event_json_for_storage)
+    except ModExpError as e:
+        e.log()
+    finally:
+            try:
+                send_event_to_webpage(event_dict)
+            except ModExpError as e:
+                e.log()
 
-def send_frame_to_storage_webpage(frame_metadata_dict, image_numpy, send_to_webpage=True):
+
+
+def send_frame_to_storage_webpage(frame_metadata_event, image_numpy, send_to_webpage):
         """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
             'frame_dict' must be dictionary with format that is returned by  'create_event()'
 
@@ -209,23 +196,51 @@ def send_frame_to_storage_webpage(frame_metadata_dict, image_numpy, send_to_webp
 
         np.savez_compressed(s, frame_data=image_numpy)
         s.seek(0)
-        data = {'data': json.dumps(frame_metadata_dict)}
+        data = {'data': json.dumps(frame_metadata_event)}
         files = {'file': s}
-        if REAL_TOMOGRAPH_STORAGE_WEBPAGE:
-            success, exception_message = send_to_storage(storage_uri=STORAGE_FRAMES_URI, data=data, files=files)
-            # if storage is stub there are problems with sending images there
-        else:
-            success = True
+        send_to_storage(storage_uri=STORAGE_FRAMES_URI, data=data, files=files)
+        # if storage is stub there are problems with sending images there
 
-        if not success:
-            raise ModExpError(error='Problems with storage', exception_message=exception_message)   
-        else:
-            if send_to_webpage == True:
-                frame_dict = frame_metadata_dict
-                frame_dict['frame']['image_data']['image'] = image_numpy
-                send_event_to_webpage(frame_dict)
+        logger.info("send_to_webpage is: " + str(send_to_webpage))
+        if send_to_webpage == True:
+            frame_event = frame_metadata_event
+            frame_event['frame']['image_data']['image'] = image_numpy
+            try:
+                send_event_to_webpage(frame_event)
+            except ModExpError as e:
+                e.log()
         #return success
 
+
+def prepare_send_frame(row_image_with_metadata, experiment, send_to_webpage=False):
+    row_image = row_image_with_metadata['image_data']['row_image']
+    del(row_image_with_metadata['image_data']['row_image'])
+    frame_metadata = row_image_with_metadata
+
+    try:
+        logger.info("Image was red, preparing the image to send...")
+        try:
+            enc = PyTango.EncodedAttribute()
+            image_numpy = enc.decode_gray16(row_image)
+            #image_numpy = numpy.zeros((10, 10))
+        except Exception as e:
+            raise ModExpError(error='Could not convert raw image to numpy.array', exception_message=e.message)
+
+        if experiment != None:
+            frame_metadata_event = create_event(type='frame', exp_id=experiment.exp_id, MoF=frame_metadata)
+            send_frame_to_storage_webpage(frame_metadata_event=frame_metadata_event,
+                                          image_numpy=image_numpy,
+                                          send_to_webpage=send_to_webpage)
+        else:
+            make_png(image_numpy)
+
+    except ModExpError as e:
+        if experiment != None:
+            experiment.stop_exception = e
+            experiment.to_be_stopped = True
+        return False, e
+
+    return True, None
 
 
 class ModExpError(Exception):
@@ -272,8 +287,7 @@ class Experiment:
 
     exp_id = ''
     to_be_stopped = False
-    reason_of_stop = ''
-    current_exposure = ''
+    stop_exception = None
 
     def __init__(self, tomograph, exp_param, FOSITW=5):
         # FOSITW - 'Frequency Of Sending Images To Webpage '
@@ -302,30 +316,26 @@ class Experiment:
         logger.info(getting_frame_message)
     
         if mode == 'dark':
-            frame_dict = self.tomograph.get_frame(exposure=exposure, with_open_shutter=False, 
-                                                  from_experiment=True, exp_is_advanced=False)
+            row_image_with_metadata = self.tomograph.get_frame(exposure=exposure, with_open_shutter=False, 
+                                                               from_experiment=True, exp_is_advanced=False)
         else:
-            frame_dict = self.tomograph.get_frame(exposure=exposure, with_open_shutter=True, 
-                                                  from_experiment=True, exp_is_advanced=False)
+            row_image_with_metadata = self.tomograph.get_frame(exposure=exposure, with_open_shutter=True, 
+                                                               from_experiment=True, exp_is_advanced=False)
         #frame_dict = {  u'image_data':  {   'image': np.empty((10, 10)),    },  }
-        frame_dict['mode'] = mode
-        frame_dict['number'] = self.frame_num
 
-        image_numpy = frame_dict['image_data']['image']
-        del(frame_dict['image_data']['image'])
-        frame_metadata_event = create_event(type='frame', exp_id=self.exp_id, MoF=frame_dict)
+        row_image_with_metadata['mode'] = mode
+        row_image_with_metadata['number'] = self.frame_num
+        send_to_webpage = (self.frame_num % self.FOSITW == 0)
+        self.frame_num += 1
 
-        send_to_webpage = (self.frame_num % self.FOSITW == self.FOSITW - 1)
-
-        send_frame_to_storage_webpage(frame_metadata_dict=frame_metadata_event,
-                                      image_numpy=image_numpy,
-                                      send_to_webpage=send_to_webpage)
+        thr = threading.Thread(target=prepare_send_frame, args=(row_image_with_metadata,self,send_to_webpage))
+        thr.start()
 
 
     def run(self):
         # Closing shutter to get DARK images
         self.to_be_stopped = False
-        self.reason_of_stop = ''
+        self.stop_exception = None
         self.tomograph.close_shutter(0, from_experiment=True, exp_is_advanced=False)
 
         logger.info('Going to get DARK images!\n')
