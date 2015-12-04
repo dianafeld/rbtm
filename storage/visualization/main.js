@@ -9,12 +9,14 @@ animate();
 
 function init() {
 
+
 	// variables from "numbers.js" : NMK, R_arr, G_arr, B_arr, A_arr, X_arr, Y_arr, Z_arr
 	var N = NMK[0];
 	var M = NMK[1];
 	var K = NMK[2];
 
-	var medianPointSize =  1
+
+	var medianPointSize =  1;
 
 			
 

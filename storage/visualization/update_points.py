@@ -44,6 +44,7 @@ def main():
     dataCube = hdf5File["Results"]
     print "Original cube shape:", dataCube.shape
 
+
     print("Rarefying dataCube...")
     if (RAREFACTION > 1):
         dataCube = dataCube[::RAREFACTION, ::RAREFACTION, ::RAREFACTION]
@@ -79,7 +80,6 @@ def main():
         left_values = np.empty((numVertices), dtype=float)
         for i in xrange(numVertices):
             left_values[i] = dataCube[ Ix[i], Iy[i], Iz[i] ]
-
 
 
         norm = mpl.colors.Normalize(vmin=threshold, vmax=maxValue)
@@ -124,6 +124,7 @@ def main():
         print("    Finish writing, filename is: '%s', size of file: %.1f kB" 
               % (outputFileName, float(os.stat(outputFileName).st_size)/1024.0) )
         print("    Number of leftover vertices: %d,  %.2f%% from all" % (numVertices, float(numVertices * 100)/float(N * M * K)))
+
 
     hdf5File.close()
     print("Finish")
