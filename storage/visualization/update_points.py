@@ -34,11 +34,13 @@ def main():
     dataCube = hdf5File["Results"]
     print "Original cube shape:", dataCube.shape
 
+
     print("Rarefying dataCube...")
     if (RAREFACTION > 1):
         rarefiedDataCube = dataCube[::RAREFACTION, ::RAREFACTION, ::RAREFACTION]
     else:
         rarefiedDataCube = dataCube[::2,:,:]
+
 
     print "Rarefied cube shape:", rarefiedDataCube.shape
     N, M, K = rarefiedDataCube.shape
@@ -76,6 +78,7 @@ def main():
     print("File opened, starting to write...")
     f.seek(0)
     f.truncate()
+
     f.write("var NMK = [%d, %d, %d]" % (N, M, K))
 
 
@@ -132,6 +135,7 @@ def main():
     f.write(";\n")
     print "number of leftover vertices: %d,  %.2f%% from all" % (numVertices, float(numVertices * 100)/float(N * M * K))
     f.write("var numVertices = " + str(numVertices) + ";\n")
+
 
     f.close()
     hdf5File.close()

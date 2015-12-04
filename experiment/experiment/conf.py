@@ -5,7 +5,6 @@ Configuration file for module "Experiment"
 Contains web-addresses of storage, of web-page of adjustment(of tomograph), of tomograph,
 also contains name of png-file, creating for storing current image during experiment,
 finally contains time that tomograph waits for commands during advanced experiments with exec,
-
 If REAL_TOMOGRAPH_STORAGE_WEBPAGE is set as False, it launches stub servers
 for storage and web-page of adjustment
 """
@@ -56,13 +55,6 @@ TIMEOUT_MILLIS = 200000
 
 MAX_EXPERIMENT_TIME = 100
 # MAX_EXPERIMENT_TIME is currently used only in advanced experiments with exec
-
-
-
-
-
-
-
 
 
 

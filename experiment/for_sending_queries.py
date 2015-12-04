@@ -56,7 +56,7 @@ new_pos = json.dumps(7.0)
 
 try:
 
-    req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/state")
+    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/state")
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/source/power-on")
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/source/power-off")
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/source/set-voltage", data = new_voltage)
@@ -80,8 +80,8 @@ try:
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/move-back")
 
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/detector/get-frame", data = exposure)
-    #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/detector/get-frame-with-closed-shutter", data = exposure)
-    
+    req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/detector/get-frame-with-closed-shutter", data = exposure)
+
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/start", data = simple_experiment)
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/start", data = advanced_experiment)
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/stop")
@@ -91,6 +91,8 @@ try:
     # Future "Experiment stop"
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/stop", data = json.dumps("prosto"))
 
+
+    #req = requests.get("http://109.234.34.140:5005/get-image")
 except requests.ConnectionError as e:
     print "Could not connect", e.message
 else:
