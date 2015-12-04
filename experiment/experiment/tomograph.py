@@ -115,16 +115,13 @@ class Tomograph:
         except ModExpError as e:
             e.log()
             return 'unavailable', e.exception_message
-            #return create_response(success=True, exception_message=exception_message, result=)
 
         if self.current_experiment != None:
             logger.info("Tomograph is available; experiment IS running")
             return 'experiment', ""
-            #return create_response(success=True, result="experiment")
         else:
             logger.info("Tomograph is available; experiment is NOT running")
             return 'ready', ""
-            #return create_response(success=True, result="ready")
 
     def basic_tomo_check(self, from_experiment):
         if not from_experiment:
@@ -133,7 +130,6 @@ class Tomograph:
         else:
             if self.current_experiment.to_be_stopped == True:
                 # someone called experiment_stop() function
-                #raise ModExpError(error=self.current_experiment.reason_of_stop, stop_msg=SOMEONE_STOP_MSG)
                 raise self.current_experiment.stop_exception
 
 

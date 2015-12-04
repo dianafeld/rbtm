@@ -415,15 +415,6 @@ def experiment_start(tomo_num):
         e.log()
         return e.create_response()
 
-    '''
-    logger.info('Experiment begins!')
-    tomograph.experiment_is_running = True
-    tomograph.exp_id = exp_id
-    if exp_param['advanced']:
-        thr = threading.Thread(target=carry_out_advanced_experiment, args=(tomograph, exp_param))
-    else:
-        thr = threading.Thread(target=carry_out_simple_experiment, args=(tomograph, exp_param))
-    '''
     logger.info('Experiment begins!')
     if exp_param['advanced']:
         pass
@@ -451,7 +442,6 @@ def experiment_stop(tomo_num):
 
     if tomograph.current_experiment != None:
         tomograph.current_experiment.to_be_stopped = True
-        #tomograph.current_experiment.reason_of_stop = exp_stop_reason_txt
         tomograph.current_experiment.stop_exception = ModExpError(error=exp_stop_reason_txt, stop_msg=SOMEONE_STOP_MSG)
 
     return create_response(True)

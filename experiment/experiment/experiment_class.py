@@ -242,7 +242,6 @@ def send_frame_to_storage_webpage(frame_metadata_event, image_numpy, send_to_web
         data = {'data': json.dumps(frame_metadata_event)}
         files = {'file': s}
         send_to_storage(storage_uri=STORAGE_FRAMES_URI, data=data, files=files)
-        # if storage is stub there are problems with sending images there
 
         if send_to_webpage == True:
             frame_event = frame_metadata_event
@@ -332,9 +331,9 @@ class Experiment:
         send_to_webpage = (self.frame_num % self.FOSITW == 0)
         self.frame_num += 1
 
-        prepare_send_frame(row_image_with_metadata,self,send_to_webpage)
-        #thr = threading.Thread(target=prepare_send_frame, args=(row_image_with_metadata,self,send_to_webpage))
-        #thr.start()
+        #prepare_send_frame(row_image_with_metadata,self,send_to_webpage)
+        thr = threading.Thread(target=prepare_send_frame, args=(row_image_with_metadata,self,send_to_webpage))
+        thr.start()
 
 
     def run(self):
