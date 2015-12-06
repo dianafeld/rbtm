@@ -85,14 +85,14 @@ def main():
         norm = mpl.colors.Normalize(vmin=threshold, vmax=maxValue)
         m = cm.ScalarMappable(norm=norm, cmap=COLORMAP)
         RGBA = m.to_rgba(left_values)
-        RGBA = (RGBA * 512).astype(int)
+        RGBA = (RGBA * 256).astype(int)
 
         R, G, B = RGBA[:, 0], RGBA[:, 1], RGBA[:, 2]
 
         A = left_values
         del(left_values)
         A = (A - minValue) / (maxValue - minValue)
-        A = (A * 512).astype(int)
+        A = (A * 256).astype(int)
 
         if RAREFACTION != 1:
             X = Ix - N / 2
@@ -110,13 +110,13 @@ def main():
         f.truncate()
         f.write("var NMK = [%d, %d, %d]" % (N, M, K))
 
-        f.write(";\nvar R_arr = " + str(R.tolist()))
-        f.write(";\nvar G_arr = " + str(G.tolist()))
-        f.write(";\nvar B_arr = " + str(B.tolist()))
-        f.write(";\nvar A_arr = " + str(A.tolist()))
-        f.write(";\nvar X_arr = " + str(X.tolist()))
-        f.write(";\nvar Y_arr = " + str(Y.tolist()))
-        f.write(";\nvar Z_arr = " + str(Z.tolist()))
+        f.write(";\nvar R_arr = " + str(R.tolist()).replace(" ", "")  )
+        f.write(";\nvar G_arr = " + str(G.tolist()).replace(" ", "")  )
+        f.write(";\nvar B_arr = " + str(B.tolist()).replace(" ", "")  )
+        f.write(";\nvar A_arr = " + str(A.tolist()).replace(" ", "")  )
+        f.write(";\nvar X_arr = " + str(X.tolist()).replace(" ", "")  )
+        f.write(";\nvar Y_arr = " + str(Y.tolist()).replace(" ", "")  )
+        f.write(";\nvar Z_arr = " + str(Z.tolist()).replace(" ", "")  )
 
         f.write(";\nvar numVertices = " + str(numVertices) + ";\n")
         f.close()
