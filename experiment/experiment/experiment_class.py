@@ -91,7 +91,7 @@ class ModExpError(Exception):
         return repr(self.message)
 
     def to_event_dict(self, exp_id):
-        return create_event(type='message', exp_id=exp_id, MoF=EMERGENCY_STOP_MSG,
+        return create_event(type='message', exp_id=exp_id, MoF=self.stop_msg,
                             error=self.error, exception_message=self.exception_message)
 
     def create_response(self):
