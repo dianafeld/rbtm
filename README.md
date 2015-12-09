@@ -3,8 +3,4 @@ A service-oriented web application for carrying out computed tomography experime
 
 http://xtomo.ru
 
-Test login: test_experimentator
-
-Test password: test_experimentator
-
 Documentation: http://rbtm.readthedocs.org/
