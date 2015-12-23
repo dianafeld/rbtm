@@ -13,6 +13,9 @@ RUN pip install -r requirements.txt
 
 COPY . /var/www/web/
 
+# setup apache
+RUN cp /var/www/web/000-default.conf /etc/apache2/sites-available/
+
 RUN sed -i "s/'HOST': 'localhost'/'HOST': 'database'/" robotom/robotom/settings.py
 
 RUN mkdir -p robotom/media && mkdir -p robotom/logs && \
@@ -27,8 +30,8 @@ RUN robotom/manage.py collectstatic --noinput
 # ENV APACHE_RUN_GROUP www-data
 # ENV APACHE_LOG_DIR /var/log/apache2
 
-# setup apache
-RUN cp /var/www/web/000-default.conf /etc/apache2/sites-available/
+
+
 
 EXPOSE 80
 CMD ["apache2ctl", "-D", "FOREGROUND"]
