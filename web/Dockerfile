@@ -3,7 +3,7 @@ FROM ubuntu:trusty
 MAINTAINER itsnotme
 
 RUN apt-get update \
-    && apt-get install -y python python-pip python-dev apache2 libapache2-mod-wsgi libpq-dev libaugeas0 \
+    && apt-get install -y python python-pip python-dev apache2 libapache2-mod-wsgi libpq-dev libaugeas0 git \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /var/www/web/requirements.txt
