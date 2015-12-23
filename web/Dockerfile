@@ -11,6 +11,8 @@ WORKDIR /var/www/web/
 
 RUN pip install -r requirements.txt
 
+RUN a2enmod rewrite
+
 COPY . /var/www/web/
 
 # setup apache
