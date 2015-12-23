@@ -3,7 +3,7 @@ FROM ubuntu:trusty
 MAINTAINER itsnotme
 
 RUN apt-get update \
-    && apt-get install -y python python-pip python-dev apache2 libapache2-mod-wsgi libpq-dev \
+    && apt-get install -y python python-pip python-dev apache2 libapache2-mod-wsgi libpq-dev libaugeas0 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /var/www/web/requirements.txt
@@ -11,12 +11,16 @@ WORKDIR /var/www/web/
 
 RUN pip install -r requirements.txt
 
+RUN git clone https://github.com/letsencrypt/letsencrypt && cd letsencrypt
+
 RUN a2enmod rewrite
 
 COPY . /var/www/web/
 
 # setup apache
 RUN cp /var/www/web/000-default.conf /etc/apache2/sites-available/
+
+RUN  ./letsencrypt-auto --config letsencrypt.ini
 
 RUN sed -i "s/'HOST': 'localhost'/'HOST': 'database'/" robotom/robotom/settings.py
 
