@@ -16,6 +16,6 @@ server:
   links:
     - database
   volumes:
-    - /etc/letsencrypt/live/xtomo.ru:/etc/crt
+    - /etc/letsencrypt:/etc/letsencrypt
   #  - ./robotom/logs:/var/www/web/robotom/logs
   restart: unless-stopped
