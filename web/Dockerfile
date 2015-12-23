@@ -20,7 +20,7 @@ COPY . /var/www/web/
 # setup apache
 RUN cp /var/www/web/000-default.conf /etc/apache2/sites-available/
 
-RUN cd letsencrypt && ./letsencrypt-auto --config letsencrypt.ini
+RUN cd letsencrypt && ./letsencrypt-auto --config /var/www/web/letsencrypt.ini
 
 RUN sed -i "s/'HOST': 'localhost'/'HOST': 'database'/" robotom/robotom/settings.py
 
