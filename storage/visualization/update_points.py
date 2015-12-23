@@ -44,7 +44,6 @@ def main():
     dataCube = hdf5File["Results"]
     print "Original cube shape:", dataCube.shape
 
-
     print("Rarefying dataCube...")
     if (RAREFACTION > 1):
         dataCube = dataCube[::RAREFACTION, ::RAREFACTION, ::RAREFACTION]
