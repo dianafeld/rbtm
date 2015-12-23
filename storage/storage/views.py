@@ -57,6 +57,8 @@ def get_experiments():
 
     cursor = experiments.find(find_query)
 
+    # cursor = experiments.find(find_query).sort('datetime', pm.DESCENDING) # unfortunately there is no datetime yet
+
     resp = Response(response=dumps(cursor),
                     status=200,
                     mimetype="application/json")
@@ -152,7 +154,7 @@ def get_frame_info():
 
     frames = db['frames']
 
-    cursor = frames.find(find_query)
+    cursor = frames.find(find_query).sort('frame.number', pm.ASCENDING)
 
     resp = Response(response=dumps(cursor),
                     status=200,
