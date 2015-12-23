@@ -11,9 +11,11 @@ database:
 server:
   build: .
   ports:
-    - "8000:80"
+    - "80:80"
+    - "443:443"
   links:
     - database
-  #volumes:
+  volumes:
+    - /etc/crt:/etc/letsencrypt/live/xtomo.ru
   #  - ./robotom/logs:/var/www/web/robotom/logs
   restart: unless-stopped
