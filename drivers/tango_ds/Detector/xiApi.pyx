@@ -1,5 +1,6 @@
 from cxiapi cimport *
 from libc.string cimport memset, memchr, memcmp, memcpy, memmove
+from libc.stdlib cimport free
 cimport numpy
 import numpy
 import PyTango
@@ -151,7 +152,9 @@ cdef class Detector:
             e = xiStopAcquisition(self.handle)
             handle_error(e, "Detector.get_image().xiStopAcquisition()")
 
-        return self.make_image(image)
+        res_image =  self.make_image(image)
+        free(<void *>image.bp)
+        return res_image
 
     def enable_cooling(self):
         e = xiSetParamInt(self.handle, XI_PRM_COOLING, XI_ON)
@@ -172,6 +175,23 @@ cdef class Detector:
         e = xiGetParamFloat(self.handle, XI_PRM_HOUS_TEMP, &hous_temp)
         handle_error(e, "Detector.get_hous_temp()")
         return hous_temp
+
+    def set_roi(self, offset_x, width, offset_y, height):
+        # cdef int inc
+        # xiGetParamInt(self.handle, XI_PRM_HEIGHT + XI_PRM_INFO_INCREMENT, &inc)
+        # print(inc)
+        # xiGetParamInt(self.handle, XI_PRM_HEIGHT + XI_PRM_INFO_MAX, &inc)
+        # print(inc)
+        # xiGetParamInt(self.handle, XI_PRM_HEIGHT + XI_PRM_INFO_MIN, &inc)
+        # print(inc)
+        e = xiSetParamInt(self.handle, XI_PRM_OFFSET_X, offset_x)
+        handle_error(e, "Detector.set_roi().offset_x")
+        e = xiSetParamInt(self.handle, XI_PRM_OFFSET_Y, offset_y)
+        handle_error(e, "Detector.set_roi().offset_y")
+        e = xiSetParamInt(self.handle, XI_PRM_WIDTH, width)
+        handle_error(e, "Detector.set_roi().width")
+        e = xiSetParamInt(self.handle, XI_PRM_HEIGHT, height)
+        handle_error(e, "Detector.set_roi().height")
 
     def __dealloc__(self):
         e = xiCloseDevice(self.handle)

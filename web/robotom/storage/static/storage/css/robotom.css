@@ -1,0 +1,16 @@
+.table > tbody > tr > td {
+    vertical-align: middle;
+    max-width: 150px;
+}
+
+.tr-buttoned {
+    height: 45px;
+}
+
+.tr-buttoned > td > div {
+    visibility: hidden;
+}
+
+.tr-buttoned:hover > td > div {
+    visibility: visible;
+}

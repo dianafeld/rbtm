@@ -16,8 +16,17 @@ cdef extern from "m3api/xiApi.h":
     cdef char *XI_PRM_COOLING = "cooling"  # Start camera cooling. XI_SWITCH
     cdef char *XI_PRM_BUFFER_POLICY = "buffer_policy"  # Data move policy XI_BP
     cdef char *XI_PRM_CHIP_TEMP = "chip_temp"  # Camera sensor temperature 
-    cdef char *XI_PRM_HOUS_TEMP = "hous_temp"  #Camera housing tepmerature
+    cdef char *XI_PRM_HOUS_TEMP = "hous_temp"  # Camera housing tepmerature
     cdef char *XI_PRM_IS_DEVICE_EXIST = "isexist"  # Returns 1 if camera connected and works properly. XI_SWITCH
+    cdef char *XI_PRM_WIDTH = "width"  # Width of the Image provided by the device (in pixels).
+    cdef char *XI_PRM_HEIGHT = "height"  # Height of the Image provided by the device (in pixels).
+    cdef char *XI_PRM_OFFSET_X = "offsetX"  # Horizontal offset from the origin to the area of interest (in pixels).
+    cdef char *XI_PRM_OFFSET_Y = "offsetY"  # Vertical offset from the origin to the area of interest (in pixels).
+
+    cdef char *XI_PRM_INFO_MIN = ":min"  # Parameter minimum
+    cdef char *XI_PRM_INFO_MAX = ":max"  # Parameter maximum
+    cdef char *XI_PRM_INFO_INCREMENT = ":inc"  # Parameter increment
+    cdef char *XI_PRM_INFO = ":info"  # Parameter value
 
     ctypedef enum XI_IMG_FORMAT:
         XI_MONO8,  # 8 bits per pixel
@@ -185,9 +194,3 @@ cdef extern from "m3api/xiApi.h":
     XI_RETURN xiGetDeviceInfoInt(DWORD DevId, const char *prm, int *value);
     XI_RETURN xiGetDeviceInfoString(DWORD DevId, const char *prm, char *value, DWORD value_size);
     # -----------------------------------------------------------------------------------
-
-
-
-
-
-
