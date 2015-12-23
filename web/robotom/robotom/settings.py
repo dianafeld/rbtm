@@ -7,7 +7,7 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 REQUEST_DEBUG = False
 
-TIMEOUT_DEFAULT = 10  # timeout in ms
+TIMEOUT_DEFAULT = 10  # timeout in secs
 
 STORAGE_HOST = 'http://109.234.34.140:5016/'
 
