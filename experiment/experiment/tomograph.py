@@ -115,16 +115,13 @@ class Tomograph:
         except ModExpError as e:
             e.log()
             return 'unavailable', e.exception_message
-            #return create_response(success=True, exception_message=exception_message, result=)
 
         if self.current_experiment != None:
             logger.info("Tomograph is available; experiment IS running")
             return 'experiment', ""
-            #return create_response(success=True, result="experiment")
         else:
             logger.info("Tomograph is available; experiment is NOT running")
             return 'ready', ""
-            #return create_response(success=True, result="ready")
 
     def basic_tomo_check(self, from_experiment):
         if not from_experiment:
@@ -133,7 +130,6 @@ class Tomograph:
         else:
             if self.current_experiment.to_be_stopped == True:
                 # someone called experiment_stop() function
-                #raise ModExpError(error=self.current_experiment.reason_of_stop, stop_msg=SOMEONE_STOP_MSG)
                 raise self.current_experiment.stop_exception
 
 
@@ -416,6 +412,7 @@ class Tomograph:
         try_thrice_function(func=self.tomograph_proxy.MoveBack, error_str='Could not move object back')
         logger.info('Object was moved back!')
 
+
     def get_frame(self, exposure, with_open_shutter, send_to_webpage=False, from_experiment=False, exp_is_advanced=True):
         """ Tries get frame with some exposure
         :arg: 'exposure' - exposure, which frame should get with
@@ -423,6 +420,7 @@ class Tomograph:
         """
         logger.info('Going to get image...')
         logger.info('With open shutter: ' + str(with_open_shutter))
+
         self.basic_tomo_check(from_experiment)
 
         if type(exposure) not in (float, int):
@@ -446,7 +444,6 @@ class Tomograph:
         finally:
             if with_open_shutter == True:
                 self.close_shutter(0, from_experiment=from_experiment, exp_is_advanced=exp_is_advanced)
-
 
         try:
             frame_metadata = json.loads(frame_metadata_json)
@@ -534,7 +531,6 @@ class Tomograph:
         logger.info('Chip temperature is %.2f' % chip_temp)
         return chip_temp
 
-
     def get_detector_hous_temperature(self, from_experiment=False, exp_is_advanced=True):
         logger.info('Going to get detector hous temperature...')
         self.basic_tomo_check(from_experiment)
@@ -545,4 +541,3 @@ class Tomograph:
         hous_temp = hous_temp_attr.value
         logger.info('Hous temperature is %.2f' % hous_temp)
         return hous_temp
-        

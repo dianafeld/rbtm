@@ -54,10 +54,10 @@ function init() {
 
 
 	for (var i = 0; i < numVertices; i++){
-		colors[i * 3] =  (R_arr[i] / 512);
-		colors[i * 3 + 1] =  (G_arr[i] / 512);
-		colors[i * 3 + 2] =  (B_arr[i] / 512);
-		alphas[i] = (A_arr[i] / 512);
+		colors[i * 3] =  (R_arr[i] / 256);
+		colors[i * 3 + 1] =  (G_arr[i] / 256);
+		colors[i * 3 + 2] =  (B_arr[i] / 256);
+		alphas[i] = (A_arr[i] / 256);
 		positions[i * 3] =  X_arr[i];
 		positions[i * 3 + 1] =  Y_arr[i];
 		positions[i * 3 + 2] =  Z_arr[i];

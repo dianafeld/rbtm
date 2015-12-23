@@ -1,8 +1,8 @@
 import json
 import requests
 
-#MODULE_EXPERIMENT_URI = "http://109.234.34.140:5001"
-MODULE_EXPERIMENT_URI = "http://localhost:5001"
+MODULE_EXPERIMENT_URI = "http://109.234.34.140:5001"
+#MODULE_EXPERIMENT_URI = "http://localhost:5001"
 
 
 simple_experiment = json.dumps(
@@ -33,7 +33,7 @@ simple_experiment = json.dumps(
             },
     }
 )
-
+"""
 advanced_experiment = json.dumps(
     {
         'exp_id': '553e898c6c8dc562738e9294',
@@ -47,6 +47,7 @@ advanced_experiment = json.dumps(
 
     }
 )
+"""
 
 
 new_voltage = json.dumps(50.0)
@@ -56,14 +57,19 @@ new_pos = json.dumps(7.0)
 
 try:
 
-    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/state")
+    req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/state")
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/source/power-on")
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/source/power-off")
+
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/source/set-voltage", data = new_voltage)
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/source/set-current", data = new_current)
+    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/source/get-voltage")
+    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/source/get-current")
 
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/shutter/open/0")
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/shutter/close/0")
+    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/shutter/state")
+
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/set-horizontal-position", data = new_pos)
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/set-vertical-position", data = new_pos)
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/set-angle-position", data = new_pos)
@@ -72,15 +78,14 @@ try:
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/get-vertical-position")
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/get-angle-position")
 
-    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/detector/chip_temp")
-    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/detector/hous_temp")
-
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/reset-angle-position", data = new_pos)
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/move-away")
     #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/motor/move-back")
 
+    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/detector/chip_temp")
+    #req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/detector/hous_temp")
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/detector/get-frame", data = exposure)
-    req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/detector/get-frame-with-closed-shutter", data = exposure)
+    #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/detector/get-frame-with-closed-shutter", data = exposure)
 
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/start", data = simple_experiment)
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/start", data = advanced_experiment)
@@ -92,7 +97,6 @@ try:
     #req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/stop", data = json.dumps("prosto"))
 
 
-    #req = requests.get("http://109.234.34.140:5005/get-image")
 except requests.ConnectionError as e:
     print "Could not connect", e.message
 else:
