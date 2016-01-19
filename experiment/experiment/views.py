@@ -6,28 +6,26 @@ More exactly - some supporting functions and functions for receiving queries
 """
 
 import json
-import threading
 import time
 
 from flask import request
 from flask import Response
 from flask import make_response
+from flask import send_file
 
 from tomograph import Tomograph
 from tomograph import try_thrice_function
-from tomograph import create_event
-from tomograph import create_response
-from tomograph import send_to_storage
-from conf import STORAGE_FRAMES_URI
-from conf import STORAGE_EXP_START_URI
-from conf import TOMO_ADDR
-from conf import MAX_EXPERIMENT_TIME
+from experiment_class import *
 
-
-# logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG, filename = u'experiment.log')
 from experiment import app
-
 logger = app.logger
+
+if REAL_TOMOGRAPH_STORAGE_WEBPAGE == True:
+    logger.info(' !! Tomograph, storage, web-page are REAL !! ')
+else:
+    logger.info(' !! Tomograph, storage, web-page are STUBS !! ')
+
+
 
 TOMOGRAPHS = (
     Tomograph(TOMO_ADDR + "/tomo/tomograph/1", TOMO_ADDR + "/tomo/detector/1"),
@@ -38,12 +36,7 @@ def check_request(request_data):
     """ Checks body part of request, if it is not empty and has JSON string try to load it to python object
 
     :arg: 'request_data' - body part of request, type is undetermined in common case
-    :return: list of 3 elements,
-             1 - success of finding JSON string and loading it to python object, type is bool
-             2 - JSON-string loaded to python object, type is undetermined, if 'success' is True; None if False
-             3 - if 'success' is False, function returns prepared response for web-page of adjustment,
-                 type is json-string with format that is returned by  'create_response()';
-                 if 'success' is True, empty string
+    :return: 
     """
     logger.info('Checking request...')
     if not request_data:
@@ -60,6 +53,36 @@ def check_request(request_data):
         logger.info('Request has JSON data!')
         return True, request_data_dict, ''
 
+def call_method_create_response(tomo_num, method_name, args=(), GET_FRAME_method=False):
+    if type(args) not in (tuple, list):
+        args = (args,)
+
+    tomograph = TOMOGRAPHS[tomo_num - 1]
+    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+
+    try:
+        result = getattr(tomograph, method_name)(*args)
+    except ModExpError as e:
+        e.log()
+        return e.create_response()
+    """
+    except Exception as e:
+        logger.info(e.message)
+        try:
+            return create_response(success=False, error="unexpected exception", exception_message=e.message)
+        except Exception as e2:
+            logger.info(e.message)
+            return create_response(success=False, error="unexpected exception")
+    """
+    if GET_FRAME_method == False:
+        return create_response(success=True, result=result)
+    else:
+        success, ModExpError_if_fail = prepare_send_frame(row_image_with_metadata=result, experiment=None)
+        if not success:
+            return ModExpError_if_fail.create_response()
+
+        return send_file('../' + FRAME_PNG_FILENAME, mimetype='image/png')
+
 
 # in almost every function below we have argument 'tomo_num' - number of tomograph in TOMOGRAPHS list
 
@@ -68,55 +91,20 @@ def check_state(tomo_num):
     logger.info('\n\nREQUEST: CHECK STATE')
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-
-    logger.info('Checking tomograph...')
-    success, useless, exception_message = try_thrice_function(tomograph.tomograph_proxy.ping)
-    if not success:
-        logger.info("Tomograph is unavailable")
-        logger.info(exception_message)
-        return create_response(True, exception_message, result="unavailable")
-
-    if tomograph.experiment_is_running:
-        logger.info("Tomograph is available; experiment IS running")
-        return create_response(success=True, result="experiment")
-    else:
-        logger.info("Tomograph is available; experiment is NOT running")
-        return create_response(success=True, result="ready")
-
+    tomo_state, exception_message = tomograph.tomo_state()
+    return create_response(success=True, result=tomo_state, exception_message=exception_message)
 
 # NEED TO EDIT(GENERALLY)
 @app.route('/tomograph/<int:tomo_num>/source/power-on', methods=['GET'])
 def source_power_on(tomo_num):
     logger.info('\n\nREQUEST: SOURCE/POWER ON')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-    logger.info('Powering on source...')
-    success, useless, exception_message = try_thrice_function(tomograph.tomograph_proxy.PowerOn)
-    if success == False:
-        logger.info(exception_message)
-        return create_response(success, exception_message, error='Could not power on source')
-
-    logger.info('Source was powered ON!')
-    return create_response(True)
-
+    return call_method_create_response(tomo_num, method_name='source_power_on')
 
 # NEED TO EDIT(GENERALLY)
 @app.route('/tomograph/<int:tomo_num>/source/power-off', methods=['GET'])
 def source_power_off(tomo_num):
     logger.info('\n\nREQUEST: SOURCE/POWER OFF')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-    logger.info('Powering off source...')
-    success, useless, exception_message = try_thrice_function(tomograph.tomograph_proxy.PowerOff)
-    if success == False:
-        logger.info(exception_message)
-        return create_response(success, exception_message, error='Could not power off source')
-
-    logger.info('Source was powered OFF!')
-    return create_response(True)
+    return call_method_create_response(tomo_num, method_name='source_power_off')
 
 
 # ---------------------------------------------------------#
@@ -127,264 +115,136 @@ def source_power_off(tomo_num):
 @app.route('/tomograph/<int:tomo_num>/source/set-voltage', methods=['POST'])
 def source_set_voltage(tomo_num):
     logger.info('\n\nREQUEST: SOURCE/SET VOLTAGE')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-    logger.info('Going to set voltage on source...')
-    if tomograph.experiment_is_running:
-        error = 'On this tomograph experiment is running'
-        logger.info(error)
-        return create_response(success=False, error=error)
-
     success, new_voltage, response_if_fail = check_request(request.data)
     if not success:
         return response_if_fail
-
-    logger.info('Checking format...')
-    if type(new_voltage) is not float:
-        logger.info('Incorrect format! Voltage type must be float, but it is ' + str(type(new_voltage)))
-        return create_response(success=False, error='Incorrect format: type must be float')
-
-
-    # TO DELETE THIS LATER
-    logger.info('Format is correct, new voltage value is %.1f...' % (new_voltage))
-    if new_voltage < 2 or 60 < new_voltage:
-        logger.info('Voltage must have value from 2 to 60!')
-        return create_response(success=False, error='Voltage must have value from 2 to 60')
-
-    logger.info('Parameters are normal, setting new voltage...')
-    success, set_voltage, exception_message = tomograph.try_thrice_change_attr("xraysource_voltage", new_voltage)
-    if success == False:
-        logger.info(exception_message)
-        return create_response(success, exception_message, error='Could not set voltage')
-
-    logger.info('New value of voltage was set!')
-    return create_response(success=True)
+    return call_method_create_response(tomo_num, method_name='source_set_voltage', args=new_voltage)
 
 
 @app.route('/tomograph/<int:tomo_num>/source/set-current', methods=['POST'])
 def source_set_current(tomo_num):
     logger.info('\n\nREQUEST: SOURCE/SET CURRENT')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-    logger.info('Going to set current on source...')
-    if tomograph.experiment_is_running:
-        error = 'On this tomograph experiment is running'
-        logger.info(error)
-        return create_response(success=False, error=error)
-
-    success, current, response_if_fail = check_request(request.data)
+    success, new_current, response_if_fail = check_request(request.data)
     if not success:
         return response_if_fail
-
-    logger.info('Checking format...')
-    if type(current) is not float:
-        logger.info('Incorrect format! Current type must be float, but it is ' + str(type(current)))
-        return create_response(success=False, error='Incorrect format: type must be float')
-
-
-    # TO DELETE THIS LATER
-    logger.info('Format is correct, new current value is %.1f...' % (current))
-    if current < 2 or 80 < current:
-        logger.info('Current must have value from 2 to 60!')
-        return create_response(success=False, error='Current must have value from 2 to 80')
-
-    logger.info('Parameters are normal, setting new current...')
-    success, set_current, exception_message = tomograph.try_thrice_change_attr("xraysource_current", current)
-    if success == False:
-        logger.info(exception_message)
-        return create_response(success, exception_message, error='Could not set current')
-
-    logger.info('New value of current was set!')
-    return create_response(success=True)
+    return call_method_create_response(tomo_num, method_name='source_set_current', args=new_current)
 
 
 @app.route('/tomograph/<int:tomo_num>/source/get-voltage', methods=['GET'])
 def source_get_voltage(tomo_num):
     logger.info('\n\nREQUEST: SOURCE/GET VOLTAGE')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-    logger.info('Going to get voltage...')
-    if tomograph.experiment_is_running:
-        error = 'On this tomograph experiment is running'
-        logger.info(error)
-        return create_response(success=False, error=error)
-
-    success, voltage_attr, exception_message = tomograph.try_thrice_read_attr("xraysource_voltage")
-    if success == False:
-        logger.info(exception_message)
-        return create_response(success, exception_message, error='Could not get voltage')
-
-    voltage = voltage_attr.value
-    logger.info("Voltage is %.2f" % voltage)
-    return create_response(success=True, result=voltage)
-
+    return call_method_create_response(tomo_num, method_name='source_get_voltage')
 
 @app.route('/tomograph/<int:tomo_num>/source/get-current', methods=['GET'])
 def source_get_current(tomo_num):
     logger.info('\n\nREQUEST: SOURCE/GET CURRENT')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-    logger.info('Going to get current...')
-    if tomograph.experiment_is_running:
-        error = 'On this tomograph experiment is running'
-        logger.info(error)
-        return create_response(success=False, error=error)
-
-    success, current_attr, exception_message = tomograph.try_thrice_read_attr("xraysource_current")
-    if success == False:
-        logger.info(exception_message)
-        return create_response(success, exception_message, error='Could not get current')
-
-    current = current_attr.value
-    logger.info("Current is %.2f" % current)
-    return create_response(success=True, result=current)
-
+    return call_method_create_response(tomo_num, method_name='source_get_current')
 
 @app.route('/tomograph/<int:tomo_num>/shutter/open/<int:time>', methods=['GET'])
 def shutter_open(tomo_num, time):
     logger.info('\n\nREQUEST: SHUTTER/OPEN')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return tomograph.open_shutter(time)
-
-
-@app.route('/tomograph/<int:tomo_num>/shutter/state', methods=['GET'])
-def shutter_state(tomo_num):
-    logger.info('\n\nREQUEST: SHUTTER/STATE')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return tomograph.shutter_state(time)
-
+    return call_method_create_response(tomo_num, method_name='open_shutter', args=time)
 
 @app.route('/tomograph/<int:tomo_num>/shutter/close/<int:time>', methods=['GET'])
 def shutter_close(tomo_num, time):
     logger.info('\n\nREQUEST: SHUTTER/CLOSE')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-    return tomograph.close_shutter(time)
+    return call_method_create_response(tomo_num, method_name='close_shutter', args=time)
+
+@app.route('/tomograph/<int:tomo_num>/shutter/state', methods=['GET'])
+def shutter_state(tomo_num):
+    logger.info('\n\nREQUEST: SHUTTER/STATE')
+    return call_method_create_response(tomo_num, method_name='shutter_state')
+
+
 
 
 @app.route('/tomograph/<int:tomo_num>/motor/set-horizontal-position', methods=['POST'])
 def motor_set_horizontal_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/SET HORIZONTAL POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
     success, new_pos, response_if_fail = check_request(request.data)
     if not success:
         return response_if_fail
-
-    return tomograph.set_x(new_pos)
-
+    return call_method_create_response(tomo_num, method_name='set_x', args=new_pos)
 
 @app.route('/tomograph/<int:tomo_num>/motor/set-vertical-position', methods=['POST'])
 def motor_set_vertical_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/SET VERTICAL POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
     success, new_pos, response_if_fail = check_request(request.data)
     if not success:
         return response_if_fail
-
-    return tomograph.set_y(new_pos)
-
+    return call_method_create_response(tomo_num, method_name='set_y', args=new_pos)
 
 @app.route('/tomograph/<int:tomo_num>/motor/set-angle-position', methods=['POST'])
 def motor_set_angle_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/SET ANGLE POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
     success, new_pos, response_if_fail = check_request(request.data)
     if not success:
         return response_if_fail
+    return call_method_create_response(tomo_num, method_name='set_angle', args=new_pos)
 
-    return tomograph.set_angle(new_pos)
 
 
 @app.route('/tomograph/<int:tomo_num>/motor/get-horizontal-position', methods=['GET'])
 def motor_get_horizontal_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/GET HORIZONTAL POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-    return tomograph.get_x()
-
+    return call_method_create_response(tomo_num, method_name='get_x')
 
 @app.route('/tomograph/<int:tomo_num>/motor/get-vertical-position', methods=['GET'])
 def motor_get_vertical_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/GET VERTICAL POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-    return tomograph.get_y()
-
+    return call_method_create_response(tomo_num, method_name='get_y')
 
 @app.route('/tomograph/<int:tomo_num>/motor/get-angle-position', methods=['GET'])
 def motor_get_angle_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/GET ANGLE POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+    return call_method_create_response(tomo_num, method_name='get_angle')
 
-    return tomograph.get_angle()
 
 
 @app.route('/tomograph/<int:tomo_num>/motor/move-away', methods=['GET'])
 def motor_move_away(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/MOVE AWAY')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-    return tomograph.move_away()
+    return call_method_create_response(tomo_num, method_name='move_away')
 
 
 @app.route('/tomograph/<int:tomo_num>/motor/move-back', methods=['GET'])
 def motor_move_back(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/MOVE BACK')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-    return tomograph.move_back()
-
+    return call_method_create_response(tomo_num, method_name='move_back')
 
 @app.route('/tomograph/<int:tomo_num>/motor/reset-angle-position', methods=['GET'])
 def motor_reset_angle_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/RESET ANGLE POSITION')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
+    return call_method_create_response(tomo_num, method_name='reset_to_zero_angle')
 
-    return tomograph.reset_to_zero_angle()
 
 
 @app.route('/tomograph/<int:tomo_num>/detector/get-frame', methods=['POST'])
 def detector_get_frame(tomo_num):
     logger.info('\n\nREQUEST: DETECTOR/GET FRAME')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
     success, exposure, response_if_fail = check_request(request.data)
     if not success:
         return response_if_fail
+    return call_method_create_response(tomo_num, method_name='get_frame', args=(exposure, True), GET_FRAME_method=True)
 
-    return tomograph.get_frame(exposure)
+@app.route('/tomograph/<int:tomo_num>/detector/get-frame-with-closed-shutter', methods=['POST'])
+def detector_get_frame_with_closed_shutter(tomo_num):
+    logger.info('\n\nREQUEST: DETECTOR/GET FRAME WITH CLOSED SHUTTER')
+    success, exposure, response_if_fail = check_request(request.data)
+    if not success:
+        return response_if_fail
+    return call_method_create_response(tomo_num, method_name='get_frame', args=(exposure, False), GET_FRAME_method=True)
 
 
 @app.route('/tomograph/<int:tomo_num>/detector/chip_temp', methods=['GET'])
 def detector_get_chip_temperature(tomo_num):
     logger.info('\n\nREQUEST: DETECTOR/GET CHIP TEMPERATURE')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    return tomograph.get_detector_chip_temperature(tomo_num)
+    return call_method_create_response(tomo_num, method_name='get_detector_chip_temperature')
 
 @app.route('/tomograph/<int:tomo_num>/detector/hous_temp', methods=['GET'])
 def detector_get_hous_temperature(tomo_num):
     logger.info('\n\nREQUEST: DETECTOR/GET HOUS TEMPERATURE')
-    tomograph = TOMOGRAPHS[tomo_num - 1]
-    return tomograph.get_detector_hous_temperature(tomo_num)
+    return call_method_create_response(tomo_num, method_name='get_detector_hous_temperature')
 
 
 
@@ -452,81 +312,14 @@ def check_and_prepare_exp_parameters(exp_param):
     # because it will be more accurate this way
     return True, ''
 
-
-def loop_of_get_send_frames(tomograph, count, exposure, getting_frame_message, mode):
-    for i in range(0, count):
-
-        logger.info(getting_frame_message % (i))
-        success, frame_dict = tomograph.get_frame(exposure, send_to_webpage=True, exp_is_advanced=False)
-        if not success:
-            return False
-
-        frame_dict['mode'] = mode
-        frame_with_data = create_event('frame', tomograph.exp_id, frame_dict)
-        if tomograph.send_event_to_storage_webpage(STORAGE_FRAMES_URI, frame_with_data) == False:
-            return False
-    return True
-
-
-def carry_out_simple_experiment(tomograph, exp_param):
-    time_of_experiment_start = time.time()
-    exp_id = exp_param['exp_id']
-    # Closing shutter to get DARK images
-    if tomograph.close_shutter(0, exp_is_advanced=False) == False:
-        return
-
-    logger.info('Going to get DARK images!\n')
-    if loop_of_get_send_frames(tomograph, exp_param['DARK']['count'], exp_param['DARK']['exposure'],
-                               getting_frame_message='Getting DARK image %d from tomograph...', mode="dark") == False:
-        return
-    logger.info('Finished with DARK images!\n')
-
-    if tomograph.open_shutter(0, exp_is_advanced=False) == False:
-        return
-    if tomograph.move_away(exp_is_advanced=False) == False:
-        return
-
-    logger.info('Going to get EMPTY images!\n')
-    if loop_of_get_send_frames(tomograph, exp_param['EMPTY']['count'], exp_param['EMPTY']['exposure'],
-                               getting_frame_message='Getting EMPTY image %d from tomograph...', mode="empty") == False:
-        return
-    logger.info('Finished with EMPTY images!\n')
-
-    if tomograph.move_back(exp_is_advanced=False) == False:
-        return
-
-    success, initial_angle = tomograph.get_angle(exp_is_advanced=False)
-    if not success:
-        return
-    logger.info('Initial angle is %.2f' % initial_angle)
-
-    logger.info('Going to get DATA images, step count is %d!\n' % (exp_param['DATA']['step count']))
-    angle_step = exp_param['DATA']['angle step']
-    for i in range(0, exp_param['DATA']['step count']):
-        current_angle = (round((i * angle_step) + initial_angle, 2)) % 360
-        logger.info('Getting DATA images: angle is %.2f' % current_angle)
-
-        if loop_of_get_send_frames(tomograph, exp_param['DATA']['count per step'], exp_param['DATA']['exposure'],
-                                   getting_frame_message='Getting DATA image %d from tomograph...',
-                                   mode="data") == False:
-            return
-        # Rounding angles here, not in  check_and_prepare_exp_parameters(), cause it will be more accurately this way
-        new_angle = (round((i + 1) * angle_step + initial_angle, 2)) % 360
-        logger.info('Finished with this angle, turning to new angle %.2f...' % (new_angle))
-        if tomograph.set_angle(new_angle, exp_is_advanced=False) == False:
-            return
-    logger.info('Finished with DATA images!\n')
-
-    tomograph.handle_successful_stop(time_of_experiment_start)
-    return
-
-
+"""
 def time_counter_of_experiment(tomograph, exp_id, exp_time=MAX_EXPERIMENT_TIME):
     time.sleep(exp_time)
-    if (tomograph.experiment_is_running and tomograph.exp_id == exp_id):
+    cur_exp = tomograph.current_experiment
+    if (cur_exp != None and cur_exp.exp_id == exp_id):
         logger.info("\nEXPERIMENT TAKES TOO LONG, GOING TO STOP IT!\n")
-        tomograph.experiment_is_running = False
-        tomograph.exp_stop_reason = "# MODULE EXPERIMENT: EXPERIMENT TAKES TOO LONG #"
+        cur_exp.to_be_stopped = True
+        cur_exp.exp_stop_reason = "# MODULE EXPERIMENT: EXPERIMENT TAKES TOO LONG #"
     return
 
 
@@ -574,7 +367,7 @@ def carry_out_advanced_experiment(tomograph, exp_param):
 
     tomograph.handle_successful_stop(time_of_experiment_start)
     return
-
+"""
 
 # NEED TO EDIT (COMMENT BEFORE POWERING ON SOURCE)
 @app.route('/tomograph/<int:tomo_num>/experiment/start', methods=['POST'])
@@ -582,11 +375,6 @@ def experiment_start(tomo_num):
     logger.info('\n\nREQUEST: EXPERIMENT/START')
     tomograph = TOMOGRAPHS[tomo_num - 1]
     # tomo_num - 1, because in TOMOGRAPHS list numeration begins from 0
-
-    if tomograph.experiment_is_running:
-        error = 'On this tomograph experiment is running'
-        logger.info(error)
-        return create_response(success=False, error=error)
 
     success, data, response_if_fail = check_request(request.data)
     if not success:
@@ -600,39 +388,40 @@ def experiment_start(tomo_num):
     if not ((type(data['experiment parameters']) is dict) and (type(data['exp_id']) is unicode)):
         logger.info('Incorrect format of types!')
         return create_response(success=False, error='Incorrect format: incorrect types')
-
     logger.info('Generous format is normal!')
+
     exp_param = data['experiment parameters']
-    exp_id = data['exp_id']
-    exp_param['exp_id'] = exp_id
+    exp_param['exp_id'] = data['exp_id']
 
     logger.info('Checking parameters...')
     success, error = check_and_prepare_exp_parameters(exp_param)
     if not success:
         logger.info(error)
-        return create_response(success, error)
-
+        return create_response(success=success, error=error)
     logger.info('Parameters are normal!')
-    logger.info('Powering on tomograph...')
-    success, useless, exception_message = try_thrice_function(tomograph.tomograph_proxy.PowerOn)
-    if success == False:
-        return create_response(success=False, exception_message=exception_message, error='Could not power on source')
 
-    # NEED TO CHANGE MAYBE, TO ADD CHECKING STATE
-    logger.info('Was powered on!')
+    tomo_state, exception_message = tomograph.tomo_state()
+    if tomo_state == 'unavailable':
+        return create_response(success=False, error="Could not connect with tomograph", exception_message=exception_message)
+    elif tomo_state == 'experiment':
+        return create_response(success=False, error="On this tomograph experiment is running")
+    elif tomo_state != 'ready':
+        return create_response(success=False, error="Undefined tomograph state")
+
     logger.info('Sending to storage leading to prepare...')
-    success, exception_message = send_to_storage(STORAGE_EXP_START_URI, data=request.data)
-    if not success:
-        return create_response(success=False, exception_message=exception_message, error='Problems with storage')
+    try:
+        send_to_storage(STORAGE_EXP_START_URI, data=request.data)
+    except ModExpError as e:
+        e.log()
+        return e.create_response()
 
     logger.info('Experiment begins!')
-    tomograph.experiment_is_running = True
-    tomograph.exp_id = exp_id
     if exp_param['advanced']:
-        thr = threading.Thread(target=carry_out_advanced_experiment, args=(tomograph, exp_param))
+        pass
+        #thr = threading.Thread(target=carry_out_advanced_experiment, args=(tomograph, exp_param))
     else:
-        thr = threading.Thread(target=carry_out_simple_experiment, args=(tomograph, exp_param))
-    thr.start()
+        thr = threading.Thread(target=tomograph.carry_out_simple_experiment, args=(exp_param,))
+        thr.start()
 
     return create_response(True)
 
@@ -651,14 +440,12 @@ def experiment_stop(tomo_num):
     #    exp_stop_reason_txt = "unknown"
     exp_stop_reason_txt = "unknown"
 
-    tomograph.exp_stop_reason = exp_stop_reason_txt
-    tomograph.experiment_is_running = False
-    resp = Response(response=json.dumps({'success': True}),
-                    status=200,
-                    mimetype="application/json")
 
-    return resp
+    if tomograph.current_experiment != None:
+        tomograph.current_experiment.to_be_stopped = True
+        tomograph.current_experiment.stop_exception = ModExpError(error=exp_stop_reason_txt, stop_msg=SOMEONE_STOP_MSG)
 
+    return create_response(True)
 
 """
 @app.before_request
@@ -685,6 +472,3 @@ def internal_server_error(exception):
     logger.exception(exception)
     return make_response(create_response(success=False, error='Internal Server Error'), 500)
 
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001)

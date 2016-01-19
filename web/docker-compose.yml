@@ -11,9 +11,11 @@ database:
 server:
   build: .
   ports:
-    - "8000:80"
+    - "80:80"
+    - "443:443"
   links:
     - database
   volumes:
-    - ./robotom/logs:/var/www/web/robotom/logs
+    - /etc/letsencrypt:/etc/letsencrypt
+  #  - ./robotom/logs:/var/www/web/robotom/logs
   restart: unless-stopped

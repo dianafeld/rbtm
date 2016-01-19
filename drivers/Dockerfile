@@ -45,10 +45,9 @@ RUN pip install -r requirements_docker.txt
 RUN wget http://files.ximc.ru/libximc/ximc-2.8.5.tar.gz && tar -zxvf ximc-2.8.5.tar.gz && cd ximc-2.8.5/ximc/deb && dpkg -i libximc7_2.8.5-1_amd64.deb libximc7-dev_2.8.5-1_amd64.deb && apt-get install -f
 
 # detector
-# RUN wget http://www.ximea.com/support/attachments/271/XIMEA_Linux_SP.tgz && tar -zxvf XIMEA_Linux_SP.tgz && cd package
-# RUN echo "LD_LIBRARY_PATH=/package/libs/libusb/X64/:package/libs/libraw1394/X64" >> ~/.bashrc
-
-
+RUN wget http://www.ximea.com/support/attachments/271/XIMEA_Linux_SP.tgz && tar -zxvf XIMEA_Linux_SP.tgz && cd package
+RUN ln -s /var/www/drivers/package/include /usr/include/m3api
+# RUN echo "LD_LIBRARY_PATH=package/libs/libusb/X64/:package/libs/libraw1394/X64" >> ~/.bashrc
 
 COPY . /var/www/drivers/
 

@@ -3,7 +3,7 @@ server:
   #hostname: rbtm-tango
   ports:
     - "10001:10000"
-  restart: always
+  restart: unless-stopped
   devices:
     - "/dev/ttyACM2:/dev/ttyACM2"
     - "/dev/ttyACM1:/dev/ttyACM1"
@@ -12,4 +12,4 @@ server:
     - "/dev/fw0:/dev/fw0"
     - "/dev/fw1:/dev/fw1"
   environment:
-    - LD_LIBRARY_PATH=/package/libs/libusb/X64/:package/libs/libraw1394/X64
+    - LD_LIBRARY_PATH=/var/www/drivers/package/libs/libusb/X64:/var/www/drivers/package/libs/libraw1394/X64:/var/www/drivers/package/api/X64

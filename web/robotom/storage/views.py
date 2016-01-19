@@ -12,6 +12,7 @@ from django.shortcuts import render
 from requests.exceptions import Timeout
 from robotom.settings import STORAGE_EXPERIMENTS_GET_HOST, STORAGE_FRAMES_INFO_HOST, MEDIA_ROOT, \
     STORAGE_FRAMES_PNG, STORAGE_EXPERIMENTS_HOST, STORAGE_HOST
+from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 from urlparse import urljoin
 
@@ -144,7 +145,7 @@ def storage_view(request):
     elif request.method == "POST":
         info = make_info(request.POST)
     try:
-        answer = requests.post(STORAGE_EXPERIMENTS_GET_HOST, info, timeout=5)
+        answer = requests.post(STORAGE_EXPERIMENTS_GET_HOST, info, timeout=settings.TIMEOUT_DEFAULT)
         if answer.status_code == 200:
             experiments = json.loads(answer.content)
             storage_logger.debug(u'Найденные эксперименты: {}'.format(experiments))
@@ -250,7 +251,7 @@ def storage_record_view(request, storage_record_id):
     to_show = True
     try:
         exp_info = json.dumps({"_id": storage_record_id})
-        experiment = requests.post(STORAGE_EXPERIMENTS_GET_HOST, exp_info, timeout=1)
+        experiment = requests.post(STORAGE_EXPERIMENTS_GET_HOST, exp_info, timeout=settings.TIMEOUT_DEFAULT)
         if experiment.status_code == 200:
             experiment_info = json.loads(experiment.content)
             storage_logger.debug(u'Страница записи: Данные эксперимента: {}'.format(experiment_info))
@@ -277,7 +278,7 @@ def storage_record_view(request, storage_record_id):
     try:
         frame_info = json.dumps({"exp_id": storage_record_id})
         # storage_logger.debug(u'Страница записи: {}'.format(frame_info))
-        frames = requests.post(STORAGE_FRAMES_INFO_HOST, frame_info, timeout=1)
+        frames = requests.post(STORAGE_FRAMES_INFO_HOST, frame_info, timeout=settings.TIMEOUT_DEFAULT)
         if frames.status_code == 200:
             frames_info = json.loads(frames.content)
             storage_logger.debug(u'Страница записи: Список изображений: {}'.format(frames_info))
@@ -311,7 +312,7 @@ def frames_downloading(request, storage_record_id):
     try:
         frame_request = json.dumps({"exp_id": storage_record_id})
         storage_logger.debug(u'Получение изображений: Запрос списка изображений {}'.format(frame_request))
-        frames = requests.post(STORAGE_FRAMES_INFO_HOST, frame_request, timeout=1)
+        frames = requests.post(STORAGE_FRAMES_INFO_HOST, frame_request, timeout=settings.TIMEOUT_DEFAULT)
         if frames.status_code == 200:
             frames_info = json.loads(frames.content)
             storage_logger.debug(u'Получение изображений: Список изображений: {}'.format(frames_info))
@@ -345,7 +346,7 @@ def frames_downloading(request, storage_record_id):
                 storage_logger.debug(
                     u'Получение изображений: Запрос на получение изображения номер {}: {}'.format(frame.id,
                                                                                                   frame_request))
-                frame_response = requests.post(STORAGE_FRAMES_PNG, frame_request, timeout=10, stream=True)
+                frame_response = requests.post(STORAGE_FRAMES_PNG, frame_request, timeout=settings.TIMEOUT_DEFAULT, stream=True)
                 if frame_response.status_code == 200:
                     temp_file = tempfile.TemporaryFile()
                     for block in frame_response.iter_content(1024 * 8):
@@ -378,7 +379,7 @@ def frames_downloading(request, storage_record_id):
 def delete_experiment(request, experiment_id):
     try:
         storage_logger.debug(u'Удаление эксперимента: {}'.format(experiment_id))
-        response = requests.delete(STORAGE_EXPERIMENTS_HOST + '/' + experiment_id, timeout=1)
+        response = requests.delete(STORAGE_EXPERIMENTS_HOST + '/' + experiment_id, timeout=settings.TIMEOUT_DEFAULT)
 
         if response.status_code == 200:
             response_content = json.loads(response.content)

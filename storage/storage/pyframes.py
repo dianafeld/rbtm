@@ -1,13 +1,16 @@
-import h5py
 import os
-# import pylab as plt
+from threading import Thread
+
+import h5py
+
+import numpy as np
+from scipy.ndimage import zoom
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from scipy.ndimage import zoom
-from threading import Thread
 
 from storage import app
+
 logger = app.logger
 
 
@@ -36,11 +39,12 @@ def delete_frame(frame_id, experiment_id):
     frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'frames.h5')
     with h5py.File(frames_file_path, 'r+') as frames_file:
         del frames_file[str(frame_id)]
-    logger.info('hdf5 file: frame {} was deleted from experiment {} successfully'.format(str(frame_id), str(experiment_id)))
+    logger.info(
+        'hdf5 file: frame {} was deleted from experiment {} successfully'.format(str(frame_id), str(experiment_id)))
 
 
 def make_png(res, frame_path):
     logger.info('Going to make png...')
-    small_res = zoom(res, zoom=0.25, order=2)
+    small_res = zoom(np.rot90(res), zoom=0.25, order=2)
     plt.imsave(frame_path, small_res, cmap=plt.cm.gray)
     logger.info('png was made')
