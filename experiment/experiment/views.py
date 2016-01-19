@@ -77,7 +77,7 @@ def call_method_create_response(tomo_num, method_name, args=(), GET_FRAME_method
     if GET_FRAME_method == False:
         return create_response(success=True, result=result)
     else:
-        success, ModExpError_if_fail = prepare_send_frame(row_image_with_metadata=result, experiment=None)
+        success, ModExpError_if_fail = prepare_send_frame(raw_image_with_metadata=result, experiment=None)
         if not success:
             return ModExpError_if_fail.create_response()
 
