@@ -3,7 +3,7 @@ from libc.string cimport memset, memchr, memcmp, memcpy, memmove
 from libc.stdlib cimport free
 cimport numpy
 import numpy
-import PyTango
+#import PyTango
 
 error_codes = { XI_OK: "Function call succeeded",
                 XI_INVALID_HANDLE: "Invalid handle",
@@ -88,7 +88,7 @@ cdef void create_exception(return_code, func_name) except *:
     desc = error_codes[return_code]
     origin = func_name
     print(reason, desc, origin)
-    PyTango.Except.throw_exception(reason, desc, origin)
+    #PyTango.Except.throw_exception(reason, desc, origin)
 
 
 cdef void handle_error(return_code, func_name) except *:
@@ -126,7 +126,7 @@ cdef class Detector:
         cdef int exposure_in_us
         e = xiGetParamInt(self.handle, XI_PRM_EXPOSURE, &exposure_in_us)
         handle_error(e, "Detector.get_exposure()")
-        return round(float(exposure_in_us) / 1000)
+        return float(exposure_in_us) / 1000
 
     cdef make_image(self, XI_IMG image):
         number_of_pixels = (image.width + image.padding_x / 2) * image.height
@@ -139,10 +139,15 @@ cdef class Detector:
 
     def get_image(self):
         cdef XI_IMG image
-
+        
+        #xiSetParamInt(self.handle, XI_PRM_TRG_SOURCE, XI_TRG_OFF)
+        
+        #xiSetParamInt(self.handle, XI_PRM_DEBUG_LEVEL, XI_DL_WARNING)
+        
         e = xiStartAcquisition(self.handle)
         handle_error(e, "Detector.get_image().xiStartAcquisition()")
-
+        # import time
+        # time.sleep(1.0)
         try:
             image.bp = NULL
             image.bp_size = 0
