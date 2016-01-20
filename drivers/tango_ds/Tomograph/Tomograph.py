@@ -52,6 +52,7 @@ import sys
 # ----- PROTECTED REGION ID(Tomograph.additionnal_import) ENABLED START -----#
 
 import datetime
+import time
 import json
 
 # ----- PROTECTED REGION END -----# //  Tomograph.additionnal_import
