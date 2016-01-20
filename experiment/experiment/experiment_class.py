@@ -165,7 +165,7 @@ def send_event_to_webpage(event_dict):
     try:
         req_webpage = requests.post(WEBPAGE_URI, data=data, files=files)
     except Exception as e:
-        raise ModExpError(error='Could not send to web-page of adjustment', exception_message='' 'e.message')
+        raise ModExpError(error='Could not send to web-page of adjustment', exception_message=str(e))
 
     logger.info(req_webpage.content)
 
