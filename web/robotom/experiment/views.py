@@ -311,10 +311,14 @@ def experiment_interface(request):
     if request.method == 'POST':
         if 'parameters' in request.POST:
             exp_id = uuid.uuid4()
+            timestamp = time.time()
+            current_datetime = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
             simple_experiment = json.dumps({
                 'exp_id': str(exp_id),
                 'specimen': request.POST['name'],
                 'tags': request.POST['tags'],
+                'timestamp': timestamp,
+                'datetime': current_datetime,
                 'experiment parameters':
                     {
                         'advanced': False,
