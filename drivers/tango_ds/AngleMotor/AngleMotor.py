@@ -85,6 +85,7 @@ class AngleMotor (PyTango.Device_4Impl):
             steps = motor.get_position()
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
+            self.init_device()
             raise
         except Exception as e:
             self.error_stream(str(e))
@@ -102,6 +103,7 @@ class AngleMotor (PyTango.Device_4Impl):
             self.debug_stream("Position has been set")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
+            self.init_device()
             raise
         except Exception as e:
             self.error_stream(str(e))
@@ -252,7 +254,16 @@ class AngleMotor (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(AngleMotor.SetZero) ENABLED START -----#
         self.info_stream("Setting current angle position as new zero")
         with closing(self.angle_motor.open()):
-            self.angle_motor.set_zero()
+            try:
+                self.angle_motor.set_zero()
+            except PyTango.DevFailed as df:
+                self.error_stream(str(df))
+                self.init_device()
+                raise
+            except Exception as e:
+                self.error_stream(str(e))
+                raise
+            
         self.debug_stream("New zero has been set")
         #----- PROTECTED REGION END -----#	//	AngleMotor.SetZero
         

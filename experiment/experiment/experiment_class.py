@@ -15,7 +15,7 @@ from StringIO import StringIO
 from scipy.ndimage import zoom
 import threading
 
-import pylab as plt
+import matplotlib.pyplot as plt
 
 from conf import *
 
@@ -116,12 +116,6 @@ class ModExpError(Exception):
             logger.info("Reason:    " + self.error)
 
 
-
-
-
-
-
-
 def make_png(image_numpy, png_filename=FRAME_PNG_FILENAME):
     """ Takes 2-dimensional numpy array and creates png file from it
 
@@ -171,7 +165,7 @@ def send_event_to_webpage(event_dict):
     try:
         req_webpage = requests.post(WEBPAGE_URI, data=data, files=files)
     except Exception as e:
-        raise ModExpError(error='Could not send to web-page of adjustment', exception_message='' 'e.message')
+        raise ModExpError(error='Could not send to web-page of adjustment', exception_message=str(e))
 
     logger.info(req_webpage.content)
 
@@ -253,16 +247,16 @@ def send_frame_to_storage_webpage(frame_metadata_event, image_numpy, send_to_web
         #return success
 
 
-def prepare_send_frame(row_image_with_metadata, experiment, send_to_webpage=False):
-    row_image = row_image_with_metadata['image_data']['row_image']
-    del(row_image_with_metadata['image_data']['row_image'])
-    frame_metadata = row_image_with_metadata
+def prepare_send_frame(raw_image_with_metadata, experiment, send_to_webpage=False):
+    raw_image = raw_image_with_metadata['image_data']['raw_image']
+    del(raw_image_with_metadata['image_data']['raw_image'])
+    frame_metadata = raw_image_with_metadata
 
     try:
         logger.info("Image was red, preparing the image to send...")
         try:
             enc = PyTango.EncodedAttribute()
-            image_numpy = enc.decode_gray16(row_image)
+            image_numpy = enc.decode_gray16(raw_image)
             #image_numpy = numpy.zeros((10, 10))
         except Exception as e:
             raise ModExpError(error='Could not convert raw image to numpy.array', exception_message=e.message)
@@ -319,20 +313,20 @@ class Experiment:
         logger.info(getting_frame_message)
     
         if mode == 'dark':
-            row_image_with_metadata = self.tomograph.get_frame(exposure=exposure, with_open_shutter=False, 
+            raw_image_with_metadata = self.tomograph.get_frame(exposure=exposure, with_open_shutter=False, 
                                                                from_experiment=True, exp_is_advanced=False)
         else:
-            row_image_with_metadata = self.tomograph.get_frame(exposure=exposure, with_open_shutter=True, 
+            raw_image_with_metadata = self.tomograph.get_frame(exposure=exposure, with_open_shutter=True, 
                                                                from_experiment=True, exp_is_advanced=False)
         #frame_dict = {  u'image_data':  {   'image': np.empty((10, 10)),    },  }
 
-        row_image_with_metadata['mode'] = mode
-        row_image_with_metadata['number'] = self.frame_num
+        raw_image_with_metadata['mode'] = mode
+        raw_image_with_metadata['number'] = self.frame_num
         send_to_webpage = (self.frame_num % self.FOSITW == 0)
         self.frame_num += 1
 
-        #prepare_send_frame(row_image_with_metadata,self,send_to_webpage)
-        thr = threading.Thread(target=prepare_send_frame, args=(row_image_with_metadata,self,send_to_webpage))
+        #prepare_send_frame(raw_image_with_metadata,self,send_to_webpage)
+        thr = threading.Thread(target=prepare_send_frame, args=(raw_image_with_metadata,self,send_to_webpage))
         thr.start()
 
 
@@ -340,18 +334,22 @@ class Experiment:
         # Closing shutter to get DARK images
         self.to_be_stopped = False
         self.stop_exception = None
+
+        self.tomograph.source_power_on(from_experiment=True, exp_is_advanced=False)
         self.tomograph.close_shutter(0, from_experiment=True, exp_is_advanced=False)
 
         logger.info('Going to get DARK images!\n')
+        self.tomograph.set_exposure(self.DARK_exposure, from_experiment=True, exp_is_advanced=False)
         for i in range(0, self.DARK_count):
-            self.get_and_send_frame(exposure=self.DARK_exposure, mode='dark')
+            self.get_and_send_frame(exposure=None, mode='dark')
         logger.info('Finished with DARK images!\n')
 
         self.tomograph.move_away(from_experiment=True, exp_is_advanced=False)
 
         logger.info('Going to get EMPTY images!\n')
+        self.tomograph.set_exposure(self.EMPTY_exposure, from_experiment=True, exp_is_advanced=False)
         for i in range(0, self.EMPTY_count):
-            self.get_and_send_frame(exposure=self.EMPTY_exposure, mode='empty')
+            self.get_and_send_frame(exposure=None, mode='empty')
         logger.info('Finished with EMPTY images!\n')
 
         self.tomograph.move_back(from_experiment=True, exp_is_advanced=False)
@@ -362,14 +360,14 @@ class Experiment:
         initial_angle = self.tomograph.get_angle(from_experiment=True, exp_is_advanced=False)
         logger.info('Initial angle is %.2f' % initial_angle)
         angle_step = self.DATA_angle_step
-
+        self.tomograph.set_exposure(self.DATA_exposure, from_experiment=True, exp_is_advanced=False)
         for i in range(0, self.DATA_step_count):
             current_angle = (round((i * angle_step) + initial_angle, 2)) % 360
             logger.info('Getting DATA images: angle is %.2f' % current_angle)
 
 
             for j in range(0, self.DATA_count_per_step):
-                self.get_and_send_frame(exposure=self.DATA_exposure, mode='data')
+                self.get_and_send_frame(exposure=None, mode='data')
 
             # Rounding angles here, not in  check_and_prepare_exp_parameters(), cause it will be more accurately this way
             new_angle = (round((i + 1) * angle_step + initial_angle, 2)) % 360
@@ -377,5 +375,7 @@ class Experiment:
             self.tomograph.set_angle(new_angle, from_experiment=True, exp_is_advanced=False)
 
         logger.info('Finished with DATA images!\n')
+
+        self.tomograph.source_power_off(from_experiment=True, exp_is_advanced=False)
         return
 
