@@ -55,9 +55,7 @@ def get_experiments():
 
     experiments = db['experiments']
 
-    cursor = experiments.find(find_query)
-
-    # cursor = experiments.find(find_query).sort('datetime', pm.DESCENDING) # unfortunately there is no datetime yet
+    cursor = experiments.find(find_query).sort('timestamp', pm.DESCENDING)
 
     resp = Response(response=dumps(cursor),
                     status=200,
