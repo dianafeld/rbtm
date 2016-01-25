@@ -213,7 +213,7 @@ class Detector (PyTango.Device_4Impl):
         self.debug_stream("Starting reinitalize detector.")
         prev_exposure = self.detector._read_exposure()
         prev_state = self.get_state()
-        
+
         self.init_device()
 
         self._write_exposure(prev_exposure)
@@ -267,10 +267,6 @@ class Detector (PyTango.Device_4Impl):
                 self.set_state(PyTango.DevState.FAULT)
                 self.error_stream(str(e))
                 raise
-        except PyTango.DevFailed as df:
-            self.set_state(PyTango.DevState.FAULT)
-            self.error_stream(str(df))
-            raise
         except Exception as e:
             self.set_state(PyTango.DevState.FAULT)
             self.error_stream(str(e))

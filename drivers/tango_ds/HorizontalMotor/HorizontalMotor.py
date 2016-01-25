@@ -82,6 +82,7 @@ class HorizontalMotor (PyTango.Device_4Impl):
             steps = motor.get_position()
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
+            self.init_device()
             raise
         except Exception as e:
             self.error_stream(str(e))
@@ -99,6 +100,7 @@ class HorizontalMotor (PyTango.Device_4Impl):
             self.debug_stream("Position has been set")
         except PyTango.DevFailed as df:
             self.error_stream(str(df))
+            self.init_device()
             raise
         except Exception as e:
             self.error_stream(str(e))

@@ -175,25 +175,25 @@ class Tomograph:
 	########## One needs to look at checking types of arguments, which go to Tango-tomograph functions
 	##############################
     
-    def source_power_on(self):
+    def source_power_on(self, from_experiment=False, exp_is_advanced=True):
         """
         :arg:
         :return:
         """
         logger.info('Powering on source...')
-        self.basic_tomo_check(from_experiment=False)
+        self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.PowerOn,
         					error_str='Could not power on source')
         logger.info('Source was powered ON!')
 
-    def source_power_off(self):
+    def source_power_off(self, from_experiment=False, exp_is_advanced=True):
         """
         :arg:
         :return:
         """
         logger.info('Powering off source...')
-        self.basic_tomo_check(from_experiment=False)
+        self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.PowerOff,
         					error_str='Could not power off source')
@@ -423,21 +423,16 @@ class Tomograph:
 
         self.basic_tomo_check(from_experiment)
 
-        if type(exposure) not in (float, int):
-            raise ModExpError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_angle)))
-
-        # TO DELETE THIS LATER
-        if exposure < 0.1 or 16000 < exposure:
-            raise ModExpError(error = ('Exposure must have value from 0.1 to 16000 (given is %.1f )' % (exposure)) )
-
-
         if with_open_shutter == True:
             self.open_shutter(0, from_experiment=from_experiment, exp_is_advanced=exp_is_advanced)
-        logger.info('Getting an image with exposure %.1f milliseconds...' % (exposure))
+        
         # Tomograph takes exposure multiplied by 10 and rounded
-        exposure = round(exposure)
+        if exposure:
+            logger.info('Getting an image with exposure %.1f milliseconds...' % (exposure))
+            self.set_exposure(exposure, from_experiment=from_experiment, exp_is_advanced=exp_is_advanced)
+        
         try:
-            frame_metadata_json = try_thrice_function(func=self.tomograph_proxy.GetFrame, args=exposure,
+            frame_metadata_json = try_thrice_function(func=self.tomograph_proxy.GetFrame,
             										  error_str='Could not get image because of tomograph')
         except Exception as e:
             raise e
@@ -451,12 +446,12 @@ class Tomograph:
             raise ModExpError(error='Could not convert frame\'s JSON into dict')
 
         logger.info('Image was get, reading the image from detector...')
-        row_image = self.try_thrice_read_attr_detector("image", extract_as=PyTango.ExtractAs.Nothing,
+        raw_image = self.try_thrice_read_attr_detector("image", extract_as=PyTango.ExtractAs.Nothing,
                                                        error_str='Could not read image because of tomograph')
 
-        frame_metadata['image_data']['row_image'] = row_image
-        row_image_with_metadata = frame_metadata
-        return row_image_with_metadata
+        frame_metadata['image_data']['raw_image'] = raw_image
+        raw_image_with_metadata = frame_metadata
+        return raw_image_with_metadata
 
 
     def carry_out_simple_experiment(self, exp_param):
@@ -541,3 +536,45 @@ class Tomograph:
         hous_temp = hous_temp_attr.value
         logger.info('Hous temperature is %.2f' % hous_temp)
         return hous_temp
+
+    def set_exposure(self, new_exposure, from_experiment=False, exp_is_advanced=True):
+        """ Tries to set new detector exposure
+
+        :arg: 'exposure' - value of new exposure, in '?', type is int
+
+        :return:
+        """
+        logger.info('Going to set exposure...')
+
+        self.basic_tomo_check(from_experiment)
+
+        if type(new_exposure) not in (int, float):
+            raise ModExpError(error='Incorrect type! Exposure type must be int, but it is ' + str(type(new_exposure)))
+
+        # TO DELETE THIS LATER
+        if new_exposure < 0.1 or 16000 < new_exposure:
+            raise ModExpError(error = ('Exposure must have value from 0.1 to 16000 (given is %.1f )' % (new_exposure)) )
+
+        new_exposure = round(new_exposure)
+        # TO DELETE THIS LATER
+        logger.info('Setting value %.1f...' % (new_exposure))
+
+        set_exposure = self.try_thrice_change_attr("exposure", new_exposure,
+                                                error_str='Could not set new exposure because of tomograph')
+
+        logger.info('Exposure was set!')
+
+
+    def get_exposure(self, from_experiment=False, exp_is_advanced=True):
+        """ Tries to get detector exposure
+        :arg:
+        :return:
+        """
+        logger.info('Going to get exposure...')
+        self.basic_tomo_check(from_experiment)
+
+        exposure_attr = self.try_thrice_read_attr("exposure",
+                                           error_str='Could not get exposure because of tomograph')
+        exposure_value = exposure.value
+        logger.info('Exposure is %d' % exposure_value)
+        return exposure_value

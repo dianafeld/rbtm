@@ -52,6 +52,7 @@ import sys
 # ----- PROTECTED REGION ID(Tomograph.additionnal_import) ENABLED START -----#
 
 import datetime
+import time
 import json
 
 # ----- PROTECTED REGION END -----# //  Tomograph.additionnal_import
@@ -90,6 +91,7 @@ class Tomograph (PyTango.Device_4Impl):
         self.attr_horizontal_position_read = 0
         self.attr_vertical_position_read = 0
         self.attr_image_read = ''
+        self.attr_exposure_read = 0
         #----- PROTECTED REGION ID(Tomograph.init_device) ENABLED START -----#
 
         self.set_state(PyTango.DevState.OFF)
@@ -221,6 +223,21 @@ class Tomograph (PyTango.Device_4Impl):
         attr.set_value(self.detector.image)
 
         #----- PROTECTED REGION END -----#	//	Tomograph.image_read
+        
+    def read_exposure(self, attr):
+        self.debug_stream("In read_exposure()")
+        #----- PROTECTED REGION ID(Tomograph.exposure_read) ENABLED START -----#
+        self.attr_exposure_read = self.detector.exposure
+        attr.set_value(self.attr_exposure_read)     
+        #----- PROTECTED REGION END -----#	//	Tomograph.exposure_read
+        
+    def write_exposure(self, attr):
+        self.debug_stream("In write_exposure()")
+        data=attr.get_write_value()
+        #----- PROTECTED REGION ID(Tomograph.exposure_write) ENABLED START -----#
+        exposure = data
+        self.detector.exposure = exposure
+        #----- PROTECTED REGION END -----#	//	Tomograph.exposure_write
         
     
     
@@ -423,25 +440,23 @@ class Tomograph (PyTango.Device_4Impl):
         #----- PROTECTED REGION END -----#  //  Tomograph.DetectorStatus
         return argout
         
-    def GetFrame(self, argin):
+    def GetFrame(self):
         """ Return image from detector with metadata in JSON
         
-        :param argin: exposure
-        :type: PyTango.DevLong
+        :param : 
+        :type: PyTango.DevVoid
         :return: 
         :rtype: PyTango.DevString """
         self.debug_stream("In GetFrame()")
         argout = ''
         #----- PROTECTED REGION ID(Tomograph.GetFrame) ENABLED START -----#
 
-        exposure = argin
-
-        self.detector.exposure = exposure
         image = self.detector.GetFrame()
         current_datetime = datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S")
-
+        timestamp = time.time()
         detector_data = {'model': 'Ximea xiRAY'}
-        image_data = {'exposure': exposure, 'datetime': current_datetime, 'detector': detector_data,
+        image_data = {'timestamp': timestamp, 'datetime': current_datetime,
+                      'exposure': self.detector.exposure, 'detector': detector_data,
                       'chip_temp': self.detector.chip_temp, 'hous_temp': self.detector.hous_temp} # 'image': image,
         object_data = {'present': self.object_present,
                        'angle position': self.angle_motor.position,
@@ -560,7 +575,7 @@ class TomographClass(PyTango.DeviceClass):
             [[PyTango.DevVoid, "none"],
             [PyTango.DevString, "none"]],
         'GetFrame':
-            [[PyTango.DevLong, "exposure"],
+            [[PyTango.DevVoid, "none"],
             [PyTango.DevString, "none"]],
         'MoveAway':
             [[PyTango.DevVoid, "none"],
@@ -611,6 +626,10 @@ class TomographClass(PyTango.DeviceClass):
             [[PyTango.DevEncoded,
             PyTango.SCALAR,
             PyTango.READ]],
+        'exposure':
+            [[PyTango.DevLong,
+            PyTango.SCALAR,
+            PyTango.READ_WRITE]],
         }
 
 
