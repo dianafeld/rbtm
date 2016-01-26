@@ -51,7 +51,7 @@ def make_png(res, frame_path):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     enhanced_image = scipy.ndimage.filters.median_filter(np.rot90(res), size=3)
-    im = ax.imshow(enhanced_image, cmap=plt.cm.gray) # vmin, vmax 
+    im = ax.imshow(enhanced_image, cmap=plt.cm.gray, vmin=0) # vmin, vmax 
     fig.colorbar(im)
     fig.savefig(frame_path)
     plt.close(fig)
