@@ -215,41 +215,41 @@ def send_message_to_storage_webpage(event_dict):
     except ModExpError as e:
         e.log()
     finally:
-            try:
-                send_event_to_webpage(event_dict)
-            except ModExpError as e:
-                e.log()
+        try:
+            send_event_to_webpage(event_dict)
+        except ModExpError as e:
+            e.log()
 
 
 
 def send_frame_to_storage_webpage(frame_metadata_event, image_numpy, send_to_webpage):
-        """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
-            'frame_dict' must be dictionary with format that is returned by  'create_event()'
+    """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
+        'frame_dict' must be dictionary with format that is returned by  'create_event()'
 
-        :arg:
-        :return: success of sending, type is bool
-        """
-        s = StringIO()
+    :arg:
+    :return: success of sending, type is bool
+    """
+    s = StringIO()
 
-        np.savez_compressed(s, frame_data=image_numpy)
-        s.seek(0)
-        data = {'data': json.dumps(frame_metadata_event)}
-        files = {'file': s}
-        send_to_storage(storage_uri=STORAGE_FRAMES_URI, data=data, files=files)
+    np.savez_compressed(s, frame_data=image_numpy)
+    s.seek(0)
+    data = {'data': json.dumps(frame_metadata_event)}
+    files = {'file': s}
+    send_to_storage(storage_uri=STORAGE_FRAMES_URI, data=data, files=files)
 
-        if send_to_webpage == True:
-            frame_event = frame_metadata_event
-            frame_event['frame']['image_data']['image'] = image_numpy
-            try:
-                send_event_to_webpage(frame_event)
-            except ModExpError as e:
-                e.log()
-        #return success
+    # if send_to_webpage == True:
+    #     frame_event = frame_metadata_event
+    #     frame_event['frame']['image_data']['image'] = image_numpy
+    #     try:
+    #         send_event_to_webpage(frame_event)
+    #     except ModExpError as e:
+    #         e.log()
+    #return success
 
 
 def prepare_send_frame(raw_image_with_metadata, experiment, send_to_webpage=False):
     raw_image = raw_image_with_metadata['image_data']['raw_image']
-    del(raw_image_with_metadata['image_data']['raw_image'])
+    del raw_image_with_metadata['image_data']['raw_image']
     frame_metadata = raw_image_with_metadata
 
     try:
@@ -261,7 +261,8 @@ def prepare_send_frame(raw_image_with_metadata, experiment, send_to_webpage=Fals
         except Exception as e:
             raise ModExpError(error='Could not convert raw image to numpy.array', exception_message=e.message)
 
-        if experiment != None:
+        if experiment:
+            pass
             frame_metadata_event = create_event(type='frame', exp_id=experiment.exp_id, MoF=frame_metadata)
             send_frame_to_storage_webpage(frame_metadata_event=frame_metadata_event,
                                           image_numpy=image_numpy,
@@ -355,7 +356,6 @@ class Experiment:
         self.tomograph.move_back(from_experiment=True, exp_is_advanced=False)
 
 
-
         logger.info('Going to get DATA images, step count is %d!\n' % (self.DATA_step_count))
         initial_angle = self.tomograph.get_angle(from_experiment=True, exp_is_advanced=False)
         logger.info('Initial angle is %.2f' % initial_angle)
@@ -364,7 +364,6 @@ class Experiment:
         for i in range(0, self.DATA_step_count):
             current_angle = (round((i * angle_step) + initial_angle, 2)) % 360
             logger.info('Getting DATA images: angle is %.2f' % current_angle)
-
 
             for j in range(0, self.DATA_count_per_step):
                 self.get_and_send_frame(exposure=None, mode='data')

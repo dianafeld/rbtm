@@ -420,7 +420,6 @@ class Tomograph:
         """
         logger.info('Going to get image...')
         logger.info('With open shutter: ' + str(with_open_shutter))
-
         self.basic_tomo_check(from_experiment)
 
         if with_open_shutter == True:
