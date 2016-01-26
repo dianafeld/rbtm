@@ -11,6 +11,7 @@ import pymongo as pm
 
 from storage import pyframes
 from storage import filesystem as fs
+from storage import visualization_3d
 from storage import app
 
 from conf import MONGODB_URI
@@ -128,8 +129,6 @@ def new_frame():
     logger.info('Going to np.load...')
     image_array = np.load(frame.stream)['frame_data']
     logger.info('Image array has been loaded!')
-    logger.debug(type(image_array))
-    logger.debug(image_array[1])
 
     frame_id = db['frames'].insert(json_frame)
 
@@ -261,84 +260,15 @@ def delete_experiment(experiment_id):
     return json_result
 
 
-# Needs rewriting
-# @app.route('/storage/frames/get', methods=['POST'])
-# def get_frame():
-#     if not request.data:
-#         logger.error('Incorrect format')
-#         abort(400)
-#
-#     try:
-#         frames = db['frames']
-#         find_query = json.loads(request.data.decode())
-#         cursor = frames.find(find_query)
-#         frames_list = list(cursor)
-#         for frame in frames_list:
-#             if frame['type'] == 'frame':
-#                 frame_id = frame['_id']
-#                 experiment_id = frame['exp_id']
-#
-#                 image_numpy = frames.extract_frame(frame_id, experiment_id)
-#
-#                 s = StringIO.StringIO()
-#                 np.savetxt(s, image_numpy, fmt="%d")
-#
-#                 frame['frame']['image_data']['image'] = s.getvalue()
-#         logger.info('done')
-#         resp = Response(response=dumps(frames_list),
-#                         status=200,
-#                         mimetype="application/json")
-#
-#         return resp
-#
-#     except BaseException as e:
-#         logger.error(e)
-#         abort(500)
+@app.route('/storage/experiments/<experiment_id>/3d/<int:rarefaction>/<int:level1>/<int:level2>', methods=['GET'])
+def get_3d_visualization(experiment_id, rarefaction, level1, level2):
+    rarefaction = max(rarefaction, 1)
+    level1 = min(max(level1, 0), 25)
+    level2 = min(max(level2, 0), 25)
+    if level2 < level1:
+        level1, level2 = level2, level1
 
-# # update data of the experiment, need json file as a request'
-# @app.route('/storage/experiments/update', methods=['POST'])
-# def update_experiment():
-#     if not request.data:
-#         logger.error('Incorrect format')
-#         abort(400)
-#
-#     try:
-#         experiments = db['experiments']
-#         query = json.loads(request.data.decode())
-#         experiment_id = experiments['_id']
-#         experiments.update({'_id': experiment_id}, query)
-#     except BaseException as e:
-#         logger.error(e)
-#         abort(500)
-#     return jsonify({'result': 'success'})
-
-
-# # delete data of the experiment, return json file
-# @app.route('/storage/experiments/delete', methods=['POST'])
-# def delete_experiment():
-#     if not request.json:
-#         logger.error('Incorrect format')
-#         abort(400)
-#
-#     try:
-#         logger.debug(json.loads(request.data.decode()))
-#         experiments = db['experiments']
-#         frames = db['frames']
-#
-#         cursor = experiments.find(json.loads(request.data.decode()))
-#
-#         experiments.remove(json.loads(request.data.decode()))
-#
-#         experiments_list = list(cursor)
-#         for experiment in experiments_list:
-#             experiment_id = experiment['_id']
-#             frames.remove({'experiment id': experiment_id})
-#             fs.delete_experiment(experiment_id)
-#
-#         # db['reconstructions'].remove(request.get_json())
-#
-#         return jsonify({'deleted': cursor.count()})
-#
-#     except BaseException as e:
-#         logger.error(e)
-#         abort(500)
+    hfd5_filename = "largeData/hand/result.hdf5"
+    output_filename_prefix = "largeData/hand/RF{}".format(rarefaction)
+    visualization_3d.get_ans_save_3d_points(
+        hfd5_filename, output_filename_prefix, rarefaction, level1, level2)
