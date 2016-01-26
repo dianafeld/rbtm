@@ -24,7 +24,9 @@ cdef extern from "m3api/xiApi.h":
     cdef char *XI_PRM_OFFSET_Y = "offsetY"  # Vertical offset from the origin to the area of interest (in pixels).
     cdef char *XI_PRM_TRG_SOURCE = "trigger_source"  # Defines source of trigger. XI_TRG_SOURCE
     cdef char *XI_PRM_TRG_SOFTWARE = "trigger_software"  # Generates an internal trigger. XI_PRM_TRG_SOURCE must be set to TRG_SOFTWARE. 
-
+    cdef char *XI_PRM_RECENT_FRAME = "recent_frame"  # GetImage returns most recent frame 
+    cdef char *XI_PRM_BUFFERS_QUEUE_SIZE = "buffers_queue_size"  # Queue of field/frame buffers 
+    
     cdef char *XI_PRM_DEVICE_NAME = "device_name"  # Return device name 
     cdef char *XI_PRM_DEVICE_TYPE = "device_type"  # Return device type
     cdef char *XI_PRM_DEVICE_MODEL_ID = "device_model_id" # Return device model id

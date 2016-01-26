@@ -112,6 +112,14 @@ cdef class Detector:
         e = xiOpenDevice(0, &self.handle)
         handle_error(e, "Detector.__cinit__()")
 
+        # e = xiSetParamInt(self.handle, XI_PRM_RECENT_FRAME, 1)
+        # handle_error(e, "Detector.__cinit__()")
+
+        e = xiSetParamInt(self.handle, XI_PRM_BUFFERS_QUEUE_SIZE, 3)
+        handle_error(e, "Detector.__cinit__()")
+        cdef int exp_min
+        e = xiGetParamInt(self.handle, XI_PRM_BUFFERS_QUEUE_SIZE + XI_PRM_INFO_MIN, &exp_min);
+        print(exp_min)
         e = xiSetParamInt(self.handle, XI_PRM_IMAGE_DATA_FORMAT, XI_MONO16)
         handle_error(e, "Detector.__cinit__()")
 
