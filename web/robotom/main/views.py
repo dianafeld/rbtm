@@ -24,15 +24,15 @@ main_logger = logging.getLogger('main_logger')
 def index(request):
     return render(request, 'main/index.html', {'caption': 'ROBO-TOM'})
 
-
+@login_required
 def group1(request):
     return render(request, 'main/group_1.html', {'caption': 'Группа 1'})
 
-
+@login_required
 def group2(request):
     return render(request, 'main/group_2.html', {'caption': "Группа 2"})
 
-
+@login_required
 def group3(request):
     return render(request, 'main/group_3.html', {'caption': "Группа 3"})
 
