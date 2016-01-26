@@ -4,7 +4,7 @@ from threading import Thread
 import h5py
 
 import numpy as np
-from scipy.ndimage import zoom
+import scipy.ndimage
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -45,12 +45,13 @@ def delete_frame(frame_id, experiment_id):
 
 def make_png(res, frame_path):
     logger.info('Going to make png...')
-    # small_res = zoom(np.rot90(res), zoom=0.25, order=2)
+    # small_res = scipy.ndimage.zoom(np.rot90(res), zoom=0.25, order=2)
     # plt.imsave(frame_path, small_res, cmap=plt.cm.gray)
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    im = ax.imshow(np.rot90(res), cmap=plt.cm.gray) # vmin, vmax 
+    enhanced_image = scipy.ndimage.filters.median_filter(np.rot90(res), size=3)
+    im = ax.imshow(enhanced_image, cmap=plt.cm.gray) # vmin, vmax 
     fig.colorbar(im)
     fig.savefig(frame_path)
     plt.close(fig)
