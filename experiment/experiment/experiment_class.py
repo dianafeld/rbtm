@@ -14,6 +14,7 @@ import numpy as np
 from StringIO import StringIO
 from scipy.ndimage import zoom
 import threading
+import time
 
 import matplotlib.pyplot as plt
 
@@ -338,7 +339,7 @@ class Experiment:
 
         self.tomograph.source_power_on(from_experiment=True, exp_is_advanced=False)
         self.tomograph.close_shutter(0, from_experiment=True, exp_is_advanced=False)
-
+        time.sleep(1.0)
         logger.info('Going to get DARK images!\n')
         self.tomograph.set_exposure(self.DARK_exposure, from_experiment=True, exp_is_advanced=False)
         for i in range(0, self.DARK_count):
