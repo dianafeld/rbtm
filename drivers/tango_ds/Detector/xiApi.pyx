@@ -1,6 +1,6 @@
 from cxiapi cimport *
 from libc.string cimport memset, memchr, memcmp, memcpy, memmove
-from libc.stdlib cimport free
+from libc.stdlib cimport free, malloc
 cimport numpy
 import numpy
 #import PyTango
@@ -118,6 +118,9 @@ cdef class Detector:
         e = xiSetParamInt(self.handle, XI_PRM_BUFFER_POLICY, XI_BP_SAFE)
         handle_error(e, "Detector.__cinit__()")
 
+        e = xiStartAcquisition(self.handle)
+        handle_error(e, "Detector.get_image().xiStartAcquisition()")
+
     def set_exposure(self, exposure):
         e = xiSetParamInt(self.handle, XI_PRM_EXPOSURE, exposure * 1000)
         handle_error(e, "Detector.set_exposure()")
@@ -139,26 +142,18 @@ cdef class Detector:
 
     def get_image(self):
         cdef XI_IMG image
-        
-        #xiSetParamInt(self.handle, XI_PRM_TRG_SOURCE, XI_TRG_OFF)
-        
-        #xiSetParamInt(self.handle, XI_PRM_DEBUG_LEVEL, XI_DL_WARNING)
-        
-        e = xiStartAcquisition(self.handle)
-        handle_error(e, "Detector.get_image().xiStartAcquisition()")
-        # import time
-        # time.sleep(1.0)
         try:
             image.bp = NULL
             image.bp_size = 0
+            image.size = sizeof(XI_IMG)
+            
             e = xiGetImage(self.handle, Detector.TIMEOUT, &image)
             handle_error(e, "Detector.get_image().xiGetImage()")
-        finally:
-            e = xiStopAcquisition(self.handle)
-            handle_error(e, "Detector.get_image().xiStopAcquisition()")
 
-        res_image =  self.make_image(image)
-        free(<void *>image.bp)
+            res_image =  self.make_image(image)
+        finally:
+            free(<void *>image.bp)
+
         return res_image
 
     def enable_cooling(self):
@@ -181,7 +176,20 @@ cdef class Detector:
         handle_error(e, "Detector.get_hous_temp()")
         return hous_temp
 
+    def get_name(self):
+        cdef int length = 100
+        cdef char *c_name = <char *>malloc(length * sizeof(char))
+        cdef bytes py_name = c_name
+        e = xiGetParamString(self.handle, XI_PRM_DEVICE_NAME, c_name, length)
+        handle_error(e, "Detector.get_name()")
+        try:
+            py_name = c_name
+        finally:
+            free(c_name)
+        return py_name.decode("utf-8")
+
     def set_roi(self, offset_x, width, offset_y, height):
+        # uncomment this to see available offsets and dimension sizes
         # cdef int inc
         # xiGetParamInt(self.handle, XI_PRM_HEIGHT + XI_PRM_INFO_INCREMENT, &inc)
         # print(inc)
@@ -199,6 +207,8 @@ cdef class Detector:
         handle_error(e, "Detector.set_roi().height")
 
     def __dealloc__(self):
+        e = xiStopAcquisition(self.handle)
+        handle_error(e, "Detector.get_image().xiStopAcquisition()")
         e = xiCloseDevice(self.handle)
         handle_error(e, "Detector.__dealloc__()")
         print('DEBUG: Detector dealloc')

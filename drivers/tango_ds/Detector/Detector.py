@@ -148,6 +148,8 @@ class Detector (PyTango.Device_4Impl):
             self.error_stream(str(e))
             raise
 
+        print(self.detector.get_name())
+
         self.set_state(PyTango.DevState.ON)
         self.attr_exposure_read = self._read_exposure()
 

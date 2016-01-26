@@ -25,6 +25,11 @@ cdef extern from "m3api/xiApi.h":
     cdef char *XI_PRM_TRG_SOURCE = "trigger_source"  # Defines source of trigger. XI_TRG_SOURCE
     cdef char *XI_PRM_TRG_SOFTWARE = "trigger_software"  # Generates an internal trigger. XI_PRM_TRG_SOURCE must be set to TRG_SOFTWARE. 
 
+    cdef char *XI_PRM_DEVICE_NAME = "device_name"  # Return device name 
+    cdef char *XI_PRM_DEVICE_TYPE = "device_type"  # Return device type
+    cdef char *XI_PRM_DEVICE_MODEL_ID = "device_model_id" # Return device model id
+    cdef char *XI_PRM_DEVICE_MANIFEST = "device_manifest"  # Return device capability description XML.  
+
     cdef char *XI_PRM_INFO_MIN = ":min"  # Parameter minimum
     cdef char *XI_PRM_INFO_MAX = ":max"  # Parameter maximum
     cdef char *XI_PRM_INFO_INCREMENT = ":inc"  # Parameter increment
