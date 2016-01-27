@@ -206,6 +206,7 @@
                         <thead>
                         <tr>
                             <th>Образец</th>
+                            <th>Дата и время</th>
                             <th>Шаг угла</th>
                             <th>Число шагов</th>
                             <th>Экспозиция</th>
@@ -216,6 +217,7 @@
                         {% for record in record_range %}
                             <tr class="paginated-content tr-buttoned" id="id{{ record.experiment_id }}">
                                 <td><a href='{% url 'storage:storage_record' record.experiment_id %}'>{{ record.specimen }}</a></td>
+                                <td>{{ record.datetime }}</td>
                                 <td>{{ record.data_angle_step }}&deg;</td>
                                 <td>{{ record.data_step_count }}</td>
                                 <td>{{ record.data_exposure }} мс</td>
