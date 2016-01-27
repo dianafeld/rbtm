@@ -148,6 +148,8 @@ class Detector (PyTango.Device_4Impl):
             self.error_stream(str(e))
             raise
 
+        print(self.detector.get_name())
+
         self.set_state(PyTango.DevState.ON)
         self.attr_exposure_read = self._read_exposure()
 
@@ -206,8 +208,20 @@ class Detector (PyTango.Device_4Impl):
         
         #----- PROTECTED REGION END -----#	//	Detector.chip_temp_read
         
-    
-    
+    def _reinit_detector(self):
+        """
+        This function reinitilize detector after crash.
+        """
+        self.debug_stream("Starting reinitalize detector.")
+        prev_exposure = self.detector._read_exposure()
+        prev_state = self.get_state()
+
+        self.init_device()
+
+        self._write_exposure(prev_exposure)
+        self.attr_exposure_read = self._read_exposure()
+        self.set_state(prev_state)
+        
         #----- PROTECTED REGION ID(Detector.initialize_dynamic_attributes) ENABLED START -----#
 
         #----- PROTECTED REGION END -----#  //  Detector.initialize_dynamic_attributes
@@ -244,9 +258,17 @@ class Detector (PyTango.Device_4Impl):
         try:
             image = self.detector.get_image()
         except PyTango.DevFailed as df:
-            self.set_state(PyTango.DevState.FAULT)
-            self.error_stream(str(df))
-            raise
+            try:
+                self._reinit_detector()
+                image = self.detector.get_image()
+            except PyTango.DevFailed as df:
+                self.set_state(PyTango.DevState.FAULT)
+                self.error_stream(str(df))
+                raise
+            except Exception as e:
+                self.set_state(PyTango.DevState.FAULT)
+                self.error_stream(str(e))
+                raise
         except Exception as e:
             self.set_state(PyTango.DevState.FAULT)
             self.error_stream(str(e))

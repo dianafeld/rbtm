@@ -22,11 +22,22 @@ cdef extern from "m3api/xiApi.h":
     cdef char *XI_PRM_HEIGHT = "height"  # Height of the Image provided by the device (in pixels).
     cdef char *XI_PRM_OFFSET_X = "offsetX"  # Horizontal offset from the origin to the area of interest (in pixels).
     cdef char *XI_PRM_OFFSET_Y = "offsetY"  # Vertical offset from the origin to the area of interest (in pixels).
+    cdef char *XI_PRM_TRG_SOURCE = "trigger_source"  # Defines source of trigger. XI_TRG_SOURCE
+    cdef char *XI_PRM_TRG_SOFTWARE = "trigger_software"  # Generates an internal trigger. XI_PRM_TRG_SOURCE must be set to TRG_SOFTWARE. 
+    cdef char *XI_PRM_RECENT_FRAME = "recent_frame"  # GetImage returns most recent frame 
+    cdef char *XI_PRM_BUFFERS_QUEUE_SIZE = "buffers_queue_size"  # Queue of field/frame buffers 
+    
+    cdef char *XI_PRM_DEVICE_NAME = "device_name"  # Return device name 
+    cdef char *XI_PRM_DEVICE_TYPE = "device_type"  # Return device type
+    cdef char *XI_PRM_DEVICE_MODEL_ID = "device_model_id" # Return device model id
+    cdef char *XI_PRM_DEVICE_MANIFEST = "device_manifest"  # Return device capability description XML.  
 
     cdef char *XI_PRM_INFO_MIN = ":min"  # Parameter minimum
     cdef char *XI_PRM_INFO_MAX = ":max"  # Parameter maximum
     cdef char *XI_PRM_INFO_INCREMENT = ":inc"  # Parameter increment
     cdef char *XI_PRM_INFO = ":info"  # Parameter value
+    cdef char *XI_PRM_DEBUG_LEVEL = "debug_level"  # Set debug level XI_DEBUG_LEVEL
+    
 
     ctypedef enum XI_IMG_FORMAT:
         XI_MONO8,  # 8 bits per pixel
@@ -75,9 +86,21 @@ cdef extern from "m3api/xiApi.h":
         XI_BP_UNSAFE #User gets pointer to internally allocated circle buffer and data may be overwritten by device.
         XI_BP_SAFE  # Data from device will be copied to user allocated buffer or xiApi allocated memory.
 
+    ctypedef enum XI_DEBUG_LEVEL:
+        XI_DL_DETAIL                 =0,  # Same as trace plus locking resources
+        XI_DL_TRACE                  =1,  # Information level.
+        XI_DL_WARNING                =2,  # Warning level.
+        XI_DL_ERROR                  =3,  # Error level.
+        XI_DL_FATAL                  =4,  # Fatal error level.
+        XI_DL_DISABLED               =100, # Print no errors at all.
 
 
-
+    # Structure containing information about trigger source
+    ctypedef enum XI_TRG_SOURCE:
+        XI_TRG_OFF                   =0,  # Camera works in free run mode.
+        XI_TRG_EDGE_RISING           =1,  # External trigger (rising edge).
+        XI_TRG_EDGE_FALLING          =2,  # External trigger (falling edge).
+        XI_TRG_SOFTWARE              =3,  # Software(manual) trigger.
 
     # Error codes xiApi
     ctypedef enum XI_RET:

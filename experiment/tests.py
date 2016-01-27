@@ -2,7 +2,7 @@
 import os
 import unittest
 import json
-import runserver
+import experiment
 import tempfile
 import xmlrunner
 
@@ -66,8 +66,8 @@ def response_format_is_normal(response_dict):
 class ModuleExperimentTestCase2(unittest.TestCase):
 
     def setUp(self):
-        runserver.app.config['TESTING'] = True
-        self.app = runserver.app.test_client()
+        experiment.app.config['TESTING'] = True
+        self.app = experiment.app.test_client()
 
     def tearDown(self):
         pass

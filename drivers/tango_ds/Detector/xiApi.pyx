@@ -1,9 +1,9 @@
 from cxiapi cimport *
 from libc.string cimport memset, memchr, memcmp, memcpy, memmove
-from libc.stdlib cimport free
+from libc.stdlib cimport free, malloc
 cimport numpy
 import numpy
-import PyTango
+#import PyTango
 
 error_codes = { XI_OK: "Function call succeeded",
                 XI_INVALID_HANDLE: "Invalid handle",
@@ -88,7 +88,7 @@ cdef void create_exception(return_code, func_name) except *:
     desc = error_codes[return_code]
     origin = func_name
     print(reason, desc, origin)
-    PyTango.Except.throw_exception(reason, desc, origin)
+    #PyTango.Except.throw_exception(reason, desc, origin)
 
 
 cdef void handle_error(return_code, func_name) except *:
@@ -112,11 +112,22 @@ cdef class Detector:
         e = xiOpenDevice(0, &self.handle)
         handle_error(e, "Detector.__cinit__()")
 
+        # e = xiSetParamInt(self.handle, XI_PRM_RECENT_FRAME, 1)
+        # handle_error(e, "Detector.__cinit__()")
+
+        e = xiSetParamInt(self.handle, XI_PRM_BUFFERS_QUEUE_SIZE, 3)
+        handle_error(e, "Detector.__cinit__()")
+        cdef int exp_min
+        e = xiGetParamInt(self.handle, XI_PRM_BUFFERS_QUEUE_SIZE + XI_PRM_INFO_MIN, &exp_min);
+        print(exp_min)
         e = xiSetParamInt(self.handle, XI_PRM_IMAGE_DATA_FORMAT, XI_MONO16)
         handle_error(e, "Detector.__cinit__()")
 
         e = xiSetParamInt(self.handle, XI_PRM_BUFFER_POLICY, XI_BP_SAFE)
         handle_error(e, "Detector.__cinit__()")
+
+        e = xiStartAcquisition(self.handle)
+        handle_error(e, "Detector.get_image().xiStartAcquisition()")
 
     def set_exposure(self, exposure):
         e = xiSetParamInt(self.handle, XI_PRM_EXPOSURE, exposure * 1000)
@@ -126,7 +137,7 @@ cdef class Detector:
         cdef int exposure_in_us
         e = xiGetParamInt(self.handle, XI_PRM_EXPOSURE, &exposure_in_us)
         handle_error(e, "Detector.get_exposure()")
-        return round(float(exposure_in_us) / 1000)
+        return float(exposure_in_us) / 1000
 
     cdef make_image(self, XI_IMG image):
         number_of_pixels = (image.width + image.padding_x / 2) * image.height
@@ -139,21 +150,18 @@ cdef class Detector:
 
     def get_image(self):
         cdef XI_IMG image
-
-        e = xiStartAcquisition(self.handle)
-        handle_error(e, "Detector.get_image().xiStartAcquisition()")
-
         try:
             image.bp = NULL
             image.bp_size = 0
+            image.size = sizeof(XI_IMG)
+            
             e = xiGetImage(self.handle, Detector.TIMEOUT, &image)
             handle_error(e, "Detector.get_image().xiGetImage()")
-        finally:
-            e = xiStopAcquisition(self.handle)
-            handle_error(e, "Detector.get_image().xiStopAcquisition()")
 
-        res_image =  self.make_image(image)
-        free(<void *>image.bp)
+            res_image =  self.make_image(image)
+        finally:
+            free(<void *>image.bp)
+
         return res_image
 
     def enable_cooling(self):
@@ -176,7 +184,20 @@ cdef class Detector:
         handle_error(e, "Detector.get_hous_temp()")
         return hous_temp
 
+    def get_name(self):
+        cdef int length = 100
+        cdef char *c_name = <char *>malloc(length * sizeof(char))
+        cdef bytes py_name = c_name
+        e = xiGetParamString(self.handle, XI_PRM_DEVICE_NAME, c_name, length)
+        handle_error(e, "Detector.get_name()")
+        try:
+            py_name = c_name
+        finally:
+            free(c_name)
+        return py_name.decode("utf-8")
+
     def set_roi(self, offset_x, width, offset_y, height):
+        # uncomment this to see available offsets and dimension sizes
         # cdef int inc
         # xiGetParamInt(self.handle, XI_PRM_HEIGHT + XI_PRM_INFO_INCREMENT, &inc)
         # print(inc)
@@ -194,6 +215,8 @@ cdef class Detector:
         handle_error(e, "Detector.set_roi().height")
 
     def __dealloc__(self):
+        e = xiStopAcquisition(self.handle)
+        handle_error(e, "Detector.get_image().xiStopAcquisition()")
         e = xiCloseDevice(self.handle)
         handle_error(e, "Detector.__dealloc__()")
         print('DEBUG: Detector dealloc')

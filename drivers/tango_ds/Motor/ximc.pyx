@@ -57,6 +57,7 @@ cdef class Motor:
         return self
 
     def close(self):
+        print("Close")
         cdef int tmp_device_id = self.device_id
         result_code = close_device(&tmp_device_id)
         handle_error(result_code, "Motor.close()")
