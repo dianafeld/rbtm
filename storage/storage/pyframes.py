@@ -14,45 +14,41 @@ from storage import app
 logger = app.logger
 
 
-def extract_frame(frame_id, experiment_id):
-    frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'frames.h5')
+def extract_frame(frame_number, frame_type, experiment_id):
+    frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', '{}.h5'.format(experiment_id))
     with h5py.File(frames_file_path, 'r') as frames_file:
-        frame = frames_file[str(frame_id)]
+        frame = frames_file[frame_type][str(frame_number)]
     logger.info('hdf5 file: extract frame {} of experiment {} successfully'.format(frame_id, experiment_id))
     return frame
 
 
-def add_frame(frame, frame_id, experiment_id):
-    frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'frames.h5')
+def add_frame(frame, frame_number, frame_type, frame_id, experiment_id):
+    frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', '{}.h5'.format(experiment_id))
     with h5py.File(frames_file_path, 'r+') as frames_file:
-        frames_file.create_dataset(str(frame_id), data=frame, compression="gzip", compression_opts=1)
+        frames_file[frame_type].create_dataset(str(frame_number), data=frame, compression="gzip", compression_opts=1)
     logger.info('hdf5 file: add frame {} to experiment {} successfully'.format(frame_id, experiment_id))
 
-    png_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
-                                 str(frame_id) + '.png')
-    # make_png(frame, png_file_path)
+    png_file_path = os.path.abspath(os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
+                                 str(frame_id) + '.png'))
     Thread(target=make_png, args=(frame, png_file_path)).start()
     logger.info('png: start making png from frame {} of experiment {}'.format(frame_id, experiment_id))
 
 
-def delete_frame(frame_id, experiment_id):
-    frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'frames.h5')
+def delete_frame(frame_number, frame_type, experiment_id):
+    frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', '{}.h5'.format(experiment_id))
     with h5py.File(frames_file_path, 'r+') as frames_file:
-        del frames_file[str(frame_id)]
+        del frames_file[frame_type][str(frame_number)]
     logger.info(
         'hdf5 file: frame {} was deleted from experiment {} successfully'.format(str(frame_id), str(experiment_id)))
 
 
-def make_png(res, frame_path):
+def make_png(frame, png_path):
     logger.info('Going to make png...')
-    # small_res = scipy.ndimage.zoom(np.rot90(res), zoom=0.25, order=2)
-    # plt.imsave(frame_path, small_res, cmap=plt.cm.gray)
-
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    enhanced_image = scipy.ndimage.filters.median_filter(np.rot90(res), size=3)
+    enhanced_image = scipy.ndimage.filters.median_filter(np.rot90(frame), size=3)
     im = ax.imshow(enhanced_image, cmap=plt.cm.gray) # vmin, vmax 
     fig.colorbar(im)
-    fig.savefig(frame_path)
+    fig.savefig(png_path)
     plt.close(fig)
     logger.info('png was made')

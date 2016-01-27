@@ -82,7 +82,7 @@ def create_experiment():
     insert_query.pop('exp_id', None)
     insert_query['_id'] = experiment_id
 
-    if fs.create_new_experiment(experiment_id):
+    if fs.create_experiment(experiment_id):
         insert_query['finished'] = False
         experiments.insert(insert_query)
 
@@ -131,8 +131,10 @@ def new_frame():
     logger.info('Image array has been loaded!')
 
     frame_id = db['frames'].insert(json_frame)
+    frame_number = str(json_frame[0]['frame']['number'])
+    frame_type = str(json_frame[0]['frame']['mode'])
 
-    pyframes.add_frame(image_array, frame_id, experiment_id)
+    pyframes.add_frame(image_array, frame_number, frame_type, frame_id, experiment_id)
 
     logger.info('experiment id: {} frame id: {}'.format(str(experiment_id), str(frame_id)))
 
@@ -191,15 +193,17 @@ def transform_data(data, transformed_data_path, experiment_id):
 
 
 @app.route('/storage/experiments/<experiment_id>/hdf5', methods=['GET'])
-def get_experiment_by_id(experiment_id):
+def get_experiment_hdf5(experiment_id):
     logger.info('Getting experiment: ' + experiment_id)
-    data = h5py.File(os.path.abspath(os.path.join('data', 'experiments', experiment_id, 'before_processing', 'frames.h5')), 'r')
-    transformed_data_path = os.path.abspath(os.path.join("data", "experiments", str(experiment_id), "before_processing",
-                                                         experiment_id + ".h5"))
-    logger.debug(transformed_data_path)
-    if not os.path.exists(transformed_data_path):
-        transform_data(data, transformed_data_path, experiment_id)
-    return send_file(transformed_data_path,
+    hdf5_path = os.path.abspath(os.path.join("data", "experiments", experiment_id, "before_processing",
+                                             experiment_id + ".h5"))
+    # data = h5py.File(os.path.abspath(os.path.join('data', 'experiments', experiment_id, 'before_processing', 'frames.h5')), 'r')
+    # transformed_data_path = os.path.abspath(os.path.join("data", "experiments", str(experiment_id), "before_processing",
+    #                                                      experiment_id + ".h5"))
+    # logger.debug(transformed_data_path)
+    # if not os.path.exists(transformed_data_path):
+    #     transform_data(data, transformed_data_path, experiment_id)
+    return send_file(hdf5_path,
                      mimetype='application/x-hdf5', as_attachment=True, attachment_filename=str(experiment_id)+'.h5')
 
 

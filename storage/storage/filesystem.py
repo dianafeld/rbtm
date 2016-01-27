@@ -6,7 +6,7 @@ from storage import app
 logger = app.logger
 
 
-def create_new_experiment(experiment_id):
+def create_experiment(experiment_id):
     experiment_path = os.path.join('data', 'experiments', str(experiment_id))
 
     if not os.path.exists(experiment_path):
@@ -23,9 +23,14 @@ def create_new_experiment(experiment_id):
         reconstructions_path = os.path.join(experiment_path, 'reconstructions')
         os.makedirs(reconstructions_path)
 
-        frames_file_path = os.path.join(before_processing_path, 'frames.h5')
-        with h5py.File(frames_file_path, 'w'):
-            pass
+        vis_path = os.path.join(experiment_path, '3d')
+        os.makedirs(vis_path)
+
+        frames_file_path = os.path.join(before_processing_path, '{}.h5'.format(experiment_id))
+        with h5py.File(frames_file_path, 'w') as frames_file:
+            frames_file.create_group("empty")
+            frames_file.create_group("dark")
+            frames_file.create_group("data")
 
         logger.info('file system: create experiment {} successfully'.format(experiment_id))
         return True
