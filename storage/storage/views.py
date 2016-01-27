@@ -131,8 +131,8 @@ def new_frame():
     logger.info('Image array has been loaded!')
 
     frame_id = db['frames'].insert(json_frame)
-    frame_number = str(json_frame[0]['frame']['number'])
-    frame_type = str(json_frame[0]['frame']['mode'])
+    frame_number = str(json_frame['frame']['number'])
+    frame_type = str(json_frame['frame']['mode'])
 
     pyframes.add_frame(image_array, frame_number, frame_type, frame_id, experiment_id)
 
