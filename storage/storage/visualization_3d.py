@@ -10,14 +10,14 @@ from storage import app
 logger = app.logger
 
 
-def get_and_save_3d_points(hfd5_filename, output_filename_prefix, rarefaction, level1, level2):
+def get_and_save_3d_points(hdf5_filename, output_filename, rarefaction, level1, level2):
     # Script will create files for each level between level1 and level2 including
     colormap = plt.cm.hsv
 
     levels = range(level1, level2 + 1)
     logger.info("rarefaction = {}, levels = {}".format(rarefaction, levels))
 
-    with h5py.File(hfd5_filename, 'r') as hdf5_file:
+    with h5py.File(hdf5_filename, "r") as hdf5_file:
         data_cube = hdf5_file["Results"]
 
     logger.info("Original cube shape: {}".format(data_cube.shape))
@@ -37,6 +37,9 @@ def get_and_save_3d_points(hfd5_filename, output_filename_prefix, rarefaction, l
         logger.info("All values are the same - look for better data!\nStop.")
         return
 
+    with h5py.File(output_filename, "w") as vis_file:
+        pass
+
     logger.info("Looking for thresholds...")
     list_of_percents_to_left = [(1 - 0.5 ** level) * 100 for level in levels]
     thresholds_list = np.percentile(data_cube, list_of_percents_to_left)
@@ -47,8 +50,8 @@ def get_and_save_3d_points(hfd5_filename, output_filename_prefix, rarefaction, l
         threshold = thresholds_dict[level]
         shape = (m, n, k)
         num_vertices, rgba, xyz = get_level(level, threshold, data_cube, rarefaction, colormap)
-
-        save_level(level, output_filename_prefix, num_vertices, shape, rgba, xyz)
+        with h5py.File(output_filename, "w") as vis_file:
+            save_level(level, vis_file, num_vertices, shape, rgba, xyz)
 
         logger.info("Number of leftover vertices: {},  {:.2f}% from all".format(
             num_vertices, num_vertices * 100 / (n * m * k)))
@@ -99,7 +102,27 @@ def get_level(level, threshold, data_cube, rarefaction, colormap):
     return num_vertices, rgba, xyz
 
 
-def save_level(level, output_filename_prefix, num_vertices, shape, rgba, xyz):
+def save_level(level, hdf5_file, num_vertices, shape, rgba, xyz):
+    n, m , k = shape
+    R, G, B, A = rgba
+    X, Y, Z = xyz
+
+    logger.info("Writing to file...")
+    group = hdf5_file.create_group(str(level))
+    group.attrs["n"] = n
+    group.attrs["m"] = m
+    group.attrs["k"] = k
+    group.attrs["num_vertices"] = num_vertices
+    hdf5_file.create_dataset("R", data=R, compression="gzip", compression_opts=4)
+    hdf5_file.create_dataset("G", data=G, compression="gzip", compression_opts=4)
+    hdf5_file.create_dataset("B", data=B, compression="gzip", compression_opts=4)
+    hdf5_file.create_dataset("A", data=A, compression="gzip", compression_opts=4)
+    hdf5_file.create_dataset("X", data=X, compression="gzip", compression_opts=4)
+    hdf5_file.create_dataset("Y", data=Y, compression="gzip", compression_opts=4)
+    hdf5_file.create_dataset("Z", data=Z, compression="gzip", compression_opts=4)
+
+
+def save_level_js(level, output_filename_prefix, num_vertices, shape, rgba, xyz):
     n, m , k = shape
     R, G, B, A = rgba
     X, Y, Z = xyz
