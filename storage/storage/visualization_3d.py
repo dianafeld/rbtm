@@ -51,7 +51,7 @@ def get_and_save_3d_points(hdf5_filename, output_filename, rarefaction, level1, 
             threshold = thresholds_dict[level]
             shape = (m, n, k)
             num_vertices, rgba, xyz = get_level(level, threshold, data_cube, rarefaction, colormap)
-            with h5py.File(output_filename, "w") as vis_file:
+            with h5py.File(output_filename, "r+") as vis_file:
                 save_level(level, vis_file, num_vertices, shape, rgba, xyz)
 
             logger.info("Number of leftover vertices: {},  {:.2f}% from all".format(
