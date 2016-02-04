@@ -344,8 +344,9 @@ def frames_downloading(request, storage_record_id):
         if not os.path.exists(os.path.join(MEDIA_ROOT, file_name)):
             try:
                 storage_logger.debug(
-                    u'Получение изображений: Запрос на получение изображения номер {}: {}'.format(frame.id))
-                frame_response = requests.get(STORAGE_FRAMES_PNG.format(exp_id=storage_record_id, frame_id=frame.id), timeout=settings.TIMEOUT_DEFAULT, stream=True)
+                    u'Получение изображений: Запрос на получение изображения номер {}'.format(frame.id))
+                frame_response = requests.get(STORAGE_FRAMES_PNG.format(exp_id=storage_record_id, frame_id=frame.id),
+                                              timeout=settings.TIMEOUT_DEFAULT, stream=True)
                 if frame_response.status_code == 200:
                     temp_file = tempfile.TemporaryFile()
                     for block in frame_response.iter_content(1024 * 8):
