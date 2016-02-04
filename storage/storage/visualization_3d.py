@@ -77,8 +77,8 @@ def get_level(level, threshold, data_cube, rarefaction, colormap):
         left_values[i] = data_cube[Ix[i], Iy[i], Iz[i]]
 
     norm = matplotlib.colors.Normalize(vmin=threshold, vmax=max_value)
-    m = matplotlib.cm.ScalarMappable(norm=norm, cmap=colormap)
-    RGBA = m.to_rgba(left_values)
+    mappable = matplotlib.cm.ScalarMappable(norm=norm, cmap=colormap)
+    RGBA = mappable.to_rgba(left_values)
     RGBA = (RGBA * 256).astype(int)
 
     R, G, B = RGBA[:, 0], RGBA[:, 1], RGBA[:, 2]
