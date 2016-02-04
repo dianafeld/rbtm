@@ -150,6 +150,17 @@ cdef class Detector:
 
     def get_image(self):
         cdef XI_IMG image
+        for i in range(2):
+            try:
+                image.bp = NULL
+                image.bp_size = 0
+                image.size = sizeof(XI_IMG)
+                
+                e = xiGetImage(self.handle, Detector.TIMEOUT, &image)
+                handle_error(e, "Detector.get_image().xiGetImage()")
+            finally:
+                free(<void *>image.bp)
+
         try:
             image.bp = NULL
             image.bp_size = 0
