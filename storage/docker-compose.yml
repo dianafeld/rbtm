@@ -10,6 +10,7 @@ server:
   build: .
   volumes:
     - ./data/experiments:/var/www/storage/data/experiments
+    - ./data/hand:/var/www/storage/data/hand
     - ./logs:/var/www/storage/logs
   ports:
     - "5006:5006"
