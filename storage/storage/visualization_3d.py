@@ -3,6 +3,7 @@ import os
 import h5py
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 from storage import app
@@ -75,8 +76,8 @@ def get_level(level, threshold, data_cube, rarefaction, colormap):
     for i in range(num_vertices):
         left_values[i] = data_cube[Ix[i], Iy[i], Iz[i]]
 
-    norm = plt.colors.Normalize(vmin=threshold, vmax=max_value)
-    m = plt.cm.ScalarMappable(norm=norm, cmap=colormap)
+    norm = matplotlib.colors.Normalize(vmin=threshold, vmax=max_value)
+    m = matplotlib.cm.ScalarMappable(norm=norm, cmap=colormap)
     RGBA = m.to_rgba(left_values)
     RGBA = (RGBA * 256).astype(int)
 
