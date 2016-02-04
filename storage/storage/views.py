@@ -274,7 +274,7 @@ def get_3d_visualization(experiment_id, rarefaction, level1, level2):
 
     hfd5_filename = os.path.abspath("data/hand/result.hdf5")
     output_filename = os.path.abspath("data/hand/visualization_3d.hdf5")
-    visualization_3d.get_ans_save_3d_points(
+    visualization_3d.get_and_save_3d_points(
         hfd5_filename, output_filename, rarefaction, level1, level2)
 
     return send_file(output_filename, mimetype='application/x-hdf5', 
