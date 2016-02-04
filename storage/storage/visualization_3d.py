@@ -20,43 +20,43 @@ def get_and_save_3d_points(hdf5_filename, output_filename, rarefaction, level1, 
     with h5py.File(hdf5_filename, "r") as hdf5_file:
         data_cube = hdf5_file["Results"]
 
-    logger.info("Original cube shape: {}".format(data_cube.shape))
+        logger.info("Original cube shape: {}".format(data_cube.shape))
 
-    logger.info("Rarefying data_cube...")
-    if rarefaction > 1:
-        data_cube = data_cube[::rarefaction, ::rarefaction, ::rarefaction]
-    else:
-        data_cube = data_cube[::2, :, :]
+        logger.info("Rarefying data_cube...")
+        if rarefaction > 1:
+            data_cube = data_cube[::rarefaction, ::rarefaction, ::rarefaction]
+        else:
+            data_cube = data_cube[::2, :, :]
 
-    logger.info("Rarefied cube shape: {}".format(data_cube.shape))
-    n, m, k = data_cube.shape
+        logger.info("Rarefied cube shape: {}".format(data_cube.shape))
+        n, m, k = data_cube.shape
 
-    min_value = np.min(data_cube)
-    max_value = np.max(data_cube)
-    if max_value == min_value:
-        logger.info("All values are the same - look for better data!\nStop.")
-        return
+        min_value = np.min(data_cube)
+        max_value = np.max(data_cube)
+        if max_value == min_value:
+            logger.info("All values are the same - look for better data!\nStop.")
+            return
 
-    with h5py.File(output_filename, "w") as vis_file:
-        pass
-
-    logger.info("Looking for thresholds...")
-    list_of_percents_to_left = [(1 - 0.5 ** level) * 100 for level in levels]
-    thresholds_list = np.percentile(data_cube, list_of_percents_to_left)
-    thresholds_dict = dict(zip(levels, thresholds_list))
-    logger.info("Done")
-
-    for level in levels:
-        threshold = thresholds_dict[level]
-        shape = (m, n, k)
-        num_vertices, rgba, xyz = get_level(level, threshold, data_cube, rarefaction, colormap)
         with h5py.File(output_filename, "w") as vis_file:
-            save_level(level, vis_file, num_vertices, shape, rgba, xyz)
+            pass
 
-        logger.info("Number of leftover vertices: {},  {:.2f}% from all".format(
-            num_vertices, num_vertices * 100 / (n * m * k)))
+        logger.info("Looking for thresholds...")
+        list_of_percents_to_left = [(1 - 0.5 ** level) * 100 for level in levels]
+        thresholds_list = np.percentile(data_cube, list_of_percents_to_left)
+        thresholds_dict = dict(zip(levels, thresholds_list))
+        logger.info("Done")
 
-    logger.info("Finish")
+        for level in levels:
+            threshold = thresholds_dict[level]
+            shape = (m, n, k)
+            num_vertices, rgba, xyz = get_level(level, threshold, data_cube, rarefaction, colormap)
+            with h5py.File(output_filename, "w") as vis_file:
+                save_level(level, vis_file, num_vertices, shape, rgba, xyz)
+
+            logger.info("Number of leftover vertices: {},  {:.2f}% from all".format(
+                num_vertices, num_vertices * 100 / (n * m * k)))
+
+        logger.info("Finish")
 
 
 def get_level(level, threshold, data_cube, rarefaction, colormap):
