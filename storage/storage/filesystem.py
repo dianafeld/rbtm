@@ -6,7 +6,7 @@ from storage import app
 logger = app.logger
 
 
-def create_experiment(experiment_id):
+def create_experiment(experiment_id, exp_info):
     experiment_path = os.path.join('data', 'experiments', str(experiment_id))
 
     if not os.path.exists(experiment_path):
@@ -31,6 +31,8 @@ def create_experiment(experiment_id):
             frames_file.create_group("empty")
             frames_file.create_group("dark")
             frames_file.create_group("data")
+            frames_file.attrs["exp_info"] = exp_info.encode("utf-8")
+
 
         logger.info('file system: create experiment {} successfully'.format(experiment_id))
         return True
