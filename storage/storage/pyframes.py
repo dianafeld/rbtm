@@ -2,6 +2,7 @@ import os
 from threading import Thread
 
 import h5py
+from lockfile import LockFile
 
 import numpy as np
 import scipy.ndimage
@@ -24,9 +25,13 @@ def extract_frame(frame_number, frame_type, experiment_id):
 
 def add_frame(frame, frame_info, frame_number, frame_type, frame_id, experiment_id):
     frames_file_path = os.path.join('data', 'experiments', str(experiment_id), 'before_processing', '{}.h5'.format(experiment_id))
-    with h5py.File(frames_file_path, 'r+') as frames_file:
-        frames_file[frame_type].create_dataset(str(frame_number), data=frame, compression="gzip", compression_opts=4)
-        frames_file[frame_type][str(frame_number)].attrs["frame_info"] = frame_info.encode('utf8')
+
+    lock = LockFile(frames_file_path)
+    with lock:
+        with h5py.File(frames_file_path, 'r+') as frames_file:
+            frames_file[frame_type].create_dataset(str(frame_number), data=frame, compression="gzip", compression_opts=4)
+            frames_file[frame_type][str(frame_number)].attrs["frame_info"] = frame_info.encode('utf8')
+
     logger.info('hdf5 file: add frame {} to experiment {} successfully'.format(frame_id, experiment_id))
 
     png_file_path = os.path.abspath(os.path.join('data', 'experiments', str(experiment_id), 'before_processing', 'png',
@@ -48,7 +53,7 @@ def make_png(frame, png_path):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     enhanced_image = scipy.ndimage.filters.median_filter(np.rot90(frame), size=3)
-    im = ax.imshow(enhanced_image, cmap=plt.cm.gray) # vmin, vmax 
+    im = ax.imshow(enhanced_image, cmap=plt.cm.gray)  # vmin, vmax
     fig.colorbar(im)
     fig.savefig(png_path)
     plt.close(fig)
