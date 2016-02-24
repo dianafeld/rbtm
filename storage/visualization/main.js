@@ -25,20 +25,7 @@ sliderYElement.step = 0.01;
 sliderZElement.min = -1;
 sliderZElement.max = 1;
 sliderZElement.step = 0.01;
-/*
-sliderElement.addEventListener('input', function () {
-	var vec1 = new THREE.Vector3(1, 1, 1);
-	var vec2 = new THREE.Vector3(1, 1, 1);
-	vec1.project(camera2);
-	vec2.unproject(camera2);
-	var for_alert = '';
-	for_alert += vec1.x + "  " + vec1.y + "  " + vec1.z + "\n";
-	for_alert += vec2.x + "  " + vec2.y + "  " + vec2.z + "\n";
-	var m = camera2.getWorldDirection();
-	for_alert += m.x + "  " + m.y + "  " + m.z + "\n";
-	alert(for_alert);
-}, false);
-*/
+
 function sign(x) { return x < 0 ? -1 : 1; }
 
 sliderElement.addEventListener('input', function () {
@@ -67,6 +54,66 @@ sliderZElement.addEventListener('input', function () {
 	camera2.lookAt(cam2_lookAt);
 }, false);
 
+function makeTextSprite( message, parameters )
+{
+    if ( parameters === undefined ) parameters = {};
+    var fontface = parameters.hasOwnProperty("fontface") ? parameters["fontface"] : "Arial";
+    var fontsize = parameters.hasOwnProperty("fontsize") ? parameters["fontsize"] : 70;
+    var borderThickness = parameters.hasOwnProperty("borderThickness") ? parameters["borderThickness"] : 4;
+    var borderColor = parameters.hasOwnProperty("borderColor") ?parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
+    var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
+    var textColor = parameters.hasOwnProperty("textColor") ?parameters["textColor"] : { r:0, g:0, b:0, a:1.0 };
+
+    var canvas = document.createElement('canvas');
+    var context = canvas.getContext('2d');
+    context.font = "Bold " + fontsize + "px " + fontface;
+    var metrics = context.measureText( message );
+    var textWidth = metrics.width;
+
+    context.fillStyle   = "rgba(" + backgroundColor.r + "," + backgroundColor.g + "," + backgroundColor.b + "," + backgroundColor.a + ")";
+    context.strokeStyle = "rgba(" + borderColor.r + "," + borderColor.g + "," + borderColor.b + "," + borderColor.a + ")";
+
+    context.lineWidth = borderThickness;
+
+    context.fillStyle = "rgba("+textColor.r+", "+textColor.g+", "+textColor.b+", 1.0)";
+    context.fillText( message, borderThickness, fontsize + borderThickness);
+
+    var texture = new THREE.Texture(canvas); 
+    texture.needsUpdate = true;
+
+    var spriteMaterial = new THREE.SpriteMaterial( { map: texture, useScreenCoordinates: false } );
+    var sprite = new THREE.Sprite( spriteMaterial );
+    sprite.scale.set(0.5 * fontsize, 0.25 * fontsize, 0.75 * fontsize);
+    return sprite;  
+}
+
+
+function addNumbers(size, step)
+{
+	var spriteX, spriteY, spriteZ;
+	for ( var i = -size; i <= size; i += step ) {
+
+		if (i === 0){
+			var sprite0 = makeTextSprite(String(i));
+			scene.add(sprite0);
+			sprite0.position.set(1, 1, 1);
+		}
+		else{
+			spriteX = makeTextSprite(String(i));
+			spriteY = spriteX.clone();
+			spriteZ = spriteX.clone();
+			scene.add(spriteX);
+			scene.add(spriteY);
+			scene.add(spriteZ);
+
+			spriteX.position.set(i, 1, 1);
+			spriteY.position.set(1, i, 1);
+			spriteZ.position.set(1, 1, i);
+		}
+	}
+}
+
+
 document.getElementById('slice_pos').oninput= function()
 {
 	var distance = document.getElementById('slice_pos').value;
@@ -84,9 +131,9 @@ function addGrid(size, step){
 	var geometry = new THREE.Geometry();
 	var material = new THREE.LineBasicMaterial( { vertexColors: THREE.VertexColors } );
 
-	//var color1 = new THREE.Color( 0x00ff00 );
-	//var color2 = new THREE.Color( 0x888888 );
-	var color = new THREE.Color( 0x888888 );
+	var grey = new THREE.Color( 0xbbbbbb );
+	var black = new THREE.Color( 0x555555 );
+
 
 	for ( var i = - size; i <= size; i += step ) {
 
@@ -107,7 +154,12 @@ function addGrid(size, step){
 				geometry.colors.push( red, red, green, green, blue, blue );
 			}
 			else{
-				geometry.colors.push( color, color, color, color, color, color );
+				if (i === 0 || j === 0){
+					geometry.colors.push( black, black, black, black, black, black );
+				}
+				else{
+					geometry.colors.push( grey, grey, grey, grey, grey, grey );
+				}
 			}
 		}
 
@@ -145,16 +197,16 @@ function init() {
 
 	container.appendChild( renderer.domElement );
 
-	camera = new THREE.PerspectiveCamera( 75, container.clientWidth / container.clientHeight, 1, 1000 );
+	camera = new THREE.PerspectiveCamera( 75, container.clientWidth / container.clientHeight, 0.1, 1000 );
 
 	camera.position.z = 500;
+
 
 	controls = new THREE.TrackballControls( camera, renderer.domElement );
 	//controls.addEventListener( 'change', render ); // add this only if there is no animation loop (requestAnimationFrame)
 	controls.enableDamping = true;
 	controls.dampingFactor = 0.25;
 	controls.enableZoom = false;
-	//controls.target.set( 100, 100, 100 );
 
 
 	var for_plane = document.getElementById( 'for_plane' );
@@ -166,14 +218,10 @@ function init() {
 	for_plane.appendChild( renderer2.domElement );
 
 
-
-	//scene2 = new THREE.Scene();
-	//camera2 = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
 	camera2 = new THREE.OrthographicCamera( -400, 400, -400, 400, 1, 2 );
 	cam2_lookAt = new THREE.Vector3(500, 500, 500);
 	camera2.lookAt(cam2_lookAt);
 	//camera2.position.z = 0;
-	//camera2.matrixWorldNeedsUpdate = true;
 	//controls2 = new THREE.TrackballControls( camera2, renderer2.domElement );
 	//controls2.target.set(300, 300, 300);
 
@@ -217,7 +265,6 @@ function init() {
 	} );
 
 	var particleSystem = new THREE.Points( geometry ,shaderMaterial);
-	//particleSystem.position.set(200, 200, 200);
 
 	scene.add(particleSystem);
 
@@ -232,6 +279,7 @@ function init() {
 
 
 	addGrid(400, 100);
+	addNumbers(400, 100);
 
 
 	//  add  FPS stats in upper left corner, can delete it
@@ -260,12 +308,12 @@ function animate() {
 
 	requestAnimationFrame( animate );
 
-	controls.update(); // required if controls.enableDamping = true, or if controls.autoRotate = true
+	//controls.update(); // required if controls.enableDamping = true, or if controls.autoRotate = true
 	//controls2.update(); // required if controls.enableDamping = true, or if controls.autoRotate = true
-
+	controls.update();
 	stats.update();
 
-	bind_plain_with_cam2();
+	bind_plane_with_cam2();
 	render();
 	render2();
 
@@ -273,14 +321,14 @@ function animate() {
 
 function render() {
 	renderer.render( scene, camera );
-	renderer.setClearColor( 0xcccccc, 1);
+	renderer.setClearColor( 0xeeeeee, 1);
 }
 
 function render2() {
 	renderer2.render( scene, camera2 );
 	renderer2.setClearColor( 0xffffff, 1);
 }
-function bind_plain_with_cam2()
+function bind_plane_with_cam2()
 {
 	plane.position.copy(camera2.position);
 	plane.quaternion.copy(camera2.quaternion);
