@@ -50,16 +50,22 @@
 			    top: 120px;
 			    right: 0px;
 			}
+			#sliderMin {
+			    position: absolute;
+			    top: 150px;
+			    right: 0px;
+			}
+			#sliderMax {
+			    position: absolute;
+			    top: 180px;
+			    right: 0px;
+			}
 		</style>
 	</head>
 	<body>
-  		<input id="slider" type="range">
-  		<output id="slider_out"></output>
-  		<input id="sliderX" type="range">
-  		<input id="sliderY" type="range">
-  		<input id="sliderZ" type="range">
+  		<input id="sliderMin" type="range">
+  		<input id="sliderMax" type="range">
 		<div id="container"></div>
-		<div id="for_plane"></div>
 		<div id="info">
 			<a href="http://threejs.org" target="_blank">three.js</a> - orbit controls example
 		</div>
@@ -102,7 +108,7 @@
 		    }
 		</script>
 
-		<script src="largeData/hand/RF1_LVL23.js"></script>
+		<script src="largeData/hand/RF50_8G.js"></script>
 		<script src="main.js"></script>
 	</body>
 </html>
