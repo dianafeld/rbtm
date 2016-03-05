@@ -46,7 +46,9 @@ def main():
 
     if KERNEL_SIZE > 1:
         print("Filtering dataCube...")
-        dataCube = scipy.signal.medfilt(dataCube, KERNEL_SIZE).astype(np.float32)
+        dataCube[:200] = scipy.signal.medfilt(dataCube[:200], KERNEL_SIZE).astype(np.float32)
+        dataCube[200:400] = scipy.signal.medfilt(dataCube[200:400], KERNEL_SIZE).astype(np.float32)
+        dataCube[400:] = scipy.signal.medfilt(dataCube[400:], KERNEL_SIZE).astype(np.float32)
         print("Done")
         hfd5FileOutName += "f" + str(KERNEL_SIZE)
 

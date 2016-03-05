@@ -10,7 +10,7 @@ import os
 def main():
 
     COLORMAP = cm.hsv
-    GROUP_COUNT = 8
+    GROUP_COUNT = 128
 
     hfd5FileName = "largeData/hand/result_r50.hdf5"
     outputFileName = "largeData/hand/R50_" + str(GROUP_COUNT) + "G.js"
@@ -49,7 +49,7 @@ def main():
 
     print ("Splitting to %d groups..." % GROUP_COUNT)
     for group in xrange(1, GROUP_COUNT + 1):
-        if group % 2 == 0:
+        if group % 8 == 0:
             print ("   %d groups are done" % group)
 
         threshold_A, threshold_B = thresholds[group - 1], thresholds[group]

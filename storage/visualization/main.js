@@ -3,7 +3,7 @@ if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 var stats;
 
 var camera, controls, scene, renderer, uniforms, camera2, renderer2, controls2, plane, cam2_lookAt;
-var particleSystems, minThreshold, maxThreshold;
+var particleSystems, minThreshold = group_count * 0.75, maxThreshold = group_count;
 
 var sliderElement = document.getElementById('slider');
 var sliderXElement = document.getElementById('sliderX');
@@ -17,31 +17,25 @@ init();
 animate();
 
 
-sliderMinElement.min = 0;
 sliderMinElement.max = group_count;
-sliderMinElement.step = 1;
-sliderMaxElement.min = 0;
 sliderMaxElement.max = group_count;
-sliderMaxElement.step = 1;
+sliderMinElement.defaultValue = minThreshold;
+sliderMaxElement.defaultValue = maxThreshold;
 
-sliderMinElement.addEventListener('input', function () {
-	minThreshold = sliderMinElement.value;
-	var for_alert = "";
+function update_visibilities()
+{
 	for (var i_g = 0; i_g < group_count; i_g++){
 		particleSystems[i_g].visible = (minThreshold <= i_g && i_g < maxThreshold);
-		for_alert += i_g + ": " + particleSystems[i_g].visible + "\n";
 	}
-	//alert(for_alert);
+}
+sliderMinElement.addEventListener('input', function () {
+	minThreshold = sliderMinElement.value;
+	update_visibilities()
 }, false);
 
 sliderMaxElement.addEventListener('input', function () {
 	maxThreshold = sliderMaxElement.value;
-	var for_alert = "";
-	for (var i_g = 0; i_g < group_count; i_g++){
-		particleSystems[i_g].visible = (minThreshold <= i_g && i_g < maxThreshold);
-		for_alert += i_g + ": " + particleSystems[i_g].visible + "\n";
-	}
-	//alert(for_alert);
+	update_visibilities()
 }, false);
 
 
@@ -73,7 +67,7 @@ function init() {
 
 	camera = new THREE.PerspectiveCamera( 75, container.clientWidth / container.clientHeight, 0.1, 1000 );
 
-	camera.position.z = 500;
+	camera.position.z = NMK[0] * 2;
 
 
 	controls = new THREE.TrackballControls( camera, renderer.domElement );
@@ -124,6 +118,7 @@ function init() {
 		scene.add(particleSystem);
 
 	}
+	update_visibilities()
 
 
 
