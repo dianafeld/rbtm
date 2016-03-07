@@ -18,7 +18,9 @@ def main():
 
     hdf5File = h5py.File(hfd5FileName, 'r')
     dataCube = hdf5File["Results"]
-    print "Cube shape:", dataCube.shape
+
+    rarefaction = int(hdf5File["rarefaction_num"][0])
+    print "Cube shape:", dataCube.shape, "  rarefaction number: ", rarefaction
 
 
     N, M, K = dataCube.shape
@@ -62,9 +64,9 @@ def main():
 
         RGBA_str += str(rgba.tolist()) + ",\n"
 
-        X = Ix - N / 2
-        Y = Iy - M / 2
-        Z = Iz - K / 2
+        X = (Ix - N / 2) * rarefaction
+        Y = (Iy - M / 2) * rarefaction
+        Z = (Iz - K / 2) * rarefaction
         XYZ = np.concatenate(((X,), (Y,), (Z,)))
         XYZ = np.reshape(a=XYZ, newshape=(-1), order='F')
         f.write(str(XYZ.tolist()).replace(" ", "") + ",\n" )
@@ -72,6 +74,7 @@ def main():
     f.write("];\n")
     RGBA_str += "];\n"
     f.write(RGBA_str)
+    f.write('var rarefaction = %d;\n' % rarefaction)
     f.close()
     hdf5File.close()
 

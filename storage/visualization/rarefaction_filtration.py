@@ -55,6 +55,8 @@ def main():
     hfd5FileOutName += hfd5FileOutNameSuffix
     hdf5FileOut = h5py.File(hfd5FileOutName)
     hdf5FileOut["Results"] = dataCube
+    hdf5FileOut["rarefaction_num"] = (RAREFACTION,)
+    hdf5FileOut["filtration_cernel_size"] = (KERNEL_SIZE,)
 
     hdf5FileIn.close()
     hdf5FileOut.close()
