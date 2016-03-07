@@ -17,7 +17,11 @@ sliderMaxElement.max = group_count;
 sliderMinElement.defaultValue = minThreshold;
 sliderMaxElement.defaultValue = maxThreshold;
 
-
+/*
+$("for_plane").click(function(event){
+      alert("Поздравляем! Вы починили код!");
+   });
+*/
 
 function sign(x) { return x < 0 ? -1 : 1; }
 
@@ -117,7 +121,6 @@ document.getElementById('slider').oninput= function()
 }
 
 
-alert(1);
 function addGrid(size, step){
 
 	var geometry = new THREE.Geometry();
@@ -160,7 +163,6 @@ function addGrid(size, step){
 	var grid = new THREE.LineSegments(geometry, material );
 	scene.add(grid);
 }
-alert(1);
 
 init();
 animate();
@@ -231,7 +233,7 @@ function init() {
 	for_plane.appendChild( renderer2.domElement );
 
 
-	camera2 = new THREE.OrthographicCamera( -400, 400, -400, 400, 1, 2 );
+	camera2 = new THREE.OrthographicCamera( -400, 400, -400, 400, 1, rarefaction );
 	cam2_lookAt = new THREE.Vector3(500, 500, 500);
 	camera2.lookAt(cam2_lookAt);
 	//camera2.position.z = 0;
