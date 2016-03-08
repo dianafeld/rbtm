@@ -1,6 +1,5 @@
 # coding=utf-8
 import logging
-from string import join
 import os
 import tempfile
 from django.contrib import messages
@@ -14,7 +13,7 @@ from robotom.settings import STORAGE_EXPERIMENTS_GET_HOST, STORAGE_FRAMES_INFO_H
     STORAGE_FRAMES_PNG, STORAGE_EXPERIMENTS_HOST, STORAGE_HOST
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
-from urlparse import urljoin
+import h5py
 
 storage_logger = logging.getLogger('storage_logger')
 
@@ -413,7 +412,21 @@ def delete_experiment(request, experiment_id):
 
 
 def record_reconstruction(request, storage_record_id):
-    return render(request, 'storage/record_reconstruction.html', {
-        "record_id": storage_record_id,
-        'caption': 'Реконструкция эксперимента ' + str(storage_record_id)
+    with h5py.File(os.path.join(os.path.join(MEDIA_ROOT, 'reconstructions'), 'exp_id.hdf5')) as f:
+        nmk = []
+        nmk.append(f["6"].attrs["n"])
+        nmk.append(f["6"].attrs["m"])
+        nmk.append(f["6"].attrs["k"])
+        return render(request, 'storage/record_reconstruction.html', {
+            "record_id": storage_record_id,
+            'caption': 'Реконструкция эксперимента ' + str(storage_record_id),
+            "nmk": nmk,
+            "R_arr": f["6"]["R"].value.tolist(),
+            "G_arr": f["6"]["G"].value.tolist(),
+            "B_arr": f["6"]["B"].value.tolist(),
+            "A_arr": f["6"]["A"].value.tolist(),
+            "X_arr": f["6"]["X"].value.tolist(),
+            "Y_arr": f["6"]["Y"].value.tolist(),
+            "Z_arr": f["6"]["Z"].value.tolist(),
+            "num_vertices": f["6"].attrs["num_vertices"]
     })
