@@ -40,7 +40,7 @@ EXPERIMENT_STOP = urljoin(EXPERIMENT_HOST, '/tomograph/{}/experiment/stop')
 EXPERIMENT_MOTOR_GET_HORIZ = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/get-horizontal-position')
 EXPERIMENT_MOTOR_GET_VERT = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/get-vertical-position')
 EXPERIMENT_MOTOR_GET_ANGLE = urljoin(EXPERIMENT_HOST, '/tomograph/{}/motor/get-angle-position')
-EXPERIMENT_SHUTTER_GET_STATUS = urljoin(EXPERIMENT_HOST, '/tomograph/{}/shutter/')
+EXPERIMENT_SHUTTER_GET_STATUS = urljoin(EXPERIMENT_HOST, '/tomograph/{}/shutter/state')
 EXPERIMENT_SOURCE_GET_VOLT = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/get-voltage')
 EXPERIMENT_SOURCE_GET_CURR = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/get-current')
 
