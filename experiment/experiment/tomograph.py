@@ -425,7 +425,7 @@ class Tomograph:
         if with_open_shutter == True:
             self.open_shutter(0, from_experiment=from_experiment, exp_is_advanced=exp_is_advanced)
         
-        time.sleep(0.5)
+        time.sleep(0.2)
         # Tomograph takes exposure multiplied by 10 and rounded
         if exposure:
             logger.info('Getting an image with exposure %.1f milliseconds...' % (exposure))

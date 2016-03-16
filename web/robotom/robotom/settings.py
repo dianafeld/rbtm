@@ -11,7 +11,7 @@ TIMEOUT_DEFAULT = 10  # timeout in secs
 
 STORAGE_HOST = 'http://109.234.34.140:5016/'
 
-STORAGE_FRAMES_PNG = urljoin(STORAGE_HOST, '/storage/png/get')
+STORAGE_FRAMES_PNG = urljoin(STORAGE_HOST, '/storage/experiments/{exp_id}/frames/{frame_id}/png')
 STORAGE_FRAMES_INFO_HOST = urljoin(STORAGE_HOST, '/storage/frames_info/get')
 STORAGE_FRAMES_HOST = urljoin(STORAGE_HOST, '/storage/frames/get')
 STORAGE_EXPERIMENTS_GET_HOST = urljoin(STORAGE_HOST, '/storage/experiments/get')

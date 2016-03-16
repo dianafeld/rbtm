@@ -3,6 +3,7 @@ import os
 import h5py
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 from storage import app
@@ -10,50 +11,53 @@ from storage import app
 logger = app.logger
 
 
-def get_and_save_3d_points(hfd5_filename, output_filename_prefix, rarefaction, level1, level2):
+def get_and_save_3d_points(hdf5_filename, output_filename, rarefaction, level1, level2):
     # Script will create files for each level between level1 and level2 including
     colormap = plt.cm.hsv
 
     levels = range(level1, level2 + 1)
     logger.info("rarefaction = {}, levels = {}".format(rarefaction, levels))
 
-    with h5py.File(hfd5_filename, 'r') as hdf5_file:
+    with h5py.File(hdf5_filename, "r") as hdf5_file:
         data_cube = hdf5_file["Results"]
 
-    logger.info("Original cube shape: {}".format(data_cube.shape))
+        logger.info("Original cube shape: {}".format(data_cube.shape))
 
-    logger.info("Rarefying data_cube...")
-    if rarefaction > 1:
-        data_cube = data_cube[::rarefaction, ::rarefaction, ::rarefaction]
-    else:
-        data_cube = data_cube[::2, :, :]
+        logger.info("Rarefying data_cube...")
+        if rarefaction > 1:
+            data_cube = data_cube[::rarefaction, ::rarefaction, ::rarefaction]
+        else:
+            data_cube = data_cube[::2, :, :]
 
-    logger.info("Rarefied cube shape: {}".format(data_cube.shape))
-    n, m, k = data_cube.shape
+        logger.info("Rarefied cube shape: {}".format(data_cube.shape))
+        n, m, k = data_cube.shape
 
-    min_value = np.min(data_cube)
-    max_value = np.max(data_cube)
-    if max_value == min_value:
-        logger.info("All values are the same - look for better data!\nStop.")
-        return
+        min_value = np.min(data_cube)
+        max_value = np.max(data_cube)
+        if max_value == min_value:
+            logger.info("All values are the same - look for better data!\nStop.")
+            return
 
-    logger.info("Looking for thresholds...")
-    list_of_percents_to_left = [(1 - 0.5 ** level) * 100 for level in levels]
-    thresholds_list = np.percentile(data_cube, list_of_percents_to_left)
-    thresholds_dict = dict(zip(levels, thresholds_list))
-    logger.info("Done")
+        with h5py.File(output_filename, "w") as vis_file:
+            pass
 
-    for level in levels:
-        threshold = thresholds_dict[level]
-        shape = (m, n, k)
-        num_vertices, rgba, xyz = get_level(level, threshold, data_cube, rarefaction, colormap)
+        logger.info("Looking for thresholds...")
+        list_of_percents_to_left = [(1 - 0.5 ** level) * 100 for level in levels]
+        thresholds_list = np.percentile(data_cube, list_of_percents_to_left)
+        thresholds_dict = dict(zip(levels, thresholds_list))
+        logger.info("Done")
 
-        save_level(level, output_filename_prefix, num_vertices, shape, rgba, xyz)
+        for level in levels:
+            threshold = thresholds_dict[level]
+            shape = (m, n, k)
+            num_vertices, rgba, xyz = get_level(level, threshold, data_cube, rarefaction, colormap)
+            with h5py.File(output_filename, "r+") as vis_file:
+                save_level(level, vis_file, num_vertices, shape, rgba, xyz)
 
-        logger.info("Number of leftover vertices: {},  {:.2f}% from all".format(
-            num_vertices, num_vertices * 100 / (n * m * k)))
+            logger.info("Number of leftover vertices: {},  {:.2f}% from all".format(
+                num_vertices, num_vertices * 100 / (n * m * k)))
 
-    logger.info("Finish")
+        logger.info("Finish")
 
 
 def get_level(level, threshold, data_cube, rarefaction, colormap):
@@ -72,9 +76,9 @@ def get_level(level, threshold, data_cube, rarefaction, colormap):
     for i in range(num_vertices):
         left_values[i] = data_cube[Ix[i], Iy[i], Iz[i]]
 
-    norm = plt.colors.Normalize(vmin=threshold, vmax=max_value)
-    m = plt.cm.ScalarMappable(norm=norm, cmap=colormap)
-    RGBA = m.to_rgba(left_values)
+    norm = matplotlib.colors.Normalize(vmin=threshold, vmax=max_value)
+    mappable = matplotlib.cm.ScalarMappable(norm=norm, cmap=colormap)
+    RGBA = mappable.to_rgba(left_values)
     RGBA = (RGBA * 256).astype(int)
 
     R, G, B = RGBA[:, 0], RGBA[:, 1], RGBA[:, 2]
@@ -99,7 +103,27 @@ def get_level(level, threshold, data_cube, rarefaction, colormap):
     return num_vertices, rgba, xyz
 
 
-def save_level(level, output_filename_prefix, num_vertices, shape, rgba, xyz):
+def save_level(level, hdf5_file, num_vertices, shape, rgba, xyz):
+    n, m , k = shape
+    R, G, B, A = rgba
+    X, Y, Z = xyz
+
+    logger.info("Writing to file...")
+    group = hdf5_file.create_group(str(level))
+    group.attrs["n"] = n
+    group.attrs["m"] = m
+    group.attrs["k"] = k
+    group.attrs["num_vertices"] = num_vertices
+    group.create_dataset("R", data=R, compression="gzip", compression_opts=4)
+    group.create_dataset("G", data=G, compression="gzip", compression_opts=4)
+    group.create_dataset("B", data=B, compression="gzip", compression_opts=4)
+    group.create_dataset("A", data=A, compression="gzip", compression_opts=4)
+    group.create_dataset("X", data=X, compression="gzip", compression_opts=4)
+    group.create_dataset("Y", data=Y, compression="gzip", compression_opts=4)
+    group.create_dataset("Z", data=Z, compression="gzip", compression_opts=4)
+
+
+def save_level_js(level, output_filename_prefix, num_vertices, shape, rgba, xyz):
     n, m , k = shape
     R, G, B, A = rgba
     X, Y, Z = xyz

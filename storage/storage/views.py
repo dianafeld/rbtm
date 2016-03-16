@@ -82,7 +82,7 @@ def create_experiment():
     insert_query.pop('exp_id', None)
     insert_query['_id'] = experiment_id
 
-    if fs.create_experiment(experiment_id):
+    if fs.create_experiment(experiment_id, dumps(insert_query)):
         insert_query['finished'] = False
         experiments.insert(insert_query)
 
@@ -133,8 +133,9 @@ def new_frame():
     frame_id = db['frames'].insert(json_frame)
     frame_number = str(json_frame['frame']['number'])
     frame_type = str(json_frame['frame']['mode'])
+    frame_info = dumps(db['frames'].find({"_id": ObjectId(frame_id)}))
 
-    pyframes.add_frame(image_array, frame_number, frame_type, frame_id, experiment_id)
+    pyframes.add_frame(image_array, frame_info, frame_number, frame_type, frame_id, experiment_id)
 
     logger.info('experiment id: {} frame id: {}'.format(str(experiment_id), str(frame_id)))
 
@@ -272,7 +273,10 @@ def get_3d_visualization(experiment_id, rarefaction, level1, level2):
     if level2 < level1:
         level1, level2 = level2, level1
 
-    hfd5_filename = "largeData/hand/result.hdf5"
-    output_filename_prefix = "largeData/hand/RF{}".format(rarefaction)
-    visualization_3d.get_ans_save_3d_points(
-        hfd5_filename, output_filename_prefix, rarefaction, level1, level2)
+    hfd5_filename = os.path.abspath("data/hand/result.hdf5")
+    output_filename = os.path.abspath("data/hand/visualization_3d.hdf5")
+    visualization_3d.get_and_save_3d_points(
+        hfd5_filename, output_filename, rarefaction, level1, level2)
+
+    return send_file(output_filename, mimetype='application/x-hdf5', 
+        as_attachment=True, attachment_filename=str(experiment_id) + '.hdf5')

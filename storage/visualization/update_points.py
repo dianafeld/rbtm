@@ -9,48 +9,20 @@ import os
 
 def main():
 
-    RAREFACTION = 1
-    LEVEL1, LEVEL2 = 10, 10
-    # Script will create files for each level between LEVEL1 and LEVEL2 including
     COLORMAP = cm.hsv
+    GROUP_COUNT = 128
 
-
-    # User can input RAREFACTION, LEVEL1 and LEVEL2
-    if len (sys.argv) > 1:
-        RAREFACTION = int(sys.argv[1])
-        if len (sys.argv) > 2:
-            LEVEL1 = int(sys.argv[2])
-            if len (sys.argv) > 3:
-                LEVEL2 = int(sys.argv[3])
-            else:
-                LEVEL2 = LEVEL1
-    
-    # Correcting values inputed by user
-    RAREFACTION = max(RAREFACTION, 1)
-    LEVEL1 = min (max (LEVEL1, 0), 25)
-    LEVEL2 = min (max (LEVEL2, 0), 25)
-    if LEVEL2 < LEVEL1:
-        LEVEL1, LEVEL2 = LEVEL2, LEVEL1
-
-    levels = range(LEVEL1, LEVEL2+1)
-    print "RAREFACTION = ",  RAREFACTION, "  LEVELS = ", levels
-
-
-    hfd5FileName = "largeData/hand/result.hdf5"
-    outputFileNamePrefix = "largeData/hand/RF" + str(RAREFACTION)
+    hfd5FileName = "largeData/hand/result_r50.hdf5"
+    outputFileName = "largeData/hand/R50_" + str(GROUP_COUNT) + "G.js"
 
 
     hdf5File = h5py.File(hfd5FileName, 'r')
     dataCube = hdf5File["Results"]
-    print "Original cube shape:", dataCube.shape
 
-    print("Rarefying dataCube...")
-    if (RAREFACTION > 1):
-        dataCube = dataCube[::RAREFACTION, ::RAREFACTION, ::RAREFACTION]
-    else:
-        dataCube = dataCube[::2,:,:]
+    rarefaction = int(hdf5File["rarefaction_num"][0])
+    print "Cube shape:", dataCube.shape, "  rarefaction number: ", rarefaction
 
-    print "Rarefied cube shape:", dataCube.shape
+
     N, M, K = dataCube.shape
 
     minValue = np.min(dataCube)
@@ -59,74 +31,56 @@ def main():
         print "All values are the same - look for better data!\nStop."
         return
 
-    print("Looking for thresholds...")
-    list_of_percents_to_left = [  (1 - 0.5 ** level) * 100   for level in levels ]
-    thresholds_list = np.percentile(dataCube, list_of_percents_to_left)
-    thresholds_dict = dict( zip(levels, thresholds_list) )
-    print("Done")
+    norm = mpl.colors.Normalize(vmin=minValue, vmax=maxValue)
+    m = cm.ScalarMappable(norm=norm, cmap=COLORMAP)
+
+    range_of_values = maxValue - minValue
 
 
-    for level in levels:
-        print ("Creating file with level: %d" % level)
-        outputFileName =  outputFileNamePrefix + "_LVL" + str(level) +  ".js"
+    thresholds = [minValue + float(i) / float(GROUP_COUNT) * range_of_values for i in xrange(0, GROUP_COUNT + 1)]
 
-        threshold = thresholds_dict[level]
-        print("    Throwing away points with small values...")
-        Ix, Iy, Iz = np.where(dataCube > threshold)
+    #print dict(zip(range(0, GROUP_COUNT + 1), thresholds))
 
-        print("    Calculating values to write...")
-        numVertices =  len(Ix)
-        left_values = np.empty((numVertices), dtype=float)
-        for i in xrange(numVertices):
-            left_values[i] = dataCube[ Ix[i], Iy[i], Iz[i] ]
+    RGBA_str = "var RGBA = [\n"
 
+    f = open(outputFileName, 'w')
+    f.seek(0)
+    f.truncate()
+    f.write('var group_count = %d;\n' % GROUP_COUNT)
+    f.write('var NMK = [%d, %d, %d];\nvar points = [\n' % (N, M, K))
 
-        norm = mpl.colors.Normalize(vmin=threshold, vmax=maxValue)
-        m = cm.ScalarMappable(norm=norm, cmap=COLORMAP)
-        RGBA = m.to_rgba(left_values)
-        RGBA = (RGBA * 256).astype(int)
+    print ("Splitting to %d groups..." % GROUP_COUNT)
+    for group in xrange(1, GROUP_COUNT + 1):
+        if group % 8 == 0:
+            print ("   %d groups are done" % group)
 
-        R, G, B = RGBA[:, 0], RGBA[:, 1], RGBA[:, 2]
-
-        A = left_values
-        del(left_values)
-        A = (A - minValue) / (maxValue - minValue)
-        A = (A * 256).astype(int)
-
-        if RAREFACTION != 1:
-            X = Ix - N / 2
-        else:
-            X = 2 * Ix - N
-            # strange multiplying by 2 when rarefaction==1, it's becuase of using half of 
-            # array, not full (look at code above where array is rarefied)
-        Y = Iy - M / 2
-        Z = Iz - K / 2
+        threshold_A, threshold_B = thresholds[group - 1], thresholds[group]
+        Ix, Iy, Iz = np.where( (threshold_A <= dataCube)  & (dataCube < threshold_B) )
 
 
-        f = open(outputFileName, 'w')
-        print("    Writing to file...")
-        f.seek(0)
-        f.truncate()
-        f.write("var NMK = [%d, %d, %d]" % (N, M, K))
+        rgba = np.array(m.to_rgba(threshold_A))
+        rgba[3] = float(group)/float(GROUP_COUNT)
+        #rgba = (rgba * 256).astype(int)
 
-        f.write(";\nvar R_arr = " + str(R.tolist()).replace(" ", "")  )
-        f.write(";\nvar G_arr = " + str(G.tolist()).replace(" ", "")  )
-        f.write(";\nvar B_arr = " + str(B.tolist()).replace(" ", "")  )
-        f.write(";\nvar A_arr = " + str(A.tolist()).replace(" ", "")  )
-        f.write(";\nvar X_arr = " + str(X.tolist()).replace(" ", "")  )
-        f.write(";\nvar Y_arr = " + str(Y.tolist()).replace(" ", "")  )
-        f.write(";\nvar Z_arr = " + str(Z.tolist()).replace(" ", "")  )
+        RGBA_str += str(rgba.tolist()) + ",\n"
 
-        f.write(";\nvar numVertices = " + str(numVertices) + ";\n")
-        f.close()
+        X = (Ix - N / 2) * rarefaction
+        Y = (Iy - M / 2) * rarefaction
+        Z = (Iz - K / 2) * rarefaction
+        XYZ = np.concatenate(((X,), (Y,), (Z,)))
+        XYZ = np.reshape(a=XYZ, newshape=(-1), order='F')
+        f.write(str(XYZ.tolist()).replace(" ", "") + ",\n" )
 
-        print("    Finish writing, filename is: '%s', size of file: %.1f kB" 
-              % (outputFileName, float(os.stat(outputFileName).st_size)/1024.0) )
-        print("    Number of leftover vertices: %d,  %.2f%% from all" % (numVertices, float(numVertices * 100)/float(N * M * K)))
-
-
+    f.write("];\n")
+    RGBA_str += "];\n"
+    f.write(RGBA_str)
+    f.write('var rarefaction = %d;\n' % rarefaction)
+    f.close()
     hdf5File.close()
-    print("Finish")
+
+    print("Finish writing, filename is: '%s', size of file: %.1f MB"
+          % (outputFileName, float(os.stat(outputFileName).st_size)/1048576.0) )
+
 
 
 if __name__ == "__main__":
