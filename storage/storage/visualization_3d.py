@@ -51,7 +51,7 @@ def get_and_save_3d_points(hdf5_filename, output_filename, rarefaction, level1, 
             threshold = thresholds_dict[level]
             shape = (m, n, k)
             num_vertices, rgba, xyz = get_level(level, threshold, data_cube, rarefaction, colormap)
-            with h5py.File(output_filename, "w") as vis_file:
+            with h5py.File(output_filename, "r+") as vis_file:
                 save_level(level, vis_file, num_vertices, shape, rgba, xyz)
 
             logger.info("Number of leftover vertices: {},  {:.2f}% from all".format(
@@ -114,13 +114,13 @@ def save_level(level, hdf5_file, num_vertices, shape, rgba, xyz):
     group.attrs["m"] = m
     group.attrs["k"] = k
     group.attrs["num_vertices"] = num_vertices
-    hdf5_file.create_dataset("R", data=R, compression="gzip", compression_opts=4)
-    hdf5_file.create_dataset("G", data=G, compression="gzip", compression_opts=4)
-    hdf5_file.create_dataset("B", data=B, compression="gzip", compression_opts=4)
-    hdf5_file.create_dataset("A", data=A, compression="gzip", compression_opts=4)
-    hdf5_file.create_dataset("X", data=X, compression="gzip", compression_opts=4)
-    hdf5_file.create_dataset("Y", data=Y, compression="gzip", compression_opts=4)
-    hdf5_file.create_dataset("Z", data=Z, compression="gzip", compression_opts=4)
+    group.create_dataset("R", data=R, compression="gzip", compression_opts=4)
+    group.create_dataset("G", data=G, compression="gzip", compression_opts=4)
+    group.create_dataset("B", data=B, compression="gzip", compression_opts=4)
+    group.create_dataset("A", data=A, compression="gzip", compression_opts=4)
+    group.create_dataset("X", data=X, compression="gzip", compression_opts=4)
+    group.create_dataset("Y", data=Y, compression="gzip", compression_opts=4)
+    group.create_dataset("Z", data=Z, compression="gzip", compression_opts=4)
 
 
 def save_level_js(level, output_filename_prefix, num_vertices, shape, rgba, xyz):
