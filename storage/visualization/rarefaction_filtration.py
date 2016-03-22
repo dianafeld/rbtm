@@ -14,7 +14,7 @@ def main():
     hfd5FileInName = "largeData/hand/result.hdf5"
 
     if len(sys.argv) < 2:
-        print("usage: rarefaction.py  RAREFACTION_NUM(int) [FILTRATION_KERNEL_SIZE(int)]\nIf you don't want to rarefy, set RAREFACTION_NUM as 1\nIf you don't want to filter, set FILTRATION_KERNEL_SIZE as 1 (default value is 3)")
+        print("usage: rarefaction_filtration.py  <RAREFACTION_NUM(int)> [FILTRATION_KERNEL_SIZE(int)]\nIf you don't want to rarefy, set RAREFACTION_NUM as 1\nIf you don't want to filter, set FILTRATION_KERNEL_SIZE as 1 (default value is 3)")
         return
 
     RAREFACTION = int(sys.argv[1])

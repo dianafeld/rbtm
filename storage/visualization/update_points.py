@@ -10,16 +10,17 @@ import os
 def main():
 
     COLORMAP = cm.hsv
-    GROUP_COUNT = 128
+    GROUP_COUNT = 8
 
     hfd5FileName = "largeData/hand/result_r50.hdf5"
-    outputFileName = "largeData/hand/R50_" + str(GROUP_COUNT) + "G.js"
+    outputFileName = "on_server/R50_" + str(GROUP_COUNT) + "G.json"
 
 
     hdf5File = h5py.File(hfd5FileName, 'r')
     dataCube = hdf5File["Results"]
 
-    rarefaction = int(hdf5File["rarefaction_num"][0])
+    #rarefaction = int(hdf5File["rarefaction_num"][0])
+    rarefaction = 50
     print "Cube shape:", dataCube.shape, "  rarefaction number: ", rarefaction
 
 
@@ -41,13 +42,13 @@ def main():
 
     #print dict(zip(range(0, GROUP_COUNT + 1), thresholds))
 
-    RGBA_str = "var RGBA = [\n"
+    RGBA_str = "\"RGBA\" : [\n"
 
     f = open(outputFileName, 'w')
     f.seek(0)
     f.truncate()
-    f.write('var group_count = %d;\n' % GROUP_COUNT)
-    f.write('var NMK = [%d, %d, %d];\nvar points = [\n' % (N, M, K))
+    f.write('{\n\"group_count\" : %d,\n' % GROUP_COUNT)
+    f.write('\"NMK\" : [%d, %d, %d],\n\"points\" : [\n' % (N, M, K))
 
     print ("Splitting to %d groups..." % GROUP_COUNT)
     for group in xrange(1, GROUP_COUNT + 1):
@@ -62,19 +63,23 @@ def main():
         rgba[3] = float(group)/float(GROUP_COUNT)
         #rgba = (rgba * 256).astype(int)
 
-        RGBA_str += str(rgba.tolist()) + ",\n"
 
         X = (Ix - N / 2) * rarefaction
         Y = (Iy - M / 2) * rarefaction
         Z = (Iz - K / 2) * rarefaction
         XYZ = np.concatenate(((X,), (Y,), (Z,)))
         XYZ = np.reshape(a=XYZ, newshape=(-1), order='F')
-        f.write(str(XYZ.tolist()).replace(" ", "") + ",\n" )
+        if (group != GROUP_COUNT):
+            f.write(str(XYZ.tolist()).replace(" ", "") + ",\n" )
+            RGBA_str += str(rgba.tolist()) + ",\n"
+        else:
+            f.write(str(XYZ.tolist()).replace(" ", "") + "\n" )
+            RGBA_str += str(rgba.tolist()) + "\n"
 
-    f.write("];\n")
-    RGBA_str += "];\n"
+    f.write("],\n")
+    RGBA_str += "],\n"
     f.write(RGBA_str)
-    f.write('var rarefaction = %d;\n' % rarefaction)
+    f.write('\"rarefaction\" : %d\n}' % rarefaction)
     f.close()
     hdf5File.close()
 

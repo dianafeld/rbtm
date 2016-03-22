@@ -3,7 +3,12 @@ if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 var stats;
 
 var camera, controls, scene, renderer, uniforms, camera2, renderer2, controls2, plane, cam2_lookAt;
-var particleSystems, minThreshold = group_count * 0.75, maxThreshold = group_count;
+var particleSystems, minThreshold, maxThreshold;
+var scene_is_empty = true;
+
+
+var container = document.getElementById( 'container' );
+var for_plane = document.getElementById( 'for_plane' );
 
 var sliderElement = document.getElementById('slider');
 var sliderXElement = document.getElementById('sliderX');
@@ -12,16 +17,8 @@ var sliderZElement = document.getElementById('sliderZ');
 var sliderMinElement = document.getElementById('sliderMin');
 var sliderMaxElement = document.getElementById('sliderMax');
 
-sliderMinElement.max = group_count;
-sliderMaxElement.max = group_count;
-sliderMinElement.defaultValue = minThreshold;
-sliderMaxElement.defaultValue = maxThreshold;
 
-/*
-$("for_plane").click(function(event){
-      alert("Поздравляем! Вы починили код!");
-   });
-*/
+
 
 function sign(x) { return x < 0 ? -1 : 1; }
 
@@ -139,9 +136,6 @@ function addGrid(size, step){
 				new THREE.Vector3( i, -size, j ), new THREE.Vector3( i, size, j ),
 				new THREE.Vector3( i, j, -size ), new THREE.Vector3( i, j, size )
 			);
-
-			//var color = (i === 0 && j === 0) ? color1 : color2;
-			//geometry.colors.push( color, color, color, color, color, color );
 			if (i === 0 && j === 0){
 				var red = new THREE.Color( 0xff0000 );
 				var green = new THREE.Color( 0x00ff00 );
@@ -165,7 +159,8 @@ function addGrid(size, step){
 }
 
 init();
-animate();
+//draw();
+//animate();
 
 
 function update_visibilities()
@@ -188,33 +183,24 @@ sliderMaxElement.addEventListener('input', function () {
 function init() {
 
 
-	// variables from "numbers.js" : NMK, R_arr, G_arr, B_arr, A_arr, X_arr, Y_arr, Z_arr
-	var N = NMK[0];
-	var M = NMK[1];
-	var K = NMK[2];
-
-
-	var maxPointSize = 1.4 * rarefaction;
-
-
-
+	// variables from "numbers.js" : NMK
 
 	scene = new THREE.Scene();
 
 
-	var container = document.getElementById( 'container' );
 
 	renderer = new THREE.WebGLRenderer();
 	renderer.setPixelRatio( window.devicePixelRatio ); //need to change, we don't look at window size anymore
 	renderer.setSize( container.clientWidth, container.clientHeight );
 	renderer.sortObjects = false;
 
+
 	container.appendChild( renderer.domElement );
 
 	camera = new THREE.PerspectiveCamera( 75, container.clientWidth / container.clientHeight, 0.1, 1000 );
 
-	camera.position.z = NMK[0] * 2;
 
+	alert();
 
 	controls = new THREE.TrackballControls( camera, renderer.domElement );
 	//controls.addEventListener( 'change', render ); // add this only if there is no animation loop (requestAnimationFrame)
@@ -224,52 +210,21 @@ function init() {
 
 
 
-	var for_plane = document.getElementById( 'for_plane' );
 
 	renderer2 = new THREE.WebGLRenderer();
-	//renderer2.setPixelRatio( window.devicePixelRatio );
 	renderer2.setSize( for_plane.clientWidth,  for_plane.clientHeight );
 	renderer2.domElement.style.position = 'absolute';
 	for_plane.appendChild( renderer2.domElement );
 
 
-	camera2 = new THREE.OrthographicCamera( -400, 400, -400, 400, 1, rarefaction );
-	cam2_lookAt = new THREE.Vector3(500, 500, 500);
-	camera2.lookAt(cam2_lookAt);
-	//camera2.position.z = 0;
-	//controls2 = new THREE.TrackballControls( camera2, renderer2.domElement );
-	//controls2.target.set(300, 300, 300);
 
 
 	
-	particleSystems = [];
-	for (var g_i = 0; g_i < group_count; g_i++){
-
-		var	geometry = new THREE.BufferGeometry();
-
-		var positions_int = points[g_i];
-		var positions = new Float32Array( positions_int.length * 3 );	
-		for (var i = 0; i < positions_int.length; i++){
-			positions[i] =  positions_int[i];
-		}
-   		geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
-
-   		var rgba = RGBA[g_i];
-		var groupColor = new THREE.Color(rgba[0], rgba[1], rgba[2]);
-		var pointsMaterial = new THREE.PointsMaterial({color:groupColor, size: rgba[3]*maxPointSize});
-		var particleSystem = new THREE.Points( geometry ,pointsMaterial);
-
-		particleSystems.push(particleSystem);
-		scene.add(particleSystem);
-
-	}
-	update_visibilities()
-
 
 
 	var my_plane_geom = new THREE.PlaneGeometry( 800, 800);
-	my_plane_geom.position = camera2.position;
-	my_plane_geom.quaternion = camera2.quaternion;
+	//my_plane_geom.position = camera2.position;
+	//my_plane_geom.quaternion = camera2.quaternion;
 	var my_plane_mat = new THREE.MeshBasicMaterial( {color: 0x000000, side: THREE.DoubleSide,
 													opacity: 0.3, transparent: true} );
 	plane = new THREE.Mesh( my_plane_geom, my_plane_mat );
@@ -293,6 +248,46 @@ function init() {
 	window.addEventListener( 'resize', onWindowResize, false );
 	alert("Draw!");
 
+}
+
+function draw() {
+
+	var N = NMK[0];
+	var M = NMK[1];
+	var K = NMK[2];
+
+
+	var maxPointSize = 1.4 * rarefaction;
+	camera.position.z = NMK[0] * 2;
+
+	camera2 = new THREE.OrthographicCamera( -400, 400, -400, 400, 1, rarefaction );
+	cam2_lookAt = new THREE.Vector3(500, 500, 500);
+	camera2.lookAt(cam2_lookAt);
+
+
+	particleSystems = [];
+	for (var g_i = 0; g_i < group_count; g_i++){
+
+		var	geometry = new THREE.BufferGeometry();
+
+		var positions_int = points[g_i];
+		var positions = new Float32Array( positions_int.length * 3 );	
+		for (var i = 0; i < positions_int.length; i++){
+			positions[i] =  positions_int[i];
+		}
+   		geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+
+   		var rgba = RGBA[g_i];
+		var groupColor = new THREE.Color(rgba[0], rgba[1], rgba[2]);
+		var pointsMaterial = new THREE.PointsMaterial({color:groupColor, size: rgba[3]*maxPointSize});
+		var particleSystem = new THREE.Points( geometry ,pointsMaterial);
+
+		particleSystems.push(particleSystem);
+		scene.add(particleSystem);
+
+	}
+	update_visibilities();
+	scene_is_empty = false;
 }
 
 function onWindowResize() {
@@ -334,3 +329,61 @@ function bind_plane_with_cam2()
 	plane.quaternion.copy(camera2.quaternion);
 }
 
+
+function get_draw(filename){	
+	$.ajax({
+		url: "http://109.234.34.140:5001/take_json/" + filename,
+		async: false,
+		method: 'GET',
+		cache: false,
+		dataType: 'json',
+		success: function(data, status){
+			alert("success");
+			if (scene_is_empty == false){
+				for (var g_i = 0; g_i < group_count; g_i++){
+					scene.remove(particleSystems[g_i]);
+				}
+			}
+			group_count = data["group_count"];
+			NMK = data["NMK"];
+			points = data["points"];
+			RGBA = data["RGBA"];
+			rarefaction = data["rarefaction"];
+
+
+			minThreshold = group_count * 0.75, maxThreshold = group_count;
+			sliderMinElement.max = group_count;
+			sliderMaxElement.max = group_count;
+			sliderMinElement.defaultValue = minThreshold;
+			sliderMaxElement.defaultValue = maxThreshold;
+
+			draw();
+			animate();
+		},
+			  
+		error: function(xhr, status, error) {
+			alert(error);
+			var err = eval("(" + xhr.responseText + ")");
+			alert(err.Message);
+		},
+			//complete: function(jqXHR, status){ alert("complete!"); alert(status); alert( jqXHR.responseText);  }
+	});
+
+}
+
+$("#r5f1").click(function(event){
+	alert("waiting for data...");
+	get_draw("R5_128G.json");
+});
+$("#r5f3").click(function(event){
+	alert("waiting for data...");
+	get_draw("R5F3_128G.json");
+});
+$("#r5f5").click(function(event){
+	alert("waiting for data...");
+	get_draw("R5F5_128G.json");
+});
+$("#r50").click(function(event){
+	alert("waiting for data...");
+	get_draw("R50_8G.json");
+});
