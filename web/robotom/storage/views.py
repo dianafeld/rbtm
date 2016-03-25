@@ -9,8 +9,8 @@ import requests
 import json
 from django.shortcuts import render
 from requests.exceptions import Timeout
-from robotom.settings import STORAGE_EXPERIMENTS_GET_HOST, STORAGE_FRAMES_INFO_HOST, MEDIA_ROOT, \
-    STORAGE_FRAMES_PNG, STORAGE_EXPERIMENTS_HOST, STORAGE_HOST
+from robotom.settings import STORAGE_EXPERIMENTS_GET_HOST, STORAGE_FRAMES_INFO_HOST, MEDIA_ROOT, RECONSTRUCTION_ROOT, \
+    STORAGE_FRAMES_PNG, STORAGE_EXPERIMENTS_HOST, STORAGE_RECONSTRUCTION
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 import h5py
@@ -429,4 +429,48 @@ def record_reconstruction(request, storage_record_id):
             "Y_arr": f["6"]["Y"].value.tolist(),
             "Z_arr": f["6"]["Z"].value.tolist(),
             "num_vertices": f["6"].attrs["num_vertices"]
+        })
+
+
+def record_reconstruction_loading(request, storage_record_id):
+    return render(request, 'storage/record_reconstruction_loading.html', {
+        'record_id': storage_record_id
     })
+
+
+def record_reconstruction_downloading(request, storage_record_id):
+    file_name = storage_record_id + '.hdf5'
+    if not os.path.exists(os.path.join(RECONSTRUCTION_ROOT, file_name)):
+        try:
+            storage_logger.debug(
+                u'Получение реконструции: {}'.format(storage_record_id))
+            reconstruction_response = requests.get(STORAGE_RECONSTRUCTION.format(exp_id=storage_record_id,
+                                                                                 rarefaction=1, level1=6, level2=6),
+                                                   timeout=settings.TIMEOUT_DEFAULT, stream=True)
+            if reconstruction_response.status_code == 200:
+                temp_file = tempfile.TemporaryFile()
+                for block in reconstruction_response.iter_content(1024 * 8):
+                    if not block:
+                        break
+                    temp_file.write(block)
+                default_storage.save(os.path.join(RECONSTRUCTION_ROOT, file_name), temp_file)
+            else:
+                storage_logger.error(u'Не удается получить реконструкцию {}. Ошибка: {}'.format(
+                    storage_record_id, reconstruction_response.status_code))
+                return HttpResponseBadRequest(
+                    u'Ошибкa {} при получении реконструкции'.format(reconstruction_response.status_code),
+                    content_type='text/plain')
+        except Timeout as e:
+            storage_logger.error(
+                u'Получение реконструкции: Не удается получить реконструкцию. Ошибка: {}'.format(e.message))
+            return HttpResponseBadRequest(
+                u'Не удалось получить реконструкцию. Истекло время ожидания ответа'.format(storage_record_id),
+                content_type='text/plain')
+        except BaseException as e:
+            storage_logger.error(
+                u'Получение реконструкции: Не удается получить реконструкцию. Ошибка: {}'.format(e.message))
+            return HttpResponseBadRequest(
+                u'Не удалось получить реконструкцию. Сервер хранилища не отвечает.'.format(storage_record_id),
+                content_type='text/plain')
+
+    return HttpResponse(u'Реконструкция получена успешно', content_type='text/plain')

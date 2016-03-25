@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% load staticfiles %}
+    <p>Эксперимент загружается, подождите</p>
+    <img src="{% static 'storage/Loading.gif' %}" />
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            alert("Начало запроса");
+            $.ajax({
+                url: '{% url 'storage:record_reconstruction_downloading' record_id %}',
+                method: 'GET',
+                dataType: 'text',
+                success: function (data, textStatus, jqXHR) {
+                    alert(data + " " + textStatus + " " + jqXHR);
+                    document.location.href='{% url 'storage:record_reconstruction' record_id%}'
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert(jqXHR.responseText);
+                }
+            });
+            alert("Запрос отправлен");
+        });
+    </script>
+{% endblock content %}
