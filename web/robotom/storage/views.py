@@ -412,23 +412,21 @@ def delete_experiment(request, experiment_id):
 
 
 def record_reconstruction(request, storage_record_id):
-    with h5py.File(os.path.join(os.path.join(MEDIA_ROOT, 'reconstructions'), 'exp_id.hdf5')) as f:
-        nmk = []
-        nmk.append(f["6"].attrs["n"])
-        nmk.append(f["6"].attrs["m"])
-        nmk.append(f["6"].attrs["k"])
+    with h5py.File(os.path.join(RECONSTRUCTION_ROOT, storage_record_id + '.hdf5')) as f:
         return render(request, 'storage/record_reconstruction.html', {
             "record_id": storage_record_id,
             'caption': 'Реконструкция эксперимента ' + str(storage_record_id),
-            "nmk": nmk,
-            "R_arr": f["6"]["R"].value.tolist(),
-            "G_arr": f["6"]["G"].value.tolist(),
-            "B_arr": f["6"]["B"].value.tolist(),
-            "A_arr": f["6"]["A"].value.tolist(),
-            "X_arr": f["6"]["X"].value.tolist(),
-            "Y_arr": f["6"]["Y"].value.tolist(),
-            "Z_arr": f["6"]["Z"].value.tolist(),
-            "num_vertices": f["6"].attrs["num_vertices"]
+            "n": f["7"].attrs["n"],
+            "m": f["7"].attrs["m"],
+            "k": f["7"].attrs["k"],
+            "R_arr": map(int, f["7"]["R"].value.tolist()),
+            "G_arr": map(int, f["7"]["G"].value.tolist()),
+            "B_arr": map(int, f["7"]["B"].value.tolist()),
+            "A_arr": map(int, f["7"]["A"].value.tolist()),
+            "X_arr": map(int, f["7"]["X"].value.tolist()),
+            "Y_arr": map(int, f["7"]["Y"].value.tolist()),
+            "Z_arr": map(int, f["7"]["Z"].value.tolist()),
+            "num_vertices": f["7"].attrs["num_vertices"]
         })
 
 
@@ -445,7 +443,7 @@ def record_reconstruction_downloading(request, storage_record_id):
             storage_logger.debug(
                 u'Получение реконструции: {}'.format(storage_record_id))
             reconstruction_response = requests.get(STORAGE_RECONSTRUCTION.format(exp_id=storage_record_id,
-                                                                                 rarefaction=1, level1=6, level2=6),
+                                                                                 rarefaction=1, level1=7, level2=7),
                                                    timeout=settings.TIMEOUT_DEFAULT, stream=True)
             if reconstruction_response.status_code == 200:
                 temp_file = tempfile.TemporaryFile()

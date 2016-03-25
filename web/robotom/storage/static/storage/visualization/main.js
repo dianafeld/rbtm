@@ -174,19 +174,10 @@ function addGrid(size, step){
 function init() {
 
 
-	// variables from "numbers.js" : NMK, R_arr, G_arr, B_arr, A_arr, X_arr, Y_arr, Z_arr
-	var N = NMK[0];
-	var M = NMK[1];
-	var K = NMK[2];
-
-
+	// variables from "numbers.js" : N, M, K, R_arr, G_arr, B_arr, A_arr, X_arr, Y_arr, Z_arr
 	var medianPointSize =  1;
 
-
-
-
 	scene = new THREE.Scene();
-
 
 	var container = document.getElementById( 'container' );
 
@@ -214,6 +205,7 @@ function init() {
 	renderer2 = new THREE.WebGLRenderer();
 	//renderer2.setPixelRatio( window.devicePixelRatio );
 	renderer2.setSize( for_plane.clientWidth,  for_plane.clientHeight );
+	renderer2.domElement.style.position = 'absolute';
 	for_plane.appendChild( renderer2.domElement );
 
 
@@ -253,7 +245,7 @@ function init() {
 
 	var shaderMaterial = new THREE.RawShaderMaterial( {
 
-		uniforms: { 
+		uniforms: {
 			time: { type: "f", value: 1.0 },
 			median_pSize:  { type: "f", value: medianPointSize },
 		},
@@ -277,17 +269,23 @@ function init() {
 	scene.add( camera2 );
 
 
-	addGrid(400, 200);
+	addGrid(400, 100);
 	addNumbers(400, 100);
 
 
-	//  странно, но можно удалить dom-элемент, но не сам елемент stats
+	//  add  FPS stats in upper left corner, can delete it
 	stats = new Stats();
+	stats.domElement.style.position = 'absolute';
+	stats.domElement.style.top = '0px';
+	stats.domElement.style.zIndex = 100;
+	container.appendChild( stats.domElement );
 
 
 	window.addEventListener( 'resize', onWindowResize, false );
 	alert("Draw!");
-    onWindowResize(); //без этого оно почему-то сразу не отрисовывается.
+
+    //без этого не начинается отрисовка
+    onWindowResize();
 }
 
 function onWindowResize() {
