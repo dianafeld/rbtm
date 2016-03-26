@@ -416,17 +416,17 @@ def record_reconstruction(request, storage_record_id):
         return render(request, 'storage/record_reconstruction.html', {
             "record_id": storage_record_id,
             'caption': 'Реконструкция эксперимента ' + str(storage_record_id),
-            "n": f["7"].attrs["n"],
-            "m": f["7"].attrs["m"],
-            "k": f["7"].attrs["k"],
-            "R_arr": map(int, f["7"]["R"].value.tolist()),
-            "G_arr": map(int, f["7"]["G"].value.tolist()),
-            "B_arr": map(int, f["7"]["B"].value.tolist()),
-            "A_arr": map(int, f["7"]["A"].value.tolist()),
-            "X_arr": map(int, f["7"]["X"].value.tolist()),
-            "Y_arr": map(int, f["7"]["Y"].value.tolist()),
-            "Z_arr": map(int, f["7"]["Z"].value.tolist()),
-            "num_vertices": f["7"].attrs["num_vertices"]
+            "n": f["10"].attrs["n"],
+            "m": f["10"].attrs["m"],
+            "k": f["10"].attrs["k"],
+            "R_arr": map(int, f["10"]["R"].value.tolist()),
+            "G_arr": map(int, f["10"]["G"].value.tolist()),
+            "B_arr": map(int, f["10"]["B"].value.tolist()),
+            "A_arr": map(int, f["10"]["A"].value.tolist()),
+            "X_arr": map(int, f["10"]["X"].value.tolist()),
+            "Y_arr": map(int, f["10"]["Y"].value.tolist()),
+            "Z_arr": map(int, f["10"]["Z"].value.tolist()),
+            "num_vertices": f["10"].attrs["num_vertices"]
         })
 
 
@@ -443,7 +443,7 @@ def record_reconstruction_downloading(request, storage_record_id):
             storage_logger.debug(
                 u'Получение реконструции: {}'.format(storage_record_id))
             reconstruction_response = requests.get(STORAGE_RECONSTRUCTION.format(exp_id=storage_record_id,
-                                                                                 rarefaction=1, level1=7, level2=7),
+                                                                                 rarefaction=1, level1=10, level2=10),
                                                    timeout=settings.TIMEOUT_DEFAULT, stream=True)
             if reconstruction_response.status_code == 200:
                 temp_file = tempfile.TemporaryFile()
