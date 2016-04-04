@@ -3,5 +3,6 @@ largeData/*
 !largeData/hand
 largeData/hand/*
 !largeData/hand/result_r50.hdf5
-
+on_server/*
+!on_server/F1R50.json
 

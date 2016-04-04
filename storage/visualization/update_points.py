@@ -10,17 +10,17 @@ import os
 def main():
 
     COLORMAP = cm.hsv
-    GROUP_COUNT = 8
+    GROUP_COUNT = 128
 
     hfd5FileName = "largeData/hand/result_r50.hdf5"
-    outputFileName = "on_server/R50_" + str(GROUP_COUNT) + "G.json"
+    outputFileName = "on_server/F1R50.json"
 
 
     hdf5File = h5py.File(hfd5FileName, 'r')
     dataCube = hdf5File["Results"]
 
-    #rarefaction = int(hdf5File["rarefaction_num"][0])
-    rarefaction = 50
+    rarefaction = int(hdf5File["rarefaction_num"][0])
+    
     print "Cube shape:", dataCube.shape, "  rarefaction number: ", rarefaction
 
 

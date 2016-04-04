@@ -1,14 +1,14 @@
 if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
-var stats;
+//var stats;
 
 var camera, controls, scene, renderer, uniforms, camera2, renderer2, controls2, plane, cam2_lookAt;
 var particleSystems, minThreshold, maxThreshold;
 var scene_is_empty = true;
 
 
-var container = document.getElementById( 'container' );
-var for_plane = document.getElementById( 'for_plane' );
+var vis_area = document.getElementById( 'vis_area' );
+var section_area = document.getElementById( 'section_area' );
 
 var sliderElement = document.getElementById('slider');
 var sliderXElement = document.getElementById('sliderX');
@@ -16,7 +16,8 @@ var sliderYElement = document.getElementById('sliderY');
 var sliderZElement = document.getElementById('sliderZ');
 var sliderMinElement = document.getElementById('sliderMin');
 var sliderMaxElement = document.getElementById('sliderMax');
-
+var sliderFiltration = document.getElementById('sliderF');
+var sliderRarefaction = document.getElementById('sliderR');
 
 
 
@@ -31,20 +32,23 @@ sliderElement.addEventListener('input', function () {
 	var coef = sign(n.x) * sign(n.y) * sign(n.z);
 	n.multiplyScalar(  coef *  distance );
 	camera2.position.copy(n);
-	document.getElementById('slider_out').innerHTML = sliderElement.value;
+	$("#plane_pos_val").text(sliderElement.value);
 }, false);
 
 sliderXElement.addEventListener('input', function () {
 	cam2_lookAt.x = sliderXElement.value * 500;
 	camera2.lookAt(cam2_lookAt);
+	$("#plane_X_val").text(sliderXElement.value);
 }, false);
 sliderYElement.addEventListener('input', function () {
 	cam2_lookAt.y = sliderYElement.value * 500;
 	camera2.lookAt(cam2_lookAt);
+	$("#plane_Y_val").text(sliderYElement.value);
 }, false);
 sliderZElement.addEventListener('input', function () {
 	cam2_lookAt.z = sliderZElement.value * 500;
 	camera2.lookAt(cam2_lookAt);
+	$("#plane_Z_val").text(sliderZElement.value);
 }, false);
 
 function makeTextSprite( message, parameters )
@@ -53,9 +57,9 @@ function makeTextSprite( message, parameters )
     var fontface = parameters.hasOwnProperty("fontface") ? parameters["fontface"] : "Arial";
     var fontsize = parameters.hasOwnProperty("fontsize") ? parameters["fontsize"] : 70;
     var borderThickness = parameters.hasOwnProperty("borderThickness") ? parameters["borderThickness"] : 4;
-    var borderColor = parameters.hasOwnProperty("borderColor") ?parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
-    var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
-    var textColor = parameters.hasOwnProperty("textColor") ?parameters["textColor"] : { r:0, g:0, b:0, a:1.0 };
+    var borderColor = parameters.hasOwnProperty("borderColor") ? parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
+    var backgroundColor = parameters.hasOwnProperty("backgroundColor") ? parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
+    var textColor = parameters.hasOwnProperty("textColor") ? parameters["textColor"] : { r:0, g:0, b:0, a:1.0 };
 
     var canvas = document.createElement('canvas');
     var context = canvas.getContext('2d');
@@ -169,14 +173,32 @@ function update_visibilities()
 		particleSystems[i_g].visible = (minThreshold <= i_g && i_g < maxThreshold);
 	}
 }
+
+function to_percents(number)
+{
+	var rounded = Math.round(number * 1000);
+	var fractional = rounded % 10;
+	var integral = Math.floor(rounded/10);
+	return integral + "." + fractional + "%";
+}
+
 sliderMinElement.addEventListener('input', function () {
 	minThreshold = sliderMinElement.value;
+	$("#lower_bound_val").text( to_percents( RGBA[ sliderMinElement.value ][3] ) );
 	update_visibilities()
 }, false);
 
 sliderMaxElement.addEventListener('input', function () {
 	maxThreshold = sliderMaxElement.value;
+	$("#upper_bound_val").text( to_percents( RGBA[ sliderMaxElement.value ][3] ) );
 	update_visibilities()
+}, false);
+
+sliderFiltration.addEventListener('input', function () {
+	$("#filtration_val").text(sliderFiltration.value);
+}, false);
+sliderRarefaction.addEventListener('input', function () {
+	$("#rarefaction_val").text(sliderRarefaction.value);
 }, false);
 
 
@@ -191,16 +213,14 @@ function init() {
 
 	renderer = new THREE.WebGLRenderer();
 	renderer.setPixelRatio( window.devicePixelRatio ); //need to change, we don't look at window size anymore
-	renderer.setSize( container.clientWidth, container.clientHeight );
+	renderer.setSize( vis_area.clientWidth, vis_area.clientHeight );
 	renderer.sortObjects = false;
+	//alert();
 
+	vis_area.appendChild( renderer.domElement );
+	renderer.domElement.style.visibility = "hidden";
+	camera = new THREE.PerspectiveCamera( 75, vis_area.clientWidth / vis_area.clientHeight, 0.1, 2000 );
 
-	container.appendChild( renderer.domElement );
-
-	camera = new THREE.PerspectiveCamera( 75, container.clientWidth / container.clientHeight, 0.1, 1000 );
-
-
-	alert();
 
 	controls = new THREE.TrackballControls( camera, renderer.domElement );
 	//controls.addEventListener( 'change', render ); // add this only if there is no animation loop (requestAnimationFrame)
@@ -212,19 +232,14 @@ function init() {
 
 
 	renderer2 = new THREE.WebGLRenderer();
-	renderer2.setSize( for_plane.clientWidth,  for_plane.clientHeight );
+	renderer2.setSize( section_area.clientWidth,  section_area.clientHeight );
 	renderer2.domElement.style.position = 'absolute';
-	for_plane.appendChild( renderer2.domElement );
-
-
-
+	section_area.appendChild( renderer2.domElement );
 
 	
 
 
 	var my_plane_geom = new THREE.PlaneGeometry( 800, 800);
-	//my_plane_geom.position = camera2.position;
-	//my_plane_geom.quaternion = camera2.quaternion;
 	var my_plane_mat = new THREE.MeshBasicMaterial( {color: 0x000000, side: THREE.DoubleSide,
 													opacity: 0.3, transparent: true} );
 	plane = new THREE.Mesh( my_plane_geom, my_plane_mat );
@@ -236,16 +251,7 @@ function init() {
 	addNumbers(400, 200);
 
 
-
-	//  add  FPS stats in upper left corner, can delete it
-	stats = new Stats();
-	stats.domElement.style.position = 'absolute';
-	stats.domElement.style.top = '0px';
-	stats.domElement.style.zIndex = 100;
-	container.appendChild( stats.domElement );
-
-
-	window.addEventListener( 'resize', onWindowResize, false );
+	//window.addEventListener( 'resize', onWindowResize, false );
 	alert("Draw!");
 
 }
@@ -260,7 +266,7 @@ function draw() {
 	var maxPointSize = 1.4 * rarefaction;
 	camera.position.z = NMK[0] * 2;
 
-	camera2 = new THREE.OrthographicCamera( -400, 400, -400, 400, 1, rarefaction );
+	camera2 = new THREE.OrthographicCamera( -400, 400, -400, 400, 1, (rarefaction  + 1)/2);
 	cam2_lookAt = new THREE.Vector3(500, 500, 500);
 	camera2.lookAt(cam2_lookAt);
 
@@ -292,10 +298,10 @@ function draw() {
 
 function onWindowResize() {
 	//need to change, also we don't look at window size anymore
-	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.aspect = vis_area.innerWidth / vis_area.innerHeight;
 	camera.updateProjectionMatrix();
 
-	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.setSize( vis_area.innerWidth, vis_area.innerHeight );
 
 }
 
@@ -306,7 +312,7 @@ function animate() {
 	//controls.update(); // required if controls.enableDamping = true, or if controls.autoRotate = true
 	//controls2.update(); // required if controls.enableDamping = true, or if controls.autoRotate = true
 	controls.update();
-	stats.update();
+	//stats.update();
 
 	bind_plane_with_cam2();
 	render();
@@ -338,6 +344,8 @@ function get_draw(filename){
 		cache: false,
 		dataType: 'json',
 		success: function(data, status){
+			$("#default_text").css('display', 'none');
+			renderer.domElement.style.visibility = "visible";
 			alert("success");
 			if (scene_is_empty == false){
 				for (var g_i = 0; g_i < group_count; g_i++){
@@ -371,19 +379,8 @@ function get_draw(filename){
 
 }
 
-$("#r5f1").click(function(event){
+$("#btn_Apply").click(function(event){
+	var filename = "F" + sliderFiltration.value + "R" + sliderRarefaction.value + ".json";
 	alert("waiting for data...");
-	get_draw("R5_128G.json");
-});
-$("#r5f3").click(function(event){
-	alert("waiting for data...");
-	get_draw("R5F3_128G.json");
-});
-$("#r5f5").click(function(event){
-	alert("waiting for data...");
-	get_draw("R5F5_128G.json");
-});
-$("#r50").click(function(event){
-	alert("waiting for data...");
-	get_draw("R50_8G.json");
+	get_draw(filename);
 });
