@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% load staticfiles %}
+    <div class="container">
+        <div class="alert alert-info" id="LoadStatus">Пожалуйста, подождите. Эксперимент загружается.</div>
+        <img src="{% static 'storage/Loading.gif' %}" />
+    </div>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var status = document.getElementById("LoadStatus");
+            $.ajax({
+                url: '{% url 'storage:record_reconstruction_downloading' record_id %}',
+                method: 'GET',
+                dataType: 'text',
+                success: function (data, textStatus, jqXHR) {
+                    status.innerText = "Эксперимент загружен, перенаправление на страницу эксперимента...";
+                    status.className = "alert alert-success";
+                    document.location.href='{% url 'storage:record_reconstruction' record_id%}';
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert(jqXHR.responseText);
+                    status.innerText = "Ошибка загрузки эксперимента, попробуйте перезагрузить страницу.";
+                    status.className = "alert alert-danger"
+                }
+            });
+        });
+    </script>
+{% endblock content %}

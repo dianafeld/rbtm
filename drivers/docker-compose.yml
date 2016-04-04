@@ -4,6 +4,9 @@ server:
   ports:
     - "10001:10000"
   restart: unless-stopped
+  volumes:
+    - "/dev/ximc/0000037A:/dev/ximc/0000037A"
+    - "/dev/ximc/00000271:/dev/ximc/00000271"
   devices:
     - "/dev/ttyACM2:/dev/ttyACM2"
     - "/dev/ttyACM1:/dev/ttyACM1"
