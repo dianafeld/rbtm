@@ -11,7 +11,7 @@ import scipy.signal
 
 def main():
 
-    hfd5FileInName = "largeData/hand/result.hdf5"
+    hfd5FileInName = "largeData/hand/result_f7.hdf5"
 
     if len(sys.argv) < 2:
         print("usage: rarefaction_filtration.py  <RAREFACTION_NUM(int)>\nIf you don't want to rarefy, set RAREFACTION_NUM as 1")

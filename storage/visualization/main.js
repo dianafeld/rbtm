@@ -18,6 +18,7 @@ var sliderMinElement = document.getElementById('sliderMin');
 var sliderMaxElement = document.getElementById('sliderMax');
 var sliderFiltration = document.getElementById('sliderF');
 var sliderRarefaction = document.getElementById('sliderR');
+var sliderNewRarefaction = document.getElementById('sliderNewR');
 
 
 
@@ -174,24 +175,61 @@ function update_visibilities()
 	}
 }
 
-function to_percents(number)
+function big_num_repr(number)
 {
-	var rounded = Math.round(number * 1000);
-	var fractional = rounded % 10;
-	var integral = Math.floor(rounded/10);
-	return integral + "." + fractional + "%";
+	var result = number + " ";
+	if (number >= 1000){
+		if (number < 1000000){
+			var rounded = Math.round(number / 100);
+			var fractional = rounded % 10;
+			var integral = Math.floor(rounded/10);
+			result = integral + "." + fractional + "k"
+		}
+		else{
+			var rounded = Math.round(number / 100000);
+			var fractional = rounded % 10;
+			var integral = Math.floor(rounded/10);
+			result = integral + "." + fractional + "m"
+		}
+	}
+	return result;
+}
+
+function estimate_new_point_count()
+{
+	var R = rarefaction;
+	var newR = sliderNewRarefaction.value;
+	var cur_point_count = COUNT[maxThreshold] - COUNT[minThreshold];
+
+	var new_point_count = Math.round(cur_point_count * R*R*R / (newR*newR*newR));
+	$("#n_p_cnt_val").text( big_num_repr(new_point_count) );
 }
 
 sliderMinElement.addEventListener('input', function () {
-	minThreshold = sliderMinElement.value;
-	$("#lower_bound_val").text( to_percents( RGBA[ sliderMinElement.value ][3] ) );
-	update_visibilities()
+	minThreshold = +sliderMinElement.value;
+	$("#lower_bound_val").text(minThreshold + "%");
+	update_visibilities();
+	//alert(minThreshold + "   " + maxThreshold);
+
+	if (maxThreshold >= minThreshold){
+		point_count = COUNT[maxThreshold] - COUNT[minThreshold];
+		max_count = COUNT[group_count];
+		$("#p_cnt_val").text(big_num_repr(point_count) + " / " + big_num_repr(max_count));
+		estimate_new_point_count();
+	}
 }, false);
 
 sliderMaxElement.addEventListener('input', function () {
-	maxThreshold = sliderMaxElement.value;
-	$("#upper_bound_val").text( to_percents( RGBA[ sliderMaxElement.value ][3] ) );
-	update_visibilities()
+	maxThreshold = +sliderMaxElement.value;
+	$("#upper_bound_val").text(maxThreshold + "%");
+	update_visibilities();
+	//alert(minThreshold + "   " + maxThreshold);
+	if (maxThreshold >= minThreshold){
+		point_count = COUNT[maxThreshold] - COUNT[minThreshold];
+		max_count = COUNT[group_count];
+		$("#p_cnt_val").text(big_num_repr(point_count) + " / " + big_num_repr(max_count));
+		estimate_new_point_count();
+	}
 }, false);
 
 sliderFiltration.addEventListener('input', function () {
@@ -199,6 +237,10 @@ sliderFiltration.addEventListener('input', function () {
 }, false);
 sliderRarefaction.addEventListener('input', function () {
 	$("#rarefaction_val").text(sliderRarefaction.value);
+}, false);
+sliderNewRarefaction.addEventListener('input', function () {
+	$("#new_rar_val").text(sliderNewRarefaction.value);
+	estimate_new_point_count();
 }, false);
 
 
@@ -357,6 +399,7 @@ function get_draw(filename){
 			points = data["points"];
 			RGBA = data["RGBA"];
 			rarefaction = data["rarefaction"];
+			COUNT = data["COUNT"];
 
 
 			minThreshold = group_count * 0.75, maxThreshold = group_count;
@@ -380,7 +423,111 @@ function get_draw(filename){
 }
 
 $("#btn_Apply").click(function(event){
-	var filename = "F" + sliderFiltration.value + "R" + sliderRarefaction.value + ".json";
+	var filename = "!F" + sliderFiltration.value + "R" + sliderRarefaction.value + ".json";
 	alert("waiting for data...");
 	get_draw(filename);
+});
+
+/*
+$("#btn_Cut").click(function(event){
+
+	alert("waiting for data...");
+
+	//$.post("http://109.234.34.140:5001/cut", JSON.stringify({ lb: sliderMinElement.value, ub: sliderMaxElement.value, fil: sliderFiltration.value, rar: sliderRarefaction.value }) );
+	///*
+	var data = {'data': JSON.stringify({ lb: sliderMinElement.value, ub: sliderMaxElement.value, fil: sliderFiltration.value, rar: sliderRarefaction.value })}
+	$.ajax({
+		url: "http://109.234.34.140:5001/cut",
+		async: false,
+		method: 'POST',
+		cache: false,
+		//data: "lb=" + sliderMinElement.value + "&ub=" + sliderMaxElement.value + "&fil=" + sliderFiltration.value + "&rar=" + sliderRarefaction.value,
+		//data: JSON.stringify({ lb: sliderMinElement.value, ub: sliderMaxElement.value, fil: sliderFiltration.value, rar: sliderRarefaction.value }),
+		data: data,
+		contentType: "application/json; charset=utf-8",
+    	dataType: "json",
+    	crossDomain: true,
+    	//contentType : 'application/json',
+		//{ lb: sliderMinElement.value, ub: sliderMaxElement.value, fil: sliderFiltration.value, rar: sliderRarefaction.value } ,
+		success: function(data, status){
+			$("#default_text").css('display', 'none');
+			renderer.domElement.style.visibility = "visible";
+			alert("success");
+			if (scene_is_empty == false){
+				for (var g_i = 0; g_i < group_count; g_i++){
+					scene.remove(particleSystems[g_i]);
+				}
+			}
+			group_count = data["group_count"];
+			NMK = data["NMK"];
+			points = data["points"];
+			RGBA = data["RGBA"];
+			rarefaction = data["rarefaction"];
+
+
+			minThreshold = group_count * 0.75, maxThreshold = group_count;
+			sliderMinElement.max = group_count;
+			sliderMaxElement.max = group_count;
+			sliderMinElement.defaultValue = minThreshold;
+			sliderMaxElement.defaultValue = maxThreshold;
+
+			draw();
+			animate();
+		},
+			  
+		error: function(xhr, status, error) {
+			alert(error);
+			var err = eval("(" + xhr.responseText + ")");
+			alert(err.Message);
+		},
+			//complete: function(jqXHR, status){ alert("complete!"); alert(status); alert( jqXHR.responseText);  }
+	});
+		//
+});
+*/
+
+$("#btn_Cut").click(function(event){
+
+	alert("waiting for data...");
+
+	$.ajax({
+		url: "http://109.234.34.140:5001/cut/" + sliderFiltration.value + '/' + sliderNewRarefaction.value + '/' + (Math.round(sliderMinElement.value * 100/group_count)) + '/' + (Math.round(sliderMaxElement.value*100/group_count)),
+		async: false,
+		method: 'GET',
+		cache: false,
+		success: function(data, status){
+			$("#default_text").css('display', 'none');
+			renderer.domElement.style.visibility = "visible";
+			alert("success");
+			if (scene_is_empty == false){
+				for (var g_i = 0; g_i < group_count; g_i++){
+					scene.remove(particleSystems[g_i]);
+				}
+			}
+			group_count = data["group_count"];
+			NMK = data["NMK"];
+			points = data["points"];
+			RGBA = data["RGBA"];
+			rarefaction = data["rarefaction"];
+			COUNT = data["COUNT"];
+
+
+			minThreshold = group_count * 0.75, maxThreshold = group_count;
+			sliderMinElement.max = group_count;
+			sliderMaxElement.max = group_count;
+			sliderMinElement.defaultValue = minThreshold;
+			sliderMaxElement.defaultValue = maxThreshold;
+
+			draw();
+			animate();
+		},
+			  
+		error: function(xhr, status, error) {
+			alert(error);
+			var err = eval("(" + xhr.responseText + ")");
+			alert(err.Message);
+		},
+			//complete: function(jqXHR, status){ alert("complete!"); alert(status); alert( jqXHR.responseText);  }
+	});
+		//*/
 });
