@@ -1,8 +1,8 @@
+filtration.py
 largeData/*
 !largeData/hand
 largeData/hand/*
-!largeData/hand/RF1_LVL23.js
-!largeData/hand/R50_8G.js
 !largeData/hand/result_r50.hdf5
-
+on_server/*
+!on_server/F1R50.json
 

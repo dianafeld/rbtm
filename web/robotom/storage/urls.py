@@ -10,5 +10,13 @@ urlpatterns = patterns('',
                        url(r'^delete_experiment_(?P<experiment_id>[a-zA-Z\d\-]+)/$', views.delete_experiment,
                            name='delete_experiment'),
                        url(r'^record_reconstruction_(?P<storage_record_id>[a-zA-Z\d\-]+)/$', views.record_reconstruction,
-                           name='record_reconstruction')
+                           name='record_reconstruction'),
+                       url(r'^record_reconstruction_loading_(?P<storage_record_id>[a-zA-Z\d\-]+)/$',
+                           views.record_reconstruction_loading,
+                           name='record_reconstruction_loading'
+                           ),
+                       url(r'^record_reconstruction_downloading_(?P<storage_record_id>[a-zA-Z\d\-]+)/$',
+                           views.record_reconstruction_downloading,
+                           name='record_reconstruction_downloading'
+                           )
                        )
