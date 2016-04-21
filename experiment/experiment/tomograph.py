@@ -422,8 +422,8 @@ class Tomograph:
         logger.info('With open shutter: ' + str(with_open_shutter))
         self.basic_tomo_check(from_experiment)
 
-        if with_open_shutter == True:
-            self.open_shutter(0, from_experiment=from_experiment, exp_is_advanced=exp_is_advanced)
+        # if with_open_shutter == True:
+        #     self.open_shutter(0, from_experiment=from_experiment, exp_is_advanced=exp_is_advanced)
         
         time.sleep(0.2)
         # Tomograph takes exposure multiplied by 10 and rounded
@@ -437,8 +437,9 @@ class Tomograph:
         except Exception as e:
             raise e
         finally:
-            if with_open_shutter == True:
-                self.close_shutter(0, from_experiment=from_experiment, exp_is_advanced=exp_is_advanced)
+            pass
+            # if with_open_shutter == True:
+            #     self.close_shutter(0, from_experiment=from_experiment, exp_is_advanced=exp_is_advanced)
 
         try:
             frame_metadata = json.loads(frame_metadata_json)

@@ -3,10 +3,12 @@ server:
   #hostname: rbtm-tango
   ports:
     - "10001:10000"
+  #  - "3306:3306"
   restart: unless-stopped
   volumes:
     - "/dev/ximc/0000037A:/dev/ximc/0000037A"
     - "/dev/ximc/00000271:/dev/ximc/00000271"
+    - "./logs:/var/log/supervisor"
   devices:
     - "/dev/ttyACM2:/dev/ttyACM2"
     - "/dev/ttyACM1:/dev/ttyACM1"

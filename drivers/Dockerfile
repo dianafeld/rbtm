@@ -50,6 +50,9 @@ RUN ln -s /var/www/drivers/package/include /usr/include/m3api
 RUN wget http://files.ximc.ru/libximc/ximc-2.8.7.tar.gz && tar -zxvf ximc-2.8.7.tar.gz && \
     cd ximc-2.8.7/ximc/deb && dpkg -i libximc7_2.8.7-1_amd64.deb libximc7-dev_2.8.7-1_amd64.deb && apt-get install -f
 
+ENV TZ=Europe/Moscow
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 COPY . /var/www/drivers/
 
 RUN cp drivers_supervisord.conf /etc/supervisor/conf.d/

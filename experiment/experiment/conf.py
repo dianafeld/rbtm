@@ -20,7 +20,7 @@ REAL_TOMOGRAPH_STORAGE_WEBPAGE = True
 
 if REAL_TOMOGRAPH_STORAGE_WEBPAGE == True:
     
-    TOMO_ADDR = "172.17.0.1:10000"
+    TOMO_ADDR = "drivers_server_1:10000"
 
     STORAGE_FRAMES_URI = "http://10.0.7.153:5006/storage/frames/post"
     STORAGE_EXP_START_URI = "http://10.0.7.153:5006/storage/experiments/create"

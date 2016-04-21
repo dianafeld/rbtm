@@ -11,26 +11,26 @@ def handle_error(error, func_name):
         error_code, error_desc = error
         make_exception("XRaySource_UnexpectedValue", error_desc, func_name)
 
-
+TIMEOUT = 10
 class Source(object):
 
     def __init__(self, tty_name):
         self.tty_name = tty_name
 
     def on_high_voltage(self):
-        with serial.Serial(self.tty_name) as serial_port:
+        with serial.Serial(self.tty_name, timeout=TIMEOUT) as serial_port:
             serial_port.write("HV:1\n")
             error = self._get_error(serial_port)  
         handle_error(error, "Source.on_high_voltage()")
         
     def off_high_voltage(self):
-        with serial.Serial(self.tty_name) as serial_port:
+        with serial.Serial(self.tty_name, timeout=TIMEOUT) as serial_port:
             serial_port.write("HV:0\n")
             error = self._get_error(serial_port)
         handle_error(error, "Source.off_high_voltage()")
 
     def is_on_high_volatge(self):
-        with serial.Serial(self.tty_name) as serial_port:
+        with serial.Serial(self.tty_name, timeout=TIMEOUT) as serial_port:
             serial_port.write("SR:01\n")
             answer = self.get_data_string(serial_port)
             error = self._get_error(serial_port)
@@ -38,7 +38,7 @@ class Source(object):
         return self.get_number(answer) & 64 != 0
 
     def get_nominal_voltage(self):
-        with serial.Serial(self.tty_name) as serial_port:
+        with serial.Serial(self.tty_name, timeout=TIMEOUT) as serial_port:
             serial_port.write("VN\n")
             answer = self.get_data_string(serial_port)
             error = self._get_error(serial_port)
@@ -46,7 +46,7 @@ class Source(object):
         return self.get_number(answer) / 100
 
     def get_actual_voltage(self):
-        with serial.Serial(self.tty_name) as serial_port:
+        with serial.Serial(self.tty_name, timeout=TIMEOUT) as serial_port:
             serial_port.write("VA\n")
             answer = self.get_data_string(serial_port)
             error = self._get_error(serial_port)
@@ -54,7 +54,7 @@ class Source(object):
         return self.get_number(answer) / 100
 
     def get_nominal_current(self):
-        with serial.Serial(self.tty_name) as serial_port:
+        with serial.Serial(self.tty_name, timeout=TIMEOUT) as serial_port:
             serial_port.write("CN\n")
             answer = self.get_data_string(serial_port)
             error = self._get_error(serial_port)
@@ -62,7 +62,7 @@ class Source(object):
         return self.get_number(answer) / 100
 
     def get_actual_current(self):
-        with serial.Serial(self.tty_name) as serial_port:
+        with serial.Serial(self.tty_name, timeout=TIMEOUT) as serial_port:
             serial_port.write("CA\n")
             answer = self.get_data_string(serial_port)
             error = self._get_error(serial_port)
@@ -71,29 +71,36 @@ class Source(object):
 
     def set_voltage(self, voltage):
         command = "SV:" + str(voltage*100).zfill(6) + "\n"
-        with serial.Serial(self.tty_name) as serial_port:
+        with serial.Serial(self.tty_name, timeout=TIMEOUT) as serial_port:
             serial_port.write(command)
             error = self._get_error(serial_port)
         handle_error(error, "Source.set_voltage()")
 
     def set_current(self, current):
         command = "SC:" + str(current*100).zfill(6) + "\n"
-        with serial.Serial(self.tty_name) as serial_port:
+        with serial.Serial(self.tty_name, timeout=TIMEOUT) as serial_port:
             serial_port.write(command)
             error = self._get_error(serial_port)
         handle_error(error, "Source.set_current()")
 
-
     def get_id(self):
-        with serial.Serial(self.tty_name) as serial_port:
+        with serial.Serial(self.tty_name, timeout=TIMEOUT) as serial_port:
             serial_port.write("ID\n")
             answer = self.get_data_string(serial_port)
             error = self._get_error(serial_port)
         handle_error(error, "Source.get_id()")
         return answer 
 
+    def get_tube_name(self):
+        with serial.Serial(self.tty_name, timeout=TIMEOUT) as serial_port:
+            serial_port.write("XT\n")
+            answer = self.get_data_string(serial_port)
+            error = self._get_error(serial_port)
+        handle_error(error, "Source.get_tube_name()")
+        return answer
+
     def get_error(self):
-        with serial.Serial(self.tty_name) as serial_port:
+        with serial.Serial(self.tty_name, timeout=TIMEOUT) as serial_port:
             return self._get_error(serial_port)
 
     def _get_error(self, serial_port):
