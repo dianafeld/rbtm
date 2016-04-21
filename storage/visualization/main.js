@@ -285,12 +285,12 @@ function init() {
 	var my_plane_mat = new THREE.MeshBasicMaterial( {color: 0x000000, side: THREE.DoubleSide,
 													opacity: 0.3, transparent: true} );
 	plane = new THREE.Mesh( my_plane_geom, my_plane_mat );
-	scene.add( plane );
-	scene.add( camera2 );
+	//scene.add( plane );
+	//scene.add( camera2 );
 
 
-	addGrid(400, 200);
-	addNumbers(400, 200);
+	//addGrid(400, 200);
+	//addNumbers(400, 200);
 
 
 	//window.addEventListener( 'resize', onWindowResize, false );
@@ -377,10 +377,12 @@ function bind_plane_with_cam2()
 	plane.quaternion.copy(camera2.quaternion);
 }
 
+//var SERVER_URI = "http://109.234.34.140:5001"
+var SERVER_URI = "http://localhost:5001"
 
 function get_draw(filename){	
 	$.ajax({
-		url: "http://109.234.34.140:5001/take_json/" + filename,
+		url: SERVER_URI + "/take_json/" + filename,
 		async: false,
 		method: 'GET',
 		cache: false,
@@ -423,75 +425,17 @@ function get_draw(filename){
 }
 
 $("#btn_Apply").click(function(event){
-	var filename = "!F" + sliderFiltration.value + "R" + sliderRarefaction.value + ".json";
+	var filename = "F" + sliderFiltration.value + "R" + sliderRarefaction.value + ".json";
 	alert("waiting for data...");
 	get_draw(filename);
 });
 
-/*
-$("#btn_Cut").click(function(event){
-
-	alert("waiting for data...");
-
-	//$.post("http://109.234.34.140:5001/cut", JSON.stringify({ lb: sliderMinElement.value, ub: sliderMaxElement.value, fil: sliderFiltration.value, rar: sliderRarefaction.value }) );
-	///*
-	var data = {'data': JSON.stringify({ lb: sliderMinElement.value, ub: sliderMaxElement.value, fil: sliderFiltration.value, rar: sliderRarefaction.value })}
-	$.ajax({
-		url: "http://109.234.34.140:5001/cut",
-		async: false,
-		method: 'POST',
-		cache: false,
-		//data: "lb=" + sliderMinElement.value + "&ub=" + sliderMaxElement.value + "&fil=" + sliderFiltration.value + "&rar=" + sliderRarefaction.value,
-		//data: JSON.stringify({ lb: sliderMinElement.value, ub: sliderMaxElement.value, fil: sliderFiltration.value, rar: sliderRarefaction.value }),
-		data: data,
-		contentType: "application/json; charset=utf-8",
-    	dataType: "json",
-    	crossDomain: true,
-    	//contentType : 'application/json',
-		//{ lb: sliderMinElement.value, ub: sliderMaxElement.value, fil: sliderFiltration.value, rar: sliderRarefaction.value } ,
-		success: function(data, status){
-			$("#default_text").css('display', 'none');
-			renderer.domElement.style.visibility = "visible";
-			alert("success");
-			if (scene_is_empty == false){
-				for (var g_i = 0; g_i < group_count; g_i++){
-					scene.remove(particleSystems[g_i]);
-				}
-			}
-			group_count = data["group_count"];
-			NMK = data["NMK"];
-			points = data["points"];
-			RGBA = data["RGBA"];
-			rarefaction = data["rarefaction"];
-
-
-			minThreshold = group_count * 0.75, maxThreshold = group_count;
-			sliderMinElement.max = group_count;
-			sliderMaxElement.max = group_count;
-			sliderMinElement.defaultValue = minThreshold;
-			sliderMaxElement.defaultValue = maxThreshold;
-
-			draw();
-			animate();
-		},
-			  
-		error: function(xhr, status, error) {
-			alert(error);
-			var err = eval("(" + xhr.responseText + ")");
-			alert(err.Message);
-		},
-			//complete: function(jqXHR, status){ alert("complete!"); alert(status); alert( jqXHR.responseText);  }
-	});
-		//
-});
-*/
-
 $("#btn_Cut").click(function(event){
 
 	alert("waiting for data...");
 
 	$.ajax({
-		url: "http://109.234.34.140:5001/cut/" + sliderFiltration.value + '/' + sliderNewRarefaction.value + '/' + (Math.round(sliderMinElement.value * 100/group_count)) + '/' + (Math.round(sliderMaxElement.value*100/group_count)),
+		url: SERVER_URI + "/cut/" + sliderFiltration.value + '/' + sliderNewRarefaction.value + '/' + (Math.round(sliderMinElement.value * 100/group_count)) + '/' + (Math.round(sliderMaxElement.value*100/group_count)),
 		async: false,
 		method: 'GET',
 		cache: false,

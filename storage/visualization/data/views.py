@@ -6,6 +6,7 @@
 from datetime import timedelta
 from flask import make_response, request, current_app
 from functools import update_wrapper
+from prepare_points import prepare_points
 
 
 def crossdomain(origin=None, methods=None, headers=None,
@@ -67,37 +68,21 @@ app = Flask(__name__)
 
 
 
+OBJECT = "hand_x"
+
+
 @app.route('/take_json/<path:filename>', methods=['GET'])
 @crossdomain(origin='*')
 def send_json(filename):
-    return send_file(filename)
-
-@app.route('/cut', methods=['POST'])
-#@crossdomain(origin='93.175.11.224')
-@crossdomain(origin='*')
-def cut_post():
-    print request.method
-    if request.method == 'POST':
-        print 'post'
-    if request.method == 'OPTIONS':
-        print 'options'
-    if not request.data:
-        print "nothing"
-        return json.dumps("")
-    data = json.loads(request.data)
-    lb, ub, fil, rar = data['lb'], data['ub'], data['fil'], data['rar']
-    print lb, ub, fil, rar
-    os.system("prepare_points.py %d %d %f %f" % (fil, rar, lb, ub))
-    filename = "F%dR%d_L%dU%d.json" % (fil, rar, round(lb * 100), round(ub * 100))
-    return send_file(filename)
+    return send_file("prepared_data/" + OBJECT + "/" + filename)
 
 @app.route('/cut/<int:fil>/<int:rar>/<int:lb>/<int:ub>', methods=['GET'])
 @crossdomain(origin='*')
 def cut(fil, rar, lb, ub):
-    os.system("python prepare_points.py %d %d %f %f" % (fil, rar, lb, ub))
-    filename = "on_server/F%dR%d_L%dU%d.json" % (fil, rar, lb, ub)
+    filename = prepare_points(fil, rar, lb, ub, dirname="prepared_data/" + OBJECT + "/")
+    #os.system("python prepare_points.py %d %d %f %f" % (fil, rar, lb, ub))
+    #filename = "on_server/F%dR%d_L%dU%d.json" % (fil, rar, lb, ub)
     return send_file(filename)
-
 
 
 if __name__ == '__main__':

@@ -9,7 +9,7 @@ import os
 
 
 
-def main():
+def prepare_points(filtration_cernel_size, rarefaction, lower_bound = 0, upper_bound = 100, dirname = ""):
 
     COLORMAP = cm.hsv
     GROUP_COUNT = 100
@@ -18,61 +18,30 @@ def main():
     # which means from 45th to 57th groups. Also better display in percents this way.
 
 
-    #filtration = 1
-    #rarefaction = 50
-
-    # LOWER_BOUND and UPPER_BOUND are in PERCENTS!
-    LOWER_BOUND = 0
-    UPPER_BOUND = 100
-
-    if len(sys.argv) < 3:
-        print "Give at least 2 arguments!!\nStop."
+    if upper_bound <= lower_bound:
+        print "Upper bound must be more than lower bound!\nStop."
         return
 
+    try:
+        os.chdir(dirname)
+    except: pass
 
-    filtration_cernel_size = int(sys.argv[1])
-    rarefaction = int(sys.argv[2])
-
-
-
-    #hfd5FileName = "largeData/hand/result_r50.hdf5"
-    hfd5FileName = "largeData/hand/result_"
-    if filtration_cernel_size > 1:
-        hfd5FileName += 'f' + str(filtration_cernel_size)
-    if rarefaction > 1:
-        hfd5FileName += 'r' + str(rarefaction)
-    hfd5FileName += ".hdf5"
-
-
-
-    hdf5File = h5py.File(hfd5FileName, 'r')
-    dataCube = hdf5File["Results"]
-    #rarefaction = int(hdf5File["rarefaction_num"][0])
-    #filtration = int(hdf5File["filtration_cernel_size"][0])
-
-    outputFileName = "on_server/F%dR%d" % (filtration_cernel_size, rarefaction)
-
-
-    if len(sys.argv) > 3:
-        LOWER_BOUND = int(float(sys.argv[3]))  # int(float(...))-because it doesn't work for int('4.0000')
-        LOWER_BOUND = min(max(LOWER_BOUND, 0), 100)
-
-        if len(sys.argv) > 4:
-            UPPER_BOUND = int(float(sys.argv[4]))
-            UPPER_BOUND = min(max(UPPER_BOUND, 0), 100)
-            if UPPER_BOUND <= LOWER_BOUND:
-                print "Upper bound must be more than lower bound!\nStop."
-                return
-
+    if (lower_bound == 0) and (upper_bound == 100):
+        outputFileName = "F%dR%d.json" % (filtration_cernel_size, rarefaction)
+    else:
+        outputFileName = "cut/F%dR%d_L%dU%d.json" % (filtration_cernel_size, rarefaction, lower_bound, upper_bound)
         
-        outputFileName += "_L%dU%d" % (LOWER_BOUND, UPPER_BOUND)
 
-    outputFileName += ".json"
-
+    hfd5FileName = "f%dr%d.hdf5" % (filtration_cernel_size, rarefaction)
+    hdf5File = h5py.File(hfd5FileName, 'r')
+    try:
+        dataCube = hdf5File["Results"]
+    except:
+        dataCube = hdf5File["Result"]
 
 
     print "Cube shape:", dataCube.shape, "  filtration cernel size: ", filtration_cernel_size, "  rarefaction number: ",rarefaction
-    print "lower bound: %d%%      upper bound: %d%%" % (LOWER_BOUND, UPPER_BOUND)
+    print "lower bound: %d%%      upper bound: %d%%" % (lower_bound, upper_bound)
 
 
     N, M, K = dataCube.shape
@@ -86,8 +55,8 @@ def main():
     range_of_values = maxValue - minValue
 
 
-    maxValue = minValue + (UPPER_BOUND * range_of_values)/100
-    minValue = minValue + (LOWER_BOUND * range_of_values)/100
+    maxValue = minValue + (upper_bound * range_of_values)/100
+    minValue = minValue + (lower_bound * range_of_values)/100
     range_of_values = maxValue - minValue
 
 
@@ -112,7 +81,7 @@ def main():
 
     print ("Splitting to %d groups..." % GROUP_COUNT)
     for group in xrange(1, GROUP_COUNT + 1):
-        if group % 10 == 0:
+        if group % 25 == 0:
             print ("   %d groups are done" % group)
 
         threshold_A, threshold_B = thresholds[group - 1], thresholds[group]
@@ -151,8 +120,31 @@ def main():
 
     print("Finish writing, filename is: '%s', size of file: %.1f MB"
           % (outputFileName, float(os.stat(outputFileName).st_size)/1048576.0) )
+    return dirname + outputFileName
 
 
 
 if __name__ == "__main__":
-    main()
+
+
+    if len(sys.argv) < 3:
+        print "usage: <filtration cernel size> <rarefaction num> [lower bound] [upper bound]"
+    else:
+
+        filtration_cernel_size = int(sys.argv[1])
+        rarefaction = int(sys.argv[2])
+
+        # LOWER_BOUND and UPPER_BOUND are in PERCENTS!
+        LOWER_BOUND = 0
+        UPPER_BOUND = 100
+
+
+        if len(sys.argv) > 3:
+            LOWER_BOUND = int(float(sys.argv[3]))  # int(float(...))-because it doesn't work for int('4.0000')
+            LOWER_BOUND = min(max(LOWER_BOUND, 0), 100)
+
+            if len(sys.argv) > 4:
+                UPPER_BOUND = int(float(sys.argv[4]))
+                UPPER_BOUND = min(max(UPPER_BOUND, 0), 100)
+
+        prepare_points(filtration_cernel_size, rarefaction, LOWER_BOUND, UPPER_BOUND)

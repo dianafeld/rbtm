@@ -1,8 +1,5 @@
-filtration.py
-largeData/*
-!largeData/hand
-largeData/hand/*
-!largeData/hand/result_r50.hdf5
-on_server/*
-!on_server/F1R50.json
-
+data/prepared_data/*
+!data/prepared_data/hand
+data/prepared_data/hand/*
+!data/prepared_data/hand/cut
+data/prepared_data/hand/cut/*
