@@ -27,11 +27,20 @@ NEW:
 
 ```
 # expssh && 
+docker stop drivers_server_1 experiment_server_1
+docker rm drivers_server_1 experiment_server_1
+
+cd ~/rbtm/drivers && docker-compose up -d
+cd ~/rbtm/experiment && docker-compose up -d
+
 #restart experiment docker container
-docker restart experiment_server_1
-docker restart drivers_server_1
-cd ~/rbtm/drivers/tango_ds && ./run.sh
-./stop.sh
+#docker stop experiment_server_1 drivers_server_1
+#docker rm experiment_server_1 drivers_server_1
+
+# rebuild docker images
+
+#cd ~/rbtm/drivers/tango_ds && ./run.sh
+#./stop.sh
 ```
 
 BUILD:
