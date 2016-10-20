@@ -6,14 +6,27 @@
 		<style type="text/css">
 			body { margin: 0; }
 			canvas { width: 100%; height: 100%; }
-			#container {
+			#vis_area {
 				position: absolute;
 			    top: 0px;
 			    left: 0px;
-			    width: 85%;
+				right: 330px;
 			    height: 100%;
+			    background-color: #999999;
 			}
-			#for_plane {
+			#options_menu{
+				position: absolute;
+				top: 0px;
+				right: 0px;
+			}
+			.options_area{
+				position: absolute;
+				top: 50px;
+				right: 0px;
+				width: 300px;
+				height: 300px;
+			}
+			#section_area {
 			    position: absolute;
 			    bottom: 0px;
 			    right: 0px;
@@ -21,63 +34,168 @@
 			    width: 30%;
     			border: solid 1px green;
 			}
-			#slider_out {
-			    position: absolute;
-			    top: 40px;
-			    right: 0px;
-			    width: 60px;
-			    height: 20px;
-    			border: solid 1px green;
-			}
-			#slider {
-			    position: absolute;
-			    top: 10px;
-			    right: 0px;
-			}
+			.top-buffer { margin-top:30px; }
+			.text-align-right { text-align: right; }
 
-			#sliderX {
-			    position: absolute;
-			    top: 60px;
-			    right: 0px;
-			}
-			#sliderY {
-			    position: absolute;
-			    top: 90px;
-			    right: 0px;
-			}
-			#sliderZ {
-			    position: absolute;
-			    top: 120px;
-			    right: 0px;
-			}
-			#sliderMin {
-			    position: absolute;
-			    top: 150px;
-			    right: 0px;
-			}
-			#sliderMax {
-			    position: absolute;
-			    top: 180px;
-			    right: 0px;
-			}
 		</style>
+		<link href="css/bootstrap.min.css" rel="stylesheet">
 	</head>
 	<body>
-  		<input id="slider" type="range" min=-400 max=400 step=1>
-  		<input id="sliderX" type="range" min=-1 max=1 step=0.01>
-  		<input id="sliderY" type="range" min=-1 max=1 step=0.01>
-  		<input id="sliderZ" type="range" min=-1 max=1 step=0.01>
-  		<input id="sliderMin" type="range" min=0 step=1>
-  		<input id="sliderMax" type="range" min=0 step=1>
-		<div id="container"></div>
-		<div id="for_plane"></div>
-		<div id="info">
-			<a href="http://threejs.org" target="_blank">three.js</a> - orbit controls example
+		<script src="js/jquery.min.js"></script>
+		<script src="js/bootstrap.min.js"></script>
+		<div id="options_menu" class="btn-group">
+			<button id="btn_options_1" type="button" class="btn btn-default" style="background-color: #00FF00">Filtrate/Rarefy</button>
+			<button id="btn_options_2" type="button" class="btn btn-default">Value range</button>
+			<button id="btn_options_3" type="button" class="btn btn-default">Section plane</button>
 		</div>
+		<script type="text/javascript">
+			$("#btn_options_1").click(function(event){
+				$("#btn_options_1").css('background-color', '#00FF00');
+				$("#btn_options_2").css('background-color', 'white');
+				$("#btn_options_3").css('background-color', 'white');
+				$("#options_1").css('display', 'block');
+				$("#options_2").css('display', 'none');
+				$("#options_3").css('display', 'none');
+			});
+			$("#btn_options_2").click(function(event){
+				$("#btn_options_1").css('background-color', 'white');
+				$("#btn_options_2").css('background-color', '#00FF00');
+				$("#btn_options_3").css('background-color', 'white');
+				$("#options_1").css('display', 'none');
+				$("#options_2").css('display', 'block');
+				$("#options_3").css('display', 'none');
+			});
+			$("#btn_options_3").click(function(event){
+				$("#btn_options_1").css('background-color', 'white');
+				$("#btn_options_2").css('background-color', 'white');
+				$("#btn_options_3").css('background-color', '#00FF00');
+				$("#options_1").css('display', 'none');
+				$("#options_2").css('display', 'none');
+				$("#options_3").css('display', 'block');
+			});
+		</script>
+
+		<div id="options_1" class="options_area">
+
+			<div class="row">
+			    <div class="col-xs-5">Rarefaction</div>
+			    <div class="col-xs-4">
+	  				<input id="sliderR" type="range" min=5 max=7 step=1>
+	  				<!-- At this time (04_04_16) you can choose only files with rarefaction from 5 to 7 -->
+			    </div>
+			    <div class="col-xs-2 text-align-right" id="rarefaction_val"></div>
+			</div>
+
+			<div class="row">
+			    <div class="col-xs-5">Filtration</div>
+			    <div class="col-xs-4">
+	  				<input id="sliderF" type="range" min=1 max=7 step=2>
+			    </div>
+			    <div class="col-xs-2 text-align-right" id="filtration_val"></div>
+			</div>
+
+			<div class="row top-buffer">
+			    <div class="col-xs-5">
+	  				<button id="btn_Apply">Apply</button>
+			    </div>
+			</div>
+
+		</div>
+
+
+
+		<div id="options_2" class="options_area" style="display:none;">
+
+			<div class="row">
+			    <div class="col-xs-5">Lower bound</div>
+			    <div class="col-xs-4">
+	  				<input id="sliderMin" type="range" min=0 max=100 step=1>
+			    </div>
+			    <div class="col-xs-2 text-align-right" id="lower_bound_val"></div>
+			</div>
+
+			<div class="row">
+			    <div class="col-xs-5">Upper bound</div>
+			    <div class="col-xs-4">
+	  				<input id="sliderMax" type="range" min=0 max=100 step=1>
+			    </div>
+			    <div class="col-xs-2 text-align-right" id="upper_bound_val"></div>
+			</div>
+
+			<div class="row">
+			    <div class="col-xs-4">Points count</div>
+			    <div class="col-xs-5 text-align-right" id="p_cnt_val"></div>
+			</div>
+
+			<div class="row top-buffer">
+			    <div class="col-xs-5">New rarefaction</div>
+			    <div class="col-xs-4">
+	  				<input id="sliderNewR" type="range" min=1 max=4 step=1>
+			    </div>
+			    <div class="col-xs-2 text-align-right" id="new_rar_val"></div>
+			</div>			
+
+			<div class="row">
+			    <div class="col-xs-5">New points count</div>
+			    <div class="col-xs-3 text-align-right" id="n_p_cnt_val"></div>
+			</div>
+
+			<div class="row">
+			    <div class="col-xs-5">
+	  				<button id="btn_Cut">Cut</button>
+			    </div>
+			</div>
+
+		</div>
+
+
+
+		<div id="options_3" class="options_area" style="display:none;">
+			<div class="row">
+			    <div class="col-xs-5">Plane position</div>
+			    <div class="col-xs-4">
+	  				<input id="slider" type="range" min=-400 max=400 step=1>
+			    </div>
+			    <div class="col-xs-2 text-align-right" id="plane_pos_val"></div>
+			</div>
+
+			<div class="row">
+			    <div class="col-xs-5">Plane direction X</div>
+			    <div class="col-xs-4">
+	  				<input id="sliderX" type="range" min=-1 max=1 step=0.01>
+			    </div>
+			    <div class="col-xs-2 text-align-right" id="plane_X_val"></div>
+			</div>
+
+			<div class="row">
+				<div class="col-xs-5">Plane direction Y</div>
+			    <div class="col-xs-4">
+	  				<input id="sliderY" type="range" min=-1 max=1 step=0.01>
+			    </div>
+			    <div class="col-xs-2 text-align-right" id="plane_Y_val"></div>
+			</div>
+
+			<div class="row">
+				<div class="col-xs-5">Plane direction Z</div>
+			    <div class="col-xs-4">
+	  				<input id="sliderZ" type="range" min=-1 max=1 step=0.01>
+			    </div>
+			    <div class="col-xs-2 text-align-right" id="plane_Z_val"></div>
+			</div>
+
+		</div>
+
+
+		<div id="vis_area">
+			<h1 id="default_text" style="text-align: center; margin: 150px;">
+				Please, set some rarefaction and filtration numbers and press "Apply" to load some data to visualize
+			</h1>
+		</div>
+		<div id="section_area"></div>
+
 		<script src="js/three.min.js"></script>
 		<script src="js/TrackballControls.js"></script>
 		<script src="js/Detector.js"></script>
-		<script src="js/stats.min.js"></script>
 		<script type="x-shader/x-vertex" id="vertexshader">
 			precision mediump float;
 			precision mediump int;
@@ -112,8 +230,6 @@
 				gl_FragColor = vColor;
 		    }
 		</script>
-
-		<script src="largeData/hand/R50_8G.js"></script>
 		<script src="main.js"></script>
 	</body>
 </html>

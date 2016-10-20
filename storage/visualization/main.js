@@ -1,9 +1,14 @@
 if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
-var stats;
+//var stats;
 
 var camera, controls, scene, renderer, uniforms, camera2, renderer2, controls2, plane, cam2_lookAt;
-var particleSystems, minThreshold = group_count * 0.75, maxThreshold = group_count;
+var particleSystems, minThreshold, maxThreshold;
+var scene_is_empty = true;
+
+
+var vis_area = document.getElementById( 'vis_area' );
+var section_area = document.getElementById( 'section_area' );
 
 var sliderElement = document.getElementById('slider');
 var sliderXElement = document.getElementById('sliderX');
@@ -11,17 +16,11 @@ var sliderYElement = document.getElementById('sliderY');
 var sliderZElement = document.getElementById('sliderZ');
 var sliderMinElement = document.getElementById('sliderMin');
 var sliderMaxElement = document.getElementById('sliderMax');
+var sliderFiltration = document.getElementById('sliderF');
+var sliderRarefaction = document.getElementById('sliderR');
+var sliderNewRarefaction = document.getElementById('sliderNewR');
 
-sliderMinElement.max = group_count;
-sliderMaxElement.max = group_count;
-sliderMinElement.defaultValue = minThreshold;
-sliderMaxElement.defaultValue = maxThreshold;
 
-/*
-$("for_plane").click(function(event){
-      alert("Поздравляем! Вы починили код!");
-   });
-*/
 
 function sign(x) { return x < 0 ? -1 : 1; }
 
@@ -34,20 +33,23 @@ sliderElement.addEventListener('input', function () {
 	var coef = sign(n.x) * sign(n.y) * sign(n.z);
 	n.multiplyScalar(  coef *  distance );
 	camera2.position.copy(n);
-	document.getElementById('slider_out').innerHTML = sliderElement.value;
+	$("#plane_pos_val").text(sliderElement.value);
 }, false);
 
 sliderXElement.addEventListener('input', function () {
 	cam2_lookAt.x = sliderXElement.value * 500;
 	camera2.lookAt(cam2_lookAt);
+	$("#plane_X_val").text(sliderXElement.value);
 }, false);
 sliderYElement.addEventListener('input', function () {
 	cam2_lookAt.y = sliderYElement.value * 500;
 	camera2.lookAt(cam2_lookAt);
+	$("#plane_Y_val").text(sliderYElement.value);
 }, false);
 sliderZElement.addEventListener('input', function () {
 	cam2_lookAt.z = sliderZElement.value * 500;
 	camera2.lookAt(cam2_lookAt);
+	$("#plane_Z_val").text(sliderZElement.value);
 }, false);
 
 function makeTextSprite( message, parameters )
@@ -56,9 +58,9 @@ function makeTextSprite( message, parameters )
     var fontface = parameters.hasOwnProperty("fontface") ? parameters["fontface"] : "Arial";
     var fontsize = parameters.hasOwnProperty("fontsize") ? parameters["fontsize"] : 70;
     var borderThickness = parameters.hasOwnProperty("borderThickness") ? parameters["borderThickness"] : 4;
-    var borderColor = parameters.hasOwnProperty("borderColor") ?parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
-    var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
-    var textColor = parameters.hasOwnProperty("textColor") ?parameters["textColor"] : { r:0, g:0, b:0, a:1.0 };
+    var borderColor = parameters.hasOwnProperty("borderColor") ? parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
+    var backgroundColor = parameters.hasOwnProperty("backgroundColor") ? parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
+    var textColor = parameters.hasOwnProperty("textColor") ? parameters["textColor"] : { r:0, g:0, b:0, a:1.0 };
 
     var canvas = document.createElement('canvas');
     var context = canvas.getContext('2d');
@@ -139,9 +141,6 @@ function addGrid(size, step){
 				new THREE.Vector3( i, -size, j ), new THREE.Vector3( i, size, j ),
 				new THREE.Vector3( i, j, -size ), new THREE.Vector3( i, j, size )
 			);
-
-			//var color = (i === 0 && j === 0) ? color1 : color2;
-			//geometry.colors.push( color, color, color, color, color, color );
 			if (i === 0 && j === 0){
 				var red = new THREE.Color( 0xff0000 );
 				var green = new THREE.Color( 0x00ff00 );
@@ -165,7 +164,8 @@ function addGrid(size, step){
 }
 
 init();
-animate();
+//draw();
+//animate();
 
 
 function update_visibilities()
@@ -174,46 +174,94 @@ function update_visibilities()
 		particleSystems[i_g].visible = (minThreshold <= i_g && i_g < maxThreshold);
 	}
 }
+
+function big_num_repr(number)
+{
+	var result = number + " ";
+	if (number >= 1000){
+		if (number < 1000000){
+			var rounded = Math.round(number / 100);
+			var fractional = rounded % 10;
+			var integral = Math.floor(rounded/10);
+			result = integral + "." + fractional + "k"
+		}
+		else{
+			var rounded = Math.round(number / 100000);
+			var fractional = rounded % 10;
+			var integral = Math.floor(rounded/10);
+			result = integral + "." + fractional + "m"
+		}
+	}
+	return result;
+}
+
+function estimate_new_point_count()
+{
+	var R = rarefaction;
+	var newR = sliderNewRarefaction.value;
+	var cur_point_count = COUNT[maxThreshold] - COUNT[minThreshold];
+
+	var new_point_count = Math.round(cur_point_count * R*R*R / (newR*newR*newR));
+	$("#n_p_cnt_val").text( big_num_repr(new_point_count) );
+}
+
 sliderMinElement.addEventListener('input', function () {
-	minThreshold = sliderMinElement.value;
-	update_visibilities()
+	minThreshold = +sliderMinElement.value;
+	$("#lower_bound_val").text(minThreshold + "%");
+	update_visibilities();
+	//alert(minThreshold + "   " + maxThreshold);
+
+	if (maxThreshold >= minThreshold){
+		point_count = COUNT[maxThreshold] - COUNT[minThreshold];
+		max_count = COUNT[group_count];
+		$("#p_cnt_val").text(big_num_repr(point_count) + " / " + big_num_repr(max_count));
+		estimate_new_point_count();
+	}
 }, false);
 
 sliderMaxElement.addEventListener('input', function () {
-	maxThreshold = sliderMaxElement.value;
-	update_visibilities()
+	maxThreshold = +sliderMaxElement.value;
+	$("#upper_bound_val").text(maxThreshold + "%");
+	update_visibilities();
+	//alert(minThreshold + "   " + maxThreshold);
+	if (maxThreshold >= minThreshold){
+		point_count = COUNT[maxThreshold] - COUNT[minThreshold];
+		max_count = COUNT[group_count];
+		$("#p_cnt_val").text(big_num_repr(point_count) + " / " + big_num_repr(max_count));
+		estimate_new_point_count();
+	}
+}, false);
+
+sliderFiltration.addEventListener('input', function () {
+	$("#filtration_val").text(sliderFiltration.value);
+}, false);
+sliderRarefaction.addEventListener('input', function () {
+	$("#rarefaction_val").text(sliderRarefaction.value);
+}, false);
+sliderNewRarefaction.addEventListener('input', function () {
+	$("#new_rar_val").text(sliderNewRarefaction.value);
+	estimate_new_point_count();
 }, false);
 
 
 function init() {
 
 
-	// variables from "numbers.js" : NMK, R_arr, G_arr, B_arr, A_arr, X_arr, Y_arr, Z_arr
-	var N = NMK[0];
-	var M = NMK[1];
-	var K = NMK[2];
-
-
-	var maxPointSize = 1.4 * rarefaction;
-
-
-
+	// variables from "numbers.js" : NMK
 
 	scene = new THREE.Scene();
 
 
-	var container = document.getElementById( 'container' );
 
 	renderer = new THREE.WebGLRenderer();
 	renderer.setPixelRatio( window.devicePixelRatio ); //need to change, we don't look at window size anymore
-	renderer.setSize( container.clientWidth, container.clientHeight );
+	renderer.setSize( vis_area.clientWidth, vis_area.clientHeight );
 	renderer.sortObjects = false;
+	//alert();
 
-	container.appendChild( renderer.domElement );
-
-	camera = new THREE.PerspectiveCamera( 75, container.clientWidth / container.clientHeight, 0.1, 1000 );
-
-	camera.position.z = NMK[0] * 2;
+	vis_area.appendChild( renderer.domElement );
+	renderer.domElement.style.visibility = "hidden";
+	camera = new THREE.PerspectiveCamera( 75, vis_area.clientWidth / vis_area.clientHeight, 0.1, 2000 );
 
 
 	controls = new THREE.TrackballControls( camera, renderer.domElement );
@@ -224,24 +272,47 @@ function init() {
 
 
 
-	var for_plane = document.getElementById( 'for_plane' );
 
 	renderer2 = new THREE.WebGLRenderer();
-	//renderer2.setPixelRatio( window.devicePixelRatio );
-	renderer2.setSize( for_plane.clientWidth,  for_plane.clientHeight );
+	renderer2.setSize( section_area.clientWidth,  section_area.clientHeight );
 	renderer2.domElement.style.position = 'absolute';
-	for_plane.appendChild( renderer2.domElement );
-
-
-	camera2 = new THREE.OrthographicCamera( -400, 400, -400, 400, 1, rarefaction );
-	cam2_lookAt = new THREE.Vector3(500, 500, 500);
-	camera2.lookAt(cam2_lookAt);
-	//camera2.position.z = 0;
-	//controls2 = new THREE.TrackballControls( camera2, renderer2.domElement );
-	//controls2.target.set(300, 300, 300);
-
+	section_area.appendChild( renderer2.domElement );
 
 	
+
+
+	var my_plane_geom = new THREE.PlaneGeometry( 800, 800);
+	var my_plane_mat = new THREE.MeshBasicMaterial( {color: 0x000000, side: THREE.DoubleSide,
+													opacity: 0.3, transparent: true} );
+	plane = new THREE.Mesh( my_plane_geom, my_plane_mat );
+	scene.add( plane );
+	scene.add( camera2 );
+
+
+	addGrid(400, 200);
+	addNumbers(400, 200);
+
+
+	//window.addEventListener( 'resize', onWindowResize, false );
+	alert("Draw!");
+
+}
+
+function draw() {
+
+	var N = NMK[0];
+	var M = NMK[1];
+	var K = NMK[2];
+
+
+	var maxPointSize = 1.4 * rarefaction;
+	camera.position.z = NMK[0] * 2;
+
+	camera2 = new THREE.OrthographicCamera( -400, 400, -400, 400, 1, (rarefaction  + 1)/2);
+	cam2_lookAt = new THREE.Vector3(500, 500, 500);
+	camera2.lookAt(cam2_lookAt);
+
+
 	particleSystems = [];
 	for (var g_i = 0; g_i < group_count; g_i++){
 
@@ -263,44 +334,16 @@ function init() {
 		scene.add(particleSystem);
 
 	}
-	update_visibilities()
-
-
-
-	var my_plane_geom = new THREE.PlaneGeometry( 800, 800);
-	my_plane_geom.position = camera2.position;
-	my_plane_geom.quaternion = camera2.quaternion;
-	var my_plane_mat = new THREE.MeshBasicMaterial( {color: 0x000000, side: THREE.DoubleSide,
-													opacity: 0.3, transparent: true} );
-	plane = new THREE.Mesh( my_plane_geom, my_plane_mat );
-	scene.add( plane );
-	scene.add( camera2 );
-
-
-	addGrid(400, 200);
-	addNumbers(400, 200);
-
-
-
-	//  add  FPS stats in upper left corner, can delete it
-	stats = new Stats();
-	stats.domElement.style.position = 'absolute';
-	stats.domElement.style.top = '0px';
-	stats.domElement.style.zIndex = 100;
-	container.appendChild( stats.domElement );
-
-
-	window.addEventListener( 'resize', onWindowResize, false );
-	alert("Draw!");
-
+	update_visibilities();
+	scene_is_empty = false;
 }
 
 function onWindowResize() {
 	//need to change, also we don't look at window size anymore
-	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.aspect = vis_area.innerWidth / vis_area.innerHeight;
 	camera.updateProjectionMatrix();
 
-	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.setSize( vis_area.innerWidth, vis_area.innerHeight );
 
 }
 
@@ -311,7 +354,7 @@ function animate() {
 	//controls.update(); // required if controls.enableDamping = true, or if controls.autoRotate = true
 	//controls2.update(); // required if controls.enableDamping = true, or if controls.autoRotate = true
 	controls.update();
-	stats.update();
+	//stats.update();
 
 	bind_plane_with_cam2();
 	render();
@@ -334,3 +377,157 @@ function bind_plane_with_cam2()
 	plane.quaternion.copy(camera2.quaternion);
 }
 
+
+function get_draw(filename){	
+	$.ajax({
+		url: "http://109.234.34.140:5001/take_json/" + filename,
+		async: false,
+		method: 'GET',
+		cache: false,
+		dataType: 'json',
+		success: function(data, status){
+			$("#default_text").css('display', 'none');
+			renderer.domElement.style.visibility = "visible";
+			alert("success");
+			if (scene_is_empty == false){
+				for (var g_i = 0; g_i < group_count; g_i++){
+					scene.remove(particleSystems[g_i]);
+				}
+			}
+			group_count = data["group_count"];
+			NMK = data["NMK"];
+			points = data["points"];
+			RGBA = data["RGBA"];
+			rarefaction = data["rarefaction"];
+			COUNT = data["COUNT"];
+
+
+			minThreshold = group_count * 0.75, maxThreshold = group_count;
+			sliderMinElement.max = group_count;
+			sliderMaxElement.max = group_count;
+			sliderMinElement.defaultValue = minThreshold;
+			sliderMaxElement.defaultValue = maxThreshold;
+
+			draw();
+			animate();
+		},
+			  
+		error: function(xhr, status, error) {
+			alert(error);
+			var err = eval("(" + xhr.responseText + ")");
+			alert(err.Message);
+		},
+			//complete: function(jqXHR, status){ alert("complete!"); alert(status); alert( jqXHR.responseText);  }
+	});
+
+}
+
+$("#btn_Apply").click(function(event){
+	var filename = "!F" + sliderFiltration.value + "R" + sliderRarefaction.value + ".json";
+	alert("waiting for data...");
+	get_draw(filename);
+});
+
+/*
+$("#btn_Cut").click(function(event){
+
+	alert("waiting for data...");
+
+	//$.post("http://109.234.34.140:5001/cut", JSON.stringify({ lb: sliderMinElement.value, ub: sliderMaxElement.value, fil: sliderFiltration.value, rar: sliderRarefaction.value }) );
+	///*
+	var data = {'data': JSON.stringify({ lb: sliderMinElement.value, ub: sliderMaxElement.value, fil: sliderFiltration.value, rar: sliderRarefaction.value })}
+	$.ajax({
+		url: "http://109.234.34.140:5001/cut",
+		async: false,
+		method: 'POST',
+		cache: false,
+		//data: "lb=" + sliderMinElement.value + "&ub=" + sliderMaxElement.value + "&fil=" + sliderFiltration.value + "&rar=" + sliderRarefaction.value,
+		//data: JSON.stringify({ lb: sliderMinElement.value, ub: sliderMaxElement.value, fil: sliderFiltration.value, rar: sliderRarefaction.value }),
+		data: data,
+		contentType: "application/json; charset=utf-8",
+    	dataType: "json",
+    	crossDomain: true,
+    	//contentType : 'application/json',
+		//{ lb: sliderMinElement.value, ub: sliderMaxElement.value, fil: sliderFiltration.value, rar: sliderRarefaction.value } ,
+		success: function(data, status){
+			$("#default_text").css('display', 'none');
+			renderer.domElement.style.visibility = "visible";
+			alert("success");
+			if (scene_is_empty == false){
+				for (var g_i = 0; g_i < group_count; g_i++){
+					scene.remove(particleSystems[g_i]);
+				}
+			}
+			group_count = data["group_count"];
+			NMK = data["NMK"];
+			points = data["points"];
+			RGBA = data["RGBA"];
+			rarefaction = data["rarefaction"];
+
+
+			minThreshold = group_count * 0.75, maxThreshold = group_count;
+			sliderMinElement.max = group_count;
+			sliderMaxElement.max = group_count;
+			sliderMinElement.defaultValue = minThreshold;
+			sliderMaxElement.defaultValue = maxThreshold;
+
+			draw();
+			animate();
+		},
+			  
+		error: function(xhr, status, error) {
+			alert(error);
+			var err = eval("(" + xhr.responseText + ")");
+			alert(err.Message);
+		},
+			//complete: function(jqXHR, status){ alert("complete!"); alert(status); alert( jqXHR.responseText);  }
+	});
+		//
+});
+*/
+
+$("#btn_Cut").click(function(event){
+
+	alert("waiting for data...");
+
+	$.ajax({
+		url: "http://109.234.34.140:5001/cut/" + sliderFiltration.value + '/' + sliderNewRarefaction.value + '/' + (Math.round(sliderMinElement.value * 100/group_count)) + '/' + (Math.round(sliderMaxElement.value*100/group_count)),
+		async: false,
+		method: 'GET',
+		cache: false,
+		success: function(data, status){
+			$("#default_text").css('display', 'none');
+			renderer.domElement.style.visibility = "visible";
+			alert("success");
+			if (scene_is_empty == false){
+				for (var g_i = 0; g_i < group_count; g_i++){
+					scene.remove(particleSystems[g_i]);
+				}
+			}
+			group_count = data["group_count"];
+			NMK = data["NMK"];
+			points = data["points"];
+			RGBA = data["RGBA"];
+			rarefaction = data["rarefaction"];
+			COUNT = data["COUNT"];
+
+
+			minThreshold = group_count * 0.75, maxThreshold = group_count;
+			sliderMinElement.max = group_count;
+			sliderMaxElement.max = group_count;
+			sliderMinElement.defaultValue = minThreshold;
+			sliderMaxElement.defaultValue = maxThreshold;
+
+			draw();
+			animate();
+		},
+			  
+		error: function(xhr, status, error) {
+			alert(error);
+			var err = eval("(" + xhr.responseText + ")");
+			alert(err.Message);
+		},
+			//complete: function(jqXHR, status){ alert("complete!"); alert(status); alert( jqXHR.responseText);  }
+	});
+		//*/
+});

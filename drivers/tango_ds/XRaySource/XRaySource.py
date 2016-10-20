@@ -156,8 +156,13 @@ class XRaySource (PyTango.Device_4Impl):
             self.error_stream(str(e))
             raise
 
-        self.attr_voltage_read = self.source_driver.get_actual_voltage()
-        self.attr_current_read = self.source_driver.get_actual_current()
+        print(self.source_driver.get_tube_name())
+
+        self.attr_voltage_read = self._read_voltage()
+        self.attr_current_read = self._read_current()
+
+        self.voltage_reads_counter = 0
+        self.current_reads_counter = 0
         
         if self.source_driver.is_on_high_volatge():
             self.set_state(PyTango.DevState.ON)
@@ -181,8 +186,10 @@ class XRaySource (PyTango.Device_4Impl):
     def read_voltage(self, attr):
         self.debug_stream("In read_voltage()")
         #----- PROTECTED REGION ID(XRaySource.voltage_read) ENABLED START -----#
-        voltage = self._read_voltage()
-        attr.set_value(voltage / 10.)
+        if self.voltage_reads_counter % 5 == 0:
+            self.attr_voltage_read = self._read_voltage()
+        self.voltage_reads_counter = (self.voltage_reads_counter + 1) % 5
+        attr.set_value(self.attr_voltage_read / 10.)
         #----- PROTECTED REGION END -----#  //  XRaySource.voltage_read
         
     def write_voltage(self, attr):
@@ -191,13 +198,16 @@ class XRaySource (PyTango.Device_4Impl):
         # ----- PROTECTED REGION ID(XRaySource.voltage_write) ENABLED START -----#
         new_voltage = int(round(data * 10))
         self._write_voltage(new_voltage)
+        self.attr_voltage_read = self._read_voltage()
         #----- PROTECTED REGION END -----#  //  XRaySource.voltage_write
         
     def read_current(self, attr):
         self.debug_stream("In read_current()")
         # ----- PROTECTED REGION ID(XRaySource.current_read) ENABLED START -----#
-        current = self._read_current()
-        attr.set_value(current / 10.)
+        if self.current_reads_counter % 5 == 0:
+            self.attr_current_read = self._read_current()
+        self.current_reads_counter = (self.current_reads_counter + 1) % 5
+        attr.set_value(self.attr_current_read / 10.)
         # ----- PROTECTED REGION END -----# //  XRaySource.current_read
         
     def write_current(self, attr):
@@ -206,6 +216,7 @@ class XRaySource (PyTango.Device_4Impl):
         # ----- PROTECTED REGION ID(XRaySource.current_write) ENABLED START -----#
         new_current = int(round(data * 10))
         self._write_current(new_current)
+        self.attr_current_read = self._read_current()
         # ----- PROTECTED REGION END -----# //  XRaySource.current_write
         
     
@@ -245,6 +256,9 @@ class XRaySource (PyTango.Device_4Impl):
             self.debug_stream(str(e))
             raise
 
+        self.voltage_reads_counter = 0
+        self.current_reads_counter = 0
+
         self.set_state(PyTango.DevState.OFF)
 
         #----- PROTECTED REGION END -----#  //  XRaySource.Off
@@ -268,6 +282,9 @@ class XRaySource (PyTango.Device_4Impl):
         except Exception as e:
             self.debug_stream(str(e))
             raise
+
+        self.voltage_reads_counter = 0
+        self.current_reads_counter = 0
 
         self.set_state(PyTango.DevState.ON)
 

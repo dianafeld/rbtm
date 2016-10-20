@@ -345,7 +345,7 @@ class Experiment:
         for i in range(0, self.DARK_count):
             self.get_and_send_frame(exposure=None, mode='dark')
         logger.info('Finished with DARK images!\n')
-
+        self.tomograph.open_shutter(0, from_experiment=True, exp_is_advanced=False)
         self.tomograph.move_away(from_experiment=True, exp_is_advanced=False)
 
         logger.info('Going to get EMPTY images!\n')
@@ -375,6 +375,7 @@ class Experiment:
             self.tomograph.set_angle(new_angle, from_experiment=True, exp_is_advanced=False)
 
         logger.info('Finished with DATA images!\n')
+        self.tomograph.close_shutter(0, from_experiment=True, exp_is_advanced=False)
 
         self.tomograph.source_power_off(from_experiment=True, exp_is_advanced=False)
         return
