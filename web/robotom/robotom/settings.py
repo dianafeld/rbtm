@@ -9,7 +9,7 @@ REQUEST_DEBUG = False
 
 TIMEOUT_DEFAULT = 120  # timeout in secs
 
-STORAGE_HOST = 'http://109.234.34.140:5016/'
+STORAGE_HOST = 'http://storage_server_1:5006/'
 
 STORAGE_FRAMES_PNG = urljoin(STORAGE_HOST, '/storage/experiments/{exp_id}/frames/{frame_id}/png')
 STORAGE_FRAMES_INFO_HOST = urljoin(STORAGE_HOST, '/storage/frames_info/get')
@@ -20,7 +20,7 @@ STORAGE_ALT_USER_HOST = urljoin(STORAGE_HOST, '/storage/users/update')
 STORAGE_EXPERIMENTS_HOST = urljoin(STORAGE_HOST, '/storage/experiments')
 STORAGE_RECONSTRUCTION = urljoin(STORAGE_HOST, '/storage/experiments/{exp_id}/3d/{rarefaction}/{level1}/{level2}')
 
-EXPERIMENT_HOST = 'http://109.234.34.140:5001/'
+EXPERIMENT_HOST = 'http://10.0.3.104:5001/'
 # address templates, where {} is a placeholder for tomograph number
 EXPERIMENT_SOURCE_POWER_ON = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/power-on')
 EXPERIMENT_SOURCE_POWER_OFF = urljoin(EXPERIMENT_HOST, '/tomograph/{}/source/power-off')
