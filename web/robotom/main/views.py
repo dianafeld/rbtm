@@ -87,11 +87,11 @@ def registration_view(request):
             user.is_active = False
             new_profile = userprofile_form.save(commit=False)
 
-            attempt = try_user_sending(request, u'Невозможно завершить регистрацию', settings.STORAGE_CREATE_USER_HOST,
-                                       user=user)
+            #attempt = try_user_sending(request, u'Невозможно завершить регистрацию', settings.STORAGE_CREATE_USER_HOST,
+            #                           user=user)
 
-            if attempt:  # if something went wrong
-                return attempt
+            #if attempt:  # if something went wrong
+            #    return attempt
 
             user.save()
 
@@ -107,7 +107,10 @@ def registration_view(request):
             try:
                 send_mail(email_subject, email_body, 'robotomproject@gmail.com',
                           [user.email], fail_silently=False)
-            except BaseException:
+            except BaseException as e:
+                import traceback
+                main_logger.error(traceback.print_exc()) 
+                main_logger.error(e)  
                 messages.warning(request,
                                  'Произошла ошибка при отправке письма о подтверждении регистрации. Попробуйте \
                                  зарегистрироваться повторно, указав корректный email')
@@ -203,10 +206,10 @@ def profile_view(request):
                 profile = userprofile_form.save(commit=False)
                 user_info = json.dumps({'username': profile.user.username, 'password': profile.user.password,
                                         'role': ', '.join(profile.get_roles())})
-                attempt = try_user_sending(request, u'Невозможно сохранить изменения профиля',
-                                           settings.STORAGE_ALT_USER_HOST, user_info=user_info)
-                if attempt:  # if something went wrong
-                    return attempt
+                #attempt = try_user_sending(request, u'Невозможно сохранить изменения профиля',
+                #                           settings.STORAGE_ALT_USER_HOST, user_info=user_info)
+                #if attempt:  # if something went wrong
+                #    return attempt
                 profile.save()
                 messages.success(request, 'Ваши данные были успешно сохранены!')
         elif 'cancel' in request.POST:

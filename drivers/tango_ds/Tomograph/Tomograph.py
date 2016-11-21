@@ -104,6 +104,7 @@ class Tomograph (PyTango.Device_4Impl):
         self.detector.set_timeout_millis(320000)
         self.angle_motor.set_timeout_millis(70000)
         self.horizontal_motor.set_timeout_millis(70000)
+        self.source.set_timeout_millis(20000)
 
         #self.SelfTest()
 
