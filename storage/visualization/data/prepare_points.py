@@ -81,7 +81,7 @@ def prepare_points(filtration_cernel_size, rarefaction, lower_bound = 0, upper_b
 
     print ("Splitting to %d groups..." % GROUP_COUNT)
     for group in xrange(1, GROUP_COUNT + 1):
-        if group % 25 == 0:
+        if group % 20 == 0:
             print ("   %d groups are done" % group)
 
         threshold_A, threshold_B = thresholds[group - 1], thresholds[group]

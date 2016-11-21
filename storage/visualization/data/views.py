@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: UTF-8 -*-
 
 # for running it on remote machine for uploading data to visualization
 # example of data is R50_128G.json
@@ -68,7 +69,7 @@ app = Flask(__name__)
 
 
 
-OBJECT = "hand_x"
+OBJECT = "hand"
 
 
 @app.route('/take_json/<path:filename>', methods=['GET'])
@@ -87,3 +88,8 @@ def cut(fil, rar, lb, ub):
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug = True, port=5001)
+
+#Самая важная часть работы. Использовался язык JavaScript. В конце концов было решено для отрисовки выбрать библиотеку three.js (http://threejs.org/), так как она идёт под лицензией MIT (разрешено свободное использование), а также она широко используется, вследствие чего по ней легко найти информацию в интернете. 
+
+#В начале выбиралось между двумя вариантами отрисовки — нарисовать массив данных как «облако точек» или рисовать с помощью изоповерхностей. Первый вариант более легче и понятнее для реализации, поэтому в итоге выбор остался на нём.
+
