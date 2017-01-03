@@ -13,34 +13,18 @@ createdb -h localhost -p 15432 -U postgres -T template0 robotom_users
 psql -h localhost -p 15432 -U postgres robotom_users < robotom_users_dump_<date>
 ```
 
-STEPS:
-
-```
-ssh mardanov@109.234.34.140 "cd rbtm/experiment && docker-compose stop"
-cd ~/rbtm/drivers/tango_ds && source tango_env/bin/activate && ./run.sh > tango.log 2>&1
-
-cd ~/rbtm/experiment && docker-compose build && docker-compose up -d > experiment.log 2>&1
-ssh -T -N -g -R 5001:10.0.3.104:5001 mardanov@109.234.34.140 
-```
 
 NEW:
 
+Если не работает streamView или двигатели выполнить команду:
+```sh
+docker stop drivers_server_1 experiment_server_1 
 ```
-# expssh && 
-docker stop drivers_server_1 experiment_server_1
-docker rm drivers_server_1 experiment_server_1
 
-cd ~/rbtm/drivers && docker-compose up -d
-cd ~/rbtm/experiment && docker-compose up -d
+Если не работет томограф, то убедиться, что источник прогрет и выполнить:
 
-#restart experiment docker container
-#docker stop experiment_server_1 drivers_server_1
-#docker rm experiment_server_1 drivers_server_1
-
-# rebuild docker images
-
-#cd ~/rbtm/drivers/tango_ds && ./run.sh
-#./stop.sh
+```sh
+~/rbtm/drivers/restart.sh
 ```
 
 BUILD:

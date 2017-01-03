@@ -1,7 +1,7 @@
 import json
 import requests
 
-MODULE_EXPERIMENT_URI = "http://109.234.34.140:5001"
+MODULE_EXPERIMENT_URI = "http://109.234.38.83:5001"
 #MODULE_EXPERIMENT_URI = "http://localhost:5001"
 
 
@@ -17,7 +17,7 @@ simple_experiment = json.dumps(
                     {
                         'count': 1,
                         'exposure': 1000.0,
-                        },
+                    },
                 'EMPTY':
                     {
                         'count': 1,

@@ -377,7 +377,6 @@ function bind_plane_with_cam2()
 	plane.quaternion.copy(camera2.quaternion);
 }
 
-//var SERVER_URI = "http://109.234.34.140:5001"
 var SERVER_URI = "http://localhost:5001"
 
 function get_draw(filename){	
