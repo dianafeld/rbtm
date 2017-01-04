@@ -5,27 +5,19 @@ Contains the main part of module "Experiment"
 More exactly - some supporting functions and functions for receiving queries
 """
 
-import json
-import time
-
-from flask import request
-from flask import Response
 from flask import make_response
+from flask import request
 from flask import send_file
 
-from tomograph import Tomograph
-from tomograph import try_thrice_function
 from experiment_class import *
+from tomograph import Tomograph
 
-from experiment import app
 logger = app.logger
 
 if REAL_TOMOGRAPH_STORAGE_WEBPAGE == True:
     logger.info(' !! Tomograph, storage, web-page are REAL !! ')
 else:
     logger.info(' !! Tomograph, storage, web-page are STUBS !! ')
-
-
 
 TOMOGRAPHS = (
     Tomograph(TOMO_ADDR + "/tomo/tomograph/1", TOMO_ADDR + "/tomo/detector/1"),
@@ -52,6 +44,7 @@ def check_request(request_data):
     else:
         logger.info('Request has JSON data!')
         return True, request_data_dict, ''
+
 
 def call_method_create_response(tomo_num, method_name, args=(), GET_FRAME_method=False):
     if type(args) not in (tuple, list):
@@ -94,11 +87,13 @@ def check_state(tomo_num):
     tomo_state, exception_message = tomograph.tomo_state()
     return create_response(success=True, result=tomo_state, exception_message=exception_message)
 
+
 # NEED TO EDIT(GENERALLY)
 @app.route('/tomograph/<int:tomo_num>/source/power-on', methods=['GET'])
 def source_power_on(tomo_num):
     logger.info('\n\nREQUEST: SOURCE/POWER ON')
     return call_method_create_response(tomo_num, method_name='source_power_on')
+
 
 # NEED TO EDIT(GENERALLY)
 @app.route('/tomograph/<int:tomo_num>/source/power-off', methods=['GET'])
@@ -109,7 +104,7 @@ def source_power_off(tomo_num):
 
 # ---------------------------------------------------------#
 # Functions for adjustment of tomograph
-#---------------------------------------------------------#
+# ---------------------------------------------------------#
 
 
 @app.route('/tomograph/<int:tomo_num>/source/set-voltage', methods=['POST'])
@@ -135,27 +130,29 @@ def source_get_voltage(tomo_num):
     logger.info('\n\nREQUEST: SOURCE/GET VOLTAGE')
     return call_method_create_response(tomo_num, method_name='source_get_voltage')
 
+
 @app.route('/tomograph/<int:tomo_num>/source/get-current', methods=['GET'])
 def source_get_current(tomo_num):
     logger.info('\n\nREQUEST: SOURCE/GET CURRENT')
     return call_method_create_response(tomo_num, method_name='source_get_current')
 
-@app.route('/tomograph/<int:tomo_num>/shutter/open/<int:time>', methods=['GET'])
-def shutter_open(tomo_num, time):
-    logger.info('\n\nREQUEST: SHUTTER/OPEN')
-    return call_method_create_response(tomo_num, method_name='open_shutter', args=time)
 
-@app.route('/tomograph/<int:tomo_num>/shutter/close/<int:time>', methods=['GET'])
-def shutter_close(tomo_num, time):
+@app.route('/tomograph/<int:tomo_num>/shutter/open/<time_>', methods=['GET'])
+def shutter_open(tomo_num, time_):
+    logger.info('\n\nREQUEST: SHUTTER/OPEN')
+    return call_method_create_response(tomo_num, method_name='open_shutter', args=time_)
+
+
+@app.route('/tomograph/<int:tomo_num>/shutter/close/<time_>', methods=['GET'])
+def shutter_close(tomo_num, time_):
     logger.info('\n\nREQUEST: SHUTTER/CLOSE')
-    return call_method_create_response(tomo_num, method_name='close_shutter', args=time)
+    return call_method_create_response(tomo_num, method_name='close_shutter', args=time_)
+
 
 @app.route('/tomograph/<int:tomo_num>/shutter/state', methods=['GET'])
 def shutter_state(tomo_num):
     logger.info('\n\nREQUEST: SHUTTER/STATE')
     return call_method_create_response(tomo_num, method_name='shutter_state')
-
-
 
 
 @app.route('/tomograph/<int:tomo_num>/motor/set-horizontal-position', methods=['POST'])
@@ -166,6 +163,7 @@ def motor_set_horizontal_position(tomo_num):
         return response_if_fail
     return call_method_create_response(tomo_num, method_name='set_x', args=new_pos)
 
+
 @app.route('/tomograph/<int:tomo_num>/motor/set-vertical-position', methods=['POST'])
 def motor_set_vertical_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/SET VERTICAL POSITION')
@@ -173,6 +171,7 @@ def motor_set_vertical_position(tomo_num):
     if not success:
         return response_if_fail
     return call_method_create_response(tomo_num, method_name='set_y', args=new_pos)
+
 
 @app.route('/tomograph/<int:tomo_num>/motor/set-angle-position', methods=['POST'])
 def motor_set_angle_position(tomo_num):
@@ -183,22 +182,22 @@ def motor_set_angle_position(tomo_num):
     return call_method_create_response(tomo_num, method_name='set_angle', args=new_pos)
 
 
-
 @app.route('/tomograph/<int:tomo_num>/motor/get-horizontal-position', methods=['GET'])
 def motor_get_horizontal_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/GET HORIZONTAL POSITION')
     return call_method_create_response(tomo_num, method_name='get_x')
+
 
 @app.route('/tomograph/<int:tomo_num>/motor/get-vertical-position', methods=['GET'])
 def motor_get_vertical_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/GET VERTICAL POSITION')
     return call_method_create_response(tomo_num, method_name='get_y')
 
+
 @app.route('/tomograph/<int:tomo_num>/motor/get-angle-position', methods=['GET'])
 def motor_get_angle_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/GET ANGLE POSITION')
     return call_method_create_response(tomo_num, method_name='get_angle')
-
 
 
 @app.route('/tomograph/<int:tomo_num>/motor/move-away', methods=['GET'])
@@ -212,11 +211,11 @@ def motor_move_back(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/MOVE BACK')
     return call_method_create_response(tomo_num, method_name='move_back')
 
+
 @app.route('/tomograph/<int:tomo_num>/motor/reset-angle-position', methods=['GET'])
 def motor_reset_angle_position(tomo_num):
     logger.info('\n\nREQUEST: MOTOR/RESET ANGLE POSITION')
     return call_method_create_response(tomo_num, method_name='reset_to_zero_angle')
-
 
 
 @app.route('/tomograph/<int:tomo_num>/detector/get-frame', methods=['POST'])
@@ -226,6 +225,7 @@ def detector_get_frame(tomo_num):
     if not success:
         return response_if_fail
     return call_method_create_response(tomo_num, method_name='get_frame', args=(exposure, True), GET_FRAME_method=True)
+
 
 @app.route('/tomograph/<int:tomo_num>/detector/get-frame-with-closed-shutter', methods=['POST'])
 def detector_get_frame_with_closed_shutter(tomo_num):
@@ -241,17 +241,16 @@ def detector_get_chip_temperature(tomo_num):
     logger.info('\n\nREQUEST: DETECTOR/GET CHIP TEMPERATURE')
     return call_method_create_response(tomo_num, method_name='get_detector_chip_temperature')
 
+
 @app.route('/tomograph/<int:tomo_num>/detector/hous_temp', methods=['GET'])
 def detector_get_hous_temperature(tomo_num):
     logger.info('\n\nREQUEST: DETECTOR/GET HOUS TEMPERATURE')
     return call_method_create_response(tomo_num, method_name='get_detector_hous_temperature')
 
 
-
-
-#---------------------------------------------------------#
+# ---------------------------------------------------------#
 #    Functions for running experiment
-#---------------------------------------------------------#
+# ---------------------------------------------------------#
 
 # NEED TO EDIT
 def check_and_prepare_exp_parameters(exp_param):
@@ -298,7 +297,6 @@ def check_and_prepare_exp_parameters(exp_param):
                             type(exp_param['DATA']['count per step']) is int)):
             return False, 'Incorrect format in \'DATA\' parameters'
 
-
         # TO DELETE AFTER WEB-PAGE OF ADJUSTMENT START CHECK PARAMETERS
         if exp_param['DARK']['exposure'] < 0.1:
             return False, 'Bad parameters in \'DARK\' parameters'
@@ -307,10 +305,10 @@ def check_and_prepare_exp_parameters(exp_param):
         if exp_param['DATA']['exposure'] < 0.1:
             return False, 'Bad parameters in \'DATA\' parameters'
 
-
     # we don't multiply and round  exp_param['DATA']['angle step'] here, we will do it during experiment,
     # because it will be more accurate this way
     return True, ''
+
 
 """
 def time_counter_of_experiment(tomograph, exp_id, exp_time=MAX_EXPERIMENT_TIME):
@@ -369,6 +367,7 @@ def carry_out_advanced_experiment(tomograph, exp_param):
     return
 """
 
+
 # NEED TO EDIT (COMMENT BEFORE POWERING ON SOURCE)
 @app.route('/tomograph/<int:tomo_num>/experiment/start', methods=['POST'])
 def experiment_start(tomo_num):
@@ -402,7 +401,8 @@ def experiment_start(tomo_num):
 
     tomo_state, exception_message = tomograph.tomo_state()
     if tomo_state == 'unavailable':
-        return create_response(success=False, error="Could not connect with tomograph", exception_message=exception_message)
+        return create_response(success=False, error="Could not connect with tomograph",
+                               exception_message=exception_message)
     elif tomo_state == 'experiment':
         return create_response(success=False, error="On this tomograph experiment is running")
     elif tomo_state != 'ready':
@@ -418,7 +418,7 @@ def experiment_start(tomo_num):
     logger.info('Experiment begins!')
     if exp_param['advanced']:
         pass
-        #thr = threading.Thread(target=carry_out_advanced_experiment, args=(tomograph, exp_param))
+        # thr = threading.Thread(target=carry_out_advanced_experiment, args=(tomograph, exp_param))
     else:
         thr = threading.Thread(target=tomograph.carry_out_simple_experiment, args=(exp_param,))
         thr.start()
@@ -436,23 +436,21 @@ def experiment_stop(tomo_num):
     # if not success:
     #    return response_if_fail
 
-    #if not exp_stop_reason_txt:
+    # if not exp_stop_reason_txt:
     #    exp_stop_reason_txt = "unknown"
     exp_stop_reason_txt = "unknown"
 
-
-    if tomograph.current_experiment != None:
+    if tomograph.current_experiment is not None:
         tomograph.current_experiment.to_be_stopped = True
         tomograph.current_experiment.stop_exception = ModExpError(error=exp_stop_reason_txt, stop_msg=SOMEONE_STOP_MSG)
 
     return create_response(True)
 
-"""
-@app.before_request
-def limit_remote_addr():
-	if request.remote_addr != '10.20.30.40':
-		abort(403)  # Forbidden
-"""
+
+# @app.before_request
+# def limit_remote_addr():
+# 	if request.remote_addr != '10.20.30.40':
+# 		abort(403)  # Forbidden
 
 
 @app.errorhandler(400)
@@ -471,4 +469,3 @@ def not_found(exception):
 def internal_server_error(exception):
     logger.exception(exception)
     return make_response(create_response(success=False, error='Internal Server Error'), 500)
-

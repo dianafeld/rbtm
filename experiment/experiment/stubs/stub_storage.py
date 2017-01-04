@@ -8,24 +8,22 @@ Logs to 'stub_storage.log' file
 Launch server on port 5020
 """
 
-from flask import Flask, jsonify
-from flask import request
-import json
 import logging
 from socket import error as socket_error
 
-logging.basicConfig(format = u'%(levelname)-8s [%(asctime)s] %(message)s', level = logging.DEBUG,
-					filename = u'experiment/stubs/stub_storage.log')
+from flask import Flask, jsonify
 
+logging.basicConfig(format=u'%(levelname)-8s [%(asctime)s] %(message)s', level=logging.DEBUG,
+                    filename=u'experiment/stubs/stub_storage.log')
 
 app = Flask(__name__)
-
 
 
 @app.route('/stub_storage', methods=['POST'])
 def got_request():
     logging.info("Something has been recieved...")
-    return jsonify({'result': 'success', "I'm": "STUB storage",})
+    return jsonify({'result': 'success', "I'm": "STUB storage", })
+
 
 '''
     if not (request.data or request.form):
@@ -51,21 +49,11 @@ def got_request():
 
 if __name__ == '__main__':
     try:
-        app.run(host='0.0.0.0', port = 5020)
-    except socket_error: pass
-        # if you don't pass - it will complain "socket.error: [Errno 98] Address already in use"
-        # because of twice execution (all files are run twice because of flask reloader, look
-        # http://stackoverflow.com/questions/26958952/python-program-seems-to-be-running-twice)
+        app.run(host='0.0.0.0', port=5020)
+    except socket_error:
+        pass
+    # if you don't pass - it will complain "socket.error: [Errno 98] Address already in use"
+    # because of twice execution (all files are run twice because of flask reloader, look
+    # http://stackoverflow.com/questions/26958952/python-program-seems-to-be-running-twice)
     else:
         print "Stub storage starts to run"
-
-
-
-
-
-
-
-
-
-
-

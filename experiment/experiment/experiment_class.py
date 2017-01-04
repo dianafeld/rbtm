@@ -21,12 +21,13 @@ import matplotlib.pyplot as plt
 from conf import *
 
 from experiment import app
-logger = app.logger
 
+logger = app.logger
 
 EMERGENCY_STOP_MSG = 'Experiment was emergency stopped'
 SOMEONE_STOP_MSG = 'Experiment was stopped by someone'
-SUCCESSFULL_STOP_MSG = 'Experiment was finished successfully'
+SUCCESSFUL_STOP_MSG = 'Experiment was finished successfully'
+
 
 def create_response(success=True, exception_message='', error='', result=None):
     """ Creates response for queries in one format
@@ -42,7 +43,8 @@ def create_response(success=True, exception_message='', error='', result=None):
     }
     return json.dumps(response_dict)
 
-def create_event(type, exp_id, MoF, exception_message='', error=''):
+
+def create_event(event_type, exp_id, MoF, exception_message='', error=''):
     # MoF - Message or Frame
 
     """ quite bydlocode
@@ -58,9 +60,9 @@ def create_event(type, exp_id, MoF, exception_message='', error=''):
     :return: "event", dictionary with data converted to string
     :rtype: string
     """
-    if type == 'message':
+    if event_type == 'message':
         event_with_message_dict = {
-            'type': type,
+            'type': event_type,
             'exp_id': exp_id,
             'message': MoF,
             'exception message': exception_message,
@@ -68,15 +70,16 @@ def create_event(type, exp_id, MoF, exception_message='', error=''):
         }
         return event_with_message_dict
 
-    elif type == 'frame':
+    elif event_type == 'frame':
         frame_dict = {
-            'type': type,
+            'type': event_type,
             'exp_id': exp_id,
             'frame': MoF,
         }
         return frame_dict
 
     return None
+
 
 class ModExpError(Exception):
     exception_message = ""
@@ -92,7 +95,7 @@ class ModExpError(Exception):
         return repr(self.message)
 
     def to_event_dict(self, exp_id):
-        return create_event(type='message', exp_id=exp_id, MoF=self.stop_msg,
+        return create_event(event_type='message', exp_id=exp_id, MoF=self.stop_msg,
                             error=self.error, exception_message=self.exception_message)
 
     def create_response(self):
@@ -130,10 +133,9 @@ def make_png(image_numpy, png_filename=FRAME_PNG_FILENAME):
         small_res = zoom(np.rot90(res), zoom=0.25, order=2)
         plt.imsave(png_filename, small_res, cmap=plt.cm.gray)
     except Exception as e:
-        raise ModExpError(error="Could not make png-file from image", exception_message='' '''e.message''')
+        raise ModExpError(error="Could not make png-file from image", exception_message=e.message)
 
     logger.info("Image was converted!")
-
 
 
 def send_event_to_webpage(event_dict):
@@ -155,7 +157,7 @@ def send_event_to_webpage(event_dict):
         files = {'file': open(FRAME_PNG_FILENAME, 'rb')}
 
         del (event_dict['frame']['image_data']['image'])
-        #data = json.dumps(event_dict)
+        # data = json.dumps(event_dict)
         # WE DON'T SEND TO WEB-PAGE METADATA OF FRAME YET, IN FUTURE WE CAN ADD IT
         # req_webpage = requests.post(WEBPAGE_URI, files=files, data= event_json)
 
@@ -169,7 +171,6 @@ def send_event_to_webpage(event_dict):
         raise ModExpError(error='Could not send to web-page of adjustment', exception_message=str(e))
 
     logger.info(req_webpage.content)
-
 
 
 def send_to_storage(storage_uri, data, files=None):
@@ -201,6 +202,7 @@ def send_to_storage(storage_uri, data, files=None):
         raise ModExpError(error='Problems with storage',
                           exception_message='Storage\'s response:  ' + str(storage_resp_dict['result']))
 
+
 def send_message_to_storage_webpage(event_dict):
     """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
         'event_dict' must be dictionary with format that is returned by  'create_event()'
@@ -220,7 +222,6 @@ def send_message_to_storage_webpage(event_dict):
             send_event_to_webpage(event_dict)
         except ModExpError as e:
             e.log()
-
 
 
 def send_frame_to_storage_webpage(frame_metadata_event, image_numpy, send_to_webpage):
@@ -245,7 +246,7 @@ def send_frame_to_storage_webpage(frame_metadata_event, image_numpy, send_to_web
     #         send_event_to_webpage(frame_event)
     #     except ModExpError as e:
     #         e.log()
-    #return success
+    # return success
 
 
 def prepare_send_frame(raw_image_with_metadata, experiment, send_to_webpage=False):
@@ -258,13 +259,13 @@ def prepare_send_frame(raw_image_with_metadata, experiment, send_to_webpage=Fals
         try:
             enc = PyTango.EncodedAttribute()
             image_numpy = enc.decode_gray16(raw_image)
-            #image_numpy = numpy.zeros((10, 10))
+            # image_numpy = numpy.zeros((10, 10))
         except Exception as e:
             raise ModExpError(error='Could not convert raw image to numpy.array', exception_message=e.message)
 
         if experiment:
             pass
-            frame_metadata_event = create_event(type='frame', exp_id=experiment.exp_id, MoF=frame_metadata)
+            frame_metadata_event = create_event(event_type='frame', exp_id=experiment.exp_id, MoF=frame_metadata)
             send_frame_to_storage_webpage(frame_metadata_event=frame_metadata_event,
                                           image_numpy=image_numpy,
                                           send_to_webpage=send_to_webpage)
@@ -272,13 +273,12 @@ def prepare_send_frame(raw_image_with_metadata, experiment, send_to_webpage=Fals
             make_png(image_numpy)
 
     except ModExpError as e:
-        if experiment != None:
+        if experiment is not None:
             experiment.stop_exception = e
             experiment.to_be_stopped = True
         return False, e
 
     return True, None
-
 
 
 class Experiment:
@@ -313,24 +313,23 @@ class Experiment:
 
         getting_frame_message = 'Getting image, number: %d, mode: %s ...\n' % (self.frame_num, mode)
         logger.info(getting_frame_message)
-    
+
         if mode == 'dark':
-            raw_image_with_metadata = self.tomograph.get_frame(exposure=exposure, with_open_shutter=False, 
+            raw_image_with_metadata = self.tomograph.get_frame(exposure=exposure, with_open_shutter=False,
                                                                from_experiment=True, exp_is_advanced=False)
         else:
-            raw_image_with_metadata = self.tomograph.get_frame(exposure=exposure, with_open_shutter=True, 
+            raw_image_with_metadata = self.tomograph.get_frame(exposure=exposure, with_open_shutter=True,
                                                                from_experiment=True, exp_is_advanced=False)
-        #frame_dict = {  u'image_data':  {   'image': np.empty((10, 10)),    },  }
+        # frame_dict = {  u'image_data':  {   'image': np.empty((10, 10)),    },  }
 
         raw_image_with_metadata['mode'] = mode
         raw_image_with_metadata['number'] = self.frame_num
         send_to_webpage = (self.frame_num % self.FOSITW == 0)
         self.frame_num += 1
 
-        #prepare_send_frame(raw_image_with_metadata,self,send_to_webpage)
-        thr = threading.Thread(target=prepare_send_frame, args=(raw_image_with_metadata,self,send_to_webpage))
+        # prepare_send_frame(raw_image_with_metadata,self,send_to_webpage)
+        thr = threading.Thread(target=prepare_send_frame, args=(raw_image_with_metadata, self, send_to_webpage))
         thr.start()
-
 
     def run(self):
         # Closing shutter to get DARK images
@@ -356,8 +355,7 @@ class Experiment:
 
         self.tomograph.move_back(from_experiment=True, exp_is_advanced=False)
 
-
-        logger.info('Going to get DATA images, step count is %d!\n' % (self.DATA_step_count))
+        logger.info('Going to get DATA images, step count is %d!\n' % self.DATA_step_count)
         initial_angle = self.tomograph.get_angle(from_experiment=True, exp_is_advanced=False)
         logger.info('Initial angle is %.2f' % initial_angle)
         angle_step = self.DATA_angle_step
@@ -369,7 +367,8 @@ class Experiment:
             for j in range(0, self.DATA_count_per_step):
                 self.get_and_send_frame(exposure=None, mode='data')
 
-            # Rounding angles here, not in  check_and_prepare_exp_parameters(), cause it will be more accurately this way
+            # Rounding angles here, not in  check_and_prepare_exp_parameters(),
+            # cause it will be more accurately this way
             new_angle = (round((i + 1) * angle_step + initial_angle, 2)) % 360
             logger.info('Finished with this angle, turning to new angle %.2f...' % (new_angle))
             self.tomograph.set_angle(new_angle, from_experiment=True, exp_is_advanced=False)
@@ -379,4 +378,3 @@ class Experiment:
 
         self.tomograph.source_power_off(from_experiment=True, exp_is_advanced=False)
         return
-
