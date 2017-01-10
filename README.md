@@ -37,3 +37,21 @@ cd ../../drivers
 docker-compose build
 docker-compose up -d
 ```
+
+Configure port forwarding
+
+```
+#crontab -e 
+@reboot autossh -M 20100 -f -N -R 5080:localhost:5080 makov@109.234.38.83
+@reboot autossh -M 20110 -f -N -R 5443:localhost:5443 makov@109.234.38.83
+```
+
+To configure iptables on the gate (add to the start of /etc/ufw/before/rules:
+
+```
+*nat
+:PREROUTING ACCEPT [0:0]
+-A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 5080
+-A PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 5443
+COMMIT
+```
