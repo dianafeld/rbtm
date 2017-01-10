@@ -17,7 +17,7 @@ MAINTAINER itsnotme
 #RUN apt-get update && \
 #    apt-get install -y debconf-utils
 
-#RUN printf "\
+
 #  mysql-server mysql-server/root_password password ${DB_ROOT_PASSWORD}\n \
 #  mysql-server mysql-server/root_password_again password ${DB_ROOT_PASSWORD}\n \
 #  tango-common tango-common/tango-host string 127.0.0.1:10000\n \
@@ -41,11 +41,6 @@ WORKDIR /var/www/drivers/
 
 RUN pip install -r requirements_docker.txt
 
-# detector
-RUN wget http://www.ximea.com/support/attachments/271/XIMEA_Linux_SP.tgz && tar -zxvf XIMEA_Linux_SP.tgz && cd package
-RUN ln -s /var/www/drivers/package/include /usr/include/m3api
-# RUN echo "LD_LIBRARY_PATH=package/libs/libusb/X64/:package/libs/libraw1394/X64" >> ~/.bashrc
-
 # motor 
 RUN wget http://files.ximc.ru/libximc/ximc-2.8.7.tar.gz && tar -zxvf ximc-2.8.7.tar.gz && \
     cd ximc-2.8.7/ximc/deb && dpkg -i libximc7_2.8.7-1_amd64.deb libximc7-dev_2.8.7-1_amd64.deb && apt-get install -f
@@ -53,9 +48,14 @@ RUN wget http://files.ximc.ru/libximc/ximc-2.8.7.tar.gz && tar -zxvf ximc-2.8.7.
 ENV TZ=Europe/Moscow
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-COPY . /var/www/drivers/
+# detector
+RUN wget http://www.ximea.com/downloads/recent/XIMEA_Linux_SP.tgz && tar -zxvf XIMEA_Linux_SP.tgz && cd package
+RUN ln -s /var/www/drivers/package/include /usr/include/m3api
+RUN ln -s /var/www/drivers/package/api/X64/libm3api.so* /usr/lib/ &&\
+ ln -s /var/www/drivers/package/api/X64/libm3api.so.2 /usr/lib/libm3api.so &&\
+ ldconfig
 
-RUN cp drivers_supervisord.conf /etc/supervisor/conf.d/
+# RUN echo "LD_LIBRARY_PATH=package/libs/libusb/X64/:package/libs/libraw1394/X64" >> ~/.bashrc
 
 #RUN service tango-db start && \
 #    service tango-starter start && \
@@ -64,6 +64,8 @@ RUN cp drivers_supervisord.conf /etc/supervisor/conf.d/
 
 # RUN echo "TANGO_HOST=rbtm-tango:10000" >> ~/.bashrc
 
+COPY . /var/www/drivers/
+RUN cp drivers_supervisord.conf /etc/supervisor/conf.d/
 
 RUN python setup.py build_ext
 
