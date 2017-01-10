@@ -1,6 +1,6 @@
 # based on https://hub.docker.com/r/mliszcz/tango-cs/~/dockerfile/
 
-FROM mliszcz/tango-cs
+FROM buzmakov/tango-cs:stable
 
 MAINTAINER itsnotme
 
