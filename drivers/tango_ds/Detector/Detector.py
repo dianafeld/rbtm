@@ -156,8 +156,9 @@ class Detector (PyTango.Device_4Impl):
         self.detector.enable_cooling()
 
         for tries in range(2):
-            self.detector.set_roi(0, 4007, 0, 2671)
-            # self.detector.set_roi(700, 2000, 700, 1970)
+            #self.detector.set_roi(0, 4007, 0, 2671)
+            self.detector.set_roi(500, 3000, 10, 2650)
+            # self.detector.set_roi(100, 2000, 700, 1970)
         
         self.attr_image_read = PyTango.EncodedAttribute()
 
@@ -195,21 +196,21 @@ class Detector (PyTango.Device_4Impl):
         #----- PROTECTED REGION ID(Detector.image_read) ENABLED START -----#
         attr.set_value(self.attr_image_read)
         
-        #----- PROTECTED REGION END -----#	//	Detector.image_read
+        #----- PROTECTED REGION END -----#  //  Detector.image_read
         
     def read_hous_temp(self, attr):
         self.debug_stream("In read_hous_temp()")
         #----- PROTECTED REGION ID(Detector.hous_temp_read) ENABLED START -----#
         attr.set_value(self.detector.get_hous_temp())
         
-        #----- PROTECTED REGION END -----#	//	Detector.hous_temp_read
+        #----- PROTECTED REGION END -----#  //  Detector.hous_temp_read
         
     def read_chip_temp(self, attr):
         self.debug_stream("In read_chip_temp()")
         #----- PROTECTED REGION ID(Detector.chip_temp_read) ENABLED START -----#
         attr.set_value(self.detector.get_chip_temp())
         
-        #----- PROTECTED REGION END -----#	//	Detector.chip_temp_read
+        #----- PROTECTED REGION END -----#  //  Detector.chip_temp_read
         
     def _reinit_detector(self):
         """
@@ -298,7 +299,7 @@ class Detector (PyTango.Device_4Impl):
 
     #----- PROTECTED REGION ID(Detector.programmer_methods) ENABLED START -----#
     
-    #----- PROTECTED REGION END -----#	//	Detector.programmer_methods
+    #----- PROTECTED REGION END -----#  //  Detector.programmer_methods
 
 class DetectorClass(PyTango.DeviceClass):
     #--------- Add you global class variables here --------------------------
@@ -379,7 +380,7 @@ def main():
         py.add_class(DetectorClass,Detector,'Detector')
         #----- PROTECTED REGION ID(Detector.add_classes) ENABLED START -----#
         
-        #----- PROTECTED REGION END -----#	//	Detector.add_classes
+        #----- PROTECTED REGION END -----#  //  Detector.add_classes
 
         U = PyTango.Util.instance()
         U.server_init()
