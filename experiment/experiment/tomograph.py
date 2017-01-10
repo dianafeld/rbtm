@@ -511,7 +511,7 @@ class Tomograph:
         self.basic_tomo_check(from_experiment)
 
         hous_temp_attr = self.try_thrice_read_attr_detector("hous_temp",
-                                                        rror_str='Could not get hous temperature because of tomograph')
+                                                        error_str='Could not get hous temperature because of tomograph')
 
         hous_temp = hous_temp_attr.value
         logger.info('Hous temperature is %.2f' % hous_temp)

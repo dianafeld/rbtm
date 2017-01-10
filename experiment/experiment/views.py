@@ -310,62 +310,60 @@ def check_and_prepare_exp_parameters(exp_param):
     return True, ''
 
 
-"""
-def time_counter_of_experiment(tomograph, exp_id, exp_time=MAX_EXPERIMENT_TIME):
-    time.sleep(exp_time)
-    cur_exp = tomograph.current_experiment
-    if (cur_exp != None and cur_exp.exp_id == exp_id):
-        logger.info("\nEXPERIMENT TAKES TOO LONG, GOING TO STOP IT!\n")
-        cur_exp.to_be_stopped = True
-        cur_exp.exp_stop_reason = "# MODULE EXPERIMENT: EXPERIMENT TAKES TOO LONG #"
-    return
-
-
-def carry_out_advanced_experiment(tomograph, exp_param):
-    exp_id = exp_param['exp_id']
-    exp_code_string = exp_param['instruction']
-    # 't_0M_o_9_r_' - strange name of object, because using user of this "word" in instruction is unlikely
-    exp_code_string = exp_code_string.replace("open_shutter", "t_0M_o_9_r_.open_shutter")
-    exp_code_string = exp_code_string.replace("close_shutter", "t_0M_o_9_r_.close_shutter")
-    exp_code_string = exp_code_string.replace("set_x", "t_0M_o_9_r_.set_x")
-    exp_code_string = exp_code_string.replace("set_y", "t_0M_o_9_r_.set_y")
-    # rename method 'reset_angle' to 'reset_to_zero_angle' because 'set_angle' is substring of 'reset_angle'
-    exp_code_string = exp_code_string.replace("reset_angle", "t_0M_o_9_r_.reset_to_zero_angle")
-    exp_code_string = exp_code_string.replace("set_angle", "t_0M_o_9_r_.set_angle")
-    exp_code_string = exp_code_string.replace("get_x", "t_0M_o_9_r_.get_x")
-    exp_code_string = exp_code_string.replace("get_y", "t_0M_o_9_r_.get_y")
-    exp_code_string = exp_code_string.replace("get_angle", "t_0M_o_9_r_.get_angle")
-    exp_code_string = exp_code_string.replace("move_away", "t_0M_o_9_r_.move_away")
-    exp_code_string = exp_code_string.replace("move_back", "t_0M_o_9_r_.move_back")
-    exp_code_string = exp_code_string.replace("get_frame", "t_0M_o_9_r_.get_frame")
-    exp_code_string = exp_code_string.replace("send_frame", "t_0M_o_9_r_.se")
-    print
-    exp_code_string
-    time_of_experiment_start = time.time()
-    thr = threading.Thread(target=time_counter_of_experiment, args=(tomograph, exp_id))
-    thr.start()
-    try:
-        exec (exp_code_string, {'__builtins__': {}, 't_0M_o_9_r_': tomograph})
-    except tomograph.ExpStopException as e:
-        return
-    except SyntaxError as e:
-        print
-        repr(e)
-        tomograph.handle_emergency_stop(exp_is_advanced=False, exp_id=exp_id,
-                                        error="Syntax of experiment instruction is NOT correct",
-                                        exception_message=e.message)
-        return
-
-    except Exception as e:
-        print
-        repr(e)
-        tomograph.handle_emergency_stop(exp_is_advanced=False, exp_id=exp_id, error="Exception during experiment",
-                                        exception_message=e.message)
-        return
-
-    tomograph.handle_successful_stop(time_of_experiment_start)
-    return
-"""
+# def time_counter_of_experiment(tomograph, exp_id, exp_time=MAX_EXPERIMENT_TIME):
+#     time.sleep(exp_time)
+#     cur_exp = tomograph.current_experiment
+#     if (cur_exp != None and cur_exp.exp_id == exp_id):
+#         logger.info("\nEXPERIMENT TAKES TOO LONG, GOING TO STOP IT!\n")
+#         cur_exp.to_be_stopped = True
+#         cur_exp.exp_stop_reason = "# MODULE EXPERIMENT: EXPERIMENT TAKES TOO LONG #"
+#     return
+#
+#
+# def carry_out_advanced_experiment(tomograph, exp_param):
+#     exp_id = exp_param['exp_id']
+#     exp_code_string = exp_param['instruction']
+#     # 't_0M_o_9_r_' - strange name of object, because using user of this "word" in instruction is unlikely
+#     exp_code_string = exp_code_string.replace("open_shutter", "t_0M_o_9_r_.open_shutter")
+#     exp_code_string = exp_code_string.replace("close_shutter", "t_0M_o_9_r_.close_shutter")
+#     exp_code_string = exp_code_string.replace("set_x", "t_0M_o_9_r_.set_x")
+#     exp_code_string = exp_code_string.replace("set_y", "t_0M_o_9_r_.set_y")
+#     # rename method 'reset_angle' to 'reset_to_zero_angle' because 'set_angle' is substring of 'reset_angle'
+#     exp_code_string = exp_code_string.replace("reset_angle", "t_0M_o_9_r_.reset_to_zero_angle")
+#     exp_code_string = exp_code_string.replace("set_angle", "t_0M_o_9_r_.set_angle")
+#     exp_code_string = exp_code_string.replace("get_x", "t_0M_o_9_r_.get_x")
+#     exp_code_string = exp_code_string.replace("get_y", "t_0M_o_9_r_.get_y")
+#     exp_code_string = exp_code_string.replace("get_angle", "t_0M_o_9_r_.get_angle")
+#     exp_code_string = exp_code_string.replace("move_away", "t_0M_o_9_r_.move_away")
+#     exp_code_string = exp_code_string.replace("move_back", "t_0M_o_9_r_.move_back")
+#     exp_code_string = exp_code_string.replace("get_frame", "t_0M_o_9_r_.get_frame")
+#     exp_code_string = exp_code_string.replace("send_frame", "t_0M_o_9_r_.se")
+#     print
+#     exp_code_string
+#     time_of_experiment_start = time.time()
+#     thr = threading.Thread(target=time_counter_of_experiment, args=(tomograph, exp_id))
+#     thr.start()
+#     try:
+#         exec (exp_code_string, {'__builtins__': {}, 't_0M_o_9_r_': tomograph})
+#     except tomograph.ExpStopException as e:
+#         return
+#     except SyntaxError as e:
+#         print
+#         repr(e)
+#         tomograph.handle_emergency_stop(exp_is_advanced=False, exp_id=exp_id,
+#                                         error="Syntax of experiment instruction is NOT correct",
+#                                         exception_message=e.message)
+#         return
+#
+#     except Exception as e:
+#         print
+#         repr(e)
+#         tomograph.handle_emergency_stop(exp_is_advanced=False, exp_id=exp_id, error="Exception during experiment",
+#                                         exception_message=e.message)
+#         return
+#
+#     tomograph.handle_successful_stop(time_of_experiment_start)
+#     return
 
 
 # NEED TO EDIT (COMMENT BEFORE POWERING ON SOURCE)
