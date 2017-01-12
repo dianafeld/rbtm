@@ -2,7 +2,7 @@ from shutter import Shutter
 
 from time import sleep
 if __name__ == "__main__":
-    s = Shutter('/dev/ttyACM0', 4)
+    s = Shutter('/dev/ttyACM2', 4)
     s.open()
     print(s.is_open())
     sleep(0.5)
