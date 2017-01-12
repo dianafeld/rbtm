@@ -31,7 +31,7 @@ MAINTAINER itsnotme
 #RUN service mysql start && \
 #    apt-get install -y tango-db tango-accesscontrol tango-test
 
-RUN apt-get update && apt-get install -y wget python python-pip python-dev python-numpy python-pytango supervisor && \
+RUN apt-get update && apt-get install -y wget python python-pip python-dev python-numpy python-pytango supervisor libtiff-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # ROBO-TOM
