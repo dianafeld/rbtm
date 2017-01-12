@@ -137,13 +137,13 @@ def source_get_current(tomo_num):
     return call_method_create_response(tomo_num, method_name='source_get_current')
 
 
-@app.route('/tomograph/<int:tomo_num>/shutter/open/<time_>', methods=['GET'])
+@app.route('/tomograph/<int:tomo_num>/shutter/open/<int:time_>', methods=['GET'])
 def shutter_open(tomo_num, time_):
     logger.info('\n\nREQUEST: SHUTTER/OPEN')
     return call_method_create_response(tomo_num, method_name='open_shutter', args=time_)
 
 
-@app.route('/tomograph/<int:tomo_num>/shutter/close/<time_>', methods=['GET'])
+@app.route('/tomograph/<int:tomo_num>/shutter/close/<int:time_>', methods=['GET'])
 def shutter_close(tomo_num, time_):
     logger.info('\n\nREQUEST: SHUTTER/CLOSE')
     return call_method_create_response(tomo_num, method_name='close_shutter', args=time_)
