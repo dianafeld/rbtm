@@ -336,30 +336,30 @@ class Experiment:
         self.to_be_stopped = False
         self.stop_exception = None
 
-        self.tomograph.source_power_on(from_experiment=True, exp_is_advanced=False)
-        self.tomograph.close_shutter(0, from_experiment=True, exp_is_advanced=False)
+        self.tomograph.source_power_on(from_experiment=True)
+        self.tomograph.close_shutter(0, from_experiment=True)
         time.sleep(1.0)
         logger.info('Going to get DARK images!\n')
-        self.tomograph.set_exposure(self.DARK_exposure, from_experiment=True, exp_is_advanced=False)
+        self.tomograph.set_exposure(self.DARK_exposure, from_experiment=True)
         for i in range(0, self.DARK_count):
             self.get_and_send_frame(exposure=None, mode='dark')
         logger.info('Finished with DARK images!\n')
-        self.tomograph.open_shutter(0, from_experiment=True, exp_is_advanced=False)
-        self.tomograph.move_away(from_experiment=True, exp_is_advanced=False)
+        self.tomograph.open_shutter(0, from_experiment=True)
+        self.tomograph.move_away(from_experiment=True)
 
         logger.info('Going to get EMPTY images!\n')
-        self.tomograph.set_exposure(self.EMPTY_exposure, from_experiment=True, exp_is_advanced=False)
+        self.tomograph.set_exposure(self.EMPTY_exposure, from_experiment=True)
         for i in range(0, self.EMPTY_count):
             self.get_and_send_frame(exposure=None, mode='empty')
         logger.info('Finished with EMPTY images!\n')
 
-        self.tomograph.move_back(from_experiment=True, exp_is_advanced=False)
+        self.tomograph.move_back(from_experiment=True)
 
         logger.info('Going to get DATA images, step count is %d!\n' % self.DATA_step_count)
-        initial_angle = self.tomograph.get_angle(from_experiment=True, exp_is_advanced=False)
+        initial_angle = self.tomograph.get_angle(from_experiment=True)
         logger.info('Initial angle is %.2f' % initial_angle)
         angle_step = self.DATA_angle_step
-        self.tomograph.set_exposure(self.DATA_exposure, from_experiment=True, exp_is_advanced=False)
+        self.tomograph.set_exposure(self.DATA_exposure, from_experiment=True)
         for i in range(0, self.DATA_step_count):
             current_angle = (round((i * angle_step) + initial_angle, 2)) % 360
             logger.info('Getting DATA images: angle is %.2f' % current_angle)
@@ -371,10 +371,10 @@ class Experiment:
             # cause it will be more accurately this way
             new_angle = (round((i + 1) * angle_step + initial_angle, 2)) % 360
             logger.info('Finished with this angle, turning to new angle %.2f...' % (new_angle))
-            self.tomograph.set_angle(new_angle, from_experiment=True, exp_is_advanced=False)
+            self.tomograph.set_angle(new_angle, from_experiment=True)
 
         logger.info('Finished with DATA images!\n')
-        self.tomograph.close_shutter(0, from_experiment=True, exp_is_advanced=False)
+        self.tomograph.close_shutter(0, from_experiment=True)
 
-        self.tomograph.source_power_off(from_experiment=True, exp_is_advanced=False)
+        self.tomograph.source_power_off(from_experiment=True)
         return
