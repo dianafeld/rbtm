@@ -2,6 +2,10 @@ FROM ubuntu:trusty
 
 MAINTAINER itsnotme
 
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Moscow
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 RUN DEBIAN_FRONTEND=noninteractive  apt-get update \
  && apt-get install -y python python-pip nginx supervisor pkg-config \
                        libfreetype6-dev python-numpy python-matplotlib python-scipy python-pytango \

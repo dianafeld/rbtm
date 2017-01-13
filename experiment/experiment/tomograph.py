@@ -51,9 +51,6 @@ def try_thrice_function(func, args=(), error_str=''):
 
 class Tomograph:
     """ Wrapper of interaction with Tango tomograph server"""
-    tomograph_proxy = None
-    detector_proxy = None
-    current_experiment = None
 
     def __init__(self, tomograph_proxy_addr, detector_proxy_addr, timeout_millis=TIMEOUT_MILLIS):
         """
@@ -61,11 +58,14 @@ class Tomograph:
                'detector_proxy_addr' - type is string
                'timeout_millis' - time that tomograph waits after command, type is int
         """
+
         self.tomograph_proxy = PyTango.DeviceProxy(tomograph_proxy_addr)
         self.tomograph_proxy.set_timeout_millis(timeout_millis)
 
         self.detector_proxy = PyTango.DeviceProxy(detector_proxy_addr)
         self.detector_proxy.set_timeout_millis(timeout_millis)
+
+        self.current_experiment = None
 
     def try_thrice_read_attr(self, attr_name, extract_as=ExtractAs.Numpy, error_str=''):
         """ Try to read some attribute of Tango device three times
@@ -501,7 +501,7 @@ class Tomograph:
         self.basic_tomo_check(from_experiment)
 
         chip_temp_attr = self.try_thrice_read_attr_detector("chip_temp",
-                                                        error_str='Could not get chip temperature because of tomograph')
+                                                            error_str='Could not get chip temperature because of tomograph')
         chip_temp = chip_temp_attr.value
         logger.info('Chip temperature is %.2f' % chip_temp)
         return chip_temp
@@ -511,7 +511,7 @@ class Tomograph:
         self.basic_tomo_check(from_experiment)
 
         hous_temp_attr = self.try_thrice_read_attr_detector("hous_temp",
-                                                        error_str='Could not get hous temperature because of tomograph')
+                                                            error_str='Could not get hous temperature because of tomograph')
 
         hous_temp = hous_temp_attr.value
         logger.info('Hous temperature is %.2f' % hous_temp)

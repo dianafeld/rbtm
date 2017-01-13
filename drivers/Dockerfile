@@ -30,6 +30,7 @@ MAINTAINER itsnotme
 
 #RUN service mysql start && \
 #    apt-get install -y tango-db tango-accesscontrol tango-test
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y wget python python-pip python-dev python-numpy python-pytango supervisor libtiff-dev && \
     rm -rf /var/lib/apt/lists/*
