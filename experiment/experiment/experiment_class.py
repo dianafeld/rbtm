@@ -316,10 +316,10 @@ class Experiment:
 
         if mode == 'dark':
             raw_image_with_metadata = self.tomograph.get_frame(exposure=exposure, with_open_shutter=False,
-                                                               from_experiment=True, exp_is_advanced=False)
+                                                               from_experiment=True)
         else:
             raw_image_with_metadata = self.tomograph.get_frame(exposure=exposure, with_open_shutter=True,
-                                                               from_experiment=True, exp_is_advanced=False)
+                                                               from_experiment=True)
         # frame_dict = {  u'image_data':  {   'image': np.empty((10, 10)),    },  }
 
         raw_image_with_metadata['mode'] = mode
