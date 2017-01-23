@@ -51,9 +51,6 @@ def try_thrice_function(func, args=(), error_str=''):
 
 class Tomograph:
     """ Wrapper of interaction with Tango tomograph server"""
-    tomograph_proxy = None
-    detector_proxy = None
-    current_experiment = None
 
     def __init__(self, tomograph_proxy_addr, detector_proxy_addr, timeout_millis=TIMEOUT_MILLIS):
         """
@@ -66,6 +63,7 @@ class Tomograph:
 
         self.detector_proxy = PyTango.DeviceProxy(detector_proxy_addr)
         self.detector_proxy.set_timeout_millis(timeout_millis)
+        self.current_experiment = None
 
     def try_thrice_read_attr(self, attr_name, extract_as=ExtractAs.Numpy, error_str=''):
         """ Try to read some attribute of Tango device three times

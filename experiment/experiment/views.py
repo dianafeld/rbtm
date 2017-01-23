@@ -4,17 +4,42 @@
 Contains the main part of module "Experiment"
 More exactly - some supporting functions and functions for receiving queries
 """
+import os
+import logging
+from logging import StreamHandler
+from logging.handlers import RotatingFileHandler
 
-from flask import make_response
-from flask import request
-from flask import send_file
+from flask import Flask, make_response, request, send_file
 
 from experiment_class import *
 from tomograph import Tomograph
 
+app = Flask(__name__)
+
+logs_path = os.path.join('logs', 'experiment.log')
+if not os.path.exists(os.path.dirname(logs_path)):
+    os.makedirs(os.path.dirname(logs_path))
+
+app.logger.setLevel(logging.DEBUG)
+file_handler = RotatingFileHandler(logs_path, maxBytes=128000000, backupCount=1)
+file_handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s - %(name)s - [LINE:%(lineno)d]# - %(levelname)s - %(message)s")
+file_handler.setFormatter(formatter)
+app.logger.addHandler(file_handler)
+
+stream_handler = StreamHandler()
+stream_handler.setLevel(logging.DEBUG)
+stream_handler.setFormatter(formatter)
+app.logger.addHandler(stream_handler)
+
+# Dublicated logger?
+# log = logging.getLogger('werkzeug')
+# log.setLevel(logging.DEBUG)
+# log.addHandler(file_handler)
+
 logger = app.logger
 
-if REAL_TOMOGRAPH_STORAGE_WEBPAGE == True:
+if REAL_TOMOGRAPH_STORAGE_WEBPAGE:
     logger.info(' !! Tomograph, storage, web-page are REAL !! ')
 else:
     logger.info(' !! Tomograph, storage, web-page are STUBS !! ')
@@ -67,7 +92,7 @@ def call_method_create_response(tomo_num, method_name, args=(), GET_FRAME_method
             logger.info(e.message)
             return create_response(success=False, error="unexpected exception")
     """
-    if GET_FRAME_method == False:
+    if not GET_FRAME_method:
         return create_response(success=True, result=result)
     else:
         success, ModExpError_if_fail = prepare_send_frame(raw_image_with_metadata=result, experiment=None)

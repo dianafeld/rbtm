@@ -280,17 +280,14 @@ def prepare_send_frame(raw_image_with_metadata, experiment, send_to_webpage=Fals
 
     return True, None
 
-
+from experiment.tomograph import Tomograph
 class Experiment:
     """ For storing information about experiment during time it runs """
-
-    exp_id = ''
-    to_be_stopped = False
-    stop_exception = None
 
     def __init__(self, tomograph, exp_param, FOSITW=5):
         # FOSITW - 'Frequency Of Sending Images To Webpage '
 
+        # self.tomograph = Tomograph(1,2)
         self.tomograph = tomograph
         self.exp_id = exp_param['exp_id']
 
@@ -308,6 +305,8 @@ class Experiment:
         self.FOSITW = FOSITW
 
         self.frame_num = 0
+        self.to_be_stopped = False
+        self.stop_exception = None
 
     def get_and_send_frame(self, exposure, mode):
 
@@ -335,18 +334,18 @@ class Experiment:
         # Closing shutter to get DARK images
         self.to_be_stopped = False
         self.stop_exception = None
-
         self.tomograph.source_power_on(from_experiment=True)
         self.tomograph.close_shutter(0, from_experiment=True)
         time.sleep(1.0)
+
         logger.info('Going to get DARK images!\n')
         self.tomograph.set_exposure(self.DARK_exposure, from_experiment=True)
         for i in range(0, self.DARK_count):
             self.get_and_send_frame(exposure=None, mode='dark')
         logger.info('Finished with DARK images!\n')
+
         self.tomograph.open_shutter(0, from_experiment=True)
         self.tomograph.move_away(from_experiment=True)
-
         logger.info('Going to get EMPTY images!\n')
         self.tomograph.set_exposure(self.EMPTY_exposure, from_experiment=True)
         for i in range(0, self.EMPTY_count):
@@ -354,27 +353,37 @@ class Experiment:
         logger.info('Finished with EMPTY images!\n')
 
         self.tomograph.move_back(from_experiment=True)
-
         logger.info('Going to get DATA images, step count is %d!\n' % self.DATA_step_count)
         initial_angle = self.tomograph.get_angle(from_experiment=True)
         logger.info('Initial angle is %.2f' % initial_angle)
-        angle_step = self.DATA_angle_step
         self.tomograph.set_exposure(self.DATA_exposure, from_experiment=True)
-        for i in range(0, self.DATA_step_count):
-            current_angle = (round((i * angle_step) + initial_angle, 2)) % 360
+        reference_angles = np.arange(0,361,45)
+        # Rounding angles here, not in  check_and_prepare_exp_parameters(),
+        # cause it will be more accurately this way
+        data_angles = np.round((np.arange(0, self.DATA_step_count)) * self.DATA_angle_step + initial_angle, 2) % 360
+
+        for current_angle in np.hstack([reference_angles, data_angles]):
+            self.check_source()
+            logger.info('Starting with this angle, turning to new angle %.2f...' % current_angle)
+            self.tomograph.set_angle(current_angle, from_experiment=True)
+            # TODO: check angle after rotation
             logger.info('Getting DATA images: angle is %.2f' % current_angle)
 
             for j in range(0, self.DATA_count_per_step):
                 self.get_and_send_frame(exposure=None, mode='data')
 
-            # Rounding angles here, not in  check_and_prepare_exp_parameters(),
-            # cause it will be more accurately this way
-            new_angle = (round((i + 1) * angle_step + initial_angle, 2)) % 360
-            logger.info('Finished with this angle, turning to new angle %.2f...' % (new_angle))
-            self.tomograph.set_angle(new_angle, from_experiment=True)
+            logger.info('Finished with this angle, turning to new angle ...' )
 
         logger.info('Finished with DATA images!\n')
         self.tomograph.close_shutter(0, from_experiment=True)
 
         self.tomograph.source_power_off(from_experiment=True)
         return
+
+    def check_source(self):
+        if self.tomograph.source_get_current() < 2 or self.tomograph.source_get_voltage() < 2:
+            logger.info('X-ray source in wrong mode, try restart (off/on)')
+            self.tomograph.source_power_off(from_experiment=True)
+            time.sleep(5)
+            self.tomograph.source_power_on(from_experiment=True)
+            time.sleep(5)
