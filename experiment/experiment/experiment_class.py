@@ -16,13 +16,13 @@ from scipy.ndimage import zoom
 import threading
 import time
 
+from flask import current_app
+
 import matplotlib.pyplot as plt
 
-from conf import *
+from experiment.conf import FRAME_PNG_FILENAME, WEBPAGE_URI, STORAGE_EXP_FINISH_URI, STORAGE_FRAMES_URI
 
-from experiment import app
-
-logger = app.logger
+# logger = current_app.logger
 
 EMERGENCY_STOP_MSG = 'Experiment was emergency stopped'
 SOMEONE_STOP_MSG = 'Experiment was stopped by someone'
@@ -109,15 +109,15 @@ class ModExpError(Exception):
 
     def log(self, exp_id=''):
         if exp_id:
-            logger.info(self.stop_msg + ', id: ' + exp_id)
+            current_app.logger.info(self.stop_msg + ', id: ' + exp_id)
         else:
-            logger.info("ERROR:")
+            current_app.logger.info("ERROR:")
 
         if self.stop_msg == EMERGENCY_STOP_MSG:
-            logger.info("   " + self.error)
-            logger.info("   " + self.exception_message)
+            current_app.logger.info("   " + self.error)
+            current_app.logger.info("   " + self.exception_message)
         else:
-            logger.info("Reason:    " + self.error)
+            current_app.logger.info("Reason:    " + self.error)
 
 
 def make_png(image_numpy, png_filename=FRAME_PNG_FILENAME):
@@ -127,7 +127,7 @@ def make_png(image_numpy, png_filename=FRAME_PNG_FILENAME):
 
     :return: 
     """
-    logger.info("Converting image to png-file...")
+    current_app.logger.info("Converting image to png-file...")
     res = image_numpy
     try:
         small_res = zoom(np.rot90(res), zoom=0.25, order=2)
@@ -135,7 +135,7 @@ def make_png(image_numpy, png_filename=FRAME_PNG_FILENAME):
     except Exception as e:
         raise ModExpError(error="Could not make png-file from image", exception_message=e.message)
 
-    logger.info("Image was converted!")
+    current_app.logger.info("Image was converted!")
 
 
 def send_event_to_webpage(event_dict):
@@ -164,13 +164,13 @@ def send_event_to_webpage(event_dict):
     elif event_dict['type'] == 'message':
         data = json.dumps(event_dict)
 
-    logger.info('Sending to web-page of adjustment...')
+    current_app.logger.info('Sending to web-page of adjustment...')
     try:
         req_webpage = requests.post(WEBPAGE_URI, data=data, files=files)
     except Exception as e:
         raise ModExpError(error='Could not send to web-page of adjustment', exception_message=str(e))
 
-    logger.info(req_webpage.content)
+    current_app.logger.info(req_webpage.content)
 
 
 def send_to_storage(storage_uri, data, files=None):
@@ -180,15 +180,15 @@ def send_to_storage(storage_uri, data, files=None):
     :return:
     """
 
-    logger.info('Sending to storage...')
+    current_app.logger.info('Sending to storage...')
     try:
         storage_resp = requests.post(storage_uri, files=files, data=data)
     except Exception as e:
-        logger.info(e.message)
+        current_app.logger.info(e.message)
         raise ModExpError(error='Problems with storage', exception_message='Could not send to storage' """e.message""")
         # IF UNCOMMENT   #exception_message,    OCCURS PROBLEMS WITH JSON.DUMPS(...) LATER
 
-    logger.info(storage_resp.content)
+    current_app.logger.info(storage_resp.content)
     try:
         storage_resp_dict = json.loads(storage_resp.content)
     except (ValueError, TypeError):
@@ -255,7 +255,7 @@ def prepare_send_frame(raw_image_with_metadata, experiment, send_to_webpage=Fals
     frame_metadata = raw_image_with_metadata
 
     try:
-        logger.info("Image was red, preparing the image to send...")
+        current_app.logger.info("Image was red, preparing the image to send...")
         try:
             enc = PyTango.EncodedAttribute()
             image_numpy = enc.decode_gray16(raw_image)
@@ -280,7 +280,10 @@ def prepare_send_frame(raw_image_with_metadata, experiment, send_to_webpage=Fals
 
     return True, None
 
-from experiment.tomograph import Tomograph
+
+# from experiment.tomograph import Tomograph
+
+
 class Experiment:
     """ For storing information about experiment during time it runs """
 
@@ -311,7 +314,7 @@ class Experiment:
     def get_and_send_frame(self, exposure, mode):
 
         getting_frame_message = 'Getting image, number: %d, mode: %s ...\n' % (self.frame_num, mode)
-        logger.info(getting_frame_message)
+        current_app.logger.info(getting_frame_message)
 
         if mode == 'dark':
             raw_image_with_metadata = self.tomograph.get_frame(exposure=exposure, with_open_shutter=False,
@@ -338,43 +341,43 @@ class Experiment:
         self.tomograph.close_shutter(0, from_experiment=True)
         time.sleep(1.0)
 
-        logger.info('Going to get DARK images!\n')
+        current_app.logger.info('Going to get DARK images!\n')
         self.tomograph.set_exposure(self.DARK_exposure, from_experiment=True)
         for i in range(0, self.DARK_count):
             self.get_and_send_frame(exposure=None, mode='dark')
-        logger.info('Finished with DARK images!\n')
+        current_app.logger.info('Finished with DARK images!\n')
 
         self.tomograph.open_shutter(0, from_experiment=True)
         self.tomograph.move_away(from_experiment=True)
-        logger.info('Going to get EMPTY images!\n')
+        current_app.logger.info('Going to get EMPTY images!\n')
         self.tomograph.set_exposure(self.EMPTY_exposure, from_experiment=True)
         for i in range(0, self.EMPTY_count):
             self.get_and_send_frame(exposure=None, mode='empty')
-        logger.info('Finished with EMPTY images!\n')
+        current_app.logger.info('Finished with EMPTY images!\n')
 
         self.tomograph.move_back(from_experiment=True)
-        logger.info('Going to get DATA images, step count is %d!\n' % self.DATA_step_count)
+        current_app.logger.info('Going to get DATA images, step count is %d!\n' % self.DATA_step_count)
         initial_angle = self.tomograph.get_angle(from_experiment=True)
-        logger.info('Initial angle is %.2f' % initial_angle)
+        current_app.logger.info('Initial angle is %.2f' % initial_angle)
         self.tomograph.set_exposure(self.DATA_exposure, from_experiment=True)
-        reference_angles = np.arange(0,361,45)
+        reference_angles = np.arange(0, 361, 45)
         # Rounding angles here, not in  check_and_prepare_exp_parameters(),
         # cause it will be more accurately this way
         data_angles = np.round((np.arange(0, self.DATA_step_count)) * self.DATA_angle_step + initial_angle, 2) % 360
 
         for current_angle in np.hstack([reference_angles, data_angles]):
             self.check_source()
-            logger.info('Starting with this angle, turning to new angle %.2f...' % current_angle)
+            current_app.logger.info('Starting with this angle, turning to new angle %.2f...' % current_angle)
             self.tomograph.set_angle(current_angle, from_experiment=True)
             # TODO: check angle after rotation
-            logger.info('Getting DATA images: angle is %.2f' % current_angle)
+            current_app.logger.info('Getting DATA images: angle is %.2f' % current_angle)
 
             for j in range(0, self.DATA_count_per_step):
                 self.get_and_send_frame(exposure=None, mode='data')
 
-            logger.info('Finished with this angle, turning to new angle ...' )
+            current_app.logger.info('Finished with this angle, turning to new angle ...')
 
-        logger.info('Finished with DATA images!\n')
+        current_app.logger.info('Finished with DATA images!\n')
         self.tomograph.close_shutter(0, from_experiment=True)
 
         self.tomograph.source_power_off(from_experiment=True)
@@ -382,7 +385,7 @@ class Experiment:
 
     def check_source(self):
         if self.tomograph.source_get_current() < 2 or self.tomograph.source_get_voltage() < 2:
-            logger.info('X-ray source in wrong mode, try restart (off/on)')
+            current_app.logger.info('X-ray source in wrong mode, try restart (off/on)')
             self.tomograph.source_power_off(from_experiment=True)
             time.sleep(5)
             self.tomograph.source_power_on(from_experiment=True)

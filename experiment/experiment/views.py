@@ -5,14 +5,18 @@ Contains the main part of module "Experiment"
 More exactly - some supporting functions and functions for receiving queries
 """
 import os
+import json
+import threading
+
 import logging
 from logging import StreamHandler
 from logging.handlers import RotatingFileHandler
 
 from flask import Flask, make_response, request, send_file
 
-from experiment_class import *
-from tomograph import Tomograph
+from experiment.experiment_class import create_response, ModExpError, prepare_send_frame, send_to_storage, SOMEONE_STOP_MSG
+from experiment.conf import REAL_TOMOGRAPH_STORAGE_WEBPAGE, TOMO_ADDR, FRAME_PNG_FILENAME, STORAGE_EXP_START_URI
+from experiment.tomograph import Tomograph
 
 app = Flask(__name__)
 

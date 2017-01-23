@@ -11,13 +11,15 @@ Contains supporting functions and class "Tomograph" with methods for comfortable
 # NEED TO EDIT DOCSTRINGS!
 # Need to look at checking types of arguments, which go to Tango-tomograph functions
 
-from PyTango import ExtractAs
 
-from experiment_class import *
+import json
+import time
+import PyTango
+from experiment.experiment_class import ModExpError, Experiment, create_event, SUCCESSFUL_STOP_MSG, send_message_to_storage_webpage
+from experiment.conf import TIMEOUT_MILLIS
 
-from experiment import app
-
-logger = app.logger
+from flask import current_app
+# logger = current_app.logger
 
 
 def try_thrice_function(func, args=(), error_str=''):
@@ -38,10 +40,10 @@ def try_thrice_function(func, args=(), error_str=''):
             # (24.11.15) Not very mature place: logging exception description before logging common 
             # error info (error_str), which will be logged after catching ModExpError exception
             for stage in e:
-                logger.info(stage.desc)
+                current_app.logger.info(stage.desc)
             exception_message = e[-1].desc
         except Exception as e:
-            logger.info(e.message)
+            current_app.logger.info(e.message)
             # Can be problems with converting to JSON e.message
             exception_message = e.message
         else:
@@ -65,7 +67,7 @@ class Tomograph:
         self.detector_proxy.set_timeout_millis(timeout_millis)
         self.current_experiment = None
 
-    def try_thrice_read_attr(self, attr_name, extract_as=ExtractAs.Numpy, error_str=''):
+    def try_thrice_read_attr(self, attr_name, extract_as=PyTango.ExtractAs.Numpy, error_str=''):
         """ Try to read some attribute of Tango device three times
         :arg: 'attr_name' - type is string
               'extract-as' - method of extraction
@@ -102,7 +104,7 @@ class Tomograph:
         raise ModExpError(error=error_str, exception_message=exception_message)
 
     def tomo_state(self):
-        logger.info('Checking tomograph...')
+        current_app.logger.info('Checking tomograph...')
         try:
             try_thrice_function(func=self.tomograph_proxy.ping, error_str="Tomograph is unavailable")
         except ModExpError as e:
@@ -110,10 +112,10 @@ class Tomograph:
             return 'unavailable', e.exception_message
 
         if self.current_experiment is not None:
-            logger.info("Tomograph is available; experiment IS running")
+            current_app.logger.info("Tomograph is available; experiment IS running")
             return 'experiment', ""
         else:
-            logger.info("Tomograph is available; experiment is NOT running")
+            current_app.logger.info("Tomograph is available; experiment is NOT running")
             return 'ready', ""
 
     def basic_tomo_check(self, from_experiment):
@@ -130,11 +132,11 @@ class Tomograph:
         :arg: 
         :return: 
         """
-        logger.info('Opening shutter...')
+        current_app.logger.info('Opening shutter...')
         self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.OpenShutter, args=time_, error_str='Could not open shutter')
-        logger.info('Shutter has been opened!')
+        current_app.logger.info('Shutter has been opened!')
 
     def close_shutter(self, time_=0, from_experiment=False):
         """ Tries to close shutter
@@ -142,11 +144,11 @@ class Tomograph:
         :arg: 
         :return: 
         """
-        logger.info('Closing shutter...')
+        current_app.logger.info('Closing shutter...')
         self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.CloseShutter, args=time_, error_str='Could not close shutter')
-        logger.info('Shutter has been closed!')
+        current_app.logger.info('Shutter has been closed!')
 
     def shutter_state(self, from_experiment=False):
         # TODO documentation
@@ -154,11 +156,11 @@ class Tomograph:
 
         :return: 
         """
-        logger.info('Getting shutter state...')
+        current_app.logger.info('Getting shutter state...')
         self.basic_tomo_check(from_experiment)
 
         status = try_thrice_function(func=self.tomograph_proxy.ShutterStatus, error_str='Could not get shutter status')
-        logger.info('Shutter return status successfully!')
+        current_app.logger.info('Shutter return status successfully!')
         return status
 
     # (14.11.15  10:37)
@@ -170,84 +172,84 @@ class Tomograph:
         :arg:
         :return:
         """
-        logger.info('Powering on source...')
+        current_app.logger.info('Powering on source...')
         self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.PowerOn,
                             error_str='Could not power on source')
-        logger.info('Source was powered ON!')
+        current_app.logger.info('Source was powered ON!')
 
     def source_power_off(self, from_experiment=False):
         """
         :arg:
         :return:
         """
-        logger.info('Powering off source...')
+        current_app.logger.info('Powering off source...')
         self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.PowerOff,
                             error_str='Could not power off source')
-        logger.info('Source was powered OFF!')
+        current_app.logger.info('Source was powered OFF!')
 
     def source_set_voltage(self, new_voltage):
-        logger.info('Going to set voltage on source...')
+        current_app.logger.info('Going to set voltage on source...')
         self.basic_tomo_check(from_experiment=False)
 
-        logger.info('Checking format...')
+        current_app.logger.info('Checking format...')
         if type(new_voltage) is not float:
-            logger.info('Incorrect format! Voltage type must be float, but it is ' + str(type(new_voltage)))
+            current_app.logger.info('Incorrect format! Voltage type must be float, but it is ' + str(type(new_voltage)))
             raise ModExpError(error='Incorrect format: type must be float')
 
             # TO DELETE THIS LATER
-        logger.info('Format is correct, new voltage value is %.1f...' % new_voltage)
+        current_app.logger.info('Format is correct, new voltage value is %.1f...' % new_voltage)
         if new_voltage < 2 or 60 < new_voltage:
             raise ModExpError(error='Voltage must have value from 2 to 60!')
 
-        logger.info('Parameters are normal, setting new voltage...')
+        current_app.logger.info('Parameters are normal, setting new voltage...')
         set_voltage = self.try_thrice_change_attr("xraysource_voltage", new_voltage,
                                                   error_str='Could not set voltage')
 
-        logger.info('New value of voltage was set!')
+        current_app.logger.info('New value of voltage was set!')
 
     def source_set_current(self, new_current):
-        logger.info('Going to set current on source...')
+        current_app.logger.info('Going to set current on source...')
         self.basic_tomo_check(from_experiment=False)
 
-        logger.info('Checking format...')
+        current_app.logger.info('Checking format...')
         if type(new_current) is not float:
-            logger.info('Incorrect format! Current type must be float, but it is ' + str(type(new_current)))
+            current_app.logger.info('Incorrect format! Current type must be float, but it is ' + str(type(new_current)))
             raise ModExpError(error='Incorrect format: type must be float')
 
         # TO DELETE THIS LATER
-        logger.info('Format is correct, new current value is %.1f...' % new_current)
+        current_app.logger.info('Format is correct, new current value is %.1f...' % new_current)
         if new_current < 2 or 80 < new_current:
             raise ModExpError(error='Current must have value from 2 to 80!')
 
-        logger.info('Parameters are normal, setting new current...')
+        current_app.logger.info('Parameters are normal, setting new current...')
         set_current = self.try_thrice_change_attr("xraysource_current", new_current,
                                                   error_str='Could not set current')
 
-        logger.info('New value of current was set!')
+        current_app.logger.info('New value of current was set!')
 
     def source_get_voltage(self):
-        logger.info('Going to get voltage...')
+        current_app.logger.info('Going to get voltage...')
         self.basic_tomo_check(from_experiment=False)
 
         voltage_attr = self.try_thrice_read_attr("xraysource_voltage",
                                                  error_str='Could not get voltage')
 
         voltage = voltage_attr.value
-        logger.info("Voltage is %.2f" % voltage)
+        current_app.logger.info("Voltage is %.2f" % voltage)
         return voltage
 
     def source_get_current(self):
-        logger.info('Going to get current...')
+        current_app.logger.info('Going to get current...')
         self.basic_tomo_check(from_experiment=False)
 
         current_attr = self.try_thrice_read_attr("xraysource_current",
                                                  error_str='Could not get current')
         current = current_attr.value
-        logger.info("Current is %.2f" % current)
+        current_app.logger.info("Current is %.2f" % current)
         return current
 
     def set_x(self, new_x, from_experiment=False):
@@ -255,7 +257,7 @@ class Tomograph:
         :arg:
             :return:
         """
-        logger.info('Going to set new horizontal position...')
+        current_app.logger.info('Going to set new horizontal position...')
 
         self.basic_tomo_check(from_experiment)
 
@@ -263,13 +265,13 @@ class Tomograph:
             raise ModExpError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_x)))
 
         # TO DELETE THIS LATER
-        logger.info('Setting value %.1f...' % new_x)
+        current_app.logger.info('Setting value %.1f...' % new_x)
         if new_x < -5000 or 2000 < new_x:
             raise ModExpError(error='Position must have value from -5000 to 2000')
 
         set_x = self.try_thrice_change_attr("horizontal_position", new_x,
                                             error_str='Could not set new position because of tomograph')
-        logger.info('Position was set!')
+        current_app.logger.info('Position was set!')
 
     def set_y(self, new_y, from_experiment=False):
         """ Tries to set new vertical position of object
@@ -278,7 +280,7 @@ class Tomograph:
 
         :return:
         """
-        logger.info('Going to set new vertical position...')
+        current_app.logger.info('Going to set new vertical position...')
 
         self.basic_tomo_check(from_experiment)
 
@@ -286,14 +288,14 @@ class Tomograph:
             raise ModExpError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_y)))
 
         # TO DELETE THIS LATER
-        logger.info('Setting value %.1f...' % new_y)
+        current_app.logger.info('Setting value %.1f...' % new_y)
         if new_y < -5000 or 2000 < new_y:
             raise ModExpError(error='Position must have value from -30 to 30')
 
         set_y = self.try_thrice_change_attr("vertical_position", new_y,
                                             error_str='Could not set new position because of tomograph')
 
-        logger.info('Position was set!')
+        current_app.logger.info('Position was set!')
 
     def set_angle(self, new_angle, from_experiment=False):
         """ Tries to set new angle position of object
@@ -302,7 +304,7 @@ class Tomograph:
 
         :return:
         """
-        logger.info('Going to set new angle position...')
+        current_app.logger.info('Going to set new angle position...')
 
         self.basic_tomo_check(from_experiment)
 
@@ -310,26 +312,26 @@ class Tomograph:
             raise ModExpError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_angle)))
 
         # TO DELETE THIS LATER
-        logger.info('Setting value %.1f...' % new_angle)
+        current_app.logger.info('Setting value %.1f...' % new_angle)
         new_angle %= 360
 
         set_angle = self.try_thrice_change_attr("angle_position", new_angle,
                                                 error_str='Could not set new position because of tomograph')
 
-        logger.info('Position was set!')
+        current_app.logger.info('Position was set!')
 
     def get_x(self, from_experiment=False):
         """ Tries to get horizontal position of object
         :arg:
         :return:
         """
-        logger.info('Going to get horizontal position...')
+        current_app.logger.info('Going to get horizontal position...')
         self.basic_tomo_check(from_experiment)
 
         x_attr = self.try_thrice_read_attr("horizontal_position",
                                            error_str='Could not get position because of tomograph')
         x_value = x_attr.value
-        logger.info('Horizontal position is %d' % x_value)
+        current_app.logger.info('Horizontal position is %d' % x_value)
         return x_value
 
     def get_y(self, from_experiment=False):
@@ -337,13 +339,13 @@ class Tomograph:
         :arg:
         :return:
         """
-        logger.info('Going to get vertical position...')
+        current_app.logger.info('Going to get vertical position...')
         self.basic_tomo_check(from_experiment)
 
         y_attr = self.try_thrice_read_attr("vertical_position",
                                            error_str='Could not get position because of tomograph')
         y_value = y_attr.value
-        logger.info('Vertical position is %d' % y_value)
+        current_app.logger.info('Vertical position is %d' % y_value)
         return y_value
 
     def get_angle(self, from_experiment=False):
@@ -351,13 +353,13 @@ class Tomograph:
         :arg:
         :return:
         """
-        logger.info('Going to get angle position...')
+        current_app.logger.info('Going to get angle position...')
         self.basic_tomo_check(from_experiment)
 
         angle_attr = self.try_thrice_read_attr("angle_position",
                                                error_str='Could not get position because of tomograph')
         angle_value = angle_attr.value
-        logger.info('Angle position is %.2f' % angle_value)
+        current_app.logger.info('Angle position is %.2f' % angle_value)
         return angle_value
 
     def reset_to_zero_angle(self, from_experiment=False):
@@ -365,42 +367,42 @@ class Tomograph:
         :arg:
         :return:
         """
-        logger.info('Resetting angle position...')
+        current_app.logger.info('Resetting angle position...')
         self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.ResetAnglePosition,
                             error_str='Could not reset angle position because of tomograph')
-        logger.info('Angle position was reset!')
+        current_app.logger.info('Angle position was reset!')
 
     def move_away(self, from_experiment=False):
         """ Tries to move object away from detector
         :arg:
         :return:
         """
-        logger.info('Moving object away...')
+        current_app.logger.info('Moving object away...')
         self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.MoveAway, error_str='Could not move object away')
-        logger.info('Object was moved away!')
+        current_app.logger.info('Object was moved away!')
 
     def move_back(self, from_experiment=False):
         """ Tries to move object "back" to the detector, in front of detector
         :arg:
         :return:
         """
-        logger.info('Moving object back...')
+        current_app.logger.info('Moving object back...')
         self.basic_tomo_check(from_experiment)
 
         try_thrice_function(func=self.tomograph_proxy.MoveBack, error_str='Could not move object back')
-        logger.info('Object was moved back!')
+        current_app.logger.info('Object was moved back!')
 
     def get_frame(self, exposure, with_open_shutter, send_to_webpage=False, from_experiment=False):
         """ Tries get frame with some exposure
         :arg: 'exposure' - exposure, which frame should get with
         :return:
         """
-        logger.info('Going to get image...')
-        logger.info('With open shutter: ' + str(with_open_shutter))
+        current_app.logger.info('Going to get image...')
+        current_app.logger.info('With open shutter: ' + str(with_open_shutter))
         self.basic_tomo_check(from_experiment)
 
         # if with_open_shutter == True:
@@ -409,7 +411,7 @@ class Tomograph:
         time.sleep(0.2)
         # Tomograph takes exposure multiplied by 10 and rounded
         if exposure:
-            logger.info('Getting an image with exposure %.1f milliseconds...' % exposure)
+            current_app.logger.info('Getting an image with exposure %.1f milliseconds...' % exposure)
             self.set_exposure(exposure, from_experiment=from_experiment)
 
         try:
@@ -427,8 +429,8 @@ class Tomograph:
         except TypeError:
             raise ModExpError(error='Could not convert frame\'s JSON into dict')
 
-        logger.info('Image was get, reading the image from detector...')
-        raw_image = self.try_thrice_read_attr_detector("image", extract_as=PyTango.ExtractAs.Nothing,
+        current_app.logger.info('Image was get, reading the image from detector...')
+        raw_image = self.try_thrice_read_attr_detector("image", extract_as=PyTango.PyTnago.ExtractAs.Nothing,
                                                        error_str='Could not read image because of tomograph')
 
         frame_metadata['image_data']['raw_image'] = raw_image
@@ -450,8 +452,8 @@ class Tomograph:
         # except Exception as e:
         #     error = "unexpected exception"
         #     exception_message = e.message
-        #     logger.info(error)
-        #     logger.info(exception_message)
+        #     current_app.logger.info(error)
+        #     current_app.logger.info(exception_message)
         #     stop_msg = EMERGENCY_STOP_MSG
         #
         #
@@ -464,18 +466,18 @@ class Tomograph:
             event_for_send = create_event(event_type='message', exp_id=exp_id, MoF=SUCCESSFUL_STOP_MSG)
             stop_msg = SUCCESSFUL_STOP_MSG
 
-        logger.info(stop_msg + ', id: ' + exp_id)
-        logger.info("Sending messages about stop of experiment...")
+        current_app.logger.info(stop_msg + ', id: ' + exp_id)
+        current_app.logger.info("Sending messages about stop of experiment...")
         send_message_to_storage_webpage(event_for_send)
 
         self.current_experiment = None
         experiment_time = time.time() - time_of_experiment_start
-        logger.info("Experiment took %.4f seconds" % experiment_time)
+        current_app.logger.info("Experiment took %.4f seconds" % experiment_time)
 
     # -----------------------------------------------------------------------------------------------
 
 
-    def try_thrice_read_attr_detector(self, attr_name, extract_as=ExtractAs.Numpy, error_str=''):
+    def try_thrice_read_attr_detector(self, attr_name, extract_as=PyTango.ExtractAs.Numpy, error_str=''):
         """ Try to read some attribute of Tango device three times
 
         :arg: 'attr_name' - type is string
@@ -494,24 +496,24 @@ class Tomograph:
 
     def get_detector_chip_temperature(self, from_experiment=False):
 
-        logger.info('Going to get detector chip temperature...')
+        current_app.logger.info('Going to get detector chip temperature...')
         self.basic_tomo_check(from_experiment)
 
         chip_temp_attr = self.try_thrice_read_attr_detector("chip_temp",
                                                         error_str='Could not get chip temperature because of tomograph')
         chip_temp = chip_temp_attr.value
-        logger.info('Chip temperature is %.2f' % chip_temp)
+        current_app.logger.info('Chip temperature is %.2f' % chip_temp)
         return chip_temp
 
     def get_detector_hous_temperature(self, from_experiment=False):
-        logger.info('Going to get detector hous temperature...')
+        current_app.logger.info('Going to get detector hous temperature...')
         self.basic_tomo_check(from_experiment)
 
         hous_temp_attr = self.try_thrice_read_attr_detector("hous_temp",
                                                         error_str='Could not get hous temperature because of tomograph')
 
         hous_temp = hous_temp_attr.value
-        logger.info('Hous temperature is %.2f' % hous_temp)
+        current_app.logger.info('Hous temperature is %.2f' % hous_temp)
         return hous_temp
 
     def set_exposure(self, new_exposure, from_experiment=False):
@@ -521,7 +523,7 @@ class Tomograph:
 
         :return:
         """
-        logger.info('Going to set exposure...')
+        current_app.logger.info('Going to set exposure...')
 
         self.basic_tomo_check(from_experiment)
 
@@ -534,23 +536,23 @@ class Tomograph:
 
         new_exposure = round(new_exposure)
         # TO DELETE THIS LATER
-        logger.info('Setting value %.1f...' % new_exposure)
+        current_app.logger.info('Setting value %.1f...' % new_exposure)
 
         set_exposure = self.try_thrice_change_attr("exposure", new_exposure,
                                                    error_str='Could not set new exposure because of tomograph')
 
-        logger.info('Exposure was set!')
+        current_app.logger.info('Exposure was set!')
 
     def get_exposure(self, from_experiment=False):
         """ Tries to get detector exposure
         :arg:
         :return:
         """
-        logger.info('Going to get exposure...')
+        current_app.logger.info('Going to get exposure...')
         self.basic_tomo_check(from_experiment)
 
         exposure_attr = self.try_thrice_read_attr("exposure",
                                                   error_str='Could not get exposure because of tomograph')
         exposure_value = exposure_attr.value
-        logger.info('Exposure is %d' % exposure_value)
+        current_app.logger.info('Exposure is %d' % exposure_value)
         return exposure_value
