@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import print_function
 import json
 import requests
 
@@ -97,6 +99,6 @@ try:
 
 
 except requests.ConnectionError as e:
-    print "Could not connect", e.message
+    print("Could not connect", e.message)
 else:
-    print req.content
+    print(req.content)

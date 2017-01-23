@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 """
 29.11.15 - Rustam
 Stub storage for testing module "Experiment" without changing anything more
@@ -56,4 +58,4 @@ if __name__ == '__main__':
     # because of twice execution (all files are run twice because of flask reloader, look
     # http://stackoverflow.com/questions/26958952/python-program-seems-to-be-running-twice)
     else:
-        print "Stub storage starts to run"
+        print("Stub storage starts to run")

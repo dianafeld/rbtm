@@ -19,7 +19,6 @@ from experiment.experiment_class import ModExpError, Experiment, create_event, S
 from experiment.conf import TIMEOUT_MILLIS
 
 from flask import current_app
-# logger = current_app.logger
 
 
 def try_thrice_function(func, args=(), error_str=''):
