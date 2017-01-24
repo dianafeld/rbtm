@@ -92,8 +92,6 @@ try:
     # req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/start", data = advanced_experiment)
     # req = requests.get(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/stop")
 
-
-
     # Future "Experiment stop"
     # req = requests.post(MODULE_EXPERIMENT_URI + "/tomograph/1/experiment/stop", data = json.dumps("prosto"))
 

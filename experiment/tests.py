@@ -53,10 +53,10 @@ ANGLE = json.dumps(-5690.0)
 def response_format_is_normal(response_dict):
     RD = response_dict
     if not ('success' in RD.keys()) and ('exception message' in RD.keys()) and (
-            'error' in RD.keys() and ('result' in RD.keys())):
+                    'error' in RD.keys() and ('result' in RD.keys())):
         return False
     return (type(RD['success']) is bool) and (type(RD['exception message']) is unicode) and (
-    type(RD['error']) is unicode)
+        type(RD['error']) is unicode)
 
 
 class ModuleExperimentTestCase2(unittest.TestCase):
@@ -78,9 +78,6 @@ class ModuleExperimentTestCase2(unittest.TestCase):
     #    def test_EXPERIMENT_STOP_response_format(self):
     #       response = self.app.get('tomograph/1/experiment/stop')
     #      assert response_format_is_normal(json.loads(response.data))
-
-
-
 
     def test_SOURCE_SET_VOLTAGE_response_format_when_NORMAL_PARAM(self):
         response = self.app.post('/tomograph/1/source/set-voltage', data=VOLTAGE_NORMAL)

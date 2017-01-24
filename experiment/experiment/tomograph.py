@@ -15,13 +15,14 @@ Contains supporting functions and class "Tomograph" with methods for comfortable
 import json
 import time
 import PyTango
-from experiment.experiment_class import ModExpError, Experiment, create_event, SUCCESSFUL_STOP_MSG, send_message_to_storage_webpage
+from experiment.experiment_class import ModExpError, Experiment, create_event, SUCCESSFUL_STOP_MSG, \
+    send_message_to_storage_webpage
 from experiment.conf import TIMEOUT_MILLIS
 
 from flask import current_app
 
 
-def try_thrice_function(func, args=(), error_str=''):
+def try_thrice_function(func, args=(), error_str='Error during trying thrice function'):
     """ Tries to call some TANGO function three times
 
     :arg: 'func' - called function
@@ -66,7 +67,8 @@ class Tomograph:
         self.detector_proxy.set_timeout_millis(timeout_millis)
         self.current_experiment = None
 
-    def try_thrice_read_attr(self, attr_name, extract_as=PyTango.ExtractAs.Numpy, error_str=''):
+    def try_thrice_read_attr(self, attr_name, extract_as=PyTango.ExtractAs.Numpy,
+                             error_str='Error trying thrice read attribute'):
         """ Try to read some attribute of Tango device three times
         :arg: 'attr_name' - type is string
               'extract-as' - method of extraction
@@ -83,7 +85,7 @@ class Tomograph:
                 return attr
         raise ModExpError(error=error_str, exception_message=exception_message)
 
-    def try_thrice_change_attr(self, attr_name, new_value, error_str=''):
+    def try_thrice_change_attr(self, attr_name, new_value, error_str):
         """ Try to change some attribute of Tango device three times
 
         :arg: 'attr_name' - type is string
@@ -107,7 +109,7 @@ class Tomograph:
         try:
             try_thrice_function(func=self.tomograph_proxy.ping, error_str="Tomograph is unavailable")
         except ModExpError as e:
-            e.log()
+            e.log(exp_id='')
             return 'unavailable', e.exception_message
 
         if self.current_experiment is not None:
@@ -474,9 +476,8 @@ class Tomograph:
         current_app.logger.info("Experiment took %.4f seconds" % experiment_time)
 
     # -----------------------------------------------------------------------------------------------
-
-
-    def try_thrice_read_attr_detector(self, attr_name, extract_as=PyTango.ExtractAs.Numpy, error_str=''):
+    def try_thrice_read_attr_detector(self, attr_name, extract_as=PyTango.ExtractAs.Numpy,
+                                      error_str='Error reading detector attribute'):
         """ Try to read some attribute of Tango device three times
 
         :arg: 'attr_name' - type is string
@@ -499,7 +500,7 @@ class Tomograph:
         self.basic_tomo_check(from_experiment)
 
         chip_temp_attr = self.try_thrice_read_attr_detector("chip_temp",
-                                                        error_str='Could not get chip temperature because of tomograph')
+                                                            error_str='Could not get chip temperature because of tomograph')
         chip_temp = chip_temp_attr.value
         current_app.logger.info('Chip temperature is %.2f' % chip_temp)
         return chip_temp
@@ -509,7 +510,7 @@ class Tomograph:
         self.basic_tomo_check(from_experiment)
 
         hous_temp_attr = self.try_thrice_read_attr_detector("hous_temp",
-                                                        error_str='Could not get hous temperature because of tomograph')
+                                                            error_str='Could not get hous temperature because of tomograph')
 
         hous_temp = hous_temp_attr.value
         current_app.logger.info('Hous temperature is %.2f' % hous_temp)

@@ -82,10 +82,7 @@ def create_event(event_type, exp_id, MoF, exception_message='', error=''):
 
 
 class ModExpError(Exception):
-    exception_message = ""
-    stop_msg = EMERGENCY_STOP_MSG
-
-    def __init__(self, error='', exception_message='', stop_msg=EMERGENCY_STOP_MSG):
+    def __init__(self, error, exception_message='', stop_msg=EMERGENCY_STOP_MSG):
         self.message = error
         self.error = error
         self.exception_message = exception_message
@@ -107,11 +104,11 @@ class ModExpError(Exception):
         }
         return json.dumps(response_dict)
 
-    def log(self, exp_id=''):
+    def log(self, exp_id):
         if exp_id:
             current_app.logger.info(self.stop_msg + ', id: ' + exp_id)
         else:
-            current_app.logger.info("ERROR:")
+            current_app.logger.info("ERROR: exp_id = {}".format(exp_id))
 
         if self.stop_msg == EMERGENCY_STOP_MSG:
             current_app.logger.info("   " + self.error)
@@ -216,12 +213,12 @@ def send_message_to_storage_webpage(event_dict):
     try:
         send_to_storage(STORAGE_EXP_FINISH_URI, data=event_json_for_storage)
     except ModExpError as e:
-        e.log()
+        e.log(exp_id='')
     finally:
         try:
             send_event_to_webpage(event_dict)
         except ModExpError as e:
-            e.log()
+            e.log(exp_id='')
 
 
 def send_frame_to_storage_webpage(frame_metadata_event, image_numpy, send_to_webpage):

@@ -85,7 +85,7 @@ def call_method_create_response(tomo_num, method_name, args=(), GET_FRAME_method
     try:
         result = getattr(tomograph, method_name)(*args)
     except ModExpError as e:
-        e.log()
+        e.log(exp_id='')
         return e.create_response()
     """
     except Exception as e:
@@ -439,7 +439,7 @@ def experiment_start(tomo_num):
     try:
         send_to_storage(STORAGE_EXP_START_URI, data=request.data)
     except ModExpError as e:
-        e.log()
+        e.log(exp_id=exp_param['exp_id'])
         return e.create_response()
 
     logger.info('Experiment begins!')
