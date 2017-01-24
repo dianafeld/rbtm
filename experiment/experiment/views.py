@@ -25,7 +25,7 @@ if not os.path.exists(os.path.dirname(logs_path)):
     os.makedirs(os.path.dirname(logs_path))
 
 app.logger.setLevel(logging.DEBUG)
-file_handler = RotatingFileHandler(logs_path, maxBytes=128000000, backupCount=1)
+file_handler = RotatingFileHandler(logs_path, maxBytes=1280000, backupCount=10)
 file_handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter("%(asctime)s - %(name)s - [LINE:%(lineno)d]# - %(levelname)s - %(message)s")
 file_handler.setFormatter(formatter)
