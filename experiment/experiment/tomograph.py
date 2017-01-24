@@ -429,7 +429,7 @@ class Tomograph:
             raise ModExpError(error='Could not convert frame\'s JSON into dict')
 
         current_app.logger.info('Image was get, reading the image from detector...')
-        raw_image = self.try_thrice_read_attr_detector("image", extract_as=PyTango.PyTnago.ExtractAs.Nothing,
+        raw_image = self.try_thrice_read_attr_detector("image", extract_as=PyTango.ExtractAs.Nothing,
                                                        error_str='Could not read image because of tomograph')
 
         frame_metadata['image_data']['raw_image'] = raw_image
