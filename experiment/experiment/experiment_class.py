@@ -212,25 +212,25 @@ def send_to_storage(storage_uri, data, files=None):
                           exception_message='Storage\'s response:  ' + str(storage_resp_dict['result']))
 
 
-# def send_message_to_storage_webpage(event_dict):
-#     """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
-#         'event_dict' must be dictionary with format that is returned by  'create_event()'
-#
-#     :arg:  'event_dict' - event (message (for storage and web-page of adjustment) or frame with some data),
-#                           must be dictionary with format that is returned by  'create_event()'
-#     :return: success of sending, type is bool
-#     """
-#     # we don't do anything serious if we fail with sending to message
-#     event_json_for_storage = json.dumps(event_dict)
-#     try:
-#         send_to_storage(STORAGE_EXP_FINISH_URI, data=event_json_for_storage)
-#     except ModExpError as e:
-#         e.log(exp_id='')
-#     finally:
-#         try:
-#             send_event_to_webpage(event_dict)
-#         except ModExpError as e:
-#             e.log(exp_id='')
+def send_message_to_storage_webpage(event_dict):
+    """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
+        'event_dict' must be dictionary with format that is returned by  'create_event()'
+
+    :arg:  'event_dict' - event (message (for storage and web-page of adjustment) or frame with some data),
+                          must be dictionary with format that is returned by  'create_event()'
+    :return: success of sending, type is bool
+    """
+    # we don't do anything serious if we fail with sending to message
+    event_json_for_storage = json.dumps(event_dict)
+    try:
+        send_to_storage(STORAGE_EXP_FINISH_URI, data=event_json_for_storage)
+    except ModExpError as e:
+        e.log(exp_id='')
+    # finally:
+    #     try:
+    #         send_event_to_webpage(event_dict)
+    #     except ModExpError as e:
+    #         e.log(exp_id='')
 
 
 def send_frame_to_storage_webpage(frame_metadata_event, image_numpy, send_to_webpage):
