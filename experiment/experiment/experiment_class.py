@@ -16,13 +16,23 @@ from scipy.ndimage import zoom
 import threading
 import time
 
-from flask import current_app
-
 import matplotlib.pyplot as plt
 
 from experiment.conf import FRAME_PNG_FILENAME, WEBPAGE_URI, STORAGE_EXP_FINISH_URI, STORAGE_FRAMES_URI
 
-# logger = current_app.logger
+
+def get_logger():
+    try:
+        from flask import current_app
+        logger = current_app.logger
+    except RuntimeError:
+        from experiment.views import app
+        logger = app.logger
+    except Exception as e:
+        import logging
+        logger = logging
+    return logger
+
 
 EMERGENCY_STOP_MSG = 'Experiment was emergency stopped'
 SOMEONE_STOP_MSG = 'Experiment was stopped by someone'
@@ -87,6 +97,7 @@ class ModExpError(Exception):
         self.error = error
         self.exception_message = exception_message
         self.stop_msg = stop_msg
+        self.logger = get_logger()
 
     def __str__(self):
         return repr(self.message)
@@ -106,15 +117,15 @@ class ModExpError(Exception):
 
     def log(self, exp_id):
         if exp_id:
-            current_app.logger.info(self.stop_msg + ', id: ' + exp_id)
+            self.logger.info(self.stop_msg + ', id: ' + exp_id)
         else:
-            current_app.logger.info("ERROR: exp_id = {}".format(exp_id))
+            self.logger.info("ERROR: exp_id = {}".format(exp_id))
 
         if self.stop_msg == EMERGENCY_STOP_MSG:
-            current_app.logger.info("   " + self.error)
-            current_app.logger.info("   " + self.exception_message)
+            self.logger.info("   " + self.error)
+            self.logger.info("   " + self.exception_message)
         else:
-            current_app.logger.info("Reason:    " + self.error)
+            self.logger.info("Reason:    " + self.error)
 
 
 def make_png(image_numpy, png_filename=FRAME_PNG_FILENAME):
@@ -124,7 +135,7 @@ def make_png(image_numpy, png_filename=FRAME_PNG_FILENAME):
 
     :return: 
     """
-    current_app.logger.info("Converting image to png-file...")
+    get_logger().info("Converting image to png-file...")
     res = image_numpy
     try:
         small_res = zoom(np.rot90(res), zoom=0.25, order=2)
@@ -132,7 +143,7 @@ def make_png(image_numpy, png_filename=FRAME_PNG_FILENAME):
     except Exception as e:
         raise ModExpError(error="Could not make png-file from image", exception_message=e.message)
 
-    current_app.logger.info("Image was converted!")
+    get_logger().info("Image was converted!")
 
 
 def send_event_to_webpage(event_dict):
@@ -161,13 +172,13 @@ def send_event_to_webpage(event_dict):
     elif event_dict['type'] == 'message':
         data = json.dumps(event_dict)
 
-    current_app.logger.info('Sending to web-page of adjustment...')
+    get_logger().info('Sending to web-page of adjustment...')
     try:
         req_webpage = requests.post(WEBPAGE_URI, data=data, files=files)
     except Exception as e:
         raise ModExpError(error='Could not send to web-page of adjustment', exception_message=str(e))
 
-    current_app.logger.info(req_webpage.content)
+    get_logger().info(req_webpage.content)
 
 
 def send_to_storage(storage_uri, data, files=None):
@@ -177,15 +188,15 @@ def send_to_storage(storage_uri, data, files=None):
     :return:
     """
 
-    current_app.logger.info('Sending to storage...')
+    get_logger().info('Sending to storage...')
     try:
         storage_resp = requests.post(storage_uri, files=files, data=data)
     except Exception as e:
-        current_app.logger.info(e.message)
+        get_logger().info(e.message)
         raise ModExpError(error='Problems with storage', exception_message='Could not send to storage' """e.message""")
         # IF UNCOMMENT   #exception_message,    OCCURS PROBLEMS WITH JSON.DUMPS(...) LATER
 
-    current_app.logger.info(storage_resp.content)
+    get_logger().info(storage_resp.content)
     try:
         storage_resp_dict = json.loads(storage_resp.content)
     except (ValueError, TypeError):
@@ -252,7 +263,7 @@ def prepare_send_frame(raw_image_with_metadata, experiment, send_to_webpage=Fals
     frame_metadata = raw_image_with_metadata
 
     try:
-        current_app.logger.info("Image was red, preparing the image to send...")
+        get_logger().info("Image was red, preparing the image to send...")
         try:
             enc = PyTango.EncodedAttribute()
             image_numpy = enc.decode_gray16(raw_image)
@@ -308,10 +319,12 @@ class Experiment:
         self.to_be_stopped = False
         self.stop_exception = None
 
+        self.logger = get_logger()
+
     def get_and_send_frame(self, exposure, mode):
 
         getting_frame_message = 'Getting image, number: %d, mode: %s ...\n' % (self.frame_num, mode)
-        current_app.logger.info(getting_frame_message)
+        self.logger.info(getting_frame_message)
 
         if mode == 'dark':
             raw_image_with_metadata = self.tomograph.get_frame(exposure=exposure, with_open_shutter=False,
@@ -338,24 +351,24 @@ class Experiment:
         self.tomograph.close_shutter(0, from_experiment=True)
         time.sleep(1.0)
 
-        current_app.logger.info('Going to get DARK images!\n')
+        self.logger.info('Going to get DARK images!\n')
         self.tomograph.set_exposure(self.DARK_exposure, from_experiment=True)
         for i in range(0, self.DARK_count):
             self.get_and_send_frame(exposure=None, mode='dark')
-        current_app.logger.info('Finished with DARK images!\n')
+        self.logger.info('Finished with DARK images!\n')
 
         self.tomograph.open_shutter(0, from_experiment=True)
         self.tomograph.move_away(from_experiment=True)
-        current_app.logger.info('Going to get EMPTY images!\n')
+        self.logger.info('Going to get EMPTY images!\n')
         self.tomograph.set_exposure(self.EMPTY_exposure, from_experiment=True)
         for i in range(0, self.EMPTY_count):
             self.get_and_send_frame(exposure=None, mode='empty')
-        current_app.logger.info('Finished with EMPTY images!\n')
+        self.logger.info('Finished with EMPTY images!\n')
 
         self.tomograph.move_back(from_experiment=True)
-        current_app.logger.info('Going to get DATA images, step count is %d!\n' % self.DATA_step_count)
+        self.logger.info('Going to get DATA images, step count is %d!\n' % self.DATA_step_count)
         initial_angle = self.tomograph.get_angle(from_experiment=True)
-        current_app.logger.info('Initial angle is %.2f' % initial_angle)
+        self.logger.info('Initial angle is %.2f' % initial_angle)
         self.tomograph.set_exposure(self.DATA_exposure, from_experiment=True)
         reference_angles = np.arange(0, 361, 45)
         # Rounding angles here, not in  check_and_prepare_exp_parameters(),
@@ -364,17 +377,17 @@ class Experiment:
 
         for current_angle in np.hstack([reference_angles, data_angles]):
             self.check_source()
-            current_app.logger.info('Starting with this angle, turning to new angle %.2f...' % current_angle)
+            self.logger.info('Starting with this angle, turning to new angle %.2f...' % current_angle)
             self.tomograph.set_angle(current_angle, from_experiment=True)
             # TODO: check angle after rotation
-            current_app.logger.info('Getting DATA images: angle is %.2f' % current_angle)
+            self.logger.info('Getting DATA images: angle is %.2f' % current_angle)
 
             for j in range(0, self.DATA_count_per_step):
                 self.get_and_send_frame(exposure=None, mode='data')
 
-            current_app.logger.info('Finished with this angle, turning to new angle ...')
+            self.logger.info('Finished with this angle, turning to new angle ...')
 
-        current_app.logger.info('Finished with DATA images!\n')
+        self.logger.info('Finished with DATA images!\n')
         self.tomograph.close_shutter(0, from_experiment=True)
 
         self.tomograph.source_power_off(from_experiment=True)
@@ -382,7 +395,7 @@ class Experiment:
 
     def check_source(self):
         if self.tomograph.source_get_current() < 2 or self.tomograph.source_get_voltage() < 2:
-            current_app.logger.info('X-ray source in wrong mode, try restart (off/on)')
+            self.logger.info('X-ray source in wrong mode, try restart (off/on)')
             self.tomograph.source_power_off(from_experiment=True)
             time.sleep(5)
             self.tomograph.source_power_on(from_experiment=True)
