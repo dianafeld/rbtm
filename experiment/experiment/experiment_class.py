@@ -376,6 +376,7 @@ class Experiment:
         data_angles = np.round((np.arange(0, self.DATA_step_count)) * self.DATA_angle_step + initial_angle, 2) % 360
 
         for current_angle in np.hstack([reference_angles, data_angles]):
+            self.logger.info('Checking X-ray source state')
             self.check_source()
             self.logger.info('Starting with this angle, turning to new angle %.2f...' % current_angle)
             self.tomograph.set_angle(current_angle, from_experiment=True)
@@ -400,3 +401,5 @@ class Experiment:
             time.sleep(5)
             self.tomograph.source_power_on(from_experiment=True)
             time.sleep(5)
+        else:
+            self.logger.info('X-ray source in good mode')
