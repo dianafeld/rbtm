@@ -482,7 +482,7 @@ class Tomograph:
 
         self.logger.info(stop_msg + ', id: ' + exp_id)
         self.logger.info("Sending messages about stop of experiment...")
-        send_message_to_storage_webpage(event_for_send)
+        # send_message_to_storage_webpage(event_for_send)
 
         self.current_experiment = None
         experiment_time = time.time() - time_of_experiment_start
