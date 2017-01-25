@@ -18,7 +18,7 @@ import time
 
 import matplotlib.pyplot as plt
 
-from experiment.conf import FRAME_PNG_FILENAME, WEBPAGE_URI, STORAGE_EXP_FINISH_URI, STORAGE_FRAMES_URI
+from experiment.conf import FRAME_PNG_FILENAME, STORAGE_EXP_FINISH_URI, STORAGE_FRAMES_URI
 
 
 def get_logger():
@@ -138,7 +138,7 @@ def make_png(image_numpy, png_filename=FRAME_PNG_FILENAME):
     get_logger().info("Converting image to png-file...")
     res = image_numpy
     try:
-        small_res = zoom(np.rot90(res), zoom=0.25, order=2)
+        small_res = zoom(np.rot90(res), zoom=0.25, order=0)
         plt.imsave(png_filename, small_res, cmap=plt.cm.gray)
     except Exception as e:
         raise ModExpError(error="Could not make png-file from image", exception_message=e.message)
@@ -146,39 +146,40 @@ def make_png(image_numpy, png_filename=FRAME_PNG_FILENAME):
     get_logger().info("Image was converted!")
 
 
-def send_event_to_webpage(event_dict):
-    """ Sends "event" to web-page of adjustment;
-        'event_dict' must be dictionary with format that is returned by  'create_event()'
-        if event type is "message", it sends it without changes,
-        if event type is "frame", it sends image part, converting it to png-file,
-        remain part (image data) is being sent without changes
-
-    :arg:  event_dict - event (message (for storage and web-page of adjustment) or frame with some data),
-           must be dictionary with format that is returned by  'create_event()'
-    :return: None
-    """
-    data = None
-    files = None
-
-    if event_dict['type'] == 'frame':
-        make_png(event_dict['frame']['image_data']['image'])
-        files = {'file': open(FRAME_PNG_FILENAME, 'rb')}
-
-        del (event_dict['frame']['image_data']['image'])
-        # data = json.dumps(event_dict)
-        # WE DON'T SEND TO WEB-PAGE METADATA OF FRAME YET, IN FUTURE WE CAN ADD IT
-        # req_webpage = requests.post(WEBPAGE_URI, files=files, data= event_json)
-
-    elif event_dict['type'] == 'message':
-        data = json.dumps(event_dict)
-
-    get_logger().info('Sending to web-page of adjustment...')
-    try:
-        req_webpage = requests.post(WEBPAGE_URI, data=data, files=files)
-    except Exception as e:
-        raise ModExpError(error='Could not send to web-page of adjustment', exception_message=str(e))
-
-    get_logger().info(req_webpage.content)
+# def send_event_to_webpage(event_dict):
+#     """ Sends "event" to web-page of adjustment;
+#         'event_dict' must be dictionary with format that is returned by  'create_event()'
+#         if event type is "message", it sends it without changes,
+#         if event type is "frame", it sends image part, converting it to png-file,
+#         remain part (image data) is being sent without changes
+#
+#     :arg:  event_dict - event (message (for storage and web-page of adjustment) or frame with some data),
+#            must be dictionary with format that is returned by  'create_event()'
+#     :return: None
+#     """
+#     from experiment.conf import WEBPAGE_URI
+#     data = None
+#     files = None
+#
+#     if event_dict['type'] == 'frame':
+#         make_png(event_dict['frame']['image_data']['image'])
+#         files = {'file': open(FRAME_PNG_FILENAME, 'rb')}
+#
+#         del (event_dict['frame']['image_data']['image'])
+#         # data = json.dumps(event_dict)
+#         # WE DON'T SEND TO WEB-PAGE METADATA OF FRAME YET, IN FUTURE WE CAN ADD IT
+#         # req_webpage = requests.post(WEBPAGE_URI, files=files, data= event_json)
+#
+#     elif event_dict['type'] == 'message':
+#         data = json.dumps(event_dict)
+#
+#     get_logger().info('Sending to web-page of adjustment...')
+#     try:
+#         req_webpage = requests.post(WEBPAGE_URI, data=data, files=files)
+#     except Exception as e:
+#         raise ModExpError(error='Could not send to web-page of adjustment', exception_message=str(e))
+#
+#     get_logger().info(req_webpage.content)
 
 
 def send_to_storage(storage_uri, data, files=None):
@@ -211,25 +212,25 @@ def send_to_storage(storage_uri, data, files=None):
                           exception_message='Storage\'s response:  ' + str(storage_resp_dict['result']))
 
 
-def send_message_to_storage_webpage(event_dict):
-    """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
-        'event_dict' must be dictionary with format that is returned by  'create_event()'
-
-    :arg:  'event_dict' - event (message (for storage and web-page of adjustment) or frame with some data),
-                          must be dictionary with format that is returned by  'create_event()'
-    :return: success of sending, type is bool
-    """
-    # we don't do anything serious if we fail with sending to message
-    event_json_for_storage = json.dumps(event_dict)
-    try:
-        send_to_storage(STORAGE_EXP_FINISH_URI, data=event_json_for_storage)
-    except ModExpError as e:
-        e.log(exp_id='')
-    finally:
-        try:
-            send_event_to_webpage(event_dict)
-        except ModExpError as e:
-            e.log(exp_id='')
+# def send_message_to_storage_webpage(event_dict):
+#     """ Sends "event" to storage and if argument 'send_to_webpage is True, also to web-page of adjustment;
+#         'event_dict' must be dictionary with format that is returned by  'create_event()'
+#
+#     :arg:  'event_dict' - event (message (for storage and web-page of adjustment) or frame with some data),
+#                           must be dictionary with format that is returned by  'create_event()'
+#     :return: success of sending, type is bool
+#     """
+#     # we don't do anything serious if we fail with sending to message
+#     event_json_for_storage = json.dumps(event_dict)
+#     try:
+#         send_to_storage(STORAGE_EXP_FINISH_URI, data=event_json_for_storage)
+#     except ModExpError as e:
+#         e.log(exp_id='')
+#     finally:
+#         try:
+#             send_event_to_webpage(event_dict)
+#         except ModExpError as e:
+#             e.log(exp_id='')
 
 
 def send_frame_to_storage_webpage(frame_metadata_event, image_numpy, send_to_webpage):
