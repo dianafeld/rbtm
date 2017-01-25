@@ -205,9 +205,9 @@ class Tomograph:
                             error_str='Could not power off source')
         self.logger.info('Source was powered OFF!')
 
-    def source_set_voltage(self, new_voltage):
+    def source_set_voltage(self, new_voltage, from_experiment=False):
         self.logger.info('Going to set voltage on source...')
-        self.basic_tomo_check(from_experiment=False)
+        self.basic_tomo_check(from_experiment=from_experiment)
 
         self.logger.info('Checking format...')
         if type(new_voltage) is not float:
@@ -225,9 +225,9 @@ class Tomograph:
 
         self.logger.info('New value of voltage was set!')
 
-    def source_set_current(self, new_current):
+    def source_set_current(self, new_current, from_experiment=False):
         self.logger.info('Going to set current on source...')
-        self.basic_tomo_check(from_experiment=False)
+        self.basic_tomo_check(from_experiment=from_experiment)
 
         self.logger.info('Checking format...')
         if type(new_current) is not float:
@@ -245,9 +245,9 @@ class Tomograph:
 
         self.logger.info('New value of current was set!')
 
-    def source_get_voltage(self):
+    def source_get_voltage(self, from_experiment=False):
         self.logger.info('Going to get voltage...')
-        self.basic_tomo_check(from_experiment=False)
+        self.basic_tomo_check(from_experiment=from_experiment)
 
         voltage_attr = self.try_thrice_read_attr("xraysource_voltage",
                                                  error_str='Could not get voltage')
@@ -256,9 +256,9 @@ class Tomograph:
         self.logger.info("Voltage is %.2f" % voltage)
         return voltage
 
-    def source_get_current(self):
+    def source_get_current(self, from_experiment=False):
         self.logger.info('Going to get current...')
-        self.basic_tomo_check(from_experiment=False)
+        self.basic_tomo_check(from_experiment=from_experiment)
 
         current_attr = self.try_thrice_read_attr("xraysource_current",
                                                  error_str='Could not get current')

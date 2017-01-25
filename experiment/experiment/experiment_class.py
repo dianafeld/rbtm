@@ -398,7 +398,7 @@ class Experiment:
         return
 
     def check_source(self):
-        if self.tomograph.source_get_current() < 2 or self.tomograph.source_get_voltage() < 2:
+        if self.tomograph.source_get_current(from_experiment=True) < 2 or self.tomograph.source_get_voltage(from_experiment=True) < 2:
             self.logger.info('X-ray source in wrong mode, try restart (off/on)')
             self.tomograph.source_power_off(from_experiment=True)
             time.sleep(5)
