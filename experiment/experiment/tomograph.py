@@ -323,7 +323,7 @@ class Tomograph:
         self.basic_tomo_check(from_experiment)
 
         if type(new_angle) not in (int, float):
-            raise ModExpError(error='Incorrect type! Position type must be int, but it is ' + str(type(new_angle)))
+            raise ModExpError(error='Incorrect type! Position type must be int or float, but it is ' + str(type(new_angle)))
 
         # TO DELETE THIS LATER
         self.logger.info('Setting value %.1f...' % new_angle)

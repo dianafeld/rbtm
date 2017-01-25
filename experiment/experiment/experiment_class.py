@@ -371,7 +371,7 @@ class Experiment:
         initial_angle = self.tomograph.get_angle(from_experiment=True)
         self.logger.info('Initial angle is %.2f' % initial_angle)
         self.tomograph.set_exposure(self.DATA_exposure, from_experiment=True)
-        reference_angles = np.arange(0, 361, 45)
+        reference_angles = np.arange(0, 361, 45) + initial_angle
         # Rounding angles here, not in  check_and_prepare_exp_parameters(),
         # cause it will be more accurately this way
         data_angles = np.round((np.arange(0, self.DATA_step_count)) * self.DATA_angle_step + initial_angle, 2) % 360
@@ -383,7 +383,7 @@ class Experiment:
             self.logger.info('Checking X-ray source state')
             self.check_source()
             self.logger.info('Starting with this angle, turning to new angle %.2f...' % current_angle)
-            self.tomograph.set_angle(int(current_angle), from_experiment=True)
+            self.tomograph.set_angle(float(current_angle), from_experiment=True)
             # TODO: check angle after rotation
             self.logger.info('Getting DATA images: angle is %.2f' % current_angle)
 
