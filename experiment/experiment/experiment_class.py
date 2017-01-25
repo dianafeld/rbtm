@@ -374,8 +374,11 @@ class Experiment:
         # Rounding angles here, not in  check_and_prepare_exp_parameters(),
         # cause it will be more accurately this way
         data_angles = np.round((np.arange(0, self.DATA_step_count)) * self.DATA_angle_step + initial_angle, 2) % 360
+        exp_angles = np.hstack([reference_angles, data_angles])
 
-        for current_angle in np.hstack([reference_angles, data_angles]):
+        self.logger.info('Angles for DATA experiments: {}'.format(exp_angles))
+
+        for current_angle in exp_angles:
             self.logger.info('Checking X-ray source state')
             self.check_source()
             self.logger.info('Starting with this angle, turning to new angle %.2f...' % current_angle)
