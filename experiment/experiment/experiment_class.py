@@ -382,7 +382,7 @@ class Experiment:
             self.logger.info('Checking X-ray source state')
             self.check_source()
             self.logger.info('Starting with this angle, turning to new angle %.2f...' % current_angle)
-            self.tomograph.set_angle(current_angle, from_experiment=True)
+            self.tomograph.set_angle(int(current_angle), from_experiment=True)
             # TODO: check angle after rotation
             self.logger.info('Getting DATA images: angle is %.2f' % current_angle)
 
