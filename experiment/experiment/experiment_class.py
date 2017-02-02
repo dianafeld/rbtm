@@ -363,6 +363,7 @@ class Experiment:
 
     def collect_data_frames(self):
         self.tomograph.move_back(from_experiment=True)
+        self.tomograph.open_shutter(0, from_experiment=True)
         self.logger.info('Going to get DATA images, step count is %d!\n' % self.DATA_step_count)
         initial_angle = self.tomograph.get_angle(from_experiment=True)
         self.logger.info('Initial angle is %.2f' % initial_angle)
