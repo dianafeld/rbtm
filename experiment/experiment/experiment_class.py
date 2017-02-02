@@ -349,23 +349,19 @@ class Experiment:
         self.to_be_stopped = False
         self.stop_exception = None
         self.tomograph.source_power_on(from_experiment=True)
-        self.tomograph.close_shutter(0, from_experiment=True)
-        time.sleep(1.0)
+        self.collect_dark_frames()
+        self.collect_empty_frames()
 
-        self.logger.info('Going to get DARK images!\n')
-        self.tomograph.set_exposure(self.DARK_exposure, from_experiment=True)
-        for i in range(0, self.DARK_count):
-            self.get_and_send_frame(exposure=None, mode='dark')
-        self.logger.info('Finished with DARK images!\n')
+        self.collect_data_frames()
 
-        self.tomograph.open_shutter(0, from_experiment=True)
-        self.tomograph.move_away(from_experiment=True)
-        self.logger.info('Going to get EMPTY images!\n')
-        self.tomograph.set_exposure(self.EMPTY_exposure, from_experiment=True)
-        for i in range(0, self.EMPTY_count):
-            self.get_and_send_frame(exposure=None, mode='empty')
-        self.logger.info('Finished with EMPTY images!\n')
+        self.collect_empty_frames()
+        self.collect_dark_frames()
 
+
+        self.tomograph.source_power_off(from_experiment=True)
+        return
+
+    def collect_data_frames(self):
         self.tomograph.move_back(from_experiment=True)
         self.logger.info('Going to get DATA images, step count is %d!\n' % self.DATA_step_count)
         initial_angle = self.tomograph.get_angle(from_experiment=True)
@@ -376,9 +372,7 @@ class Experiment:
         # cause it will be more accurately this way
         data_angles = np.round((np.arange(0, self.DATA_step_count)) * self.DATA_angle_step + initial_angle, 2) % 360
         exp_angles = np.hstack([reference_angles, data_angles])
-
         self.logger.info('Angles for DATA experiments: {}'.format(exp_angles))
-
         for current_angle in exp_angles:
             self.logger.info('Checking X-ray source state')
             self.check_source()
@@ -391,12 +385,28 @@ class Experiment:
                 self.get_and_send_frame(exposure=None, mode='data')
 
             self.logger.info('Finished with this angle, turning to new angle ...')
-
         self.logger.info('Finished with DATA images!\n')
-        self.tomograph.close_shutter(0, from_experiment=True)
 
-        self.tomograph.source_power_off(from_experiment=True)
-        return
+    def collect_empty_frames(self):
+        self.tomograph.open_shutter(0, from_experiment=True)
+        self.tomograph.move_away(from_experiment=True)
+        self.logger.info('Going to get EMPTY images!\n')
+        self.tomograph.set_exposure(self.EMPTY_exposure, from_experiment=True)
+        for i in range(0, self.EMPTY_count):
+            self.logger.info('Checking X-ray source state')
+            self.check_source()
+            self.get_and_send_frame(exposure=None, mode='empty')
+        self.tomograph.move_back(from_experiment=True)
+        self.logger.info('Finished with EMPTY images!\n')
+
+    def collect_dark_frames(self):
+        self.tomograph.close_shutter(0, from_experiment=True)
+        time.sleep(1.0)
+        self.logger.info('Going to get DARK images!\n')
+        self.tomograph.set_exposure(self.DARK_exposure, from_experiment=True)
+        for i in range(0, self.DARK_count):
+            self.get_and_send_frame(exposure=None, mode='dark')
+        self.logger.info('Finished with DARK images!\n')
 
     def check_source(self):
         if self.tomograph.source_get_current(from_experiment=True) < 2 or self.tomograph.source_get_voltage(from_experiment=True) < 2:
