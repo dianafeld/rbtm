@@ -362,8 +362,6 @@ class Experiment:
         return
 
     def collect_data_frames(self):
-        self.tomograph.move_back(from_experiment=True)
-        self.tomograph.open_shutter(0, from_experiment=True)
         self.logger.info('Going to get DATA images, step count is %d!\n' % self.DATA_step_count)
         initial_angle = self.tomograph.get_angle(from_experiment=True)
         self.logger.info('Initial angle is %.2f' % initial_angle)
@@ -378,6 +376,9 @@ class Experiment:
 
         exp_angles = data_angles
         self.logger.info('Angles for DATA experiments: {}'.format(exp_angles))
+
+        self.tomograph.move_back(from_experiment=True)
+        self.tomograph.open_shutter(0, from_experiment=True)
         for current_angle in exp_angles:
             self.logger.info('Checking X-ray source state')
             self.check_source()
@@ -390,17 +391,19 @@ class Experiment:
                 self.get_and_send_frame(exposure=None, mode='data')
 
             self.logger.info('Finished with this angle, turning to new angle ...')
+        self.tomograph.close_shutter(0, from_experiment=True)
         self.logger.info('Finished with DATA images!\n')
 
     def collect_empty_frames(self):
-        self.tomograph.open_shutter(0, from_experiment=True)
         self.tomograph.move_away(from_experiment=True)
         self.logger.info('Going to get EMPTY images!\n')
         self.tomograph.set_exposure(self.EMPTY_exposure, from_experiment=True)
+        self.tomograph.open_shutter(0, from_experiment=True)
         for i in range(0, self.EMPTY_count):
             self.logger.info('Checking X-ray source state')
             self.check_source()
             self.get_and_send_frame(exposure=None, mode='empty')
+        self.tomograph.close_shutter(0, from_experiment=True)
         self.tomograph.move_back(from_experiment=True)
         self.logger.info('Finished with EMPTY images!\n')
 
