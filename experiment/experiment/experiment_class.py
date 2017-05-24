@@ -354,8 +354,8 @@ class Experiment:
 
         self.collect_data_frames()
 
-        self.collect_empty_frames()
-        self.collect_dark_frames()
+        # self.collect_empty_frames()
+        # self.collect_dark_frames()
 
 
         self.tomograph.source_power_off(from_experiment=True)
@@ -368,11 +368,15 @@ class Experiment:
         initial_angle = self.tomograph.get_angle(from_experiment=True)
         self.logger.info('Initial angle is %.2f' % initial_angle)
         self.tomograph.set_exposure(self.DATA_exposure, from_experiment=True)
-        reference_angles = np.arange(0, 361, 45) + initial_angle
+        # reference_angles = np.arange(0, 361, 45) + initial_angle
+
         # Rounding angles here, not in  check_and_prepare_exp_parameters(),
         # cause it will be more accurately this way
+
         data_angles = np.round((np.arange(0, self.DATA_step_count)) * self.DATA_angle_step + initial_angle, 2) % 360
-        exp_angles = np.hstack([reference_angles, data_angles])
+        # exp_angles = np.hstack([reference_angles, data_angles])
+
+        exp_angles = data_angles
         self.logger.info('Angles for DATA experiments: {}'.format(exp_angles))
         for current_angle in exp_angles:
             self.logger.info('Checking X-ray source state')
