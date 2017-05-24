@@ -428,15 +428,19 @@ class Tomograph:
             self.logger.info('Getting an image with exposure %.1f milliseconds...' % exposure)
             self.set_exposure(exposure, from_experiment=from_experiment)
 
+        if with_open_shutter:
+            self.open_shutter(from_experiment=from_experiment)
+        else:
+            self.close_shutter(from_experiment=from_experiment)
+
         try:
             frame_metadata_json = try_thrice_function(func=self.tomograph_proxy.GetFrame,
                                                       error_str='Could not get image because of tomograph')
         except Exception as e:
             raise e
         finally:
-            pass
-            # if with_open_shutter == True:
-            #     self.close_shutter(0, from_experiment=from_experiment, exp_is_advanced=exp_is_advanced)
+            self.close_shutter(from_experiment=from_experiment)
+
 
         try:
             frame_metadata = json.loads(frame_metadata_json)
