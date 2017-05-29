@@ -143,7 +143,7 @@ class HorizontalMotor (PyTango.Device_4Impl):
             raise
 
         with closing(self.horizontal_motor.open()):
-            self.horizontal_motor.set_move_settings(500, 500)
+            self.horizontal_motor.set_move_settings(200, 200)
             steps = self._read_position(self.horizontal_motor)
         self.attr_position_read = steps
 

@@ -166,13 +166,13 @@ class Motor (PyTango.Device_4Impl):
             raise
 
         self.angle_motor.open()
-        self.angle_motor.set_move_settings(500, 500)
+        self.angle_motor.set_move_settings(200, 200)
         #steps = self._read_position(self.angle_motor)
         #self.attr_angle_position_read = steps
         #self.angle_motor.close()
 
         self.horizontal_motor.open()
-        self.horizontal_motor.set_move_settings(500, 500)
+        self.horizontal_motor.set_move_settings(200, 200)
         #steps = self._read_position(self.horizontal_motor)
         #self.attr_horizontal_position_read = steps
 
