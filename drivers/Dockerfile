@@ -43,7 +43,7 @@ WORKDIR /var/www/drivers/
 RUN pip install -r requirements_docker.txt
 
 # motor 
-RUN wget http://files.ximc.ru/libximc/ximc-2.8.7.tar.gz && tar -zxvf ximc-2.8.7.tar.gz && \
+RUN wget http://files.ximc.ru/libximc/libximc-2.8.7-all.tar.gz && tar -zxvf libximc-2.8.7-all.tar.gz && \
     cd ximc-2.8.7/ximc/deb && dpkg -i libximc7_2.8.7-1_amd64.deb libximc7-dev_2.8.7-1_amd64.deb && apt-get install -f
 
 ENV TZ=Europe/Moscow
