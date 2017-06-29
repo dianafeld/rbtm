@@ -1,0 +1,9 @@
+proxy:
+  image: nginx:alpine
+  volumes:
+    - ./proxy_nginx.conf:/etc/nginx/conf.d/default.conf:ro
+  ports:
+    - "80:80"
+    - "443:443"  
+  restart: unless-stopped
+  command: nginx
