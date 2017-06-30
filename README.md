@@ -46,7 +46,7 @@ Configure port forwarding
 @reboot autossh -M 20110 -f -N -R 5443:localhost:5443 makov@109.234.38.83
 ```
 
-To configure iptables on the gate (add to the start of /etc/ufw/before/rules:
+To configure iptables on the gate (add to the start of /etc/ufw/before/rules (no longer needed):
 
 ```
 *nat
@@ -54,4 +54,10 @@ To configure iptables on the gate (add to the start of /etc/ufw/before/rules:
 -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 5080
 -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 5443
 COMMIT
+```
+
+Allow access to 5080 port from docker container:
+
+```
+sudo ufw allow in on docker0 to any port 5080
 ```
