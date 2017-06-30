@@ -12,12 +12,10 @@ server:
   build: .
   ports:
     - "5080:80"
-    - "5443:443"
   links:
     - database
   external_links:
     - storage_server_1
-  volumes:
-    - /etc/letsencrypt:/etc/letsencrypt
-  #  - ./robotom/logs:/var/www/web/robotom/logs
+  # volumes:
+  #   - ./robotom/logs:/var/www/web/robotom/logs
   restart: unless-stopped
