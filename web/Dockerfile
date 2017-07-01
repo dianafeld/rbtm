@@ -32,8 +32,8 @@ RUN robotom/manage.py collectstatic --noinput
 # ENV APACHE_RUN_GROUP www-data
 # ENV APACHE_LOG_DIR /var/log/apache2
 
-
-
+COPY apache2-foreground /usr/local/bin/
 
 EXPOSE 80
-CMD ["apache2ctl", "-D", "FOREGROUND"]
+CMD ["apache2-foreground"]
+
