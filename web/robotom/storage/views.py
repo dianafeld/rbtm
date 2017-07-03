@@ -47,6 +47,7 @@ class ExperimentRecord:
         self.empty_count = record['experiment parameters']['EMPTY']['count']
         self.empty_exposure = record['experiment parameters']['EMPTY']['exposure']
         self.hdf_host = STORAGE_HDF5_FILE.format(hostname=hostname, exp_id=self.experiment_id)
+        storage_logger.info(self.hdf_host)
         self.datetime = record['datetime']
 
 

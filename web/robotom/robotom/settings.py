@@ -227,7 +227,7 @@ LOGGING = {
             'class': 'django.utils.log.AdminEmailHandler'
         },
         'write_to_storage_log': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': os.path.join(BASE_DIR, 'logs/storage.log'),
             'formatter': 'verbose',
