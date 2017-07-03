@@ -259,7 +259,7 @@ def storage_record_view(request, storage_record_id):
                 messages.error(request, u'Эксперимент с данным идентификатором не найден')
                 to_show = False
             else:
-                record = ExperimentRecord(experiment_info[0])
+                record = ExperimentRecord(experiment_info[0], request.get_host())
         else:
             storage_logger.error(u'Не удается получить эксперимент. Ошибка: {}'.format(experiment.status_code))
             messages.error(request, u'Не удается получить эксперимент. Ошибка: {}'.format(experiment.status_code))
