@@ -3,7 +3,7 @@
 from urlparse import urljoin
 import os
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 REQUEST_DEBUG = False
 
@@ -18,6 +18,7 @@ STORAGE_EXPERIMENTS_GET_HOST = urljoin(STORAGE_HOST, '/storage/experiments/get')
 STORAGE_CREATE_USER_HOST = urljoin(STORAGE_HOST, '/storage/users/get')
 STORAGE_ALT_USER_HOST = urljoin(STORAGE_HOST, '/storage/users/update')
 STORAGE_EXPERIMENTS_HOST = urljoin(STORAGE_HOST, '/storage/experiments')
+STORAGE_HDF5_FILE = '{hostname}/storage/experiments/{exp_id}.h5'
 STORAGE_RECONSTRUCTION = urljoin(STORAGE_HOST, '/storage/experiments/{exp_id}/3d/{rarefaction}/{level1}/{level2}')
 
 EXPERIMENT_HOST = 'http://10.0.3.104:5001/'

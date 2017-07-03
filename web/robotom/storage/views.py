@@ -10,7 +10,7 @@ import json
 from django.shortcuts import render
 from requests.exceptions import Timeout
 from robotom.settings import STORAGE_EXPERIMENTS_GET_HOST, STORAGE_FRAMES_INFO_HOST, MEDIA_ROOT, RECONSTRUCTION_ROOT, \
-    STORAGE_FRAMES_PNG, STORAGE_EXPERIMENTS_HOST, STORAGE_RECONSTRUCTION
+    STORAGE_FRAMES_PNG, STORAGE_EXPERIMENTS_HOST, STORAGE_RECONSTRUCTION, STORAGE_HDF5_FILE
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 import h5py
@@ -23,7 +23,7 @@ def is_active(user):
 
 
 class ExperimentRecord:
-    def __init__(self, record):
+    def __init__(self, record, hostname):
         self.experiment_id = record['_id']
         if 'specimen' in record:
             self.specimen = record['specimen']
@@ -46,7 +46,7 @@ class ExperimentRecord:
         self.data_exposure = record['experiment parameters']['DATA']['exposure']
         self.empty_count = record['experiment parameters']['EMPTY']['count']
         self.empty_exposure = record['experiment parameters']['EMPTY']['exposure']
-        self.hdf_host = STORAGE_EXPERIMENTS_HOST + '/' + self.experiment_id + '/hdf5'
+        self.hdf_host = STORAGE_HDF5_FILE.format(hostname=hostname, exp_id=self.experiment_id)
         self.datetime = record['datetime']
 
 
@@ -152,7 +152,7 @@ def storage_view(request):
             records = []
             for result in experiments:
                 try:
-                    record = ExperimentRecord(result)
+                    record = ExperimentRecord(result, request.get_host())
                     records.append(record)
                 except KeyError:
                     storage_logger.warning(u'Неверная запись об эксперименте {}'.format(result))

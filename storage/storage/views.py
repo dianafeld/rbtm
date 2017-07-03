@@ -163,51 +163,6 @@ def get_frame_info():
     return resp
 
 
-def transform_data(data, transformed_data_path, experiment_id):
-
-    data_transformed = h5py.File(transformed_data_path, "w")
-    logger.debug("hdf5: created file in temporary directory")
-
-    experiments = db['experiments']
-    experiment_info = dumps(experiments.find({"_id": experiment_id}))
-    data_transformed.attrs.create("exp_info", experiment_info.encode('utf8'))
-
-    data_transformed.create_group("empty")
-    data_transformed.create_group("dark")
-    data_transformed.create_group("data")
-    logger.debug("hdf5: created groups")
-
-    frames = db['frames']
-    for frame_id in data.keys():
-        frame_info = dumps(frames.find({"_id": ObjectId(frame_id)}))
-        json_frame = loads(frame_info)
-        frame_number = str(json_frame[0]['frame']['number'])
-        frame_type = str(json_frame[0]['frame']['mode'])
-        frame_dataset = data_transformed[frame_type].create_dataset(frame_number, data=data[frame_id], compression="gzip", compression_opts=1)
-        frame_dataset.attrs.create("frame_info", frame_info.encode('utf8'))
-
-    logger.debug("hdf5: wrote compressed datasets")
-    data_transformed.flush()
-    data_transformed.close()
-
-    return transformed_data_path
-
-
-@app.route('/storage/experiments/<experiment_id>/hdf5', methods=['GET'])
-def get_experiment_hdf5(experiment_id):
-    logger.info('Getting experiment: ' + experiment_id)
-    hdf5_path = os.path.abspath(os.path.join("data", "experiments", experiment_id, "before_processing",
-                                             experiment_id + ".h5"))
-    # data = h5py.File(os.path.abspath(os.path.join('data', 'experiments', experiment_id, 'before_processing', 'frames.h5')), 'r')
-    # transformed_data_path = os.path.abspath(os.path.join("data", "experiments", str(experiment_id), "before_processing",
-    #                                                      experiment_id + ".h5"))
-    # logger.debug(transformed_data_path)
-    # if not os.path.exists(transformed_data_path):
-    #     transform_data(data, transformed_data_path, experiment_id)
-    return send_file(hdf5_path,
-                     mimetype='application/x-hdf5', as_attachment=True, attachment_filename=str(experiment_id)+'.h5')
-
-
 @app.route('/storage/png/get', methods=['POST'])
 def get_png():
     if not request.data:
