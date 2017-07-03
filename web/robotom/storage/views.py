@@ -23,7 +23,7 @@ def is_active(user):
 
 
 class ExperimentRecord:
-    def __init__(self, record, hostname):
+    def __init__(self, record):
         self.experiment_id = record['_id']
         if 'specimen' in record:
             self.specimen = record['specimen']
@@ -152,7 +152,7 @@ def storage_view(request):
             records = []
             for result in experiments:
                 try:
-                    record = ExperimentRecord(result, request.get_host())
+                    record = ExperimentRecord(result)
                     records.append(record)
                 except KeyError:
                     storage_logger.warning(u'Неверная запись об эксперименте {}'.format(result))
@@ -259,7 +259,7 @@ def storage_record_view(request, storage_record_id):
                 messages.error(request, u'Эксперимент с данным идентификатором не найден')
                 to_show = False
             else:
-                record = ExperimentRecord(experiment_info[0], request.get_host())
+                record = ExperimentRecord(experiment_info[0])
         else:
             storage_logger.error(u'Не удается получить эксперимент. Ошибка: {}'.format(experiment.status_code))
             messages.error(request, u'Не удается получить эксперимент. Ошибка: {}'.format(experiment.status_code))
