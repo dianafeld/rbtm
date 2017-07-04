@@ -56,8 +56,9 @@ To configure iptables on the gate (add to the start of /etc/ufw/before/rules (no
 COMMIT
 ```
 
-Allow access to 5080 port from docker container:
+Allow access to 5080, 5006 port from docker container:
 
 ```
 sudo ufw allow in on docker0 to any port 5080
+sudo ufw allow in on docker0 to any port 5006
 ```
