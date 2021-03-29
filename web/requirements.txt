@@ -10,7 +10,7 @@ Jinja2==2.7.2
 MarkupSafe==0.18
 numpy==1.10.4
 psycopg2==2.6
-Pygments==1.6
+Pygments==2.7.4
 python-memcached==1.54
 requests==2.2.1
 roman==2.0.0
