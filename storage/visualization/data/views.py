@@ -63,7 +63,7 @@ from flask import Response
 from flask import make_response
 from flask import send_file
 from flask import Flask
-
+from werkzeug.utils import safe_join
 app = Flask(__name__)
 
 
@@ -75,7 +75,7 @@ OBJECT = "hand"
 @app.route('/take_json/<path:filename>', methods=['GET'])
 @crossdomain(origin='*')
 def send_json(filename):
-    return send_file("prepared_data/" + OBJECT + "/" + filename)
+    return send_file(safe_join("prepared_data",OBJECT, filename))
 
 @app.route('/cut/<int:fil>/<int:rar>/<int:lb>/<int:ub>', methods=['GET'])
 @crossdomain(origin='*')
